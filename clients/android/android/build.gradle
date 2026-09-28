@@ -50,6 +50,23 @@ allprojects {
     }
 }
 
+// Optional server URL for debug builds only, for example a local MockSync reached
+// through `adb reverse tcp:8080 tcp:8080`. First match wins: the Gradle property
+// arcDebugServerBaseUrl (-P or gradle.properties), the environment variable
+// ARC_DEBUG_SERVER_BASE_URL (upper case, because the flutter tool upper-cases
+// environment variable names on Windows), then arcDebugServerBaseUrl in
+// local.properties. Empty means "use serverBaseURL".
+def arcDebugServerBaseUrl = {
+    def value = project.findProperty('arcDebugServerBaseUrl') ?: System.getenv('ARC_DEBUG_SERVER_BASE_URL')
+    def localFile = file('local.properties')
+    if (!value && localFile.exists()) {
+        def local = new Properties()
+        localFile.withReader('UTF-8') { local.load(it) }
+        value = local.getProperty('arcDebugServerBaseUrl')
+    }
+    return value ? value.toString().trim() : ''
+}.call()
+
 ext {
     compileSdkVersion = 34
     buildToolsVersion = "34.0.0"
@@ -62,6 +79,8 @@ ext {
     clientmanagerLibVersionName = "\"1.0.0\""
 
     serverBaseURL = "\"https://api-internal.sandbox.xyz.net\""
+    // Debug builds use arcDebugServerBaseUrl when it is set; release builds always use serverBaseURL.
+    debugServerBaseURL = arcDebugServerBaseUrl ? "\"${arcDebugServerBaseUrl}\"" : serverBaseURL
     serverHealthCheckPath = "\"/v1/syncdata/actuator/health\""
     serverActuatorInfoPath = "\"/v1/syncdata/actuator/info\""
     debugPassword = "\"your-debug-password\""

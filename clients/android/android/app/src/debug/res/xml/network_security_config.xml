@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only. This file replaces clientmanager's
+     src/main/res/xml/network_security_config.xml in the debug APK (app resources
+     override library resources of the same name); release builds keep the original.
+     Differences: plain HTTP is allowed to a local MockSync on 127.0.0.1 / localhost
+     (emulator or USB device after `adb reverse tcp:8080 tcp:8080`) and on 10.0.2.2
+     (the host PC as seen from the Android emulator). All other hosts stay HTTPS-only. -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">jsonplaceholder.typicode.com</domain>
+        <domain includeSubdomains="true">dev.mosip.net</domain>
+    </domain-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>

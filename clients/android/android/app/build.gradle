@@ -91,6 +91,7 @@ android {
     buildTypes {
         debug {
             testCoverageEnabled = true  // Enable test coverage
+            buildConfigField("String", "BASE_URL", rootProject.ext.debugServerBaseURL)
         }
         release {
             // TODO: Add your own signing config for the release build.
