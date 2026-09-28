@@ -1,5 +1,9 @@
 package io.mosip.registration.mdm.dto;
 
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.Data;
 
 /**
@@ -80,4 +84,12 @@ public class DiscoverDto {
 	 * by the device (e.g., for multiple sensors).
 	 */
 	private String[] deviceSubId;
+
+	/**
+	 * Presentation attack detection capability (MOSIP issue
+	 * android-registration-client#1117); omitted when null. Off by default in
+	 * discovery because stock clients reject unknown discovery fields.
+	 */
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private Map<String, Object> padCapability;
 }

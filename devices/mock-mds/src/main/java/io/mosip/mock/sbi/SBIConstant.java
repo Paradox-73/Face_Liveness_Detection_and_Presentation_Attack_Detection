@@ -190,6 +190,14 @@ public class SBIConstant {
 	public static final String MOSIP_ADMIN_API_DELAY = "POST /admin/delay HTTP";
 	public static final String MOSIP_ADMIN_API_PROFILE = "POST /admin/profile HTTP";
 
+	/** Face liveness extension Admin Apis (see LIVENESS-EXTENSIONS.md) */
+	public static final String MOSIP_ADMIN_API_SOURCE = "POST /admin/source HTTP";
+	public static final String MOSIP_ADMIN_API_FAULT = "POST /admin/fault HTTP";
+	public static final String MOSIP_ADMIN_API_CERTIFICATION = "POST /admin/certification HTTP";
+	public static final String MOSIP_ADMIN_API_PAD = "POST /admin/pad HTTP";
+	public static final String MOSIP_ADMIN_API_LIVENESS_GET = "GET /admin/liveness HTTP";
+	public static final String MOSIP_ADMIN_API_LIVENESS_POST = "POST /admin/liveness HTTP";
+
 	/** Command Line Arguments Names */
 	public static final String MOSIP_PURPOSE = "mosip.mock.sbi.device.purpose";
 	public static final String MOSIP_BIOMETRIC_TYPE = "mosip.mock.sbi.biometric.type";

@@ -1,5 +1,9 @@
 package io.mosip.registration.mdm.dto;
 
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.Data;
 
 /**
@@ -98,4 +102,11 @@ public class BioMetricsDataDto {
 	 * The actual quality score of the captured biometric sample.
 	 */
 	private String qualityScore;
+
+	/**
+	 * PAD block echoing the request's {@code bio[].pad} challenge (MOSIP issue
+	 * android-registration-client#1117); omitted when null.
+	 */
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private Map<String, Object> pad;
 }

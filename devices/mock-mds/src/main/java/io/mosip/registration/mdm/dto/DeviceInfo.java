@@ -1,6 +1,9 @@
 package io.mosip.registration.mdm.dto;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.Data;
 
@@ -78,4 +81,11 @@ public class DeviceInfo {
 	 * The callback identifier associated with the device (optional).
 	 */
 	private String callbackId;
+
+	/**
+	 * Presentation attack detection capability (MOSIP issue
+	 * android-registration-client#1117); omitted when null.
+	 */
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private Map<String, Object> padCapability;
 }

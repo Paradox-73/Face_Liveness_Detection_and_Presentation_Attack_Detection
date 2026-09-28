@@ -43,6 +43,7 @@ import io.mosip.mock.sbi.devicehelper.SBIBioSubTypeInfo;
 import io.mosip.mock.sbi.devicehelper.SBICheckState;
 import io.mosip.mock.sbi.devicehelper.SBIDeviceHelper;
 import io.mosip.mock.sbi.devicehelper.face.SBIFaceCaptureInfo;
+import io.mosip.mock.sbi.devicehelper.face.SBIFaceHelper;
 import io.mosip.mock.sbi.devicehelper.finger.single.SBIFingerSingleCaptureInfo;
 import io.mosip.mock.sbi.devicehelper.finger.slap.SBIFingerSlapBioExceptionInfo;
 import io.mosip.mock.sbi.devicehelper.finger.slap.SBIFingerSlapCaptureInfo;
@@ -118,6 +119,17 @@ public class SBIServiceResponse {
 			responseJson = processSetDelay(mockService);
 		} else if (strJsonRequest.contains(SBIConstant.MOSIP_ADMIN_API_PROFILE)) {
 			responseJson = processSetProfileInfo(mockService);
+		} else if (strJsonRequest.contains(SBIConstant.MOSIP_ADMIN_API_SOURCE)) {
+			responseJson = new SBIFaceLivenessAdmin(mockService, strJsonRequest).processSetSource();
+		} else if (strJsonRequest.contains(SBIConstant.MOSIP_ADMIN_API_FAULT)) {
+			responseJson = new SBIFaceLivenessAdmin(mockService, strJsonRequest).processSetFault();
+		} else if (strJsonRequest.contains(SBIConstant.MOSIP_ADMIN_API_CERTIFICATION)) {
+			responseJson = new SBIFaceLivenessAdmin(mockService, strJsonRequest).processSetCertification();
+		} else if (strJsonRequest.contains(SBIConstant.MOSIP_ADMIN_API_PAD)) {
+			responseJson = new SBIFaceLivenessAdmin(mockService, strJsonRequest).processSetPad();
+		} else if (strJsonRequest.contains(SBIConstant.MOSIP_ADMIN_API_LIVENESS_GET)
+				|| strJsonRequest.contains(SBIConstant.MOSIP_ADMIN_API_LIVENESS_POST)) {
+			responseJson = new SBIFaceLivenessAdmin(mockService, strJsonRequest).processGetState();
 		} else {
 			responseJson = SBIResponseInfo.generateErrorResponse("en", getPort(), "500", "");
 		}
@@ -677,6 +689,13 @@ public class SBIServiceResponse {
 			deviceHelper.initDevice();
 			deviceHelper.setDeviceId(deviceId);
 			deviceHelper.setDeviceSubId(deviceSubId);
+			// face device: frame source, faults and pacing; null for finger and iris
+			FaceStreamWriter faceStream = FaceStreamWriter.forDevice(deviceHelper, socket);
+			if (faceStream != null && !faceStream.start()) {
+				deviceHelper.deInitDevice();
+				deviceHelper.setDeviceStatus(SBIConstant.DEVICE_STATUS_ISREADY);
+				return SBIJsonInfo.getStreamErrorJson(lang, "608", "");
+			}
 			deviceHelper.getCaptureInfo().setLiveStreamStarted(true);
 			renderMainHeaderData(socket);
 			int returnCode = -1;
@@ -722,14 +741,18 @@ public class SBIServiceResponse {
 
 				if (deviceHelper.getCaptureInfo() != null && deviceHelper.getCaptureInfo().getImage() != null) {
 					try {
-						renderJPGImageData(socket, deviceHelper.getCaptureInfo().getImage());
+						if (faceStream == null)
+							renderJPGImageData(socket, deviceHelper.getCaptureInfo().getImage());
+						else if (!faceStream.writeFrame(deviceHelper.getCaptureInfo().getImage(),
+								image -> renderJPGImageData(socket, image)))
+							break;
 					} catch (Exception ex) {
 						logger.error("processLiveStreamInfo :: Exception ::", ex);
 						break;
 					}
 				}
 
-				Thread.sleep(30);
+				Thread.sleep(faceStream == null ? 30 : faceStream.getPauseMillis());
 			}
 			if (deviceHelper.getCaptureInfo() != null) {
 				deviceHelper.deInitDevice();
@@ -1010,7 +1033,9 @@ public class SBIServiceResponse {
 			}
 
 			if (deviceHelper.getCaptureInfo() != null) {
-				deviceHelper.getCaptureInfo().getBioExceptionInfo().deInitBioException();
+				// face capture info has no bio exception info; without this check a face capture timeout left the device Busy
+				if (deviceHelper.getCaptureInfo().getBioExceptionInfo() != null)
+					deviceHelper.getCaptureInfo().getBioExceptionInfo().deInitBioException();
 				// When Capture is called After LiveStreaming is called
 				// DeInit is called in Livestream method
 				if (deviceHelper.getCaptureInfo().isLiveStreamStarted()) {
@@ -2067,6 +2092,9 @@ public class SBIServiceResponse {
 		biometricData.setRequestedScore(qualityRequestScore + "");
 		biometricData.setQualityScore(qualityScore + "");
 		biometricData.setTransactionId(transactionId);
+		// PAD challenge echo (issue #1117): only when the face device advertises padCapability and the request asks
+		if (deviceHelper instanceof SBIFaceHelper faceHelper)
+			biometricData.setPad(faceHelper.getPadEcho(getRequest()));
 
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);

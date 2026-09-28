@@ -87,7 +87,11 @@ public class SBIWorker implements Runnable {
 				logger.info("Method InValid ::");
 				responseJson = SBIResponseInfo.generateErrorResponse("en", getServerPort(), "500", "");
 			}
-			logger.info("Response data :: {}", responseJson);
+			// capture responses carry the biometric image (a webcam face with the liveness extensions): log the size only
+			if (strMethodName != null && strMethodName.endsWith(SBIConstant.MOSIP_METHOD_CAPTURE))
+				logger.info("Response data :: {} characters (capture response not logged)", responseJson.length());
+			else
+				logger.info("Response data :: {}", responseJson);
 			bos.write(responseJson.getBytes());
 			bos.flush();
 		} catch (IOException e) {
