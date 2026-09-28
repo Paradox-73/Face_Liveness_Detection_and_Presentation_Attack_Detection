@@ -1,0 +1,433 @@
+{
+  "english": "English",
+  "arabic": "العربية",
+  "french": "Français",
+  "hindi": "हिंदी",
+  "kannada": "ಕನ್ನಡ",
+  "tamil": "தமிழ்",
+  "locale": "tam",
+  "help": "உதவி",
+  "mosip": "MOSIP",
+  "welcome": "உங்களை வரவேற்கிறோம்",
+  "community_reg_text": "MOSIP பதிவு வாடிக்கையாளர்!",
+  "info_text": "அம்சங்களை அணுக உள்நுழைக.",
+  "login_text": "உள்நுழைவு",
+  "language": "மொழி",
+  "username": "பயனர் பெயர்",
+  "enter_username": "பயனர்பெயரை உள்ளிடவும்",
+  "next_button": "அடுத்தவர்",
+  "password": "அடையாளச் சொல்",
+  "enter_password": "கடவுச்சொல்லை உள்ளிடவும்",
+  "forgot_password": "கடவுச்சொல்லை மறந்துவிட்டீர்களா?",
+  "login_button": "உள்நுழைவு",
+  "back_button": "முதுகு",
+  "user_validated": "பயனர் சரிபார்க்கப்பட்டது!",
+  "username_required": "பயனர் பெயர் தேவை!",
+  "password_required": "கடவுச்சொல் தேவை!",
+  "username_exceed": "பயனர்பெயர் 50 எழுத்துகளுக்கு மிகாமல் இருக்க வேண்டும்!",
+  "password_exceed": "கடவுச்சொல் 50 எழுத்துகளுக்கு மிகாமல் இருக்க வேண்டும்!",
+  "username_incorrect": "பயனர் காணப்படவில்லை!",
+  "device_credentials": "சாதன நற்சான்றிதழ்",
+  "copy_text": "உரை நகல்",
+  "download_json": "JSON பதிவிறக்க",
+  "copy_message": "இயந்திர விவரங்கள் கிளிப்போர்டில் நகலெடுக்கப்பட்டன!",
+  "download_message": "கோப்பு பதிவிறக்கங்களில் சேமிக்கப்பட்டது!",
+  "logout": "உள்நுழைவு",
+  "reset_password": "கடவுச்சொல்லை மீட்டமைக்கவும்",
+  "login_failed": "உள்நுழைவு தோல்வியுற்றது. மீண்டும் முயற்சி செய்!",
+  "password_incorrect": "கடவுச்சொல் தவறானது!",
+  "machine_not_found": "இயந்திரம் கிடைக்கவில்லை!",
+  "cred_expired": "நற்சான்றிதழ்கள் காணப்படவில்லை அல்லது காலாவதியாகவில்லை. ஆன்லைன் உள்நுழைவை முயற்சிக்கவும்!",
+  "not_initialized": "இயந்திரத்தை துவக்க முடியவில்லை!",
+  "invalid_user": "பயனர்பெயர் செல்லாது!",
+  "onboard_operator_biomterics": "ஆபரேட்டர் பயோமெட்ரிக் பதிவுசெய்தல்",
+  "machine_inactive": "இயந்திரம் செயலில் இல்லை!",
+  "center_inactive": "மையம் செயல்படவில்லை!",
+  "sync_completed_succesfully": "ஒத்திசைவு வெற்றிகரமாக நிறைவடைந்தது",
+  "sync_completed_message": "கணினி சில வினாடிகளில் மறுதொடக்கம் செய்யப்படும் மற்றும் நீங்கள் உள்நுழைவு பக்கத்திற்கு திருப்பிவிடப்படுவீர்கள்.",
+  "sync_failed": "ஒத்திசைவு தோல்வியுற்றது",
+  "sync_failed_message": "உதவிக்கு கணினி நிர்வாகி அல்லது மேற்பார்வையாளருடன் இணைக்கவும்.",
+  "policy_key_sync_failed": "கொள்கை விசை ஒத்திசைவு தோல்வியுற்றது",
+  "ca_certs_sync_failed": "CA சான்றிதழ்கள் ஒத்திசைவு தோல்வியடைந்தது",
+  "global_params_sync_failed": "Global Params Sync தோல்வியுற்றது",
+  "user_details_sync_failed": "பயனர் விவரங்கள் ஒத்திசைவு தோல்வியுற்றது",
+  "id_schema_sync_failed": "IDSchena Sync Failed",
+  "master_data_sync_failed": "Master Data Sync தோல்வியுற்றது",
+  "network_error": "நெட்வொர்க் இல்லை!",
+  "delete": "அழி",
+  "newRegistrationProcess": "{language, select, eng{New Registration} ara{تسجيل جديد} fra{Nouvelle inscription} other{New Registration}}",
+  "inactive_logout_heading": "நீங்கள் சும்மா இருந்தீர்கள்",
+  "inactive_logout_description": "பாதுகாப்பு காரணங்களுக்காக, நீங்கள் $TIMER இல் வெளியேற்றப்படுவீர்கள்",
+  "seconds": " நொடிகள்.",
+  "minutes": " நிமிடங்கள்.",
+  "logout_button": "வெளியேறு",
+  "stay_logged_in_button": "உள்நுழைந்தே இருங்கள்",
+  "@newRegistrationProcess": {
+    "description": "New Registration Process Header",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationLanguage": "{language, select, eng{Notification Languages} ara{لغات الإخطار} fra{Langues de notification} hin{अधिसूचना भाषाएँ} kan{ಅಧಿಸೂಚನೆ ಭಾಷೆಗಳು} tam{அறிவிப்பு மொழிகள்} other{Notification Languages}}",
+  "@notificationLanguage": {
+    "description": "Notification Language Label",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "consentScreenName": "{language, select, eng{Consent} ara{موافقة} fra{Consentement} other{Consent}}",
+  "@consentScreenName": {
+    "description": "Consent Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "demographicsScreenName": "{language, select, eng{Demographic Details} ara{التفاصيل الديموغرافية} fra{Détails démographiques} other{Demographic Details}}",
+  "@demographicsScreenName": {
+    "description": "Demographic Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "documentsScreenName": "{language, select, eng{Document Upload} ara{تحميل الوثيقة} fra{Téléchargement de documents} other{Document Upload}}",
+  "@documentsScreenName": {
+    "description": "Document Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "biometricsScreenName": "{language, select, eng{Biometric Details} ara{التفاصيل البيومترية} fra{Détails biométriques} other{Biometric Details}}",
+  "@biometricsScreenName": {
+    "description": "Biometric Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationLanguage": "{language, select, eng{Preferred Language of Communication} ara{لغة التواصل المفضلة} fra{Langue de communication préférée} hin{संचार की पसंदीदा भाषा} kan{ಸಂವಹನದ ಆದ್ಯತೆಯ ಭಾಷೆ} tam{விருப்பமான தொடர்பு மொழி} other{Notification Languages}}",
+  "@notificationLanguage": {
+    "description": "Notification Language Label",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "dataEntryLanguage": "{language, select, eng{Data Entry Language} ara{لغة إدخال البيانات} fra{Langue de saisie des données} hin{डाटा एंट्री भाषा} kan{ಡೇಟಾ ಎಂಟ್ರಿ ಭಾಷೆ} tam{தரவு நுழைவு மொழி} other{Notification Languages}}",
+  "@dataEntryLanguage": {
+    "description": "Data Entry Language Label",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "upload_document": "ஆவணத்தைப் பதிவேற்றவும்",
+  "synchronize_data": "தரவை ஒத்திசைக்கவும்",
+  "registration_tasks": "பதிவு பணிகள்",
+  "manage_applications": "பயன்பாடுகளை நிர்வகிக்கவும்",
+  "search_application": "விண்ணப்ப ஐடி மூலம் தேடவும்",
+  "upload": "பதிவேற்றம்",
+  "export": "ஏற்றுமதி",
+  "number_of_application": "{number} பயன்பாடுகளைக் காட்டுகிறது",
+  "@number_of_application": {
+    "description": "A message with a single parameter",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "0"
+      }
+    }
+  },
+  "total_selected_application": "{selected}/{total} விண்ணப்பங்கள் தேர்ந்தெடுக்கப்பட்டன",
+  "@total_selected_application": {
+    "description": "A message with a two parameter",
+    "placeholders": {
+      "selected": {
+        "type": "int",
+        "example": "0"
+      },
+      "total": {
+        "type": "int",
+        "example": "0"
+      }
+    }
+  },
+  "client_status": "வாடிக்கையாளர் நிலை",
+  "server_status": "சேவையக நிலை",
+  "review_status": "மீளாய்வு நிலை",
+  "clear_filter": "Clear Filter",
+  "serial_number": "எஸ்.என்",
+  "application_id": "விண்ணப்ப ஐடி",
+  "reg_date": "ரெஜி. தேதி",
+  "reg_type": "ரெஜி. வகை",
+  "operator_id": "ஆபரேட்டர் ஐடி",
+  "operation_tasks": "செயல்பாட்டு பணிகள்",
+  "system_storage_usage": "கணினி சேமிப்பக பயன்பாடு",
+  "download_pre_registration_data": "முன் பதிவுத் தரவைப் பதிவிறக்கவும்",
+  "update_operator_biomterics": "ஆபரேட்டர் பயோமெட்ரிக்ஸைப் புதுப்பிக்கவும்",
+  "appliction_upload": "விண்ணப்பப் பதிவேற்றம்",
+  "check_updates": "புதுப்பிப்புகளைச் சரிபார்க்கவும்",
+  "center_remap_sync": "மைய ரீமேப் ஒத்திசைவு.",
+  "center_remap_notification": "உங்கள் இயந்திரம் மற்றொரு மையத்திற்கு மீண்டும் மேப் செய்யப்பட்டது. நிலுவையிலுள்ள செயல்பாடுகளை முடிக்கவும்.",
+  "remap_operation_blocked": "செயல்பாடு அனுமதிக்கப்படவில்லை. இயந்திரம் மற்றொரு மையத்திற்கு மீண்டும் மேப் செய்யப்பட்டது, நிலுவையிலுள்ள செயல்பாடுகளை முடிக்கவும்.",
+  "no_center_remap_detected": "எந்த மாற்றமும் கண்டறியப்படவில்லை. இந்த இயந்திரம் தற்போதைய மையத்திலேயே ஒதுக்கப்பட்டுள்ளது.",
+  "complete_pending_activities": "முடிக்க வேண்டிய நிலுவையிலுள்ள செயல்பாடுகள்",
+  "pending_activities_before_remap": "மைய மறுவரைவு ஒத்திசைவைத் தொடங்குவதற்கு முன் பின்வரும் செயல்பாடுகளை முடிக்க வேண்டும்:",
+  "pending_packets_awaiting_approval": "அனுமதிக்காக காத்திருக்கும் பாக்கெட்டுகள்",
+  "packets_require_supervisor_approval": "{count} பாக்கெட்டுகள் மேற்பார்வையாளரின் அனுமதிக்காக நிலுவையில் உள்ளன மற்றும் ஒத்திசைவுக்கு முன் அனுமதிக்கப்பட வேண்டும்.",
+  "@packets_require_supervisor_approval": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "pending_packets_awaiting_upload": "ஒத்திசைவு மற்றும் பதிவேற்றத்திற்காக நிலுவையிலுள்ள பாக்கெட்டுகள்",
+  "packets_queued_locally": "{count} பாக்கெட்டுகள் உள்ளூர் ஒத்திசைவுக்காக நிலுவையில் உள்ளன மற்றும் மைய மறுவரைவு ஒத்திசைவை தொடங்குவதற்கு முன் சேவையகத்தில் பதிவேற்றப்பட வேண்டும்.",
+  "@packets_queued_locally": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "sync_button_auto_enabled": "இரண்டு செயல்பாடுகளும் முடிந்தவுடன் ஒத்திசைவு பொத்தான் தானாகவே இயக்கப்படும்.",
+  "okay_got_it": "சரி",
+  "center_remap_sync_subtitle": "மைய மறுவரைவு சுத்தப்படுத்தலைத் தொடங்க தட்டவும்",
+  "remap_sync_screen_title": "மைய மறுவரைவு ஒத்திசைவு",
+  "remap_syncing_message": "மறுவரைவு செய்யப்பட்ட மையத்தை ஒத்திசைக்கிறது",
+  "remap_sync_in_progress_warning": "ஒத்திசைவு நடைபெறுகிறது. தயவுசெய்து பயன்பாட்டை மூடாதீர்கள்.",
+  "remap_sync_completed_title": "மைய மறுவரைவு ஒத்திசைவு வெற்றிகரமாக முடிந்தது",
+  "remap_sync_completed_subtitle": "கீழே உள்ள மறுதொடக்கம் பொத்தானை கிளிக் செய்யவும். மறுதொடக்கத்திற்கு பிறகு ஒத்திசைவு தானாகவே முடியும்.",
+  "remap_synced_at": "ஒத்திசைக்கப்பட்டது",
+  "remap_sync_failed_title": "ஒத்திசைவு தோல்வியடைந்தது!",
+  "remap_sync_failed_subtitle": "நெட்வொர்க் சிக்கல் காரணமாக ஒத்திசைவு தோல்வியடைந்தது. தொடர மீண்டும் முயற்சி செய்யவும்.",
+  "restart": "மறுதொடக்கம்",
+  "sync_activities": "ஒத்திசை செயல்பாடுகள்",
+  "pending_approval": "நிலுவையிலுள்ள ஒப்புதல்",
+  "dashboard": "டாஷ்போர்டு",
+  "settings": "அமைப்புகள்",
+  "notifications": "அறிவிப்புகள்",
+  "profile": "சுயவிவரம்",
+  "select_language": "மொழியை தேர்ந்தெடுங்கள்",
+  "select_two_languages": "தரவு உள்ளீட்டிற்கு ஏதேனும் 2 மொழிகளைத் தேர்ந்தெடுக்கவும்.",
+  "language_mandatory": "அரசாங்க வழிகாட்டுதல்களின்படி குடியிருப்பாளர் தேர்ந்தெடுக்க {mandatoryLanguage} கட்டாயமாகும். தேர்வு வரிசையானது மக்கள்தொகை தரவுகளுக்கான பக்கக் காட்சிக்கு வழிவகுக்கும்.",
+  "@language_mandatory": {
+    "description": "A message with a single parameter",
+    "placeholders": {
+      "mandatoryLanguage": {
+        "type": "String",
+        "example": "Tamil"
+      }
+    }
+  },
+  "mark_exception": "விசாரிக்கப்பட்ட விதிவிலக்கு",
+  "threshold": "அளவுக்கு",
+  "quality": "உயர்தரம்",
+  "attempts": "முயற்சிகள்",
+  "comments": "கருத்துகள்",
+  "exception_type": "விதிவிலக்கு வகை",
+  "permanent": "நிரந்தர",
+  "temporary": "குறிப்பிடுக",
+  "exceptions": "விதிவிலக்குகள்",
+  "add_comments_for_marking_the_exception": "விசாரிக்கப்பட்ட விதிவிலக்குக்கு கருத்துகளை சேர்க்கவும்",
+  "rescan": "மறு ஆய்வு",
+  "marking_exceptions_on": "விதிவிலக்குகளைக் குறிப்பது இயக்கத்தில் உள்ளது",
+  "is_not_allowed": "அனுமதிக்கப்படவில்லை",
+  "capture": "பிடிப்பு",
+  "attempts_left": "முயற்சிகள் எஞ்சியுள்ளன",
+  "left_hand": "இடது கை",
+  "left": "இடது",
+  "right": "வலது",
+  "right_hand": "வலது கை",
+  "iris": "ஐரிஸ்",
+  "thumbs": "முழுகுமதி",
+  "face": "முகம்",
+  "exception": "விதிவிலக்கு",
+  "language_selector_note": "முன்பதிவின் போது உள்ளிடப்பட்ட தரவின் அடிப்படையில் மொழி இருக்கலாம் என்பதை நினைவில் கொள்ளவும்.",
+  "cancel": "ரத்துசெய்",
+  "submit": "சமர்ப்பிக்கவும்",
+  "logo_text": "MOSIP மூலம் இயக்கப்படுகிறது",
+  "get_onboard": "இணையத்தில் பெறவும்",
+  "skip_to_home": "வீட்டிற்கு செல்க",
+  "continue_text": "தொடர்க",
+  "authenticate": "அங்கீகரிக்க",
+  "new_registration": "புதிய பதிவு",
+  "go_back": "பின்செல்",
+  "informed": "அறிந்தவர்",
+  "sync_packet": "ஒத்திசைவு பாக்கெட்",
+  "upload_packet": "பதிவேற்று பட்டியல்",
+  "authenticate_using_password": "கடவுச்சொல் பயன்படுத்தி அங்கீகரித்தல்",
+  "registration_acknowledgement": "பதிவு அறிந்தார்",
+  "print_text": "அச்சு",
+  "hello": "வணக்கம்",
+  "onboard_process_help": "ஆன்போர்டிங் செயல்முறையைத் தொடங்க, 'ஆன்போர்டைப் பெறு' என்பதைத் தட்டவும்.",
+  "scan": "ஊடுகதிர்",
+  "clear": "அகற்று",
+  "save": "சேமிக்கவும்",
+  "retake": "ரீடேக்",
+  "reference_number": "குறிப்பு எண்ணை உள்ளிடவும்",
+  "select_value_message": "மதிப்பைத் தேர்ந்தெடுக்கவும்",
+  "enter_value_message": "தயவுசெய்து ஒரு மதிப்பை உள்ளிடவும்",
+  "invalid_input": "தவறான உள்ளீடு",
+  "reference_number_validation": "தயவுசெய்து ஆதார் எண்ணை உள்ளிடவும்",
+  "referenceNumber": "{language, select, eng{Reference Number} ara{رقم المرجع} fra{Numéro de réference} kan{ಉಲ್ಲೇಖ ಸಂಖ್ಯೆ} hin{संदर्भ संख्या} tam{குறிப்பு எண்} other{Reference Number}}",
+  "@referenceNumber": {
+    "description": "Document reference number",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "default_not_found": "தேவையான பங்கு கிடைக்கவில்லை!",
+  "preview_page": "முன்னோக்கி",
+  "packet_auth_page": "அங்கீகாரம்",
+  "acknowledgement_page": "அறிவுசெய்தல்",
+  "demographic_information": "மக்கள்தொகை தகவல்",
+  "documents": "ஆவணங்கள்",
+  "biometrics": "பயோமெட்ரிக்ஸ்",
+  "share": "பகிர்",
+  "packets_created": "தொகுப்புகள் உருவாக்கப்பட்டது",
+  "packets_synced": "பாக்கெட்டுகள் ஒத்திசைக்கப்பட்டது",
+  "packets_uploaded": "பாக்கெட்டுகள் பதிவேற்றப்பட்டன",
+  "users": "பயனர்கள்",
+  "user_id": "பயனர் ஐடி",
+  "user_name": "பயனர் பெயர்",
+  "status": "நிலை",
+  "active_not_onboarded": "செயலில் - ஆன்போர்டு இல்லை",
+  "user_inactive": "பயனர் செயலற்றவர்",
+  "onboarded": "ஏற்றப்பட்டது",
+  "sync_alert_title": "தொடர ஒத்திசை செய்க!",
+  "sync_alert_content": "இயந்திரம் அல்லது மையம் செயலில் இல்லை. தொடர செயல்படுத்த மற்றும் ஒத்திசை செய்க.",
+  "sync_alert_text": "ஒத்திசை",
+  "onboarded_successfully": "நீங்கள் வெற்றிகரமாக நுழைந்துவிட்டீர்கள்.",
+  "operator_biometric_updated_successfully": "ஆபரேட்டர் பயோமெட்ரிக்ஸ் வெற்றிகரமாக புதுப்பிக்கப்பட்டது.",
+  "home": "வீடு",
+  "verify_and_save": "சரிபார்த்து சேமிக்கவும்",
+  "supervisors_biometric_onboard": "மேற்பார்வையாளர் பயோமேட்ரிக் உறுப்பினர் சேர்க்கை",
+  "supervisors_biometric_update": "மேற்பார்வையாளர் பயோமேட்ரிக் புதுப்பிப்பு",
+  "help_topics": "உதவி தலைப்புகள்",
+  "onboard_request_message": "போர்ட்டலில் உங்களை உள்வாங்க, \"ஆன்போர்டைப் பெறு\" பொத்தானைத் தட்டவும்.",
+  "hello_s": "வணக்கம் ",
+  "approve": "ஒப்புதல்",
+  "reject": "நிராகரி",
+  "reject_dialog-heading": "பாக்கெட்டை நிராகரிக்கவா?",
+  "reject_dialog_subheading": "பாக்கெட் நிராகரிப்புக்கான காரணத்தைத் தேர்ந்தெடுக்கவும். மதிப்பாய்வு நிலையை அங்கீகரிக்க அல்லது பின்னர் மீட்டமைக்க உங்கள் மதிப்பாய்வை மாற்றலாம்.",
+  "reason_rejection": "நிராகரிப்புக்கான காரணம்",
+  "no_reason_selected": "தயவுசெய்து காரணத்தைத் தேர்ந்தெடுக்கவும்...",
+  "supervisor_auth_heading": "மேற்பார்வையாளரின் அங்கீகாரம்",
+  "supervisor_auth_subheading": "கடவுச்சொல்லைப் பயன்படுத்தி மேற்பார்வையாளரின் அங்கீகாரம்",
+  "uin_number": "UIN எண்",
+  "valid_uin": "சரியான UIN ஐ உள்ளிடவும்",
+  "enter_uin": "UIN எண்ணை உள்ளிடவும்",
+  "select_update_attributes": "புதுப்பிக்கப்பட வேண்டிய அனைத்து பண்புக்கூறுகளையும் தேர்ந்தெடுக்கவும்",
+  "logout_action_required": "இன்னும் சில நடவடிக்கை தேவை!",
+  "logout_warning_message": "வெளியேறு என்பதைக் கிளிக் செய்வதன் மூலம் செயல்முறை முடிவடையும் மற்றும் தரவு இழப்பு ஏற்படலாம்.",
+  "officer": "அதிகாரி",
+  "operator": "இயக்குபவர்",
+  "supervisor": "மேற்பார்வையாளர்",
+  "online": "நிகழ்நிலை",
+  "offline": "ஆஃப்லைனில்",
+  "enabled": "இயக்கப்பட்டது",
+  "disabled": "முடக்கப்பட்டது",
+  "logout_success": "நீங்கள் வெற்றிகரமாக வெளியேறிவிட்டீர்கள்!",
+  "logout_failure": "ஏதோ தவறாகிவிட்டது, சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்",
+  "go_to_home": "வீட்டிற்கு போ",
+  "errors": "{messages, select, REG_TRY_AGAIN{உள்நுழைவு தோல்வியுற்றது. மீண்டும் முயற்சி செய்!} REG_INVALID_REQUEST{கடவுச்சொல் தவறானது!} REG_MACHINE_NOT_FOUND{இந்த சாதனம் இன்னும் பதிவுசெய்யப்படவில்லை. உதவிக்காக உங்கள் நிர்வாகியை தொடர்புகொள்ளுங்கள்!} REG_NETWORK_ERROR{உள்நுழைவு தோல்வியுற்றது. நெட்வொர்க் இணைப்பை சரிபார்க்கவும்!} REG_CRED_EXPIRED{நற்சான்றிதழ்கள் காணப்படவில்லை அல்லது காலாவதியாகவில்லை. ஆன்லைன் உள்நுழைவை முயற்சிக்கவும்!} REG_MACHINE_INACTIVE{இயந்திரம் செயலில் இல்லை!} REG_CENTER_INACTIVE{மையம் செயல்படவில்லை!} REG_LOGIN_LOCKED{அதிகபட்ச உள்நுழைவு முயற்சி வரம்பை அடைந்தது. பிறகு முயற்சிக்கவும்!} KER_SYN_AUTH_001{அங்கீகார டோக்கனை பெற முடியவில்லை!} PAK_APPRVL_MAX_TIME{நடவடிக்கை தேவை: நிலுவையிலுள்ள பதிவு செய்யப்பட்ட பாக்கெட்டுகள் அனுமதிக்கப்பட்ட அனுமதி நேரத்தை மீறியுள்ளன. தொடர, பின்னிணைப்பை அழிக்கவும்.} PAK_UPLOAD_MAX_TIME{நடவடிக்கை தேவை: பதிவைத் தொடர்வதற்கு முன், சர்வரில் பாக்கெட்டுகளைப் பதிவேற்றவும் அல்லது ஏற்றுமதி செய்யவும்.} PAK_UPLOAD_MAX_COUNT{நடவடிக்கை தேவை: பாக்கெட் வரம்பை அடைந்தது. புதிய பதிவுகளை உருவாக்கும் முன் ஏற்கனவே உள்ள பாக்கெட்டுகளை ஏற்றுமதி செய்யவும் அல்லது பதிவேற்றவும்.} PAK_DISK_SPACE_LOW{பாக்கெட்டை உருவாக்க தேவையான குறைந்தபட்ச இடம் இல்லை.} REG_PKT_APPRVL_CNT_EXCEED{கிளையண்டில் ஒப்புதலுக்காக காத்திருக்கும் பதிவு பாக்கெட்களின் அதிகபட்ச எண்ணிக்கை அடைந்தது. இந்த பதிவைத் தொடர்வதற்கு முன் பாக்கெட்களை ஒப்புதல் அல்லது நிராகரிக்கவும்.} OPT_TO_REG_TIME_SYNC_EXCEED{கடைசி ஒத்திசைவிலிருந்து நேரம் அதிகபட்ச வரம்பை மீறியுள்ளது. இந்த பதிவைத் தொடர்வதற்கு முன் தயவுசெய்து சர்வரிலிருந்து ஒத்திசைக்கவும்.} OPT_TO_REG_OUTSIDE_LOCATION{உங்கள் கிளையன் இயந்திர இடம் பதிவு மையத்திற்கு வெளியே உள்ளது. பதிவு பதிவு மையத்திற்குள் மட்டுமே செய்யப்படலாம் என்பதை தயவுசெய்து கவனிக்கவும்} other{'Some error occurred!'}}",
+  "@errors": {
+    "description": "Error messages",
+    "placeholders": {
+      "messages": {
+        "type": "String"
+      }
+    }
+  },
+  "fetch_data": "தரவைப் பெறவும்",
+  "application_id_not_exist": "விண்ணப்ப ஐடி இல்லை",
+  "correct_application_id": "உள்ளிட்ட விண்ணப்ப ஐடியைச் சரிபார்க்கவும் அல்லது சரியான ஐடியை உள்ளிட்டு, அதை மீண்டும் பெற முயற்சிக்கவும்.",
+  "enter_application_id": "விண்ணப்ப ஐடியை உள்ளிடவும்",
+  "prid_length_greater": "விண்ணப்ப ஐடி சரியாக {length} இலக்கங்களாக இருக்க வேண்டும்.",
+  "@prid_length_greater": {
+     "placeholders": {
+        "length": {
+          "type": "int"
+        }
+     }
+  },
+  "okay": "சரி",
+  "no_internet_connection": "இணைய இணைப்பு இல்லை!",
+  "connect_and_retry": "இணையத்துடன் இணைத்து மீண்டும் முயற்சிக்கவும்.",
+  "retry": "மீண்டும் முயற்சிக்கவும்",
+  "key": "விசை",
+  "server_value": "சர்வர் மதிப்பு",
+  "local_value": "உள்ளூர் மதிப்பு",
+  "no_configuration_parameters_found": "எந்த கட்டமைப்பு அளவுருக்களும் கிடைக்கவில்லை",
+  "no_configurations_found": "எந்த கட்டமைப்பும் கிடைக்கவில்லை",
+  "confirm": "உறுதிப்படுத்தவும்",
+  "scan_now": "இப்போது ஸ்கேன் செய்யுங்கள்",
+  "enter_additional_info_req_id": "கூடுதல் தகவல் கோரிக்கை ஐடியை உள்ளிடவும்",
+  "additional_info_req_id": "கூடுதல் தகவல் கோரிக்கை ஐடி",
+  "no_access_to_this_page": "இந்தப் பக்கத்தை அணுக உங்களுக்கு அனுமதி இல்லை",
+  "scheduled_job_settings": "திட்டமிடப்பட்ட வேலை அமைப்புகள்",
+  "doc_size_exceeded": "கோப்பின் அளவு {size} வரம்பை மீறுகிறது",
+  "@doc_size_exceeded": {
+       "placeholders": {
+         "size": {
+           "type": "String"
+         }
+       }
+  },
+  "age_should_not_be_greater": "வயது {age} ஆண்டுகளுக்கு அதிகமாக இருக்கக்கூடாது",
+  "@age_should_not_be_greater": {
+       "placeholders": {
+            "age": {
+            "type": "int"
+            }
+       }
+  },
+  "onboard_officer_biometric": "அதிகாரியின் பயோமெட்ரிக் பதிவு",
+  "update_officer_biometric": "அதிகாரியின் பயோமெட்ரிக் புதுப்பிப்பு",
+  "submit_changes": "மாற்றங்களை சமர்ப்பிக்கவும்",
+  "local_preferences_saved_msg": "உள்நாட்டு விருப்பங்கள் வெற்றிகரமாக சேமிக்கப்பட்டுள்ளன. மாற்றங்களைப் பார்க்க பயன்பாட்டை மறுதொடக்கம் செய்ய வேண்டும். நீங்கள் இப்போது வெளியேற விரும்புகிறீர்களா?",
+  "search_for_key": "விசையைத் தேடவும்",
+  "no_devices_found": "சாதனங்கள் எதுவும் கண்டுபிடிக்கப்படவில்லை",
+  "connect_devices_and_scan": "தயவுசெய்து உங்கள் சாதனங்களை இணைத்து, அவற்றைக் கண்டறிய 'ஊடுகதிர்' என்பதைத் தட்டவும்",
+  "sync_restart_dialog_message": "மறுதொடக்கம் என்பதைக் கிளிக் செய்தவுடன் பயன்பாடு மறுதொடங்கும், மற்றும் நீங்கள் உள்நுழைவு பக்கத்திற்கு திருப்பிவிடப்படுவீர்கள்.",
+  "sync_restart_button": "மறுதொடக்கம்",
+  "app_restart_message": "உள்ளமைவு வெற்றிகரமாக சேமிக்கப்பட்டது. பயன்பாட்டை மறுதொடக்கம் செய்கிறது...",
+  "select_option": "விருப்பத்தைத் தேர்ந்தெடுக்கவும்",
+  "cron_expression": "கிரான் வெளிப்பாடு",
+  "id": "ஐடி",
+  "name": "பெயர்",
+  "last_sync_time_not_found": "கடைசி ஒத்திசைவு நேரம் கிடைக்கவில்லை",
+  "not_downloaded_yet": "இன்னும் பதிவிறக்கப்படவில்லை",
+  "syncing_progress": "ஒத்திசைக்கப்படுகிறது... {progress}%",
+  "@syncing_progress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloading_progress": "பதிவிறக்கப்படுகிறது... {progress}%",
+  "@downloading_progress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  }
+}

@@ -1,0 +1,347 @@
+package io.mosip.registration.clientmanager.config;
+
+import android.app.Application;
+import android.content.Context;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+
+import javax.inject.Provider;
+
+import io.mosip.registration.clientmanager.dao.ApplicantValidDocumentDao;
+import io.mosip.registration.clientmanager.dao.FileSignatureDao;
+import io.mosip.registration.clientmanager.dao.LocalConfigDAO;
+import io.mosip.registration.clientmanager.dao.PreRegistrationDataSyncDao;
+import io.mosip.registration.clientmanager.dao.PreRegistrationDataSyncRepositoryDao;
+import io.mosip.registration.clientmanager.entity.PreRegistrationList;
+import io.mosip.registration.clientmanager.repository.*;
+import io.mosip.registration.clientmanager.service.*;
+import io.mosip.registration.clientmanager.service.external.PreRegZipHandlingService;
+import io.mosip.registration.clientmanager.spi.*;
+import io.mosip.registration.clientmanager.util.BioSdkProviderFactory;
+import io.mosip.registration.clientmanager.util.DateUtil;
+import io.mosip.registration.clientmanager.util.SyncRestUtil;
+import io.mosip.registration.clientmanager.util.UserInterfaceHelperService;
+import io.mosip.registration.keymanager.repository.CACertificateStoreRepository;
+import io.mosip.registration.keymanager.repository.KeyStoreRepository;
+import io.mosip.registration.keymanager.service.CertificateDBHelper;
+import io.mosip.registration.keymanager.service.LocalClientCryptoServiceImpl;
+import io.mosip.registration.keymanager.spi.CertificateManagerService;
+import io.mosip.registration.keymanager.spi.ClientCryptoManagerService;
+import io.mosip.registration.keymanager.spi.CryptoManagerService;
+import io.mosip.registration.packetmanager.service.PacketCryptoServiceImpl;
+import io.mosip.registration.packetmanager.service.PacketWriterServiceImpl;
+import io.mosip.registration.packetmanager.service.PosixAdapterServiceImpl;
+import io.mosip.registration.packetmanager.spi.IPacketCryptoService;
+import io.mosip.registration.packetmanager.spi.ObjectAdapterService;
+import io.mosip.registration.packetmanager.spi.PacketWriterService;
+import io.mosip.registration.packetmanager.util.ConfigService;
+import io.mosip.registration.packetmanager.util.PacketKeeper;
+import io.mosip.registration.packetmanager.util.PacketManagerHelper;
+
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.*;
+
+
+public class AppModuleTest {
+
+    @Mock Application mockApplication;
+    @Mock Context mockContext;
+    @Mock CertificateManagerService certificateManagerService;
+    @Mock ClientCryptoManagerService clientCryptoManagerService;
+    @Mock CryptoManagerService cryptoManagerService;
+    @Mock IPacketCryptoService iPacketCryptoService;
+    @Mock ObjectMapper objectMapper;
+    @Mock ObjectAdapterService objectAdapterService;
+    @Mock PacketKeeper packetKeeper;
+    @Mock PacketManagerHelper packetManagerHelper;
+    @Mock PacketWriterService packetWriterService;
+    @Mock SyncRestService syncRestService;
+    @Mock MachineRepository machineRepository;
+    @Mock ReasonListRepository reasonListRepository;
+    @Mock RegistrationCenterRepository registrationCenterRepository;
+    @Mock DocumentTypeRepository documentTypeRepository;
+    @Mock ApplicantValidDocRepository applicantValidDocRepository;
+    @Mock TemplateRepository templateRepository;
+    @Mock DynamicFieldRepository dynamicFieldRepository;
+    @Mock LocationRepository locationRepository;
+    @Mock GlobalParamRepository globalParamRepository;
+    @Mock IdentitySchemaRepository identitySchemaRepository;
+    @Mock BlocklistedWordRepository blocklistedWordRepository;
+    @Mock SyncJobDefRepository syncJobDefRepository;
+    @Mock UserDetailRepository userDetailRepository;
+    @Mock LanguageRepository languageRepository;
+    @Mock UserRoleRepository userRoleRepository;
+    @Mock JobManagerService jobManagerService;
+    @Mock FileSignatureDao fileSignatureDao;
+    @Mock UserBiometricRepository userBiometricRepository;
+    @Mock RegistrationRepository registrationRepository;
+    @Mock KeyStoreRepository keyStoreRepository;
+    @Mock AuditManagerService auditManagerService;
+    @Mock AuditRepository auditRepository;
+    @Mock JobTransactionRepository jobTransactionRepository;
+    @Mock CertificateDBHelper certificateDBHelper;
+    @Mock CACertificateStoreRepository caCertificateStoreRepository;
+    @Mock DateUtil dateUtil;
+    @Mock PreRegistrationDataSyncDao preRegistrationDataSyncDao;
+    @Mock PreRegistrationDataSyncRepositoryDao preRegistrationDataSyncRepositoryDao;
+    @Mock PreRegZipHandlingService preRegZipHandlingService;
+    @Mock PreRegistrationList preRegistrationList;
+    @Mock
+    Provider<PreRegistrationDataSyncService> preRegistrationDataSyncServiceProvider;
+
+    @Mock Biometrics095Service biometricService;
+
+    @Mock JobTransactionService jobTransactionService;
+
+    @Mock PermittedLocalConfigRepository permittedLocalConfigRepository;
+
+    @Mock LocalConfigDAO localConfigDAO;
+
+    @Mock LocationValidationService locationValidationService;
+    @Mock PacketService packetService;
+    @Mock PreCheckValidatorService preCheckValidatorService;
+    @Mock LocalConfigService localConfigService;
+
+    private AppModule appModule;
+    private MockedStatic<ConfigService> configServiceMock;
+
+    @Before
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+        when(mockApplication.getApplicationContext()).thenReturn(mockContext);
+        appModule = new AppModule(mockApplication);
+
+        // Mock ConfigService static methods
+        configServiceMock = Mockito.mockStatic(ConfigService.class);
+        // First match null contexts and throw NPE
+        configServiceMock.when(() -> ConfigService.getProperty(anyString(), isNull()))
+                .thenThrow(new NullPointerException());
+        // Then match any non-null context and return null
+        configServiceMock.when(() -> ConfigService.getProperty(anyString(), any(Context.class)))
+                .thenReturn(null);
+    }
+
+    @After
+    public void tearDown() {
+        if (configServiceMock != null) {
+            configServiceMock.close();
+        }
+    }
+
+    @Test
+    public void providesApplication_withMockApp_returnsMockApplication() {
+        assertEquals(mockApplication, appModule.providesApplication());
+    }
+
+    @Test
+    public void provideApplicationContext_withMockApp_returnsApplicationContext() {
+        assertEquals(mockContext, appModule.provideApplicationContext());
+    }
+
+    @Test
+    public void provideClientCryptoManagerService_withCertManager_returnsLocalClientCryptoService() {
+        ClientCryptoManagerService service = appModule.provideClientCryptoManagerService(certificateManagerService);
+        assertNotNull(service);
+        assertTrue(service instanceof LocalClientCryptoServiceImpl);
+    }
+
+    @Test
+    public void provideIPacketCryptoService_withDependencies_returnsPacketCryptoServiceImpl() {
+        IPacketCryptoService service = appModule.provideIPacketCryptoService(clientCryptoManagerService, cryptoManagerService);
+        assertNotNull(service);
+        assertTrue(service instanceof PacketCryptoServiceImpl);
+    }
+
+    @Test
+    public void provideObjectAdapterService_withDependencies_returnsPosixAdapterService() {
+        ObjectAdapterService service = appModule.provideObjectAdapterService(iPacketCryptoService, objectMapper);
+        assertNotNull(service);
+        assertTrue(service instanceof PosixAdapterServiceImpl);
+    }
+
+    @Test
+    public void providePacketWriterService_withDependencies_returnsPacketWriterServiceImpl() {
+        PacketWriterService service = appModule.providePacketWriterService(packetManagerHelper, packetKeeper);
+        assertNotNull(service);
+        assertTrue(service instanceof PacketWriterServiceImpl);
+    }
+
+    @Test
+    public void provideMasterDataService_withDependencies_returnsMasterDataServiceImpl() {
+        MasterDataService service = appModule.provideMasterDataService(
+                objectMapper, syncRestService, clientCryptoManagerService, machineRepository, reasonListRepository,
+                registrationCenterRepository, documentTypeRepository, applicantValidDocRepository, templateRepository,
+                dynamicFieldRepository, locationRepository, globalParamRepository, identitySchemaRepository,
+                blocklistedWordRepository, syncJobDefRepository, userDetailRepository, certificateManagerService,
+                languageRepository, jobManagerService, fileSignatureDao, jobTransactionService, permittedLocalConfigRepository, localConfigDAO, auditManagerService
+        );
+        assertNotNull(service);
+        assertTrue(service instanceof MasterDataServiceImpl);
+    }
+
+    @Test
+    public void provideSyncRestFactory_withCryptoService_returnsSyncRestUtil() {
+        SyncRestUtil util = appModule.provideSyncRestFactory(clientCryptoManagerService);
+        assertNotNull(util);
+    }
+
+    @Test
+    public void provideLoginService_withDependencies_returnsLoginServiceInstance() {
+        LoginService service = appModule.provideLoginService(clientCryptoManagerService, userDetailRepository,userRoleRepository);
+        assertNotNull(service);
+    }
+
+    @Test
+    public void provideRegistrationService_withDependencies_returnsRegistrationServiceImpl() {
+        RegistrationService service = appModule.provideRegistrationService(
+                packetWriterService, registrationRepository, mock(MasterDataService.class), identitySchemaRepository,
+                clientCryptoManagerService, keyStoreRepository, globalParamRepository, auditManagerService,registrationCenterRepository,locationValidationService, preRegistrationDataSyncServiceProvider,biometricService, packetService, preCheckValidatorService
+        );
+        assertNotNull(service);
+        assertTrue(service instanceof RegistrationServiceImpl);
+    }
+
+    @Test
+    public void provideUserInterfaceHelperService_withNoArgs_returnsHelperServiceInstance() {
+        UserInterfaceHelperService service = appModule.provideUserInterfaceHelperService();
+        assertNotNull(service);
+    }
+
+    @Test
+    public void providePacketService_withDependencies_returnsPacketServiceImpl() {
+        PacketService service = appModule.providePacketService(
+                registrationRepository, iPacketCryptoService, syncRestService, mock(MasterDataService.class), globalParamRepository, auditManagerService
+        );
+        assertNotNull(service);
+        assertTrue(service instanceof PacketServiceImpl);
+    }
+
+    @Test
+    public void provideJobTransactionService_withRepository_returnsJobTransactionServiceImpl() {
+        JobTransactionService service = appModule.provideJobTransactionService(jobTransactionRepository);
+        assertNotNull(service);
+        assertTrue(service instanceof JobTransactionServiceImpl);
+    }
+
+    @Test
+    public void provideCertificateDBHelper_withRepository_returnsCertificateDbHelper() {
+        CertificateDBHelper helper = appModule.provideCertificateDBHelper(caCertificateStoreRepository);
+        assertNotNull(helper);
+    }
+
+    @Test
+    public void provideAuditManagerService_withDependencies_returnsAuditManagerServiceImpl() {
+        AuditManagerService service = appModule.provideAuditManagerService(auditRepository, globalParamRepository);
+        assertNotNull(service);
+        assertTrue(service instanceof AuditManagerServiceImpl);
+    }
+
+    @Test
+    public void provideJobManagerService_withDependencies_returnsJobManagerServiceImpl() {
+        JobManagerService service = appModule.provideJobManagerService(syncJobDefRepository, mock(JobTransactionService.class), dateUtil, localConfigService);
+        assertNotNull(service);
+        assertTrue(service instanceof JobManagerServiceImpl);
+    }
+
+    @Test
+    public void provideBiometrics095Service_withDependencies_returnsBiometrics095Service() {
+        BioSdkProviderFactory bioSdkProviderFactory = appModule.provideBioSdkProviderFactory(globalParamRepository, auditManagerService);
+        Biometrics095Service service = appModule.provideBiometrics095Service(
+                objectMapper, auditManagerService, globalParamRepository, clientCryptoManagerService, userBiometricRepository, bioSdkProviderFactory
+        );
+        assertNotNull(service);
+        assertTrue(service instanceof Biometrics095Service);
+    }
+
+    @Test
+    public void provideUserOnboardService_withDependencies_returnsUserOnboardServiceInstance() {
+        UserOnboardService service = appModule.provideUserOnboardService(
+                objectMapper, auditManagerService, certificateManagerService, syncRestService, cryptoManagerService,
+                mock(RegistrationService.class), userBiometricRepository, clientCryptoManagerService, userDetailRepository, globalParamRepository
+        );
+        assertNotNull(service);
+        assertTrue(service instanceof UserOnboardService);
+    }
+
+    @Test
+    public void templateService_withDependencies_returnsTemplateServiceInstance() {
+        TemplateService service = appModule.TemplateService(
+                mock(MasterDataService.class), identitySchemaRepository, globalParamRepository
+        );
+        assertNotNull(service);
+    }
+
+    @Test
+    public void preRegistrationDataSyncService_withDependencies_returnsServiceInstance() {
+        PreRegistrationDataSyncService service = appModule.PreRegistrationDataSyncService(
+                preRegistrationDataSyncDao, mock(MasterDataService.class), syncRestService, preRegZipHandlingService,
+                preRegistrationList, globalParamRepository, mock(RegistrationService.class)
+        );
+        assertNotNull(service);
+    }
+
+    @Test
+    public void preRegistrationDataSyncDao_withRepository_returnsDaoInstance() {
+        PreRegistrationDataSyncDao dao = appModule.PreRegistrationDataSyncDao(preRegistrationDataSyncRepositoryDao);
+        assertNotNull(dao);
+    }
+
+    @Test
+    public void preRegZipHandlingService_withDependencies_returnsServiceInstance() {
+        PreRegZipHandlingService service = appModule.PreRegZipHandlingService(
+                mock(ApplicantValidDocumentDao.class), identitySchemaRepository, clientCryptoManagerService,
+                mock(RegistrationService.class), cryptoManagerService, packetKeeper, iPacketCryptoService,
+                mock(MasterDataService.class), globalParamRepository
+        );
+        assertNotNull(service);
+    }
+
+    @Test
+    public void preRegistrationList_withNoArgs_returnsNewInstance() {
+        PreRegistrationList list = appModule.PreRegistrationList();
+        assertNotNull(list);
+    }
+
+    @Test
+    public void provideCryptoManagerService_withNullAppContext_throwsNullPointerException() {
+        appModule.appContext = null;
+
+        Exception exception = assertThrows(NullPointerException.class, () -> {
+            appModule.provideCryptoManagerService(certificateManagerService);
+        });
+
+        assertNotNull(exception);
+    }
+
+    @Test
+    public void providePacketKeeper_withNullAppContext_throwsNullPointerException() {
+        appModule.appContext = null;
+        IPacketCryptoService mockCryptoService = mock(IPacketCryptoService.class);
+        ObjectAdapterService mockAdapterService = mock(ObjectAdapterService.class);
+
+        assertThrows(NullPointerException.class, () -> {
+            appModule.providePacketKeeper(mockCryptoService, mockAdapterService);
+        });
+    }
+
+    @Test
+    public void providePacketManagerHelper_withNullAppContext_throwsNullPointerException() {
+        appModule.appContext = null;
+
+        assertThrows(NullPointerException.class, () -> {
+            appModule.providePacketManagerHelper();
+        });
+    }
+
+
+}

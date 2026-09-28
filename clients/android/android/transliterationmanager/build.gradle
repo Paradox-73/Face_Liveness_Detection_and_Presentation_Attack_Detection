@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.library'
+}
+
+apply from: '../jacoco.gradle'
+
+android {
+    lintOptions {
+        abortOnError false
+        ignoreWarnings true
+    }
+    namespace 'io.mosip.registration.transliterationmanager'
+    compileSdk rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        minSdk rootProject.ext.minSdkVersion
+        targetSdk rootProject.ext.targetSdkVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+        versionCode 1
+        versionName '1.0'
+    }
+
+    buildTypes {
+        debug {
+            testCoverageEnabled true
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    buildToolsVersion buildToolsVersion
+}
+
+dependencies {
+    implementation "com.ibm.icu:icu4j:${rootProject.ext.icu4jVersion}"
+    testImplementation "junit:junit:${rootProject.ext.junitVersion}"
+    androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.androidxJunitVersion}"
+}

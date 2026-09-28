@@ -1,0 +1,89 @@
+plugins {
+    id 'com.android.library'
+    //id "org.sonarqube"
+}
+
+apply from: '../jacoco.gradle'
+
+android {
+    namespace 'io.mosip.registration.packetmanager'
+    lintOptions {
+        abortOnError false
+        ignoreWarnings true
+    }
+    compileSdkVersion rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        debug {
+            testCoverageEnabled true
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+
+    libraryVariants.every { variant ->
+        variant.outputs.each { output ->
+            def outputFile = output.outputFile
+            if (outputFile != null && outputFile.name.endsWith('.aar')) {
+                output.outputFile = new File(projectDir, '../app/new_libs/' + outputFile.name)
+            }
+        }
+    }
+
+    sourceSets {
+        test {
+            java.srcDirs += 'src/test/java'
+            assets.srcDirs += 'src/test/assets'
+        }
+    }
+}
+
+dependencies {
+
+    implementation "com.google.dagger:dagger:${rootProject.ext.daggerVersion}"
+    implementation "com.google.dagger:dagger-android-support:${rootProject.ext.daggerVersion}"
+    annotationProcessor "com.google.dagger:dagger-compiler:${rootProject.ext.daggerVersion}"
+    annotationProcessor "com.google.dagger:dagger-android-processor:${rootProject.ext.daggerVersion}"
+
+    compileOnly "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
+
+    implementation("org.simpleframework:simple-xml:${rootProject.ext.simpleXmlVersion}") {
+        exclude module: 'stax'
+        exclude module: 'stax-api'
+        exclude module: 'xpp3'
+    }
+
+    implementation "com.fasterxml.jackson.core:jackson-databind:${rootProject.ext.jacksonVersion}"
+
+    implementation group: 'commons-io', name: 'commons-io', version: "${rootProject.ext.commonsIoVersion}"
+    implementation "org.apache.commons:commons-lang3:${rootProject.ext.commonsLang3Version}"
+
+    implementation project(':keymanager')
+
+    testImplementation "junit:junit:${rootProject.ext.junitVersion}"
+    testImplementation "org.robolectric:robolectric:${rootProject.ext.robolectricVersion}"
+    testImplementation "androidx.test:core:${rootProject.ext.androidxTestCoreVersion}"
+    testImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoCoreVersion}"
+    testImplementation "com.squareup.okhttp3:mockwebserver:${rootProject.ext.mockwebserverVersion}"
+
+    androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.androidxJunitVersion}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
+    androidTestImplementation "com.squareup.okhttp3:mockwebserver:${rootProject.ext.mockwebserverVersion}"
+    androidTestImplementation "org.mockito:mockito-android:${rootProject.ext.mockitoAndroidVersion}"
+
+}

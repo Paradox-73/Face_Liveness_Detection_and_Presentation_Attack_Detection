@@ -1,0 +1,232 @@
+
+package regclient.pages.french;
+
+import static org.testng.Assert.assertTrue;
+
+import java.util.List;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+
+import io.appium.java_client.AppiumDriver;
+import io.appium.java_client.MobileBy;
+import io.appium.java_client.pagefactory.AndroidFindBy;
+import regclient.page.PendingApproval;
+
+public class PendingApprovalFrench extends PendingApproval {
+
+	@AndroidFindBy(accessibility = "En attente de validation")
+	private WebElement pendingApprovalTitle;
+
+	@AndroidFindBy(accessibility = "APPROUVER")
+	private WebElement approveButton;
+
+	@AndroidFindBy(accessibility = "Fond")
+	private WebElement backGroundScreen;
+
+	@AndroidFindBy(uiAutomator = "UiSelector().className(\"android.widget.CheckBox\").instance(0)")
+	private WebElement searchCheckBoxButton;
+
+	@AndroidFindBy(accessibility = "SOUMETTRE")
+	private WebElement submitButton;
+
+	@AndroidFindBy(accessibility = "Authentification du superviseur")
+	private WebElement supervisorAuthenticationTitle;
+
+	@AndroidFindBy(uiAutomator = "UiSelector().className(\"android.widget.EditText\").instance(0)")
+	private WebElement userNameTextBox;
+
+	@AndroidFindBy(uiAutomator = "UiSelector().className(\"android.widget.EditText\").instance(1)")
+	private WebElement passwordTextBox;
+
+	@AndroidFindBy(accessibility = "pending_approval_back_button")
+	private WebElement backButton;
+
+	@AndroidFindBy(accessibility = "REJETER")
+	private WebElement rejectButton;
+
+	@AndroidFindBy(accessibility = "N° ID de l’application Date d’inscription Statut du client Statut de l’examen ID de l’opérateur")
+	private WebElement pageAttributes;
+
+	@AndroidFindBy(uiAutomator = "new UiSelector().descriptionContains(\"CRÉÉ\")")
+	private WebElement clientStatus;
+
+	@AndroidFindBy(uiAutomator = "new UiSelector().descriptionContains(\"En attente\").instance(1)")
+	private WebElement reviewStatus;
+
+	@AndroidFindBy(xpath = "//android.widget.EditText")
+	private WebElement applicationIdTextbox;
+
+	@AndroidFindBy(accessibility = "Rejeter le paquet ?")
+	private WebElement rejectPacketTitle;
+
+	@AndroidFindBy(accessibility = "Veuillez sélectionner une valeur")
+	private WebElement rejectReasonDropdown;
+
+	@AndroidFindBy(accessibility = "Nom d’utilisateur non valide!")
+	private WebElement invalidUsernameMessage;
+
+	@AndroidFindBy(accessibility = "SOUMETTRE")
+	private WebElement invalidUsernameMessageForempty;
+
+	@AndroidFindBy(accessibility = "Affichage de 1 applications")
+	private WebElement displayApplication;
+
+	@AndroidFindBy(accessibility = "Veuillez sélectionner une raison pour le rejet du paquet. Vous pouvez modifier votre avis pour approuver ou réinitialiser le statut de l’examen plus tard.")
+	private WebElement rejectPacketInfoMessage;
+
+	@AndroidFindBy(uiAutomator = "new UiSelector().text(\"Données biométriques\")")
+	private WebElement pendingApprovalBiometricsInformation;
+
+	@AndroidFindBy(xpath = "(//android.widget.Button[@content-desc])[1]")
+	private WebElement latestAid;
+
+	@AndroidFindBy(uiAutomator = "UiSelector().className(\"android.widget.CheckBox\").instance(1)")
+	private WebElement latestAIdCheckBox;
+	
+	@AndroidFindBy(accessibility = "Aucun réseau trouvé !")
+	private WebElement noNetworkFound;
+	
+	@AndroidFindBy(accessibility = "AUTHENTIFIER")
+	private WebElement authenticateButton;
+
+	public PendingApprovalFrench(AppiumDriver driver) {
+		super(driver);
+	}
+
+	public boolean isPendingApprovalTitleDisplayed() {
+		return isElementDisplayed(pendingApprovalTitle);
+	}
+
+	@SuppressWarnings("deprecation")
+	public void clickOnAID(String AID) {
+		By RID = MobileBy.AndroidUIAutomator("new UiSelector().descriptionContains(\"" + AID + "\")");
+		click(RID);
+	}
+
+	public void clickOnApproveButton() {
+		clickOnElement(approveButton);
+	}
+
+	public void clickOnClosePopUpButton() {
+		clickOnElement(backGroundScreen);
+	}
+
+	public void clickOnCheckBox() {
+		clickOnElement(searchCheckBoxButton);
+	}
+
+	public void clickOnSubmitButton() {
+		clickOnElement(submitButton);
+	}
+
+	public boolean isSupervisorAuthenticationTitleDisplayed() {
+		return isElementDisplayed(supervisorAuthenticationTitle);
+	}
+
+	public void enterUserName(String username) {
+		clickAndsendKeysToTextBox2(userNameTextBox, username);
+	}
+
+	public void enterPassword(String password) {
+		clickAndsendKeysToTextBox2(passwordTextBox, password);
+	}
+
+	public void clickOnBackButton() {
+		clickOnElement(backButton);
+	}
+
+	public boolean isApprovalButtonDisplayed() {
+		return isElementDisplayed(approveButton);
+	}
+
+	public boolean isRejectButtonDisplayed() {
+		return isElementDisplayed(rejectButton);
+	}
+
+	public boolean isPageAttributesDisplayed() {
+		return isElementDisplayed(pageAttributes);
+	}
+
+	public boolean isClientStatusDisplayed() {
+		return isElementDisplayed(clientStatus);
+	}
+
+	public boolean isReviewStatusDisplayed() {
+		return isElementDisplayed(reviewStatus);
+	}
+
+	public void enterAID(String AID) {
+		clickAndsendKeysToTextBox(applicationIdTextbox, AID);
+	}
+
+	public boolean isInvalidUsernameMessageDisplayed() {
+		return isElementDisplayed(invalidUsernameMessage);
+	}
+
+	public void clickOnRejectButton() {
+		clickOnElement(rejectButton);
+	}
+
+	public boolean isRejectPacketTitleDisplayed() {
+		return isElementDisplayed(rejectPacketTitle);
+	}
+
+	public void selectRejectionReasonDropdown() {
+		boolean isdisplayed = isElementDisplayed(rejectReasonDropdown);
+		assertTrue(isdisplayed, "Verify if " + rejectReasonDropdown + " header is displayed");
+		clickOnElement(rejectReasonDropdown);
+		waitTime(2);
+		if (!isElementDisplayed(rejectReasonDropdown)) {
+			clickOnElement(findElement(By.className("android.view.View")));
+		} else {
+			clickOnElement(rejectReasonDropdown);
+			waitTime(2);
+			clickOnElement(findElement(By.className("android.view.View")));
+		}
+	}
+
+	public boolean isSubmitButtonEnabled() {
+		return isElementEnabled(submitButton);
+	}
+
+	public boolean isNumberOfApplicationDisplayed() {
+		waitTime(2);
+		return isElementDisplayed(displayApplication);
+	}
+
+	public boolean isRejectPacketInfoMessageDisplayed() {
+		return isElementDisplayed(rejectPacketInfoMessage);
+	}
+
+	public boolean isPendingApprovalBiometricsInformationDisplayed() {
+		swipeUp();
+		return isElementDisplayed(pendingApprovalBiometricsInformation);
+	}
+
+	public void clickOnLatestAid() {
+		List<WebElement> allButtons = driver.findElements(MobileBy.className("android.widget.Button"));
+		allButtons.get(2).click();
+	}
+
+	public void selectLatestAIdCheckBox() {
+		clickOnElement(latestAIdCheckBox);
+	}
+
+	public boolean isNoNetworkFoundDisplayed() {
+		return isElementEnabled(noNetworkFound);
+	}
+	
+	public void clickOnAuthenticateButton() {
+		clickOnElement(authenticateButton);
+	}
+	
+	public boolean isAuthenticateButtonEnabled() {
+		return isElementEnabled(authenticateButton);
+	}
+
+	public boolean isSubmitButtonDisabledWithEmptyUsername() {
+		return isElementDisabled(submitButton);
+	}
+
+}

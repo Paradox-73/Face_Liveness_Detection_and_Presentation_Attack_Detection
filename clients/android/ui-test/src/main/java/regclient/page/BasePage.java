@@ -1,0 +1,1085 @@
+package regclient.page;
+
+import io.appium.java_client.AppiumDriver;
+
+import io.appium.java_client.HidesKeyboard;
+import io.appium.java_client.MobileBy;
+import io.appium.java_client.TouchAction;
+import io.appium.java_client.android.AndroidDriver;
+import io.appium.java_client.android.nativekey.AndroidKey;
+import io.appium.java_client.android.nativekey.KeyEvent;
+import io.appium.java_client.pagefactory.AppiumFieldDecorator;
+import io.appium.java_client.remote.SupportsContextSwitching;
+import io.appium.java_client.remote.SupportsRotation;
+import io.appium.java_client.touch.WaitOptions;
+import io.appium.java_client.touch.offset.PointOption;
+import io.mosip.testrig.apirig.testrunner.OTPListener;
+import regclient.api.FetchUiSpec;
+import regclient.pages.english.BiometricDetailsPageEnglish;
+import regclient.utils.TestDataReader;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.Rectangle;
+import org.openqa.selenium.ScreenOrientation;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Pause;
+import org.openqa.selenium.interactions.PointerInput;
+import org.openqa.selenium.interactions.Sequence;
+import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static java.time.Duration.ofSeconds;
+
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+public class BasePage {
+	protected AppiumDriver driver;
+	private static String signPublicKey;
+	private static String publicKey;
+	private static String name;
+	public static String email;
+
+	public BasePage(AppiumDriver driver) {
+		this.driver = driver;
+		PageFactory.initElements(new AppiumFieldDecorator(driver), this);
+
+	}
+
+	private static final Logger logger = LoggerFactory.getLogger(BasePage.class);
+
+	protected boolean isElementDisplayed(WebElement element) {
+		try {
+			waitForElementToBeVisible(element);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	protected boolean isElementDisplayed(By locator) {
+		try {
+			waitForElementToBeVisible(locator, 20);
+			return driver.findElement(locator).isDisplayed();
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	protected void clickOnElement(WebElement element) {
+		waitForElementToBeVisible(element);
+		element.click();
+	}
+
+	protected void clickOnElement2(WebElement element) {
+		waitForElementToBeClickable(element);
+		element.click();
+	}
+
+	public void click(By locator) {
+		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+		wait.ignoring(StaleElementReferenceException.class);
+		WebElement element = wait.until(ExpectedConditions.elementToBeClickable(locator));
+		element.click();
+	}
+
+	private void waitForElementToBeVisible(WebElement element) {
+		WebDriverWait wait = new WebDriverWait(driver, ofSeconds(20));
+		wait.until(ExpectedConditions.visibilityOf(element));
+	}
+
+	protected WebElement waitForElementToBeClickable(WebElement element) {
+		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+		return wait.until(ExpectedConditions.elementToBeClickable(element));
+	}
+
+	protected boolean isElementDisplayed(WebElement element, int waitTime) {
+		try {
+			waitForElementToBeVisible(element, waitTime);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	protected boolean isElementEnabled(WebElement element) {
+		try {
+			waitForElementToBeVisible(element);
+			return element.isEnabled();
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	protected boolean isElementDisabled(WebElement element) {
+		try {
+			waitForElementToBeVisible(element);
+			return !element.isEnabled() || "false".equalsIgnoreCase(element.getAttribute("clickable"));
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	protected void clickAndsendKeysToTextBox(WebElement element, String text) {
+		this.waitForElementToBeVisible(element);
+		element.click();
+		waitTime(1);
+		element.clear();
+		waitTime(1);
+		element.sendKeys(text);
+		waitTime(1);
+		((HidesKeyboard) driver).hideKeyboard();
+	}
+
+	protected void clickAndsendKeysToTextBox4(WebElement element, String text) {
+		this.waitForElementToBeVisible(element);
+		element.click();
+		waitTime(1);
+		element.clear();
+		waitTime(1);
+		element.sendKeys(text);
+	}
+
+	protected void clickAndsendKeysToTextBox3(WebElement element, String text) {
+		this.waitForElementToBeClickable(element);
+		element.click();
+		waitTime(1);
+		element.clear();
+		waitTime(1);
+		element.sendKeys(text);
+		waitTime(1);
+		((HidesKeyboard) driver).hideKeyboard();
+	}
+
+	protected void clickAndsendKeysToTextBox2(WebElement element, String text) {
+		this.waitForElementToBeVisible(element);
+		element.click();
+		waitTime(1);
+		element.clear();
+		waitTime(1);
+		element.sendKeys(text);
+		waitTime(1);
+		driver.navigate().back();
+	}
+
+	protected void sendKeysToTextBox(WebElement element, String text) {
+		this.waitForElementToBeVisible(element);
+		waitTime(1);
+		element.clear();
+		waitTime(1);
+		element.sendKeys(text);
+		waitTime(1);
+		driver.navigate().back();
+	}
+
+	protected void sendKeys(By locator, String text) {
+		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+		WebElement el = wait.until(ExpectedConditions.elementToBeClickable(locator));
+		el.click();
+		el.clear();
+		el.sendKeys(text);
+		((HidesKeyboard) driver).hideKeyboard();
+	}
+
+	protected String getTextFromLocator(WebElement element) {
+		this.waitForElementToBeVisible(element);
+		return element.getText();
+	}
+
+	protected void cropCaptureImage(WebElement element) {
+		PointerInput finger1 = new PointerInput(PointerInput.Kind.TOUCH, "finger1");
+
+		Sequence sequence = new Sequence(finger1, 1)
+				.addAction(finger1.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(),
+						getCenterOfElement(element.getLocation(), element.getSize())))
+				.addAction(finger1.createPointerDown(PointerInput.MouseButton.LEFT.asArg()))
+				.addAction(new Pause(finger1, Duration.ofMillis(200)))
+
+				// move further inside to create small square
+				.addAction(finger1.createPointerMove(Duration.ofMillis(500), PointerInput.Origin.viewport(), 260, 320))
+
+				.addAction(finger1.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+
+		driver.perform(Collections.singletonList(sequence));
+	}
+
+	protected void cropCaptureImageEnglishFrench(WebElement element) {
+
+		PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
+
+		Sequence sequence = new Sequence(finger, 1)
+				.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(),
+						getCenterOfElement(element.getLocation(), element.getSize())))
+				.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()))
+				.addAction(new Pause(finger, Duration.ofMillis(200)))
+				.addAction(finger.createPointerMove(Duration.ofMillis(500), PointerInput.Origin.viewport(), 623, 261)) // adjust
+																														// as
+																														// needed
+				.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+
+		driver.perform(Collections.singletonList(sequence));
+	}
+
+	private org.openqa.selenium.Point getCenterOfElement(org.openqa.selenium.Point point, Dimension size) {
+		int x = (int) (point.getX() + size.getWidth() / 2);
+		int y = (int) (point.getY() + size.getHeight() / 2);
+		return new org.openqa.selenium.Point(x, y);
+	}
+
+	protected void waitForElementToBeVisible(WebElement element, int waitTime) {
+		WebDriverWait wait = new WebDriverWait(driver, ofSeconds(waitTime));
+		wait.until(ExpectedConditions.visibilityOf(element));
+	}
+
+	protected boolean isElementDisplayedOnScreen(WebElement element) {
+		try {
+			return element.isDisplayed();
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	protected String getCurrentDate() {
+		LocalDateTime currentDateTime = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+		return currentDateTime.format(formatter);
+	}
+
+	protected String getCurrentDateWord() {
+		LocalDate today = LocalDate.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.ENGLISH);
+		String formattedDate = today.format(formatter);
+		return formattedDate;
+	}
+
+	public static void waitTime(int sec) {
+		try {
+			Thread.sleep(sec * 1000L);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public WebElement retryFindElement(WebElement element, Duration timeout) {
+		int attempts = 0;
+		int maxAttempts = 5;
+		while (attempts < maxAttempts) {
+			try {
+				WebDriverWait wait = new WebDriverWait(driver, timeout);
+				wait.until(ExpectedConditions.visibilityOf(element));
+				return element;
+			} catch (StaleElementReferenceException e) {
+				logger.info("StaleElementReferenceException caught. Retrying... " + attempts);
+				attempts++;
+			} catch (TimeoutException e) {
+				logger.info("TimeoutException caught. Retrying... " + attempts);
+				attempts++;
+			}
+		}
+		throw new RuntimeException("Element not found after " + maxAttempts + " attempts");
+	}
+
+	protected void clickAndHold() {
+		PointerInput finger1 = new PointerInput(PointerInput.Kind.TOUCH, "finger1");
+		Sequence sequence = new Sequence(finger1, 1)
+				.addAction(finger1.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), 541, 1846))
+				.addAction(finger1.createPointerDown(PointerInput.MouseButton.LEFT.asArg()))
+				.addAction(new Pause(finger1, Duration.ofSeconds(2)))
+				.addAction(finger1.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+
+		driver.perform(Collections.singletonList(sequence));
+	}
+
+	protected void getMachineDetail() throws UnsupportedFlavorException, IOException, InterruptedException {
+		Toolkit toolkit = Toolkit.getDefaultToolkit();
+		Clipboard clipboard = toolkit.getSystemClipboard();
+		Transferable contents = clipboard.getContents(null);
+		if (contents != null && contents.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+			String copiedText = (String) contents.getTransferData(DataFlavor.stringFlavor);
+			ObjectMapper objectMapper = new ObjectMapper();
+			JsonNode jsonNode = objectMapper.readTree(copiedText);
+			signPublicKey = jsonNode.get("signPublicKey").asText();
+			publicKey = jsonNode.get("publicKey").asText();
+			name = jsonNode.get("name").asText();
+		} else {
+			throw new UnsupportedFlavorException(DataFlavor.stringFlavor);
+		}
+	}
+
+	public static String getSignPublicKey() {
+		return signPublicKey;
+	}
+
+	public static String getPublicKey() {
+		return publicKey;
+	}
+
+	public static String getName() {
+		return name;
+	}
+
+	public WebElement findElementWithRetry(By by) {
+
+		int MAX_RETRIES = 10;
+		int RETRY_DELAY_MS = 2000;
+
+		for (int i = 0; i < MAX_RETRIES; i++) {
+
+			try {
+
+				WebElement element = driver.findElement(by);
+
+				if (element.isDisplayed()) {
+					return element;
+				}
+
+			} catch (NoSuchElementException | StaleElementReferenceException e) {
+
+				try {
+					Thread.sleep(RETRY_DELAY_MS);
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+				}
+			}
+
+			// Scroll and retry
+			if (i < 5) {
+				swipeUp();
+			} else {
+				swipeDown();
+			}
+		}
+
+		throw new NoSuchElementException("Element not found after " + MAX_RETRIES + " attempts: " + by);
+	}
+
+	public WebElement findElement(By by) {
+		int MAX_RETRIES = 10;
+		int RETRY_DELAY_MS = 1000;
+		WebElement element = null;
+
+		for (int i = 0; i < MAX_RETRIES; i++) {
+			try {
+				element = driver.findElement(by);
+				break;
+			} catch (NoSuchElementException e) {
+				if (i < MAX_RETRIES - 1) {
+					try {
+						Thread.sleep(RETRY_DELAY_MS);
+					} catch (InterruptedException ie) {
+						Thread.currentThread().interrupt();
+					}
+				} else {
+					throw new NoSuchElementException("Element not found after " + MAX_RETRIES + " attempts.");
+				}
+			}
+		}
+
+		return element;
+	}
+
+	protected void clickAtCoordinates(int x, int y) {
+		PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
+		Sequence clickSequence = new Sequence(finger, 1)
+				.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), x, y))
+				.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()))
+				.addAction(new Pause(finger, Duration.ofMillis(600))) // Pause for 600ms
+				.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg())); // Release at x, y
+																							// coordinates
+		driver.perform(Collections.singletonList(clickSequence));
+	}
+
+	private static final Random random = new Random();
+
+	public static String generateData(String validator) {
+		if (validator == null || validator.isEmpty()) {
+			return generateStringOfLength(3, 10);
+		}
+
+		switch (validator) {
+		case "^(?=.{2,50}$).*":
+			return generateStringOfLength(2, 10);
+
+		case "^([0-9]{10})$":
+			return generateTenDigitNumber();
+
+		case "^(1869|18[7-9][0-9]|19[0-9][0-9]|20[0-9][0-9])/([0][1-9]|1[0-2])/([0][1-9]|[1-2][0-9]|3[01])$":
+			return generateDateInRange();
+
+		case "^(?=.{3,50}$).*":
+			return generateStringOfLength(3, 10);
+
+		case "^[+]*([0-9]{1})([0-9]{9})$":
+			return generateNineDigitNumber() + "1";
+
+		case "^[0-9]{9}$":
+			return generateNineDigitNumber();
+
+		case "^[A-Za-z0-9_\\-]+(\\.[A-Za-z0-9_]+)*@[A-Za-z0-9_-]+(\\.[A-Za-z0-9_]+)*(\\.[a-zA-Z]{2,})$":
+			return generateEmail();
+
+		case "^([0-9]{10,30})$":
+			return generateTenDigitNumber();
+
+		default:
+			return "abcd";
+		}
+	}
+
+	private static String generateStringOfLength(int min, int max) {
+		int length = min + random.nextInt(max - min + 1);
+		StringBuilder sb = new StringBuilder(length);
+		for (int i = 0; i < length; i++) {
+			char c = (char) (random.nextInt(26) + 'a');
+			sb.append(c);
+		}
+		return sb.toString();
+	}
+
+	private static String generateDateInRange() {
+		int currentYear = java.time.Year.now().getValue();
+		int year = 1869 + random.nextInt(currentYear - 1869 + 1); // Up to current year
+		int month = 1 + random.nextInt(12); // Generates a month between 1 and 12
+		int day = 1 + random.nextInt(28); // Generates a day between 1 and 28 (to keep it simple)
+
+		return String.format("%04d/%02d/%02d", year, month, day);
+	}
+
+	private static String generateNineDigitNumber() {
+		return String.format("%09d", random.nextInt(1000000000));
+	}
+
+	private static final Random randomten = new Random();
+
+	private static String generateTenDigitNumber() {
+		long number = 1000000000L + (long) (randomten.nextDouble() * 9000000000L);
+		return String.valueOf(number);
+	}
+
+	private static String generateEmail() {
+		String[] domains = { "example.com", "test.com", "email.com" };
+		String localPart = generateStringOfLength(3, 10);
+		String domain = domains[random.nextInt(domains.length)];
+		email = localPart + "@" + domain;
+		return email;
+	}
+
+	protected boolean switchToWebViewIfAvailable() {
+		for (int i = 0; i < 10; i++) { // wait up to ~5 seconds
+			for (String ctx : ((SupportsContextSwitching) driver).getContextHandles()) {
+				if (ctx.toUpperCase().contains("WEBVIEW")) {
+					((SupportsContextSwitching) driver).context(ctx);
+					return true;
+				}
+			}
+			try {
+				Thread.sleep(500);
+			} catch (Exception ignored) {
+			}
+		}
+		return false;
+	}
+
+	public static void enableWifiAndData() throws IOException {
+
+		Process wifiProcess = new ProcessBuilder("adb", "shell", "svc", "wifi", "enable").start();
+		Process dataProcess = new ProcessBuilder("adb", "shell", "svc", "data", "enable").start();
+		try {
+			if (wifiProcess.waitFor() != 0 || dataProcess.waitFor() != 0) {
+				throw new IOException("Failed to enable WiFi/Data");
+			}
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new IOException("Interrupted while enabling WiFi/Data", e);
+		}
+	}
+
+	public static void disableWifiAndData() throws IOException {
+		Process wifiProcess = new ProcessBuilder("adb", "shell", "svc", "wifi", "disable").start();
+		Process dataProcess = new ProcessBuilder("adb", "shell", "svc", "data", "disable").start();
+		try {
+			if (wifiProcess.waitFor() != 0 || dataProcess.waitFor() != 0) {
+				throw new IOException("Failed to disable WiFi/Data");
+			}
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new IOException("Interrupted while disabling WiFi/Data", e);
+		}
+	}
+
+	public WebElement findElementIfExists(By locator) {
+		try {
+			return findElementWithRetry(locator); // reuse your existing retry logic
+		} catch (Exception e) {
+			logger.info("Element not found after retries: " + locator);
+			return null;
+		}
+	}
+
+	public String extractValue(WebElement e) {
+		if (e == null)
+			return "";
+		try {
+			String t = safeTrim(e.getText());
+			if (!t.isEmpty())
+				return t;
+		} catch (Exception ignored) {
+		}
+		try {
+			String cd = safeTrim(e.getAttribute("content-desc"));
+			if (!cd.isEmpty())
+				return cd;
+		} catch (Exception ignored) {
+		}
+		try {
+			WebElement child = e.findElement(By.xpath(".//*"));
+			if (child != null) {
+				String ct = safeTrim(child.getText());
+				if (!ct.isEmpty())
+					return ct;
+				String ccd = safeTrim(child.getAttribute("content-desc"));
+				if (!ccd.isEmpty())
+					return ccd;
+			}
+		} catch (Exception ignored) {
+		}
+		return "";
+	}
+
+	private String safeTrim(String s) {
+		return s == null ? "" : s.trim();
+	}
+
+	public String getVisibleValue(WebElement e) {
+		if (e == null)
+			return "";
+		try {
+			String t = e.getText();
+			if (t != null && !t.trim().isEmpty())
+				return t.trim();
+		} catch (Exception ignored) {
+		}
+		try {
+			String cd = e.getAttribute("content-desc");
+			if (cd != null && !cd.trim().isEmpty())
+				return cd.trim();
+		} catch (Exception ignored) {
+		}
+		try {
+			WebElement child = e.findElement(By.xpath(".//*"));
+			if (child != null) {
+				String ct = child.getText();
+				if (ct != null && !ct.trim().isEmpty())
+					return ct.trim();
+				String ccd = child.getAttribute("content-desc");
+				if (ccd != null && !ccd.trim().isEmpty())
+					return ccd.trim();
+			}
+		} catch (Exception ignored) {
+		}
+		return "";
+	}
+
+	public String safeGetAttr(WebElement e, String name) {
+		try {
+			String v = e.getAttribute(name);
+			return v == null ? "" : v;
+		} catch (Exception ex) {
+			return "";
+		}
+	}
+
+	public String extract(WebElement e) {
+		if (e == null)
+			return "";
+		try {
+			String t = e.getText();
+			if (t != null && !t.trim().isEmpty())
+				return t.trim();
+		} catch (Exception ignored) {
+		}
+		try {
+			String cd = e.getAttribute("content-desc");
+			if (cd != null && !cd.trim().isEmpty())
+				return cd.trim();
+		} catch (Exception ignored) {
+		}
+		try {
+			WebElement child = e.findElement(By.xpath(".//*"));
+			if (child != null) {
+				try {
+					String ct = child.getText();
+					if (ct != null && !ct.trim().isEmpty())
+						return ct.trim();
+				} catch (Exception ignored) {
+				}
+				try {
+					String ccd = child.getAttribute("content-desc");
+					if (ccd != null && !ccd.trim().isEmpty())
+						return ccd.trim();
+				} catch (Exception ignored) {
+				}
+			}
+		} catch (Exception ignored) {
+		}
+		return "";
+	}
+
+	protected void scrollToTop() {
+		int maxScrolls = 5;
+		for (int i = 0; i < maxScrolls; i++) {
+			swipeDown();
+		}
+	}
+
+	protected void scrollToBottom() {
+		int maxScrolls = 5;
+		for (int i = 0; i < maxScrolls; i++) {
+			swipeUp();
+		}
+	}
+
+	protected String findWebViewContext(Duration timeout) {
+		long end = System.currentTimeMillis() + timeout.toMillis();
+		while (System.currentTimeMillis() < end) {
+			Set<String> contexts = ((SupportsContextSwitching) driver).getContextHandles();
+			for (String c : contexts) {
+				if (c != null && c.toUpperCase().contains("WEBVIEW"))
+					return c;
+			}
+			try {
+				Thread.sleep(300);
+			} catch (InterruptedException ignored) {
+			}
+		}
+		return null;
+	}
+
+	protected void openArcApplication() {
+		AndroidDriver driver = (AndroidDriver) this.driver;
+		driver.activateApp("io.mosip.registration_client");
+		switchToNativeContext();
+	}
+
+	public void switchToNativeContext() {
+		SupportsContextSwitching ctx = (SupportsContextSwitching) driver;
+		if (!"NATIVE_APP".equals(ctx.getContext())) {
+			ctx.context("NATIVE_APP");
+		}
+	}
+
+	public void scrollToTopSafe() {
+		try {
+			if (!((SupportsContextSwitching) driver).getContext().equals("NATIVE_APP")) {
+				((SupportsContextSwitching) driver).context("NATIVE_APP");
+			}
+			driver.manage().window().getSize(); // safe now
+			scrollToTop();
+		} catch (Exception e) {
+			logger.info("scrollToTop skipped — not in a native window");
+		}
+	}
+
+	protected void dismissAutoSaveOrKeyboard() {
+		if (!driver.findElements(By.id("com.android.chrome:id/sheet_container")).isEmpty()) {
+			try {
+				List<WebElement> bg = driver.findElements(By.id("com.android.chrome:id/background"));
+				if (!bg.isEmpty())
+					bg.get(0).click();
+				else
+					((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.BACK));
+			} catch (Exception ignored) {
+			}
+		}
+		try {
+			((HidesKeyboard) driver).hideKeyboard();
+		} catch (Exception ignored) {
+		}
+	}
+
+	protected void scrollTo(String contentDescFragment) {
+		for (int i = 0; i < 7; i++) {
+			try {
+				WebElement el = driver
+						.findElement(By.xpath("//*[contains(@content-desc,'" + contentDescFragment + "')]"));
+				if (el.isDisplayed()) {
+					return;
+				}
+			} catch (Exception ignore) {
+			}
+			swipeUp();
+		}
+
+		throw new NoSuchElementException(
+				"Element with content-desc containing '" + contentDescFragment + "' not found after scrolling.");
+	}
+
+	protected void swipeUp() {
+		hideKeyboardIfVisible();
+		Dimension size = driver.manage().window().getSize();
+		int startX = size.width / 2;
+		int startY = (int) (size.height * 0.85);
+		int endY = (int) (size.height * 0.40);
+
+		PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
+		Sequence swipe = new Sequence(finger, 1)
+				.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), startX, startY))
+				.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()))
+				.addAction(
+						finger.createPointerMove(Duration.ofMillis(700), PointerInput.Origin.viewport(), startX, endY))
+				.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+
+		driver.perform(Collections.singletonList(swipe));
+	}
+
+	protected void swipeDown() {
+		hideKeyboardIfVisible();
+		Dimension size = driver.manage().window().getSize();
+		int startX = size.width / 2;
+		int startY = (int) (size.height * 0.40);
+		int endY = (int) (size.height * 0.85);
+		PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
+		Sequence swipe = new Sequence(finger, 1)
+				.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), startX, startY))
+				.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()))
+				.addAction(
+						finger.createPointerMove(Duration.ofMillis(700), PointerInput.Origin.viewport(), startX, endY))
+				.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+		driver.perform(Collections.singletonList(swipe));
+	}
+
+	protected void scrollUntilElementVisible(By locator) {
+		hideKeyboardIfVisible();
+		for (int i = 0; i < 6; i++) {
+			try {
+				WebElement element = driver.findElement(locator);
+				if (element.isDisplayed()) {
+					return;
+				}
+			} catch (Exception ignored) {
+			}
+			swipeUp();
+		}
+		for (int i = 0; i < 6; i++) {
+			try {
+				WebElement element = driver.findElement(locator);
+				if (element.isDisplayed()) {
+					return;
+				}
+			} catch (Exception ignored) {
+			}
+			swipeDown();
+		}
+		throw new NoSuchElementException("Element not visible after scrolling: " + locator);
+	}
+
+	public boolean isElementEnabled(By locator) {
+		try {
+			WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+			wait.ignoring(StaleElementReferenceException.class);
+			return wait.until(Webdriver -> {
+				WebElement element = Webdriver.findElement(locator);
+				return element.isEnabled();
+			});
+
+		} catch (TimeoutException | NoSuchElementException e) {
+			return false;
+		}
+	}
+
+	public void hideKeyboardAndClick(By locator) {
+		hideKeyboardIfVisible();
+		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+		wait.ignoring(StaleElementReferenceException.class);
+		WebElement el = wait.until(ExpectedConditions.elementToBeClickable(locator));
+		el.click();
+	}
+
+	public void hideKeyboardIfVisible() {
+		try {
+			((HidesKeyboard) driver).hideKeyboard();
+		} catch (Exception e) {
+		}
+	}
+
+	protected void clickAndSendKeysToTextBox(By locator, String text) {
+		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+		for (int i = 0; i < 2; i++) {
+			try {
+				WebElement element = wait.until(ExpectedConditions.elementToBeClickable(locator));
+				element.click();
+				element.clear();
+				element.sendKeys(text);
+				hideKeyboardIfVisible();
+				return;
+			} catch (StaleElementReferenceException e) {
+			}
+		}
+		throw new RuntimeException("Unable to interact with textbox");
+	}
+
+	protected void waitForElementToBeVisible(By locator, int waitTime) {
+		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(waitTime));
+		wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+	}
+
+	private ScreenOrientation desiredOrientation;
+
+	public void applyOrientation() {
+		String orientation = TestDataReader.readData("orientation");
+		ScreenOrientation finalOrientation = ScreenOrientation.PORTRAIT; // default fallback
+		if (orientation != null && !orientation.isBlank()) {
+			try {
+				finalOrientation = ScreenOrientation.valueOf(orientation.trim().toUpperCase());
+			} catch (IllegalArgumentException e) {
+				logger.info(
+						"Invalid orientation value in testdata.json: " + orientation + ". Falling back to PORTRAIT.");
+			}
+
+		} else {
+			logger.info("Orientation not provided or empty. Using default PORTRAIT.");
+		}
+
+		lockSystemRotation(finalOrientation);
+		((SupportsRotation) driver).rotate(finalOrientation);
+
+		logger.info("Orientation applied: " + finalOrientation);
+	}
+
+	private void lockSystemRotation(ScreenOrientation orientation) {
+
+		String rotationValue = "0"; // Portrait default
+
+		if (orientation == ScreenOrientation.LANDSCAPE) {
+			rotationValue = "1";
+		}
+
+		executeAdbCommand(new String[] { "adb", "shell", "settings", "put", "system", "accelerometer_rotation", "0" });
+
+		executeAdbCommand(new String[] { "adb", "shell", "settings", "put", "system", "user_rotation", rotationValue });
+	}
+
+	private void executeAdbCommand(String[] command) {
+		try {
+			ProcessBuilder processBuilder = new ProcessBuilder(command);
+			processBuilder.redirectErrorStream(true);
+			Process process = processBuilder.start();
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+				while (reader.readLine() != null) {
+				}
+			}
+			int exitCode = process.waitFor();
+			if (exitCode != 0) {
+				System.out.println("ADB command failed with exit code: " + exitCode);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	protected void scrollUntilElementVisible(WebElement element) {
+		hideKeyboardIfVisible();
+		try {
+			if (element.isDisplayed()) {
+				return;
+			}
+		} catch (Exception ignored) {
+		}
+		for (int i = 0; i < 4; i++) {
+			try {
+				if (element.isDisplayed()) {
+					return;
+				}
+			} catch (Exception ignored) {
+			}
+			swipeUp();
+		}
+		for (int i = 0; i < 4; i++) {
+
+			try {
+				if (element.isDisplayed()) {
+					return;
+				}
+			} catch (Exception ignored) {
+			}
+
+			swipeDown();
+		}
+
+		throw new NoSuchElementException("Element not visible after scrolling: " + element);
+	}
+
+	protected void tapScreenCenter() {
+		Dimension size = driver.manage().window().getSize();
+		int x = size.width / 2;
+		int y = size.height / 2;
+		PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
+		Sequence tap = new Sequence(finger, 1);
+		tap.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), x, y));
+		tap.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
+		tap.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+
+		driver.perform(Arrays.asList(tap));
+	}
+
+	protected void swipeLeft() {
+		Dimension size = driver.manage().window().getSize();
+		int startX = (int) (size.width * 0.85);
+		int endX = (int) (size.width * 0.20);
+		int startY = size.height / 2;
+		PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
+		Sequence swipe = new Sequence(finger, 1)
+				.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), startX, startY))
+				.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()))
+				.addAction(
+						finger.createPointerMove(Duration.ofMillis(700), PointerInput.Origin.viewport(), endX, startY))
+				.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+
+		driver.perform(Collections.singletonList(swipe));
+	}
+
+	protected void swipeRight() {
+
+		Dimension size = driver.manage().window().getSize();
+		int startX = (int) (size.width * 0.20);
+		int endX = (int) (size.width * 0.85);
+		int startY = size.height / 2;
+		PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
+		Sequence swipe = new Sequence(finger, 1)
+				.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), startX, startY))
+				.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()))
+				.addAction(
+						finger.createPointerMove(Duration.ofMillis(700), PointerInput.Origin.viewport(), endX, startY))
+				.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+
+		driver.perform(Collections.singletonList(swipe));
+	}
+
+	protected void scrollHorizontallyUntilVisible(By locator) {
+
+	    for (int i = 0; i < 4; i++) {
+	        try {
+	            if (driver.findElement(locator).isDisplayed()) {
+	                return;
+	            }
+	        } catch (Exception ignored) {
+	        }
+	        swipeLeft();
+	    }
+
+	    for (int i = 0; i < 4; i++) {
+	        try {
+	            if (driver.findElement(locator).isDisplayed()) {
+	                return;
+	            }
+	        } catch (Exception ignored) {
+	        }
+	        swipeRight();
+	    }
+
+	    throw new NoSuchElementException("Element not visible after horizontal scrolling");
+	}
+
+	public void scrollInsidePopup() {
+		Dimension size = driver.manage().window().getSize();
+		int startX = size.width / 2;
+		int startY = (int) (size.height * 0.72);
+		int endY = (int) (size.height * 0.52);
+		PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
+		Sequence swipe = new Sequence(finger, 1);
+		swipe.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), startX, startY));
+		swipe.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
+		swipe.addAction(finger.createPointerMove(Duration.ofMillis(700), PointerInput.Origin.viewport(), startX, endY));
+		swipe.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+		driver.perform(Collections.singletonList(swipe));
+	}
+
+	protected void scrollHorizontallyUntilVisible(WebElement element) {
+		for (int i = 0; i < 4; i++) {
+			try {
+				if (element.isDisplayed()) {
+					return;
+				}
+			} catch (Exception ignored) {
+			}
+			swipeLeft();
+		}
+		for (int i = 0; i < 4; i++) {
+
+			try {
+				if (element.isDisplayed()) {
+					return;
+				}
+			} catch (Exception ignored) {
+			}
+			swipeRight();
+		}
+
+		throw new NoSuchElementException("Element not visible after horizontal scrolling");
+	}
+
+	// Shared by ApplicantBiometricsPage*/BiometricDetailsPage* isXxxDisplayedForCorrection() checks across all
+	// locales: the spec label may be null/empty/contain regex metacharacters, so it's guarded and quoted, with
+	// fallbackLabel offered as an alternate match.
+	protected boolean isDisplayedForCorrectionByLabel(String specId, String fallbackLabel) {
+		String label = FetchUiSpec.getValueUsingId(specId);
+		String pattern = (label == null || label.trim().isEmpty()) ? Pattern.quote(fallbackLabel)
+				: Pattern.quote(label) + "|" + Pattern.quote(fallbackLabel);
+		return isElementDisplayed(findElementWithRetry(MobileBy.AndroidUIAutomator(
+				"new UiScrollable(new UiSelector().scrollable(true).instance(0)).scrollIntoView(new UiSelector().descriptionMatches(\".*("
+						+ pattern + ").*\"))")));
+	}
+
+	// Sentinel returned by OTPListener.getAdditionalReqId while packet creation hasn't produced an id yet.
+	protected static final String Additional_Req_Id_Failed = "{Failed}";
+
+	protected static String waitForAdditionalReqId(String emailId, int maxOuterAttempts, int waitSecondsBetweenAttempts) {
+		String additionalInfoReqId = "";
+		for (int attempt = 1; attempt <= maxOuterAttempts; attempt++) {
+			additionalInfoReqId = OTPListener.getAdditionalReqId(emailId);
+			if (additionalInfoReqId != null && !additionalInfoReqId.trim().isEmpty()
+					&& !additionalInfoReqId.equals(Additional_Req_Id_Failed)) {
+				return additionalInfoReqId;
+			}
+			logger.info("AdditionalInfoRequestId not ready for {}, attempt {}/{}. Retrying...", emailId, attempt,
+					maxOuterAttempts);
+			if (attempt < maxOuterAttempts) {
+				waitTime(waitSecondsBetweenAttempts);
+			}
+		}
+		throw new IllegalStateException(
+				"AdditionalInfoRequestId not available for " + emailId + " after " + maxOuterAttempts + " attempts");
+	}
+
+}

@@ -1,0 +1,279 @@
+package io.mosip.registration_client.utils;
+
+import android.app.Activity;
+import android.content.Context;
+import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+
+import javax.inject.Inject;
+
+import io.mosip.registration.clientmanager.constant.AuditEvent;
+import io.mosip.registration.clientmanager.constant.ClientManagerConstant;
+import io.mosip.registration.clientmanager.constant.Components;
+import io.mosip.registration.clientmanager.constant.PacketClientStatus;
+import io.mosip.registration.clientmanager.constant.PacketTaskStatus;
+import io.mosip.registration.clientmanager.constant.RegistrationConstants;
+import io.mosip.registration.clientmanager.dao.GlobalParamDao;
+import io.mosip.registration.clientmanager.entity.GlobalParam;
+import io.mosip.registration.clientmanager.entity.Registration;
+import io.mosip.registration.clientmanager.entity.SyncJobDef;
+import io.mosip.registration.clientmanager.repository.SyncJobDefRepository;
+import io.mosip.registration.clientmanager.spi.AsyncPacketTaskCallBack;
+import io.mosip.registration.clientmanager.spi.AuditManagerService;
+import io.mosip.registration.clientmanager.spi.LocalConfigService;
+import io.mosip.registration.clientmanager.spi.PacketService;
+import io.mosip.registration_client.MainActivity;
+import io.mosip.registration_client.R;
+
+public class BatchJob {
+
+    PacketService packetService;
+    AuditManagerService auditManagerService;
+    GlobalParamDao globalParamDao;
+    SyncJobDefRepository syncJobDefRepository;
+    LocalConfigService localConfigService;
+    Activity activity;
+    boolean syncAndUploadInProgressStatus = false;
+
+    @Inject
+    public BatchJob(PacketService packetService, AuditManagerService auditManagerService,
+                    GlobalParamDao globalParamDao, SyncJobDefRepository syncJobDefRepository,
+                    LocalConfigService localConfigService) {
+        this.packetService = packetService;
+        this.auditManagerService = auditManagerService;
+        this.globalParamDao = globalParamDao;
+        this.syncJobDefRepository = syncJobDefRepository;
+        this.localConfigService = localConfigService;
+    }
+
+    public void setCallbackActivity(MainActivity mainActivity) {
+        this.activity = mainActivity;
+    }
+
+    public boolean getInProgressStatus() {
+        return syncAndUploadInProgressStatus;
+    }
+
+    private List<Registration> getRegistrationList(List<String> statusList) {
+        Integer batchSize = getBatchSize();
+        List<Registration> registrationList = new ArrayList();
+        for (String status : statusList) {
+            if (registrationList.size() >= batchSize) {
+                break;
+            }
+            List<Registration> newList = packetService.getRegistrationsByStatus(status, (batchSize - registrationList.size()));
+            registrationList.addAll(newList);
+        }
+        return registrationList;
+    }
+
+    public void syncRegistrationPackets(Context context, Runnable onComplete) {
+        Log.d(getClass().getSimpleName(), "Sync Packets in Batch Job");
+        List<Registration> registrationList = getRegistrationList(Arrays.asList(PacketClientStatus.APPROVED.name(), PacketClientStatus.REJECTED.name()));
+        final Integer[] remainingPack = {registrationList.size(), 0};
+
+        Integer packetSize = registrationList.size();
+        CustomToast newToast = new CustomToast(activity);
+
+        if (registrationList.isEmpty()) {
+            uploadRegistrationPackets(context, onComplete);
+            return;
+        }
+        for (Registration value : registrationList) {
+            try {
+                syncAndUploadInProgressStatus = true;
+                Log.d(getClass().getSimpleName(), "Syncing " + value.getPacketId());
+                auditManagerService.audit(AuditEvent.SYNC_PACKET, Components.REG_PACKET_LIST);
+
+                Integer remaining = packetSize - remainingPack[0];
+                newToast.setText(String.format("Sync Packet Status : %s/%s Processed", remaining.toString(), packetSize.toString()));
+                newToast.showToast();
+
+                packetService.syncRegistration(value.getPacketId(), new AsyncPacketTaskCallBack() {
+                    @Override
+                    public void inProgress(String RID) {
+                        //Do nothing
+                        newToast.showToast();
+                    }
+
+                    @Override
+                    public void onComplete(String RID, PacketTaskStatus status) {
+                        if (status.equals(PacketTaskStatus.SYNC_COMPLETED) || status.equals(PacketTaskStatus.SYNC_ALREADY_COMPLETED)) {
+                            remainingPack[1] += 1;
+                            auditManagerService.audit(AuditEvent.PACKET_SYNCED_TO_SERVER, Components.REG_PACKET_LIST);
+                        }
+                        remainingPack[0] -= 1;
+
+                        Integer remaining = packetSize - remainingPack[0];
+                        newToast.setText(String.format("Sync Packet Status : %s/%s Processed", remaining.toString(), packetSize.toString()));
+
+                        if (remainingPack[0] == 0) {
+                            syncAndUploadInProgressStatus = false;
+                            Integer failed = packetSize - remainingPack[1];
+                            newToast.setIcon(R.drawable.done);
+                            String message = "Sync Packet Status :";
+                            if (remainingPack[1] != 0) {
+                                message = message + String.format(" %s/%s Success", remainingPack[1], packetSize);
+                            }
+                            if (failed != 0) {
+                                message = message + String.format(" %s/%s Failed", failed, packetSize);
+                            }
+                            newToast.setText(message);
+                            newToast.showToast();
+
+                            Log.d(getClass().getSimpleName(), "Last Packet" + RID);
+                            uploadRegistrationPackets(context, onComplete);
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                Log.e(getClass().getSimpleName(), e.getMessage());
+                // If exception occurs, decrement counter and check if all packets are done
+                remainingPack[0] -= 1;
+                if (remainingPack[0] == 0) {
+                    // All packets processed (either completed or failed)
+                    syncAndUploadInProgressStatus = false;
+                    Log.d(getClass().getSimpleName(), "Last Packet (exception)");
+                    if (onComplete != null) {
+                        uploadRegistrationPackets(context, onComplete);
+                    } else {
+                        uploadRegistrationPackets(context, null);
+                    }
+                }
+            }
+        }
+    }
+
+    public void uploadRegistrationPackets(Context context, Runnable onComplete) {
+        Log.d(getClass().getSimpleName(), "Upload Packets in Batch Job");
+        List<Registration> registrationList = getRegistrationList(Arrays.asList(PacketClientStatus.SYNCED.name(), PacketClientStatus.EXPORTED.name()));
+
+        Integer packetSize = registrationList.size();
+        final Integer[] remainingPack = {packetSize, 0};
+        CustomToast newToast = new CustomToast(activity);
+
+        if (registrationList.isEmpty()) {
+            // If no packets to upload, call completion callback if provided
+            if (onComplete != null) {
+                onComplete.run();
+            }
+            return;
+        }
+
+        for (Registration value : registrationList) {
+            try {
+                syncAndUploadInProgressStatus = true;
+                Log.d(getClass().getSimpleName(), "Uploading " + value.getPacketId());
+                auditManagerService.audit(AuditEvent.PACKET_UPLOAD, Components.REG_PACKET_LIST);
+
+                Integer remaining = packetSize - remainingPack[0];
+                newToast.setText(String.format("Upload Packet Status : %s/%s Processed", remaining.toString(), packetSize.toString()));
+                newToast.showToast();
+
+                packetService.uploadRegistration(value.getPacketId(), new AsyncPacketTaskCallBack() {
+                    @Override
+                    public void inProgress(String RID) {
+                        //Do nothing
+                        newToast.showToast();
+                    }
+
+                    @Override
+                    public void onComplete(String RID, PacketTaskStatus status) {
+                        if (status.equals(PacketTaskStatus.UPLOAD_COMPLETED) || status.equals(PacketTaskStatus.UPLOAD_ALREADY_COMPLETED)) {
+                            remainingPack[1] += 1;
+                            auditManagerService.audit(AuditEvent.PACKET_UPLOADED, Components.REG_PACKET_LIST);
+                        }
+                        remainingPack[0] -= 1;
+
+                        Integer remaining = packetSize - remainingPack[0];
+                        newToast.setText(String.format("Upload Packet Status : %s/%s Processed", remaining.toString(), packetSize.toString()));
+
+                        if (remainingPack[0] == 0) {
+                            syncAndUploadInProgressStatus = false;
+                            Integer failed = packetSize - remainingPack[1];
+                            newToast.setIcon(R.drawable.done);
+                            String message = "Upload Packet Status :";
+                            if (remainingPack[1] != 0) {
+                                message = message + String.format(" %s/%s Success", remainingPack[1], packetSize);
+                            }
+                            if (failed != 0) {
+                                message = message + String.format(" %s/%s Failed", failed, packetSize);
+                            }
+                            newToast.setText(message);
+                            newToast.showToast();
+
+                            // Call completion callback when all uploads finish
+                            if (onComplete != null) {
+                                onComplete.run();
+                            }
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                syncAndUploadInProgressStatus = false;
+                Log.e(getClass().getSimpleName(), e.getMessage());
+                auditManagerService.audit(AuditEvent.PACKET_INTERNAL_ERROR, Components.REG_PACKET_LIST, e.getMessage());
+                // If exception occurs, decrement counter and check if all packets are done
+                remainingPack[0] -= 1;
+                if (remainingPack[0] == 0) {
+                    // All packets processed (either completed or failed)
+                    syncAndUploadInProgressStatus = false;
+                    Integer failed = packetSize - remainingPack[1];
+                    newToast.setIcon(R.drawable.done);
+                    String message = "Upload Packet Status :";
+                    if (remainingPack[1] != 0) {
+                        message = message + String.format(" %s/%s Success", remainingPack[1], packetSize);
+                    }
+                    if (failed != 0) {
+                        message = message + String.format(" %s/%s Failed", failed, packetSize);
+                    }
+                    newToast.setText(message);
+                    newToast.showToast();
+
+                    // Call completion callback when all uploads finish
+                    if (onComplete != null) {
+                        onComplete.run();
+                    }
+                }
+            }
+        }
+    }
+
+    public Integer getBatchSize() {
+        // Default batch size is 4
+        List<GlobalParam> globalParams = globalParamDao.getGlobalParams();
+        for (GlobalParam value : globalParams) {
+            if (Objects.equals(value.getId(), "mosip.registration.packet_upload_batch_size")) {
+                return Integer.parseInt(value.getValue());
+            }
+        }
+        return ClientManagerConstant.DEFAULT_BATCH_SIZE;
+    }
+
+    public long getIntervalMillis(String api) {
+        // Default everyday at Noon - 12pm
+        String cronExp = ClientManagerConstant.DEFAULT_UPLOAD_CRON;
+        SyncJobDef syncJob = syncJobDefRepository.getSyncJobDefByApiName(api);
+        if (syncJob != null) {
+            // Use default from DB first
+            cronExp = String.valueOf(syncJob.getSyncFreq());
+            Log.d(getClass().getSimpleName(), api + " Default Cron Expression : " + cronExp);
+            
+            // Check for custom cron expression and override if available
+            if (localConfigService != null) {
+                String customCron = localConfigService.getValue(syncJob.getId(), RegistrationConstants.PERMITTED_JOB_TYPE);
+                if (customCron != null && !customCron.trim().isEmpty()) {
+                    cronExp = customCron; // Use custom cron expression
+                    Log.d(getClass().getSimpleName(), api + " Custom Cron Expression : " + cronExp);
+                }
+            }
+        }
+        long nextExecution = CronParserUtil.getNextExecutionTimeInMillis(cronExp);
+        Log.d(getClass().getSimpleName(), " Next Execution : " + String.valueOf(nextExecution));
+        return nextExecution;
+    }
+}

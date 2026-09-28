@@ -1,0 +1,322 @@
+/*
+ * Copyright (c) Modular Open Source Identity Platform
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+*/
+
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:registration_client/model/process.dart';
+import 'package:registration_client/provider/global_provider.dart';
+import 'package:registration_client/provider/registration_task_provider.dart';
+import 'package:registration_client/provider/sync_provider.dart';
+import 'package:registration_client/ui/onboard/widgets/home_page_card.dart';
+import 'package:registration_client/utils/app_config.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+class RegistrationTasks extends StatefulWidget {
+  const RegistrationTasks({
+    super.key,
+    required this.getProcessUI,
+    required this.syncData,
+    this.onRemapBannerTap,
+  });
+
+  final Function getProcessUI;
+  final Function syncData;
+  final VoidCallback? onRemapBannerTap;
+
+  @override
+  State<RegistrationTasks> createState() => _RegistrationTasksState();
+}
+
+class _RegistrationTasksState extends State<RegistrationTasks> {
+  bool isPortrait = true;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  Widget _buildRemapBanner(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onRemapBannerTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFBE6),
+            border: Border.all(color: const Color(0xFFE6A817), width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: const Color(0xFFE6A817),
+                size: isMobileSize ? 22 : 30,
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context)!.center_remap_notification,
+                  style: TextStyle(
+                    color: const Color(0xFFE6A817),
+                    fontWeight: FontWeight.bold,
+                    fontSize: isMobileSize ? 13 : 18,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: const Color(0xFFE6A817),
+                size: isMobileSize ? 20 : 28,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+    final appLocalizations = AppLocalizations.of(context)!;
+    final syncProvider = context.watch<SyncProvider>();
+    final bool centerRemapped = syncProvider.isCenterRemapped;
+    final bool isSyncing = syncProvider.isMasterDataSyncing || syncProvider.isSyncAndUploadInProgress;
+    final int syncProgress = syncProvider.isSyncAndUploadInProgress ? 98 : syncProvider.masterDataSyncProgress;
+    final String? subtitle = isSyncing ? appLocalizations.syncing_progress(syncProgress) : null;
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          SizedBox(
+            height: 26.h,
+          ),
+          if (centerRemapped) _buildRemapBanner(context),
+          isMobileSize
+              ? Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: HomePageCard(
+              index: 0,
+              icon: SvgPicture.asset(
+                syncDataIcon,
+              ),
+              title: AppLocalizations.of(context)!.synchronize_data,
+              ontap: () => widget.syncData(context),
+              subtitle: subtitle,
+              isSyncing: isSyncing,
+              syncProgress: syncProgress,
+              showLastSyncFallback: true,
+            ),
+          )
+              : _getSyncDataProvider(isSyncing, syncProgress),
+          SizedBox(
+            height: 16.h,
+          ),
+          _getTasks(),
+        ],
+      ),
+    );
+  }
+
+  _getSyncDataProvider(bool isSyncing, int syncProgress) {
+    final syncProvider = context.watch<SyncProvider>();
+    final appLocalizations = AppLocalizations.of(context)!;
+    final DateTime? lastSync = DateTime.tryParse(syncProvider.lastMasterDataSyncTime);
+    final String subtitle = isSyncing
+        ? appLocalizations.syncing_progress(syncProgress)
+        : (lastSync != null
+            ? DateFormat("EEEE d MMMM, hh:mma").format(lastSync.toLocal())
+            : appLocalizations.last_sync_time_not_found);
+
+    return InkWell(
+      onTap: () {
+        widget.syncData(context);
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(
+          horizontal: 20.w,
+        ),
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: appWhite,
+          ),
+          borderRadius: const BorderRadius.all(
+            Radius.circular(6),
+          ),
+          color: appWhite,
+          boxShadow: const [
+            BoxShadow(
+              color: greyBorderShade,
+              offset: Offset(-3.0, -3.0),
+              blurRadius: 6.0,
+              spreadRadius: 0.0,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: 15.w,
+                vertical: 16.h,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    height: 78.h,
+                    width: 78.h,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: appWhite,
+                      ),
+                      borderRadius: const BorderRadius.all(
+                        Radius.circular(10),
+                      ),
+                      color: iconContainerColor,
+                    ),
+                    child: Transform.scale(
+                      scale: 0.5,
+                      child: SvgPicture.asset(
+                        syncDataIcon,
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 24.w,
+                  ),
+                  Text(
+                    AppLocalizations.of(context)!.synchronize_data,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: semiBold,
+                      color: appBlackShade1,
+                    ),
+                  ),
+                  const Expanded(
+                    child: SizedBox(),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: isSyncing ? appSolidPrimary : appBlackShade2,
+                      fontWeight: isSyncing ? semiBold : FontWeight.normal,
+                    ),
+                  )
+                ],
+              ),
+            ),
+            if (isSyncing)
+              LinearProgressIndicator(
+                value: syncProgress > 0 ? syncProgress / 100.0 : null,
+                minHeight: 4.h,
+                backgroundColor: greyBorderShade,
+                valueColor: const AlwaysStoppedAnimation<Color>(appSolidPrimary),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  _getTasks() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: GridView.builder(
+          itemCount:
+          context.watch<RegistrationTaskProvider>().listOfProcesses.length,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: (isPortrait) ? 2 : 4,
+            mainAxisSpacing: (isPortrait) ? 8.h : 1.h,
+            crossAxisSpacing: (isPortrait) ? 8.w : 1.w,
+          ),
+          itemBuilder: (BuildContext context, int index) {
+            Process process = Process.fromJson(jsonDecode(context
+                .watch<RegistrationTaskProvider>()
+                .listOfProcesses
+                .elementAt(index)
+                .toString()));
+
+            return InkWell(
+              onTap: () {
+                widget.getProcessUI(
+                  context,
+                  Process.fromJson(
+                    jsonDecode(
+                      context
+                          .read<RegistrationTaskProvider>()
+                          .listOfProcesses
+                          .elementAt(index)
+                          .toString(),
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: appWhite,
+                  ),
+                  borderRadius: const BorderRadius.all(
+                    Radius.circular(6),
+                  ),
+                  color: appWhite,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: greyBorderShade,
+                      offset: Offset(3.0, 3.0),
+                      blurRadius: 6.0,
+                      spreadRadius: 0.0,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      // height: 49.08.h,
+                      // width: 67.73.w,
+                      child: Image.asset(
+                        "assets/images/${Process.fromJson(jsonDecode(context.watch<RegistrationTaskProvider>().listOfProcesses.elementAt(index).toString())).icon ?? ""}",
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                    SizedBox(
+                      height: 38.17.h,
+                    ),
+                    Text(
+                      process.label![context
+                          .read<GlobalProvider>()
+                          .selectedLanguage] ??
+                          process.label!["eng"] ??
+                          process.label!.values.first,
+                      style: TextStyle(
+                        fontSize: isMobileSize ? 18 : 27,
+                        fontWeight: semiBold,
+                        color: appBlackShade1,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+    );
+  }
+}

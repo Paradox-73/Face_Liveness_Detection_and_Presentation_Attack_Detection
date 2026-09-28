@@ -1,0 +1,489 @@
+package io.mosip.registration.clientmanager.service;
+
+import static io.mosip.registration.clientmanager.constant.RegistrationConstants.EXCEPTION_PHOTO_ATTR;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.util.Log;
+import android.widget.Toast;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.inject.Inject;
+
+
+import io.mosip.kernel.biometrics.constant.BiometricFunction;
+import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
+import io.mosip.kernel.biometrics.entities.BIR;
+import io.mosip.kernel.biometrics.entities.BiometricRecord;
+import io.mosip.kernel.biometrics.model.QualityCheck;
+import io.mosip.kernel.biometrics.model.QualityScore;
+import io.mosip.kernel.biometrics.model.Response;
+import io.mosip.kernel.biometrics.spi.IBioApiV2;
+import io.mosip.registration.clientmanager.R;
+import io.mosip.registration.clientmanager.constant.AuditEvent;
+import io.mosip.registration.clientmanager.constant.Components;
+import io.mosip.registration.clientmanager.constant.Modality;
+import io.mosip.registration.clientmanager.config.SessionManager;
+import io.mosip.registration.clientmanager.constant.RegistrationConstants;
+import io.mosip.registration.clientmanager.constant.SBIError;
+import io.mosip.registration.clientmanager.dto.registration.BiometricsDto;
+import io.mosip.registration.clientmanager.dto.sbi.CaptureBioDetail;
+import io.mosip.registration.clientmanager.dto.sbi.CaptureDto;
+import io.mosip.registration.clientmanager.dto.sbi.CaptureRequest;
+import io.mosip.registration.clientmanager.dto.sbi.CaptureRespDetail;
+import io.mosip.registration.clientmanager.dto.sbi.CaptureResponse;
+import io.mosip.registration.clientmanager.dto.sbi.DeviceDto;
+import io.mosip.registration.clientmanager.dto.sbi.DigitalId;
+import io.mosip.registration.clientmanager.dto.sbi.InfoResponse;
+import io.mosip.registration.clientmanager.exception.BiometricsServiceException;
+import io.mosip.registration.clientmanager.repository.GlobalParamRepository;
+import io.mosip.registration.clientmanager.repository.UserBiometricRepository;
+import io.mosip.registration.clientmanager.spi.AuditManagerService;
+import io.mosip.registration.clientmanager.spi.BiometricsService;
+import io.mosip.registration.clientmanager.util.BioSdkProviderFactory;
+import io.mosip.registration.clientmanager.util.MatchUtil;
+import io.mosip.registration.keymanager.util.CryptoUtil;
+import io.mosip.registration.keymanager.dto.JWTSignatureVerifyRequestDto;
+import io.mosip.registration.keymanager.dto.JWTSignatureVerifyResponseDto;
+import io.mosip.registration.keymanager.spi.ClientCryptoManagerService;
+import io.mosip.registration.keymanager.util.KeyManagerConstant;
+
+public class Biometrics095Service extends BiometricsService {
+
+    private static final String TAG = Biometrics095Service.class.getSimpleName();
+
+    private static final String TRUST_DOMAIN_DEVICE = "DEVICE";
+    private static final String DEFAULT_SERVER_ACTIVE_PROFILE = "Staging";
+    private static final String SPEC_VERSION = "0.9.5";
+    private static final String DEVICE_STATUS_READY = "Ready";
+    private static final String DEVICE_CERTIFICATE = "L0";
+    private static final String DEFAULT_PURPOSE = "Registration";
+
+    private String rCaptureTrustDomain = TRUST_DOMAIN_DEVICE;
+    private String deviceInfoTrustDomain = TRUST_DOMAIN_DEVICE;
+
+    private Context context;
+    private ObjectMapper objectMapper;
+    private AuditManagerService auditManagerService;
+    private GlobalParamRepository globalParamRepository;
+
+    private ClientCryptoManagerService clientCryptoManagerService;
+
+    private final UserBiometricRepository userBiometricRepository;
+    private final BioSdkProviderFactory bioSdkProviderFactory;
+    SharedPreferences sharedPreferences;
+    public Map<Modality, Object> BIO_DEVICES;
+
+
+    @Inject
+    public Biometrics095Service(Context context, ObjectMapper objectMapper,
+                                AuditManagerService auditManagerService, GlobalParamRepository globalParamRepository, ClientCryptoManagerService clientCryptoManagerService, UserBiometricRepository userBiometricRepository, BioSdkProviderFactory bioSdkProviderFactory) {
+        this.context = context;
+        this.objectMapper = objectMapper;
+        this.auditManagerService = auditManagerService;
+        this.globalParamRepository = globalParamRepository;
+        this.clientCryptoManagerService = clientCryptoManagerService;
+        this.userBiometricRepository = userBiometricRepository;
+        this.bioSdkProviderFactory = bioSdkProviderFactory;
+        this.BIO_DEVICES = new HashMap<>();
+        sharedPreferences = this.context.getSharedPreferences(
+                this.context.getString(R.string.app_name),
+                Context.MODE_PRIVATE);
+    }
+
+    public CaptureRequest getRCaptureRequest(Modality modality, String deviceId, List<String> exceptionAttributes) {
+        CaptureRequest captureRequest = new CaptureRequest();
+        Map<String, Object> deviceInfo = (Map<String, Object>) BIO_DEVICES.get(modality);
+        captureRequest.setEnv(getServerActiveProfile());
+        captureRequest.setPurpose(deviceInfo != null ? (String) deviceInfo.get("purpose") : DEFAULT_PURPOSE);
+        int timeout = globalParamRepository != null ? globalParamRepository.getCachedIntCaptureTimeout()
+                : Integer.parseInt(RegistrationConstants.DEFAULT_CAPTURE_TIMEOUT);
+
+        captureRequest.setTimeout(timeout);
+        captureRequest.setSpecVersion(deviceInfo != null ? (String) deviceInfo.get("specVersion") : SPEC_VERSION);
+        captureRequest.setCaptureTime(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        captureRequest.setTransactionId(UUID.randomUUID().toString().toUpperCase());
+        List<CaptureBioDetail> list = new ArrayList<>();
+        CaptureBioDetail detail = new CaptureBioDetail();
+        detail.setType(modality == Modality.EXCEPTION_PHOTO ? Modality.FACE.getSingleType().value() : modality.getSingleType().value());
+        detail.setException(modality == Modality.EXCEPTION_PHOTO ? exceptionAttributes.toArray(new String[0]) :
+                Modality.getSpecBioSubType(exceptionAttributes).toArray(new String[0]));
+        detail.setBioSubType(new String[]{});
+        detail.setCount(modality == Modality.EXCEPTION_PHOTO ? 1 : modality.getAttributes().size()-exceptionAttributes.size());
+        detail.setDeviceId(deviceId);
+        detail.setRequestedScore(getModalityThreshold(modality));
+        detail.setDeviceSubId(String.valueOf(modality.getDeviceSubId()));
+        detail.setPreviousHash("");
+        list.add(detail);
+        captureRequest.setBio(list);
+        return captureRequest;
+    }
+
+
+    public List<BiometricsDto> handleRCaptureResponse(Modality modality, InputStream response, List<String> exceptionAttributes, String transactionId)
+            throws BiometricsServiceException {
+        return handleRCaptureResponse(modality, response, exceptionAttributes, transactionId, false);
+    }
+
+    public List<BiometricsDto> handleRCaptureResponse(Modality modality, InputStream response, List<String> exceptionAttributes, String transactionId, boolean isOperatorOnboarding)
+            throws BiometricsServiceException {
+        List<BiometricsDto> biometricsDtoList = new ArrayList<>();
+        try {
+            CaptureResponse captureResponse = objectMapper.readValue(response, new TypeReference<CaptureResponse>(){});
+
+            List<String> exemptedBioSubTypes = Modality.getSpecBioSubType(exceptionAttributes);
+            for (CaptureRespDetail bio : captureResponse.getBiometrics()) {
+                //On error, even for one attribute fail the RCapture
+                if (bio.getError() != null && !"0".equals(bio.getError().getErrorCode()))
+                    throw new BiometricsServiceException(bio.getError().getErrorCode(), bio.getError().getErrorInfo());
+
+                if(bio.getData() == null || bio.getData().trim().isEmpty())
+                    throw new BiometricsServiceException(SBIError.SBI_RCAPTURE_ERROR.getErrorCode(),
+                            SBIError.SBI_RCAPTURE_ERROR.getErrorMessage());
+
+                validateJWTResponse(bio.getData(), rCaptureTrustDomain);
+                String payload = getJWTPayLoad(bio.getData());
+                String signature = getJWTSignatureWithHeader(bio.getData());
+                byte[] decodedPayload = Base64.getUrlDecoder().decode(payload);
+                CaptureDto captureDto = objectMapper.readValue(decodedPayload, new TypeReference<CaptureDto>() {});
+                validateResponseTimestamp(captureDto.getTimestamp());
+
+                if (transactionId == null || captureDto.getTransactionId() == null ||
+                        !captureDto.getTransactionId().equals(transactionId)) {
+                    throw new BiometricsServiceException(SBIError.SBI_RCAPTURE_ERROR.getErrorCode(),
+                            "RCapture TransactionId Mismatch: request=" + transactionId + " response=" + captureDto.getTransactionId());
+                }
+
+                BiometricsDto biometricsDto = new BiometricsDto(
+                        modality == Modality.EXCEPTION_PHOTO ? modality.getSingleType().value() : captureDto.getBioType(),
+                        modality == Modality.EXCEPTION_PHOTO ? EXCEPTION_PHOTO_ATTR.get(0) : captureDto.getBioSubType(),
+                        captureDto.getBioValue(),
+                        bio.getSpecVersion(),
+                        exemptedBioSubTypes.contains(captureDto.getBioSubType()),
+                        new String(decodedPayload),
+                        signature,
+                        false,
+                        1, 0,
+                        captureDto.getQualityScore());
+
+                biometricsDtoList.add(biometricsDto);
+
+                // SDK Quality Check (if enabled)
+                if (RegistrationConstants.ENABLE.equalsIgnoreCase(
+                        globalParamRepository != null ?
+                            globalParamRepository.getCachedStringGlobalParam(RegistrationConstants.QUALITY_CHECK_WITH_SDK) :
+                            RegistrationConstants.DISABLE)) {
+                    try {
+                        double sdkScore = getSDKScore(biometricsDto, modality);
+                        biometricsDto.setSdkScore(sdkScore);
+                        Log.i(TAG, "SDK quality score fetched: " + sdkScore + " for " + modality);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Unable to fetch SDK Score", e);
+                        biometricsDto.setSdkScore(0);
+                        auditManagerService.audit(AuditEvent.BIO_SDK_QUALITY_SCORE_FAILED, Components.REGISTRATION, e.getMessage());
+                    }
+                }
+
+               if(RegistrationConstants.ENABLE.equalsIgnoreCase(sharedPreferences.getString(RegistrationConstants.DEDUPLICATION_ENABLE_FLAG, ""))) {
+                    IBioApiV2 matchProvider = bioSdkProviderFactory != null ? bioSdkProviderFactory.getProviderForMatch(modality) : null;
+
+                    if (matchProvider == null) {
+                        // Follows Desktop reg-client logic which logs an unusable dedupe SDK and continues (BaseController.matchBiometrics)
+                        Log.e(TAG, SBIError.SBI_DEDUPE_SDK_UNAVAILABLE.getErrorMessage() + " for modality: " + modality);
+                        return biometricsDtoList;
+                    }
+                    boolean isMatched;
+                    if (isOperatorOnboarding) {
+                        String currentUserId = sharedPreferences.getString(SessionManager.USER_ID, "");
+                        isMatched = MatchUtil.validateBiometricData(modality, captureDto, biometricsDtoList,
+                                userBiometricRepository, matchProvider, currentUserId);
+                    } else {
+                        isMatched = MatchUtil.validateBiometricDataForRegistration(modality, captureDto, biometricsDtoList,
+                                userBiometricRepository, matchProvider);
+                    }
+                    if (isMatched) {
+                        Log.i(TAG, "Biometrics Matched With Operator Biometrics, Please Try Again");
+                        auditManagerService.audit(AuditEvent.BIO_SDK_DEDUPE_MATCH, Components.REGISTRATION,
+                                SBIError.SBI_DEDUPE_MATCH.getErrorMessage());
+                        throw new BiometricsServiceException(SBIError.SBI_DEDUPE_MATCH.getErrorCode(),
+                                SBIError.SBI_DEDUPE_MATCH.getErrorMessage());
+                    }
+               }
+            }
+        } catch (BiometricsServiceException e) {
+            auditManagerService.audit(AuditEvent.R_CAPTURE_PARSE_FAILED, Components.REGISTRATION, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            auditManagerService.audit(AuditEvent.R_CAPTURE_PARSE_FAILED, Components.REGISTRATION, e.getMessage());
+            throw new BiometricsServiceException(SBIError.SBI_RCAPTURE_ERROR.getErrorCode(),
+                    SBIError.SBI_RCAPTURE_ERROR.getErrorMessage());
+        }
+        return biometricsDtoList;
+    }
+
+
+    public String[] handleDeviceInfoResponse(Modality modality, byte[] response) throws BiometricsServiceException {
+        String callbackId = null;
+        String serialNo = null;
+        String deviceStatus = null;
+        try {
+            List<InfoResponse> list = objectMapper.readValue(response, new TypeReference<List<InfoResponse>>() {});
+
+            if (list.isEmpty())
+                throw new BiometricsServiceException(SBIError.SBI_DINFO_INVALID_REPSONSE.getErrorCode(),
+                        SBIError.SBI_DINFO_INVALID_REPSONSE.getErrorMessage());
+
+            InfoResponse infoResponse = list.get(0);
+            if (infoResponse.getError() != null && !"0".equals(infoResponse.getError().getErrorCode()))
+                throw new BiometricsServiceException(infoResponse.getError().getErrorCode(),
+                        infoResponse.getError().getErrorInfo());
+
+            validateJWTResponse(infoResponse.getDeviceInfo(), deviceInfoTrustDomain);
+            String payload = getJWTPayLoad(infoResponse.getDeviceInfo());
+            byte[] decodedPayload = Base64.getUrlDecoder().decode(payload);
+            DeviceDto deviceDto = objectMapper.readValue(decodedPayload, DeviceDto.class);
+
+            if (!isDeviceValid(deviceDto)) {
+                throw new BiometricsServiceException(SBIError.SBI_DINFO_INVALID_REPSONSE.getErrorCode(),
+                        SBIError.SBI_DINFO_INVALID_REPSONSE.getErrorMessage());
+            }
+
+            callbackId = deviceDto.getCallbackId().replace(".info", "");
+            if(deviceDto.getCallbackId().contains(".Info")) {
+                callbackId = deviceDto.getCallbackId().replace(".Info", "");
+            }
+            deviceStatus = deviceDto.getDeviceStatus();
+            String digitalIdPayload = getJWTPayLoad(deviceDto.getDigitalId());
+            byte[] decodedDigitalIdPayload = Base64.getUrlDecoder().decode(digitalIdPayload);
+            DigitalId digitalId = objectMapper.readValue(decodedDigitalIdPayload, DigitalId.class);
+            serialNo = digitalId.getSerialNo();
+            addBioDevice(modality, deviceDto.getDeviceCode(), digitalId, deviceDto.getPurpose(), SPEC_VERSION);
+        } catch (BiometricsServiceException e) {
+            auditManagerService.audit(AuditEvent.DEVICE_INFO_PARSE_FAILED, Components.REGISTRATION, e.getMessage());
+            Toast.makeText(context, "No SBI found!", Toast.LENGTH_LONG).show();
+            throw e;
+        } catch (Exception e) {
+            auditManagerService.audit(AuditEvent.DEVICE_INFO_PARSE_FAILED, Components.REGISTRATION, e.getMessage());
+            Log.e(TAG, "Failed to parse 095 Device info response", e);
+            throw new BiometricsServiceException(SBIError.SBI_DINFO_INVALID_REPSONSE.getErrorCode(),
+                    SBIError.SBI_DINFO_INVALID_REPSONSE.getErrorMessage());
+        }
+        return new String[] { callbackId, serialNo, deviceStatus};
+    }
+
+    private boolean isDeviceValid(DeviceDto deviceDto) {
+        boolean isSpecVersionValid = deviceDto.getSpecVersion() != null
+                && Arrays.asList(deviceDto.getSpecVersion()).contains(SPEC_VERSION);
+
+        boolean isDeviceStatusValid = DEVICE_STATUS_READY
+                .equalsIgnoreCase(deviceDto.getDeviceStatus());
+
+        boolean isCertificationValid = DEVICE_CERTIFICATE
+                .equalsIgnoreCase(deviceDto.getCertification());
+
+        boolean isPurposeValid = DEFAULT_PURPOSE
+                .equalsIgnoreCase(deviceDto.getPurpose());
+
+        return isSpecVersionValid && isDeviceStatusValid && isCertificationValid && isPurposeValid;
+    }
+
+    public String handleDiscoveryResponse(Modality modality, byte[] response) throws BiometricsServiceException {
+        String callbackId = null;
+        try {
+            List<DeviceDto> list = objectMapper.readValue(response, new TypeReference<List<DeviceDto>>() {});
+            if (list.isEmpty())
+                throw new BiometricsServiceException(SBIError.SBI_DISC_INVALID_REPSONSE.getErrorCode(),
+                        SBIError.SBI_DISC_INVALID_REPSONSE.getErrorMessage());
+
+            DeviceDto deviceDto = list.get(0);
+            if (deviceDto.getError() != null && !"0".equals(deviceDto.getError().getErrorCode()))
+                throw new BiometricsServiceException(deviceDto.getError().getErrorCode(),
+                        deviceDto.getError().getErrorInfo());
+
+            callbackId = deviceDto.getCallbackId();
+        } catch (BiometricsServiceException e) {
+            auditManagerService.audit(AuditEvent.DEVICE_INFO_PARSE_FAILED, Components.REGISTRATION, e.getMessage());
+            throw e;
+        }  catch (Exception e) {
+            auditManagerService.audit(AuditEvent.DISCOVER_SBI_PARSE_FAILED, Components.REGISTRATION, e.getMessage());
+            Log.e(TAG, "Failed to parse 095 Device discovery response", e);
+            throw new BiometricsServiceException(SBIError.SBI_DISC_INVALID_REPSONSE.getErrorCode(),
+                    SBIError.SBI_DISC_INVALID_REPSONSE.getErrorMessage());
+        }
+        return callbackId;
+    }
+
+    public int getModalityThreshold(Modality modality) {
+        switch (modality) {
+            case FINGERPRINT_SLAB_LEFT:
+                return globalParamRepository.getCachedIntegerGlobalParam(RegistrationConstants.LEFT_SLAP_THRESHOLD_KEY);
+            case FINGERPRINT_SLAB_RIGHT:
+                return globalParamRepository.getCachedIntegerGlobalParam(RegistrationConstants.RIGHT_SLAP_THRESHOLD_KEY);
+            case FINGERPRINT_SLAB_THUMBS:
+                return globalParamRepository.getCachedIntegerGlobalParam(RegistrationConstants.THUMBS_THRESHOLD_KEY);
+            case IRIS_DOUBLE:
+                return globalParamRepository.getCachedIntegerGlobalParam(RegistrationConstants.IRIS_THRESHOLD_KEY);
+            case FACE:
+                return globalParamRepository.getCachedIntegerGlobalParam(RegistrationConstants.FACE_THRESHOLD_KEY);
+        }
+        return 0;
+    }
+
+    private double getSDKScore(BiometricsDto biometricsDto, Modality modality) {
+
+        BiometricType biometricType = Modality.modalityToBiometricType(modality);
+        if (biometricType == null) {
+            Log.w(TAG, "Unknown modality for SDK quality check");
+            return 0;
+        }
+
+        // Build kernel BIR from captured ISO
+        byte[] iso = CryptoUtil.base64decoder.decode(biometricsDto.getBioValue());
+        if (iso == null || iso.length == 0) {
+            Log.w(TAG, "Invalid biometric payload for SDK quality check");
+            return 0;
+        }
+        BIR bir = MatchUtil.buildBir(
+                biometricsDto.getBioSubType(),
+                (long) biometricsDto.getQualityScore(),
+                iso,
+                biometricType,
+                ProcessedLevelType.RAW,
+                false
+        );
+
+        IBioApiV2 bioProvider = bioSdkProviderFactory != null
+                ? bioSdkProviderFactory.getProviderForFunction(modality, BiometricFunction.QUALITY_CHECK) : null;
+        if (bioProvider == null) {
+            Log.d(TAG, "No SDK with QUALITY_CHECK support for modality: " + modality);
+            return 0;
+        }
+
+        try {
+            BiometricRecord sample = new BiometricRecord();
+            sample.getSegments().add(bir);
+            List<BiometricType> modalitiesToCheck = Collections.singletonList(biometricType);
+            Map<String, String> flags = new HashMap<>();
+
+            Response<QualityCheck> qualityResponse =
+                    bioProvider.checkQuality(sample, modalitiesToCheck, flags);
+
+            Double score = extractScoreFromQualityCheck(
+                    qualityResponse != null ? qualityResponse.getResponse() : null, biometricType);
+            if (score != null) {
+                Log.d(TAG, "SDK quality score calculated using checkQuality(): " + score);
+                return score;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error calling SDK checkQuality", e);
+        }
+
+        return 0;
+    }
+
+    /**
+     * Extracts quality score from typed QualityCheck (from checkQuality response).
+     * Uses QualityCheck.getScores() and QualityScore.getScore().
+     */
+    private Double extractScoreFromQualityCheck(QualityCheck qualityCheck, BiometricType biometricType) {
+        if (qualityCheck == null) {
+            Log.e(TAG, "SDK returned null QualityCheck");
+            return null;
+        }
+
+        Map<BiometricType, QualityScore> scores = qualityCheck.getScores();
+        if (scores != null && scores.containsKey(biometricType)) {
+            QualityScore qualityScore = scores.get(biometricType);
+            if (qualityScore != null) {
+                return (double) qualityScore.getScore();
+            }
+        }
+        return null;
+    }
+
+    public int getAttemptsCount(Modality modality) {
+        switch (modality) {
+            case FINGERPRINT_SLAB_LEFT:
+                return globalParamRepository.getCachedIntegerGlobalParam(RegistrationConstants.LEFT_SLAP_ATTEMPTS_KEY);
+            case FINGERPRINT_SLAB_RIGHT:
+                return globalParamRepository.getCachedIntegerGlobalParam(RegistrationConstants.RIGHT_SLAP_ATTEMPTS_KEY);
+            case FINGERPRINT_SLAB_THUMBS:
+                return globalParamRepository.getCachedIntegerGlobalParam(RegistrationConstants.THUMBS_ATTEMPTS_KEY);
+            case IRIS_DOUBLE:
+                return globalParamRepository.getCachedIntegerGlobalParam(RegistrationConstants.IRIS_ATTEMPTS_KEY);
+            case FACE:
+                return globalParamRepository.getCachedIntegerGlobalParam(RegistrationConstants.FACE_ATTEMPTS_KEY);
+        }
+        //Number of attempts for exception photo is not restricted
+        return 0;
+    }
+
+    /**
+     * Validates JWT response from DeviceInfo and Rcapture responses.
+     * if the validation fails, throws BiometricsServiceException with below errors
+     * SBI_INVALID_SIGNATURE
+     * SBI_CERT_PATH_TRUST_FAILED
+     * @param signedData
+     * @param domain
+     */
+    public void validateJWTResponse(final String signedData, final String domain)
+            throws Exception {
+        JWTSignatureVerifyRequestDto jwtSignatureVerifyRequestDto = new JWTSignatureVerifyRequestDto();
+        jwtSignatureVerifyRequestDto.setValidateTrust(true);
+        jwtSignatureVerifyRequestDto.setDomain(domain);
+        jwtSignatureVerifyRequestDto.setJwtSignatureData(signedData);
+
+        JWTSignatureVerifyResponseDto jwtSignatureVerifyResponseDto = clientCryptoManagerService.jwtVerify(jwtSignatureVerifyRequestDto);
+        if(!jwtSignatureVerifyResponseDto.isSignatureValid())
+            throw new BiometricsServiceException(SBIError.SBI_INVALID_SIGNATURE.getErrorCode(), SBIError.SBI_INVALID_SIGNATURE.getErrorMessage());
+
+        if (jwtSignatureVerifyRequestDto.getValidateTrust() && !jwtSignatureVerifyResponseDto.getTrustValid().equals(KeyManagerConstant.TRUST_VALID)) {
+            throw new BiometricsServiceException(SBIError.SBI_CERT_PATH_TRUST_FAILED.getErrorCode(), SBIError.SBI_CERT_PATH_TRUST_FAILED.getErrorMessage());
+        }
+    }
+
+    public void addBioDevice(Modality modality, String deviceCode, DigitalId digitalId, String purpose, String specVersion) {
+        Map<String, Object> registeredDevice = new LinkedHashMap<>();
+        Map<String, String> digitalIdMap = new HashMap<>();
+        digitalIdMap.put("serialNo", digitalId.getSerialNo());
+        digitalIdMap.put("make", digitalId.getMake());
+        digitalIdMap.put("model", digitalId.getModel());
+        digitalIdMap.put("type", digitalId.getType());
+        digitalIdMap.put("deviceProviderId", digitalId.getDeviceProviderId());
+        digitalIdMap.put("deviceProvider", digitalId.getDeviceProvider());
+        digitalIdMap.put("dateTime", digitalId.getDateTime());
+        digitalIdMap.put("deviceSubType", digitalId.getDeviceSubType());
+        registeredDevice.put("specVersion", specVersion);
+        registeredDevice.put("purpose", purpose != null ? purpose : DEFAULT_PURPOSE);
+        registeredDevice.put("digitalId", digitalIdMap);
+        registeredDevice.put("deviceCode", deviceCode);
+        BIO_DEVICES.put(modality, registeredDevice);
+    }
+
+    private String getServerActiveProfile() {
+        if (globalParamRepository != null) {
+            String value = globalParamRepository.getCachedStringGlobalParam(RegistrationConstants.SERVER_ACTIVE_PROFILE);
+            if (value != null && !value.trim().isEmpty()) {
+                return value.trim();
+            }
+        }
+        return DEFAULT_SERVER_ACTIVE_PROFILE;
+    }
+
+}

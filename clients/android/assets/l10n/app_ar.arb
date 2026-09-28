@@ -1,0 +1,425 @@
+{
+  "english": "English",
+  "arabic": "العربية",
+  "french": "Français",
+  "hindi": "हिंदी",
+  "kannada": "ಕನ್ನಡ",
+  "tamil": "தமிழ்",
+  "locale": "ara",
+  "help": "تعليمات",
+  "mosip": "موسيب",
+  "welcome": "مرحبا بكم في",
+  "community_reg_text": "عميل تسجيل MOSIP!",
+  "info_text": "يرجى تسجيل الدخول للوصول إلى الميزات.",
+  "login_text": "تسجيل الدخول",
+  "language": "اللغة",
+  "username": "اسم المستخدم",
+  "enter_username": "أدخل اسم المستخدم",
+  "next_button": "مقبل",
+  "password": "شعار",
+  "enter_password": "أدخل كلمة المرور",
+  "forgot_password": "هل نسيت كلمة السر؟",
+  "login_button": "تسجيل الدخول",
+  "back_button": "ظهر",
+  "user_validated": "تم التحقق من صحة المستخدم!",
+  "username_required": "اسم المستخدم مطلوب!",
+  "password_required": "كلمة المرور مطلوبة!",
+  "username_exceed": "يجب ألا يتجاوز اسم المستخدم 50 حرفا!",
+  "password_exceed": "يجب ألا تتجاوز كلمة المرور 50 حرفا!",
+  "username_incorrect": "لم يتم العثور على المستخدم!",
+  "device_credentials": "بيانات اعتماد الجهاز",
+  "copy_text": "نسخ النص",
+  "download_json": "تنزيل  جيسون",
+  "copy_message": "تفاصيل الجهاز نسخ إلى الحافظة!",
+  "download_message": "تم حفظ الملف للتنزيلات!",
+  "logout": "الخروج",
+  "reset_password": "إعادة تعيين كلمة المرور",
+  "login_failed": "فشل تسجيل الدخول. حاول مرة أخرى!",
+  "password_incorrect": "كلمة المرور غير صحيحة!",
+  "machine_not_found": "لم يتم العثور على الجهاز!",
+  "cred_expired": "لم يتم العثور على بيانات الاعتماد أو انتهت صلاحيتها. يرجى محاولة تسجيل الدخول عبر الإنترنت!",
+  "not_initialized": "تعذر تهيئة الجهاز!",
+  "invalid_user": "اسم المستخدم غير صالح!",
+  "machine_inactive": "الآلة غير نشطة!",
+  "center_inactive": "المركز غير نشط!",
+  "sync_completed_succesfully": "مزامنة. تم بنجاح",
+  "sync_completed_message": "سيُعاد تشغيل النظام في غضون ثوانٍ قليلة وستتم إعادة توجيهك إلى صفحة تسجيل الدخول.",
+  "sync_failed": "مزامنة. فشل",
+  "sync_failed_message": "يرجى الاتصال بمسؤول النظام أو المشرف للحصول على المساعدة.",
+  "policy_key_sync_failed": "فشل مزامنة مفتاح السياسة",
+  "ca_certs_sync_failed": "فشلت مزامنة شهادات CA",
+  "global_params_sync_failed": "فشل مزامنة Params العالمية",
+  "user_details_sync_failed": "فشل مزامنة تفاصيل المستخدم",
+  "id_schema_sync_failed": "فشل مزامنة IDSchema",
+  "master_data_sync_failed": "فشل مزامنة البيانات الرئيسية",
+  "network_error": "لم يتم العثور على شبكة!",
+  "delete": "يمسح",
+  "newRegistrationProcess": "{language, select, eng{New Registration} ara{تسجيل جديد} fra{Nouvelle inscription} other{New Registration}}",
+  "inactive_logout_heading": "لقد كنت خاملاً",
+  "inactive_logout_description": "لأسباب أمنية، سيتم تسجيل خروجك في $TIMER",
+  "seconds": " ثواني.",
+  "minutes": " دقائق.",
+  "logout_button": "تسجيل الخروج",
+  "stay_logged_in_button": "البقاء مسجلاً الدخول",
+  "@newRegistrationProcess": {
+    "description": "New Registration Process Header",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "consentScreenName": "{language, select, eng{Consent} ara{موافقة} fra{Consentement} other{Consent}}",
+  "@consentScreenName": {
+    "description": "Consent Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "demographicsScreenName": "{language, select, eng{Demographic Details} ara{التفاصيل الديموغرافية} fra{Détails démographiques} other{Demographic Details}}",
+  "@demographicsScreenName": {
+    "description": "Demographic Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "documentsScreenName": "{language, select, eng{Document Upload} ara{تحميل الوثيقة} fra{Téléchargement de documents} other{Document Upload}}",
+  "@documentsScreenName": {
+    "description": "Document Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "biometricsScreenName": "{language, select, eng{Biometric Details} ara{التفاصيل البيومترية} fra{Détails biométriques} other{Biometric Details}}",
+  "@biometricsScreenName": {
+    "description": "Biometric Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationLanguage": "{language, select, eng{Preferred Language of Communication} ara{لغة التواصل المفضلة} fra{Langue de communication préférée} hin{संचार की पसंदीदा भाषा} kan{ಸಂವಹನದ ಆದ್ಯತೆಯ ಭಾಷೆ} tam{விருப்பமான தொடர்பு மொழி} other{Notification Languages}}",
+  "@notificationLanguage": {
+    "description": "Notification Language Label",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "dataEntryLanguage": "{language, select, eng{Data Entry Language} ara{لغة إدخال البيانات} fra{Langue de saisie des données} hin{डाटा एंट्री भाषा} kan{ಡೇಟಾ ಎಂಟ್ರಿ ಭಾಷೆ} tam{தரவு நுழைவு மொழி} other{Notification Languages}}",
+  "@dataEntryLanguage": {
+    "description": "Data Entry Language Label",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "upload_document": "يرجى تحميل الوثيقة",
+  "scan": "مسح",
+  "clear": "يزيل",
+  "save": "يحفظ",
+  "retake": "استعادة",
+  "reference_number": "أدخل الرقم المرجعي",
+  "select_value_message": "رجاءا اختر قيمة",
+  "enter_value_message": "الرجاء إدخال قيمة",
+  "invalid_input": "مدخل غير صالح",
+  "reference_number_validation": "الرجاء إدخال الرقم المرجعي",
+  "referenceNumber": "{language, select, eng{Reference Number} ara{رقم المرجع} fra{Numéro de réference} kan{ಉಲ್ಲೇಖ ಸಂಖ್ಯೆ} hin{संदर्भ संख्या} tam{குறிப்பு எண்} other{Reference Number}}",
+  "@referenceNumber": {
+    "description": "Document reference number",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "synchronize_data": "مزامنة البيانات",
+  "registration_tasks": "مهام التسجيل",
+  "manage_applications": "إدارة التطبيقات",
+  "search_application": "البحث عن طريق معرف التطبيق",
+  "upload": "رفع",
+  "export": "يصدّر",
+  "number_of_application": "عرض {number} تطبيقات",
+  "@number_of_application": {
+    "description": "A message with a single parameter",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "0"
+      }
+    }
+  },
+  "total_selected_application": "{selected}/{total} تم تحديد التطبيقات",
+  "@total_selected_application": {
+    "description": "A message with a two parameter",
+    "placeholders": {
+      "selected": {
+        "type": "int",
+        "example": "0"
+      },
+      "total": {
+        "type": "int",
+        "example": "0"
+      }
+    }
+  },
+  "client_status": "  حالة العميل",
+  "server_status": "حالة الملقم",
+  "review_status": "حالة المراجعة",
+  "clear_filter": "مرشح واضح",
+  "serial_number": "س.ن",
+  "application_id": "رقم الاستمارة",
+  "reg_date": "ريج. تاريخ",
+  "reg_type": "ريج. يكتب",
+  "operator_id": "معرف المشغل",
+  "operation_tasks": "المهام التشغيلية",
+  "system_storage_usage": "استخدام تخزين النظام",
+  "download_pre_registration_data": "تنزيل بيانات التسجيل المسبق",
+  "update_operator_biomterics": "تحديث القياسات الحيوية للمشغل",
+  "onboard_operator_biomterics": "تسجيل القياسات الحيوية للمشغل",
+  "appliction_upload": "تحميل التطبيق",
+  "check_updates": "تفقد التحديث",
+  "center_remap_sync": "مركز إعادة رسم خريطة المزامنة.",
+  "center_remap_notification": "تمت إعادة تعيين جهازك إلى مركز آخر. يرجى إكمال الأنشطة المعلقة.",
+  "remap_operation_blocked": "العملية غير مسموح بها. تمت إعادة تعيين الجهاز إلى مركز آخر، يرجى إكمال الأنشطة المعلقة.",
+  "no_center_remap_detected": "لم يتم اكتشاف أي تغييرات. هذه الآلة لا تزال مخصصة للمركز الحالي.",
+  "complete_pending_activities": "الأنشطة المعلقة التي تتطلب الإكمال",
+  "pending_activities_before_remap": "يجب إكمال الأنشطة التالية قبل بدء مزامنة إعادة تعيين المركز:",
+  "pending_packets_awaiting_approval": "الحزم في انتظار الموافقة",
+  "packets_require_supervisor_approval": "{count} حزم في انتظار موافقة المشرف ويجب اعتمادها قبل المتابعة في المزامنة.",
+  "@packets_require_supervisor_approval": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "pending_packets_awaiting_upload": "الحزم المعلقة للمزامنة والتحميل",
+  "packets_queued_locally": "{count} حزم لا تزال معلقة للمزامنة المحلية ويجب تحميلها إلى الخادم قبل بدء مزامنة إعادة تعيين المركز.",
+  "@packets_queued_locally": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "sync_button_auto_enabled": "سيتم تمكين زر المزامنة تلقائياً بمجرد إكمال كلا النشاطين.",
+  "okay_got_it": "حسناً",
+  "center_remap_sync_subtitle": "انقر للبدء في تنظيف إعادة تعيين المركز",
+  "remap_sync_screen_title": "مزامنة إعادة تعيين المركز",
+  "remap_syncing_message": "جارٍ مزامنة المركز المُعاد تعيينه",
+  "remap_sync_in_progress_warning": "جارٍ المزامنة. يرجى عدم إغلاق التطبيق.",
+  "remap_sync_completed_title": "اكتملت مزامنة إعادة تعيين المركز بنجاح",
+  "remap_sync_completed_subtitle": "يرجى النقر على زر إعادة التشغيل أدناه. ستكتمل المزامنة تلقائياً بعد إعادة التشغيل، ويمكنك بعد ذلك الاستمرار في عملية التسجيل.",
+  "remap_synced_at": "تمت المزامنة في",
+  "remap_sync_failed_title": "فشلت المزامنة!",
+  "remap_sync_failed_subtitle": "فشلت المزامنة بسبب مشكلة في الشبكة. انقر على إعادة المحاولة للمتابعة.",
+  "restart": "إعادة التشغيل",
+  "sync_activities": "مزامنة. أنشطة",
+  "pending_approval": "ما زال يحتاج بتصدير",
+  "dashboard": "لوحة القيادة",
+  "settings": "إعدادات",
+  "notifications": "إشعارات",
+  "profile": "حساب تعريفي",
+  "select_language": "اختار اللغة",
+  "select_two_languages": "يرجى اختيار أي لغتين لإدخال البيانات.",
+  "language_mandatory": "{mandatoryLanguage} إلزامي للمقيم للاختيار وفقًا للإرشادات الحكومية. سيؤدي ترتيب الاختيار إلى عرض الصفحة للبيانات الديموغرافية.",
+  "@language_mandatory": {
+    "description": "A message with a single parameter",
+    "placeholders": {
+      "mandatoryLanguage": {
+        "type": "String",
+        "example": "Arabic"
+      }
+    }
+  },
+  "language_selector_note": "يرجى ملاحظة أن اللغة قد تعتمد على البيانات التي تم إدخالها أثناء التسجيل المسبق.",
+  "cancel": "يلغي",
+  "submit": "يُقدِّم",
+  "logo_text": "مدعوم من موسيب",
+  "get_onboard": "إركب",
+  "skip_to_home": "انتقل إلى المنزل",
+  "continue_text": "يكمل",
+  "authenticate": "المصادقة",
+  "new_registration": "تسجيل جديد",
+  "go_back": "عُد",
+  "informed": "أُبلغ",
+  "sync_packet": "حزمة المزامنة",
+  "upload_packet": "تحميل حزمة",
+  "authenticate_using_password": "المصادقة باستخدام كلمة المرور",
+  "registration_acknowledgement": "اعتراف بالتسجيل",
+  "print_text": "طباعة",
+  "hello": "مرحبًا",
+  "onboard_process_help": "الرجاء الضغط على 'البدء في الانضمام' للبدء في عملية الإعداد.",
+  "default_not_found": "الدور المطلوب غير موجود!",
+  "mark_exception": "وضع علامة استثناء",
+  "threshold": "الحد",
+  "quality": "الجودة",
+  "attempts": "المحاولات",
+  "comments": "التعليقات",
+  "exception_type": "نوع الاستثناء",
+  "permanent": "دائم",
+  "temporary": "مؤقت",
+  "exceptions": "الاستثناءات",
+  "add_comments_for_marking_the_exception": "إضافة تعليقات لوضع علامة الاستثناء",
+  "rescan": "إعادة المسح",
+  "marking_exceptions_on": "وضع علامة على الاستثناءات على",
+  "is_not_allowed": "غير مسموح",
+  "capture": "يأسر",
+  "attempts_left": "محاولات اليسار",
+  "left_hand": "اليد اليسرى",
+  "left": "اليسار",
+  "right": "اليمين",
+  "right_hand": "اليد اليمنى",
+  "iris": "القزحية",
+  "thumbs": "الأبهام",
+  "exception": "استثناء",
+  "face": "الوجه",
+  "preview_page": "معاينة",
+  "packet_auth_page": "المصادقة",
+  "acknowledgement_page": "الاعتراف",
+  "demographic_information": "المعلومات الديموغرافية",
+  "documents": "وثائق",
+  "biometrics": "القياسات الحيوية",
+  "share": "يشارك",
+  "packets_created": "تم إنشاء الحزم",
+  "packets_synced": "تمت مزامنة الحزم",
+  "packets_uploaded": "تم تحميل الحزم",
+  "users": "المستخدمين",
+  "user_id": "معرف المستخدم",
+  "user_name": "اسم المستخدم",
+  "status": "حالة",
+  "active_not_onboarded": "نشط - غير مسجل",
+  "user_inactive": "المستخدم غير نشط",
+  "onboarded": "على متن الطائرة",
+  "sync_alert_title": "المزامنة للمتابعة!",
+  "sync_alert_content": "الجهاز أو المركز غير نشط. قم بتنشيطه والمزامنة للمتابعة.",
+  "sync_alert_text": "مزامنة",
+  "onboarded_successfully": "لقد انضممت بنجاح.",
+  "operator_biometric_updated_successfully": "تم تحديث القياسات الحيوية للمشغل بنجاح.",
+  "home": "بيت",
+  "verify_and_save": "التحقق والحفظ",
+  "supervisors_biometric_onboard": "تسجيل المشرف الحيوي",
+  "supervisors_biometric_update": "تحديث المشرف الحيوي",
+  "help_topics": "مواضيع المساعدة",
+  "onboard_request_message": "الرجاء الضغط على زر \"الانضمام\" للانضمام إلى البوابة.",
+  "hello_s": "مرحبًا ",
+  "approve": "يعتمد",
+  "reject": "يرفض",
+  "reject_dialog_heading": "هل ترفض الحزمة؟",
+  "reject_dialog_subheading": "الرجاء تحديد سبب رفض الحزمة. يمكنك تغيير مراجعتك للموافقة على حالة المراجعة أو إعادة ضبطها لاحقًا.",
+  "reason_rejection": "سبب الرفض",
+  "no_reason_selected": "الرجاء تحديد السبب...",
+  "supervisor_auth_heading": "مصادقة المشرف",
+  "supervisor_auth_subheading": "مصادقة المشرف باستخدام كلمة المرور",
+  "uin_number": "رقم التعريف الفريد",
+  "valid_uin": "الرجاء إدخال رقم تعريف شخصي صالح",
+  "enter_uin": "أدخل رقم UIN",
+  "select_update_attributes": "حدد كافة السمات التي تحتاج إلى تحديث",
+  "logout_action_required": "لا يزال هناك بعض الإجراءات المطلوبة!",
+  "logout_warning_message": "سيؤدي النقر فوق تسجيل الخروج إلى إنهاء العملية وقد يؤدي إلى فقدان البيانات.",
+  "officer": "ضابط",
+  "operator": "المشغل أو العامل",
+  "supervisor": "مشرف",
+  "online": "متصل",
+  "offline": "غير متصل على الانترنت",
+  "enabled": "ممكّن",
+  "disabled": "معطل",
+  "logout_success": "لقد تم تسجيل بنجاح!",
+  "logout_failure": "حدث خطأ ما، يرجى المحاولة مرة أخرى بعد مرور بعض الوقت",
+  "go_to_home": "اذهب إلى المنزل",
+  "errors": "{messages, select, REG_TRY_AGAIN{فشل تسجيل الدخول. حاول مرة أخرى!} REG_INVALID_REQUEST{كلمة المرور غير صحيحة!} REG_MACHINE_NOT_FOUND{لم يتم تسجيل هذا الجهاز بعد. يرجى التواصل مع المسؤول للحصول على المساعدة!} REG_NETWORK_ERROR{فشل تسجيل الدخول. تحقق من اتصال الشبكة!} REG_CRED_EXPIRED{لم يتم العثور على بيانات الاعتماد أو انتهت صلاحيتها. يرجى محاولة تسجيل الدخول عبر الإنترنت!} REG_MACHINE_INACTIVE{الآلة غير نشطة!} REG_CENTER_INACTIVE{المركز غير نشط!} REG_LOGIN_LOCKED{تم الوصول إلى الحد الأقصى لمحاولة تسجيل الدخول. حاول مرة أخرى لاحقا!} KER_SYN_AUTH_001{تعذر الحصول على رمز المصادقة!} PAK_APPRVL_MAX_TIME{الإجراء المطلوب: لقد تجاوزت الحزم المسجلة المعلقة وقت الموافقة المسموح به. يرجى مسح التراكم للمتابعة.} PAK_UPLOAD_MAX_TIME{الإجراء المطلوب: تحميل الحزم أو تصديرها إلى الخادم قبل متابعة التسجيل.} PAK_UPLOAD_MAX_COUNT{الإجراء المطلوب: تم الوصول إلى الحد الأقصى للحزمة. الرجاء تصدير أو تحميل الحزم الموجودة قبل إنشاء تسجيلات جديدة.} PAK_DISK_SPACE_LOW{الحد الأدنى من المساحة المطلوبة غير متوفر لإنشاء الحزمة.} REG_PKT_APPRVL_CNT_EXCEED{تم الوصول إلى الحد الأقصى لعدد حزم التسجيل المعلقة للموافقة على العميل. يرجى الموافقة على الحزم أو رفضها قبل متابعة هذا التسجيل.} OPT_TO_REG_TIME_SYNC_EXCEED{تجاوز الوقت منذ آخر مزامنة الحد الأقصى المسموح به. يرجى المزامنة من الخادم قبل المتابعة مع هذا التسجيل.} OPT_TO_REG_OUTSIDE_LOCATION{موقع جهاز العميل الخاص بك خارج مركز التسجيل. يرجى ملاحظة أنه يمكن إجراء التسجيل فقط من داخل مركز التسجيل} other{'Some error occurred!'}}",
+  "@errors": {
+    "description": "Error messages",
+    "placeholders": {
+      "messages": {
+        "type": "String"
+      }
+    }
+  },
+  "fetch_data": "ابحث عن المعلومة",
+  "application_id_not_exist": "معرف التطبيق غير موجود!",
+  "correct_application_id": "يرجى التحقق من معرف التطبيق الذي تم إدخاله أو إدخال معرف صحيح ومحاولة جلبه مرة أخرى.",
+  "enter_application_id": "الرجاء إدخال معرف التطبيق",
+  "prid_length_greater": "يجب أن يتكون معرف التطبيق من أرقام {length} بالضبط",
+  "@prid_length_greater": {
+     "placeholders": {
+        "length": {
+          "type": "int"
+        }
+     }
+  },
+  "okay": "تمام",
+  "no_internet_connection": "لا يوجد اتصال بالإنترنت!",
+  "connect_and_retry": "يرجى الاتصال بالإنترنت وإعادة المحاولة.",
+  "retry": "إعادة المحاولة",
+  "key": "مفتاح",
+  "server_value": "قيمة الخادم",
+  "local_value": "القيمة المحلية",
+  "no_configuration_parameters_found": "لم يتم العثور على معلمات التكوين",
+  "no_configurations_found": "لم يتم العثور على أي تكوين",
+  "confirm": "تأكيد",
+  "scan_now": "امسح الآن",
+  "enter_additional_info_req_id": "أدخل معرف طلب المعلومات الإضافية",
+  "additional_info_req_id": "معرف طلب المعلومات الإضافية",
+  "no_access_to_this_page": "ليست لديك صلاحية الوصول إلى هذه الصفحة",
+  "scheduled_job_settings": "إعدادات المهمة المجدولة",
+  "doc_size_exceeded": "حجم الملف يتجاوز الحد {size}",
+  "@doc_size_exceeded": {
+       "placeholders": {
+         "size": {
+           "type": "String"
+         }
+       }
+  },
+  "age_should_not_be_greater": "يجب ألا يزيد العمر عن {age} سنة",
+  "@age_should_not_be_greater": {
+       "placeholders": {
+            "age": {
+            "type": "int"
+            }
+       }
+  },
+  "onboard_officer_biometric": "التحقق البيومتري للضابط (التسجيل)",
+  "update_officer_biometric": "تحديث التحقق البيومتري للضابط",
+  "submit_changes": "إرسال التغييرات",
+  "local_preferences_saved_msg": "تم حفظ التفضيلات المحلية بنجاح. يلزم إعادة تشغيل التطبيق لرؤية التغييرات. هل ترغب في الإنهاء الآن؟",
+  "search_for_key": "ابحث عن المفتاح",
+  "no_devices_found": "لم يتم العثور على أجهزة",
+  "connect_devices_and_scan": "يرجى توصيل أجهزتك والضغط على 'مسح' لاكتشافها",
+  "sync_restart_dialog_message": "سيتم إعادة تشغيل التطبيق بمجرد النقر على إعادة التشغيل، وسيتم توجيهك إلى صفحة تسجيل الدخول.",
+  "sync_restart_button": "إعادة التشغيل",
+  "app_restart_message": "تم حفظ التكوين بنجاح. جارٍ إعادة تشغيل التطبيق...",
+  "select_option": "اختر خياراً",
+  "cron_expression": "تعبير كرون",
+  "id": "بطاقة تعريف",
+  "name": "اسم",
+  "last_sync_time_not_found": "لم يتم العثور على وقت المزامنة الأخير",
+  "not_downloaded_yet": "لم يتم التنزيل بعد",
+  "syncing_progress": "جارٍ المزامنة... {progress}%",
+  "@syncing_progress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloading_progress": "جارٍ التنزيل... {progress}%",
+  "@downloading_progress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  }
+}
+

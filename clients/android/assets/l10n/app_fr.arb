@@ -1,0 +1,425 @@
+{
+  "english": "English",
+  "arabic": "العربية",
+  "french": "Français",
+  "hindi": "हिंदी",
+  "kannada": "ಕನ್ನಡ",
+  "tamil": "தமிழ்",
+  "locale": "fre",
+  "help": "AIDE",
+  "mosip": "MOSIP",
+  "welcome": "Bienvenue à",
+  "community_reg_text": "Client d'enregistrement MOSIP!",
+  "info_text": "Veuillez vous connecter pour accéder aux fonctionnalités.",
+  "login_text": "Connectez-vous",
+  "language": "Langue",
+  "username": "Nom d’utilisateur",
+  "enter_username": "Entrez le nom d’utilisateur",
+  "next_button": "PROCHAINE",
+  "password": "Mot de passe",
+  "enter_password": "Entrez le mot de passe",
+  "forgot_password": "MOT DE PASSE OUBLIÉ ?",
+  "login_button": "CONNECTEZ-VOUS",
+  "back_button": "PRÉCÉDENT",
+  "user_validated": "Utilisateur validé !",
+  "username_required": "Le nom d’utilisateur est requis!",
+  "password_required": "Le mot de passe est requis!",
+  "username_exceed": "Le nom d’utilisateur ne doit pas dépasser 50 caractères!",
+  "password_exceed": "Le mot de passe ne doit pas dépasser 50 caractères!",
+  "username_incorrect": "Utilisateur introuvable !",
+  "device_credentials": "Informations d’identification de l’appareil",
+  "copy_text": "Copier le texte",
+  "download_json": "Télécharger JSON",
+  "copy_message": "Détails de la machine copiés dans le presse-papiers !",
+  "download_message": "Fichier enregistré dans les téléchargements!",
+  "logout": "DÉCONNEXION",
+  "reset_password": "Réinitialiser le mot de passe",
+  "login_failed": "Echec de la connexion.. Réessayez!",
+  "password_incorrect": "Mot de passe incorrect!",
+  "machine_not_found": "Machine introuvable!",
+  "cred_expired": "Les informations d’identification sont introuvables ou ont expiré. S’il vous plaît essayer la connexion en ligne!",
+  "not_initialized": "La machine n’a pas pu être initialisée!",
+  "invalid_user": "Nom d’utilisateur non valide!",
+  "machine_inactive": "La machine n'est pas active!",
+  "center_inactive": "Le centre n'est pas actif!",
+  "sync_completed_succesfully": "Synchro. Complété avec succès",
+  "sync_completed_message": "Le système redémarrera dans quelques secondes et vous serez redirigé vers la page de connexion.",
+  "sync_failed": "Synchro. Échoué",
+  "sync_failed_message": "Veuillez contacter l'administrateur système ou le superviseur pour obtenir de l'aide.",
+  "policy_key_sync_failed": "Échec de la synchronisation de la clé de stratégie",
+  "ca_certs_sync_failed": "Échec de la synchronisation des certificats CA",
+  "global_params_sync_failed": "Échec de la synchronisation globale des paramètres",
+  "user_details_sync_failed": "Échec de la synchronisation des détails de l'utilisateur",
+  "id_schema_sync_failed": "Échec de la synchronisation IDSchema",
+  "master_data_sync_failed": "Échec de la synchronisation des données principales",
+  "network_error": "Aucun réseau trouvé!",
+  "delete": "SUPPRIMER",
+  "newRegistrationProcess": "{language, select, eng{New Registration} ara{تسجيل جديد} fra{Nouvelle inscription} other{New Registration}}",
+  "inactive_logout_heading": "Tu as été inactif",
+  "inactive_logout_description": "Pour des raisons de sécurité, vous serez déconnecté de $TIMER",
+  "seconds": " Seconds.",
+  "minutes": " Minutes.",
+  "logout_button": "LOG OUT",
+  "stay_logged_in_button": "DÉCONNEXION",
+  "@newRegistrationProcess": {
+    "description": "New Registration Process Header",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "consentScreenName": "{language, select, eng{Consent} ara{موافقة} fra{Consentement} other{Consent}}",
+  "@consentScreenName": {
+    "description": "Consent Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "demographicsScreenName": "{language, select, eng{Demographic Details} ara{التفاصيل الديموغرافية} fra{Détails démographiques} other{Demographic Details}}",
+  "@demographicsScreenName": {
+    "description": "Demographic Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "documentsScreenName": "{language, select, eng{Document Upload} ara{تحميل الوثيقة} fra{Téléchargement de documents} other{Document Upload}}",
+  "@documentsScreenName": {
+    "description": "Document Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "biometricsScreenName": "{language, select, eng{Biometric Details} ara{التفاصيل البيومترية} fra{Détails biométriques} other{Biometric Details}}",
+  "@biometricsScreenName": {
+    "description": "Biometric Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationLanguage": "{language, select, eng{Preferred Language of Communication} ara{لغة التواصل المفضلة} fra{Langue de communication préférée} hin{संचार की पसंदीदा भाषा} kan{ಸಂವಹನದ ಆದ್ಯತೆಯ ಭಾಷೆ} tam{விருப்பமான தொடர்பு மொழி} other{Notification Languages}}",
+  "@notificationLanguage": {
+    "description": "Notification Language Label",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "dataEntryLanguage": "{language, select, eng{Data Entry Language} ara{لغة إدخال البيانات} fra{Langue de saisie des données} hin{डाटा एंट्री भाषा} kan{ಡೇಟಾ ಎಂಟ್ರಿ ಭಾಷೆ} tam{தரவு நுழைவு மொழி} other{Notification Languages}}",
+  "@dataEntryLanguage": {
+    "description": "Data Entry Language Label",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "upload_document": "Veuillez télécharger le document",
+  "scan": "ANALYSE",
+  "clear": "clair",
+  "save": "SAUVEGARDER",
+  "retake": "REPRENDRE",
+  "reference_number": "Entrez le numéro de référence",
+  "select_value_message": "Veuillez sélectionner une valeur",
+  "enter_value_message": "S’il vous plaît entrer une valeur",
+  "invalid_input": "Entrée invalide",
+  "reference_number_validation": "Veuillez entrer le numéro de référence",
+  "referenceNumber": "{language, select, eng{Reference Number} ara{رقم المرجع} fra{Numéro de réference} kan{ಉಲ್ಲೇಖ ಸಂಖ್ಯೆ} hin{संदर्भ संख्या} tam{குறிப்பு எண்} other{Reference Number}}",
+  "@referenceNumber": {
+    "description": "Document reference number",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "synchronize_data": "Synchroniser les données",
+  "registration_tasks": "Tâches d'inscription",
+  "manage_applications": "Gérer des applications",
+  "search_application": "Rechercher par ID d'application",
+  "upload": "TÉLÉCHARGER",
+  "export": "EXPORTER",
+  "number_of_application": "Affichage de {number} applications",
+  "@number_of_application": {
+    "description": "A message with a single parameter",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "0"
+      }
+    }
+  },
+  "total_selected_application": "{selected}/{total} Applications sélectionnées",
+  "@total_selected_application": {
+    "description": "A message with a two parameter",
+    "placeholders": {
+      "selected": {
+        "type": "int",
+        "example": "0"
+      },
+      "total": {
+        "type": "int",
+        "example": "0"
+      }
+    }
+  },
+  "client_status": "Statut du client",
+  "server_status": "État du serveur",
+  "clear_filter": "Effacer le filtre",
+  "review_status": "Statut d'examen",
+  "serial_number": "S.non",
+  "application_id": "ID d'application",
+  "reg_date": "Rég. Date",
+  "reg_type": "Rég. Taper",
+  "operator_id": "ID de l'opérateur",
+  "operation_tasks": "Tâches opérationnelles",
+  "system_storage_usage": "Utilisation du stockage système",
+  "download_pre_registration_data": "Télécharger les données de pré-inscription",
+  "update_operator_biomterics": "Mettre à jour les données biométriques de l'opérateur",
+  "appliction_upload": "Téléchargement d'application",
+  "check_updates": "Vérifier les mises à jour",
+  "center_remap_sync": "Synchronisation du remappage central.",
+  "center_remap_notification": "Votre machine a été réaffectée à un autre centre. Veuillez compléter les activités en attente.",
+  "remap_operation_blocked": "Opération non autorisée. La machine a été réaffectée à un autre centre, veuillez compléter les activités en attente.",
+  "no_center_remap_detected": "Aucun changement détecté. Cette machine reste affectée au centre actuel.",
+  "complete_pending_activities": "Activités en attente nécessitant une complétion",
+  "pending_activities_before_remap": "Les activités suivantes doivent être complétées avant d'initier la synchronisation de réaffectation du centre:",
+  "pending_packets_awaiting_approval": "Paquets en attente d'approbation",
+  "packets_require_supervisor_approval": "{count} paquets sont en attente d'approbation du superviseur et doivent être approuvés avant de procéder à la synchronisation.",
+  "@packets_require_supervisor_approval": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "pending_packets_awaiting_upload": "Paquets en attente de synchronisation et de téléchargement",
+  "packets_queued_locally": "{count} paquets restent en attente de synchronisation locale et doivent être téléchargés vers le serveur avant d'initier la synchronisation de réaffectation du centre.",
+  "@packets_queued_locally": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "sync_button_auto_enabled": "Le bouton de synchronisation sera activé automatiquement une fois les deux activités terminées.",
+  "okay_got_it": "OK",
+  "center_remap_sync_subtitle": "Appuyez pour initier le nettoyage de réaffectation du centre",
+  "remap_sync_screen_title": "Synchronisation de réaffectation du centre",
+  "remap_syncing_message": "Synchronisation du centre réaffecté",
+  "remap_sync_in_progress_warning": "Synchronisation en cours. Veuillez ne pas fermer l'application.",
+  "remap_sync_completed_title": "Synchronisation de réaffectation du centre terminée avec succès",
+  "remap_sync_completed_subtitle": "Veuillez cliquer sur le bouton Redémarrer ci-dessous. La synchronisation se terminera automatiquement après le redémarrage, et vous pourrez ensuite continuer le processus d'enregistrement.",
+  "remap_synced_at": "Synchronisé à",
+  "remap_sync_failed_title": "Échec de la synchronisation !",
+  "remap_sync_failed_subtitle": "La synchronisation a échoué en raison d'un problème réseau. Cliquez sur Réessayer pour continuer.",
+  "restart": "REDÉMARRER",
+  "sync_activities": "Synchronisation. Activités",
+  "pending_approval": "En attente de validation",
+  "dashboard": "Tableau de bord",
+  "settings": "Paramètres",
+  "notifications": "Notifications",
+  "profile": "Profil",
+  "select_language": "Choisir la langue",
+  "select_two_languages": "Veuillez sélectionner 2 langues pour la saisie des données.",
+  "language_mandatory": "{mandatoryLanguage} est obligatoire pour que le résident choisisse conformément aux directives du gouvernement. L'ordre de sélection mènera à l'affichage de la page pour les données démographiques.",
+  "@language_mandatory": {
+    "description": "A message with a single parameter",
+    "placeholders": {
+      "mandatoryLanguage": {
+        "type": "String",
+        "example": "French"
+      }
+    }
+  },
+  "language_selector_note": "Veuillez noter que la langue peut être basée sur les données saisies lors de la pré-inscription.",
+  "cancel": "ANNULER",
+  "submit": "SOUMETTRE",
+  "logo_text": "Propulsé par MOSIP",
+  "get_onboard": "MONTER À BORD",
+  "skip_to_home": "PASSEZ À LA MAISON",
+  "continue_text": "CONTINUER",
+  "authenticate": "AUTHENTIFIER",
+  "new_registration": "NOUVELLE INSCRIPTION",
+  "go_back": "RETOUR",
+  "informed": "INFORMÉ",
+  "sync_packet": "Paquet de synchronisation",
+  "upload_packet": "Télécharger le paquet",
+  "authenticate_using_password": "Authentification en utilisant un mot de passe",
+  "registration_acknowledgement": "Accusé de réception d'inscription",
+  "print_text": "IMPRIMER",
+  "hello": "BONJOUR",
+  "onboard_process_help": "Veuillez appuyer sur 'S'INSCRIRE' pour commencer le processus d'intégration.",
+  "default_not_found": "Rôle requis introuvable!",
+  "mark_exception": "Marquer l'exception",
+  "threshold": "Seuil",
+  "quality": "Qualité",
+  "attempts": "Tentatives",
+  "comments": "Commentaires",
+  "exception_type": "Type d'exception",
+  "permanent": "Permanent",
+  "temporary": "Temporaire",
+  "exceptions": "Des exceptions",
+  "add_comments_for_marking_the_exception": "Ajouter des commentaires pour marquer l'exception",
+  "rescan": "Réanalyser",
+  "marking_exceptions_on": "Marquage des exceptions sur",
+  "is_not_allowed": "n'est pas autorisé",
+  "capture": "Capturer",
+  "attempts_left": "tentatives restantes",
+  "left_hand": "Main gauche",
+  "left": "Gauche",
+  "right": "Droite",
+  "right_hand": "Main droite",
+  "iris": "Iris",
+  "thumbs": "Pouces",
+  "exception": "Exception",
+  "face": "Visage",
+  "preview_page": "Aperçu",
+  "packet_auth_page": "Authentification",
+  "acknowledgement_page": "Accusé de réception",
+  "demographic_information": "Informations démographiques",
+  "documents": "Documents",
+  "biometrics": "Biométrie",
+  "share": "PARTAGER",
+  "packets_created": "Paquets créés",
+  "packets_synced": "Paquets synchronisés",
+  "packets_uploaded": "Paquets téléchargés",
+  "onboard_operator_biomterics": "Enrôler les données biométriques de l'opérateur",
+  "users": "Utilisatrices",
+  "user_id": "ID de l'utilisateur",
+  "user_name": "Nom d'utilisateur",
+  "status": "Statut",
+  "active_not_onboarded": "Actif – Non intégré",
+  "user_inactive": "Utilisateur inactif",
+  "onboarded": "Intégré",
+  "sync_alert_title": "Synchronisation pour continuer!",
+  "sync_alert_content": "La machine ou le centre n'est pas actif. Activez et synchronisez pour continuer.",
+  "sync_alert_text": "Synchroniser",
+  "onboarded_successfully": "Vous avez été intégré avec succès.",
+  "operator_biometric_updated_successfully": "Les données biométriques de l'opérateur ont été mises à jour avec succès.",
+  "home": "MAISON",
+  "verify_and_save": "VÉRIFIER ET ENREGISTRER",
+  "supervisors_biometric_onboard": "Enrôlement biométrique du superviseur",
+  "supervisors_biometric_update": "Mise à jour biométrique du superviseur",
+  "help_topics": "Sujets d'aide",
+  "onboard_request_message": "Veuillez appuyer sur le bouton Get Onboard pour vous intégrer au portail.",
+  "hello_s": "Bonjour ",
+  "approve": "APPROUVER",
+  "reject": "REJETER",
+  "reject_dialog_heading": "Rejeter le paquet?",
+  "reject_dialog_subheading": "Veuillez sélectionner un motif de rejet du paquet. Vous pouvez modifier votre avis pour l'approuver ou réinitialiser le statut de l'avis ultérieurement.",
+  "reason_rejection": "Raison du rejet",
+  "no_reason_selected": "Veuillez sélectionner une raison...",
+  "supervisor_auth_heading": "Authentification du superviseur",
+  "supervisor_auth_subheading": "Authentification du superviseur à l'aide d'un mot de passe",
+  "uin_number": "Numéro UIN",
+  "valid_uin": "Veuillez saisir un UIN valide",
+  "enter_uin": "Entrez le numéro UIN",
+  "select_update_attributes": "Sélectionnez tous les attributs qui doivent être mis à jour",
+  "logout_action_required": "Il y a encore des actions à faire !",
+  "logout_warning_message": "Cliquer sur se déconnecter mettra fin au processus et pourrait entraîner une perte de données.",
+  "officer": "Officier",
+  "operator": "Opérateur",
+  "supervisor": "Superviseur",
+  "online": "En ligne",
+  "offline": "Hors ligne",
+  "enabled": "Activé",
+  "disabled": "Désactivé",
+  "logout_success": "Vous avez été déconnecté avec succès!",
+  "logout_failure": "Quelque chose s'est mal passé, veuillez réessayer après un certain temps",
+  "go_to_home": "Aller à la maison",
+  "errors": "{messages, select, REG_TRY_AGAIN{Echec de la connexion.. Réessayez!} REG_INVALID_REQUEST{Mot de passe incorrect!} REG_MACHINE_NOT_FOUND{Cet appareil n’a pas encore été intégré. Veuillez contacter votre administrateur pour obtenir de l’aide !} REG_NETWORK_ERROR{Échec de la connexion. Vérifiez la connexion réseau!} REG_CRED_EXPIRED{Les informations d’identification sont introuvables ou ont expiré. S’il vous plaît essayer la connexion en ligne!} REG_MACHINE_INACTIVE{La machine n'est pas active!} REG_CENTER_INACTIVE{Le centre n'est pas actif!} REG_LOGIN_LOCKED{Limite maximale de tentatives de connexion atteinte. Réessayez plus tard!} KER_SYN_AUTH_001{Impossible d’obtenir le jeton d’authentification!} PAK_APPRVL_MAX_TIME{Action requise : les paquets enregistrés en attente ont dépassé le délai d'approbation autorisé. Veuillez éliminer l'arriéré pour continuer.} PAK_UPLOAD_MAX_TIME{Action requise : Téléchargez ou exportez les paquets vers le serveur avant de procéder à l'enregistrement.} PAK_UPLOAD_MAX_COUNT{Action requise : limite de paquets atteinte. Veuillez exporter ou télécharger les paquets existants avant de créer de nouvelles inscriptions.} PAK_DISK_SPACE_LOW{L'espace minimum requis n'est pas disponible pour créer le paquet.} REG_PKT_APPRVL_CNT_EXCEED{Le nombre maximum de paquets d'enregistrement en attente d'approbation sur le client a été atteint. Veuillez approuver ou rejeter les paquets avant de procéder à cette inscription.} OPT_TO_REG_TIME_SYNC_EXCEED{Le temps écoulé depuis la dernière synchronisation a dépassé la limite maximale. Veuillez synchroniser depuis le serveur avant de poursuivre cet enregistrement.} OPT_TO_REG_OUTSIDE_LOCATION{Votre emplacement de machine cliente est en dehors du centre d'enregistrement. Veuillez noter que l'enregistrement ne peut être effectué qu'à l'intérieur du centre d'enregistrement} other{'Some error occurred!'}}",
+  "@errors": {
+    "description": "Error messages",
+    "placeholders": {
+      "messages": {
+        "type": "String"
+      }
+    }
+  },
+  "fetch_data": "RÉCUPÉRER DES DONNÉES",
+  "application_id_not_exist": "L'ID de l'application n'existe pas!",
+  "correct_application_id": "Veuillez vérifier l'ID d'application saisi ou saisir un ID correct et essayer de le récupérer à nouveau.",
+  "enter_application_id": "Veuillez saisir l'ID de la demande",
+  "prid_length_greater": "L'ID de l'application doit contenir exactement {length} chiffres",
+  "@prid_length_greater": {
+     "placeholders": {
+        "length": {
+          "type": "int"
+        }
+     }
+  },
+  "okay": "D'ACCORD",
+  "no_internet_connection": "Pas de connexion Internet!",
+  "connect_and_retry": "Veuillez vous connecter à Internet et réessayer.",
+  "retry": "RÉESSAYER",
+  "key": "Clé",
+  "server_value": "Valeur du serveur",
+  "local_value": "Valeur locale",
+  "no_configuration_parameters_found": "Aucun paramètre de configuration trouvé",
+  "no_configurations_found": "Aucune configuration trouvée",
+  "confirm": "Confirmer",
+  "scan_now": "Analyser maintenant",
+  "enter_additional_info_req_id": "Entrez l'identifiant de la demande d'information supplémentaire",
+  "additional_info_req_id": "Identifiant de la demande d'information supplémentaire",
+  "no_access_to_this_page": "Vous n'avez pas accès à cette page",
+  "scheduled_job_settings": "Paramètres des tâches planifiées",
+  "doc_size_exceeded": "La taille du fichier dépasse la limite de {size}",
+  "@doc_size_exceeded": {
+       "placeholders": {
+         "size": {
+           "type": "String"
+         }
+       }
+  },
+  "age_should_not_be_greater": "L'âge ne doit pas dépasser {age} ans.",
+  "@age_should_not_be_greater": {
+       "placeholders": {
+            "age": {
+            "type": "int"
+            }
+       }
+  },
+  "onboard_officer_biometric": "Enregistrement biométrique de l’officier",
+  "update_officer_biometric": "Mise à jour biométrique de l’officier",
+  "submit_changes": "Soumettre les modifications",
+  "local_preferences_saved_msg": "Les préférences locales ont été enregistrées avec succès. Le redémarrage de l'application est nécessaire pour voir les changements. Voulez-vous quitter maintenant ?",
+  "search_for_key": "Rechercher une clé",
+  "no_devices_found": "Aucun appareil trouvé",
+  "connect_devices_and_scan": "Veuillez connecter vos appareils et appuyer sur 'ANALYSE' pour les détecter",
+  "sync_restart_dialog_message": "L'application redémarrera une fois que vous aurez cliqué sur Redémarrer, et vous serez redirigé vers la page de connexion.",
+  "sync_restart_button": "Redémarrer",
+  "app_restart_message": "Configuration enregistrée avec succès. Redémarrage de l'application...",
+  "select_option": "Sélectionner une option",
+  "cron_expression": "Expression Cron",
+  "id": "IDENTIFIANT",
+  "name": "Nom",
+  "last_sync_time_not_found": "Heure de dernière synchronisation introuvable",
+  "not_downloaded_yet": "Pas encore téléchargé",
+  "syncing_progress": "Synchronisation... {progress}%",
+  "@syncing_progress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloading_progress": "Téléchargement... {progress}%",
+  "@downloading_progress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  }
+}
+

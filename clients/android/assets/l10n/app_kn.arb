@@ -1,0 +1,424 @@
+{
+  "english": "English",
+  "arabic": "العربية",
+  "french": "Français",
+  "hindi": "हिंदी",
+  "kannada": "ಕನ್ನಡ",
+  "tamil": "தமிழ்",
+  "locale": "kan",
+  "help": "ಸಹಾಯ",
+  "mosip": "MOSIP",
+  "welcome": "ಇದಕ್ಕೆ ಸ್ವಾಗತ",
+  "community_reg_text": "MOSIP ನೋಂದಣಿ ಗ್ರಾಹಕ!",
+  "info_text": "ವೈಶಿಷ್ಟ್ಯಗಳನ್ನು ಪ್ರವೇಶಿಸಲು ದಯವಿಟ್ಟು ಲಾಗಿನ್ ಮಾಡಿ.",
+  "login_text": "ಲಾಗಿನ್ ಮಾಡಿ",
+  "language": "ಭಾಷೆ",
+  "username": "ಬಳಕೆದಾರ ಹೆಸರು",
+  "enter_username": "ಬಳಕೆದಾರ ಹೆಸರು ನಮೂದಿಸಿ",
+  "next_button": "ಮುಂದೆ",
+  "password": "ಪಾಸ್ ವರ್ಡ್",
+  "enter_password": "ಪಾಸ್ ವರ್ಡ್ ನಮೂದಿಸಿ",
+  "forgot_password": "ಪಾಸ್ವರ್ಡ್ ಮರೆತಿರುವಿರಾ?",
+  "login_button": "ಲಾಗಿನ್",
+  "back_button": "ಹಿಂದೆ",
+  "user_validated": "ಬಳಕೆದಾರ ಮೌಲ್ಯೀಕರಿಸಲಾಗಿದೆ!",
+  "username_required": "ಬಳಕೆದಾರ ಹೆಸರು ಅಗತ್ಯವಿದೆ!",
+  "password_required": "ಪಾಸ್ ವರ್ಡ್ ಅಗತ್ಯವಿದೆ!",
+  "username_exceed": "ಬಳಕೆದಾರಹೆಸರು 50 ಅಕ್ಷರಗಳನ್ನು ಮೀರಬಾರದು!",
+  "password_exceed": "ಪಾಸ್ ವರ್ಡ್ 50 ಅಕ್ಷರಗಳನ್ನು ಮೀರಬಾರದು!",
+  "username_incorrect": "ಬಳಕೆದಾರ ಸಿಗಲಿಲ್ಲ!",
+  "device_credentials": "ಸಾಧನ ರುಜುವಾತುಗಳು",
+  "copy_text": "ಪಠ್ಯ ನಕಲಿಸು",
+  "download_json": "ಡೌನ್ಲೋಡ್ JSON",
+  "copy_message": "ಯಂತ್ರದ ವಿವರಗಳನ್ನು ಕ್ಲಿಪ್ ಬೋರ್ಡ್ ಗೆ ನಕಲಿಸಲಾಗಿದೆ!",
+  "download_message": "ಡೌನ್ ಲೋಡ್ ಗಳಿಗೆ ಫೈಲ್ ಉಳಿಸಲಾಗಿದೆ!",
+  "logout": "ಲಾಗ್ ಔಟ್",
+  "reset_password": "ಪಾಸ್ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ",
+  "login_failed": "ಲಾಗಿನ್ ವಿಫಲವಾಗಿದೆ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸು!",
+  "password_incorrect": "ಪಾಸ್ ವರ್ಡ್ ತಪ್ಪಾಗಿದೆ!",
+  "machine_not_found": "ಯಂತ್ರ ಸಿಗಲಿಲ್ಲ!",
+  "cred_expired": "ರುಜುವಾತುಗಳು ಸಿಗಲಿಲ್ಲ ಅಥವಾ ಅವಧಿ ಮೀರಿದವು. ದಯವಿಟ್ಟು ಆನ್ ಲೈನ್ ಲಾಗಿನ್ ಪ್ರಯತ್ನಿಸಿ!",
+  "not_initialized": "ಯಂತ್ರವನ್ನು ಆರಂಭಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ!",
+  "invalid_user": "ಬಳಕೆದಾರ ಹೆಸರು ಅಮಾನ್ಯ!",
+  "machine_inactive": "ಯಂತ್ರ ಸಕ್ರಿಯವಾಗಿಲ್ಲ!",
+  "center_inactive": "ಕೇಂದ್ರವು ಸಕ್ರಿಯವಾಗಿಲ್ಲ!",
+  "sync_completed_succesfully": "ಸಿಂಕ್ ಯಶಸ್ವಿಯಾಗಿ ಪೂರ್ಣಗೊಂಡಿದೆ",
+  "sync_completed_message": "ಸಿಸ್ಟಮ್ ಕೆಲವೇ ಸೆಕೆಂಡುಗಳಲ್ಲಿ ಮರುಪ್ರಾರಂಭವಾಗುತ್ತದೆ ಮತ್ತು ನಿಮ್ಮನ್ನು ಲಾಗಿನ್ ಪುಟಕ್ಕೆ ಮರುನಿರ್ದೇಶಿಸಲಾಗುತ್ತದೆ.",
+  "sync_failed": "ಸಿಂಕ್ ವಿಫಲವಾಗಿದೆ",
+  "sync_failed_message": "ಸಹಾಯಕ್ಕಾಗಿ ದಯವಿಟ್ಟು ಸಿಸ್ಟಂ ನಿರ್ವಾಹಕ ಅಥವಾ ಮೇಲ್ವಿಚಾರಕರನ್ನು ಸಂಪರ್ಕಿಸಿ.",
+  "policy_key_sync_failed": "ನೀತಿ ಕೀಲಿ ಸಿಂಕ್ ವಿಫಲವಾಗಿದೆ",
+  "ca_certs_sync_failed": "CA ಪ್ರಮಾಣಪತ್ರಗಳ ಸಿಂಕ್ ವಿಫಲವಾಗಿದೆ",
+  "global_params_sync_failed": "ಜಾಗತಿಕ ಪರಮ್ಸ್ ಸಿಂಕ್ ವಿಫಲವಾಗಿದೆ",
+  "user_details_sync_failed": "ಬಳಕೆದಾರ ವಿವರಗಳ ಸಿಂಕ್ ವಿಫಲವಾಗಿದೆ",
+  "id_schema_sync_failed": "IDSchena ಸಿಂಕ್ ವಿಫಲವಾಗಿದೆ",
+  "master_data_sync_failed": "ಮಾಸ್ಟರ್ ಡೇಟಾ ಸಿಂಕ್ ವಿಫಲವಾಗಿದೆ",
+  "network_error": "ಯಾವುದೇ ನೆಟ್ವರ್ಕ್ ಸಿಗಲಿಲ್ಲ!",
+  "delete": "ಅಳಿಸಿ",
+  "newRegistrationProcess": "{language, select, eng{New Registration} ara{تسجيل جديد} fra{Nouvelle inscription} other{New Registration}}",
+  "inactive_logout_heading": "ನೀವು ಸುಮ್ಮನಿದ್ದಿರಿ",
+  "inactive_logout_description": "ಭದ್ರತಾ ಕಾರಣಗಳಿಗಾಗಿ, ನೀವು $TIMER ನಲ್ಲಿ ಲಾಗ್ ಔಟ್ ಆಗುತ್ತೀರಿ",
+  "seconds": " ಸೆಕೆಂಡುಗಳು.",
+  "minutes": " ನಿಮಿಷಗಳು.",
+  "logout_button": "ಲಾಗ್ ಔಟ್ ಮಾಡಿ",
+  "stay_logged_in_button": "ಲಾಗಿನ್ ಆಗಿರಿ",
+  "@newRegistrationProcess": {
+    "description": "New Registration Process Header",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "consentScreenName": "{language, select, eng{Consent} ara{موافقة} fra{Consentement} other{Consent}}",
+  "@consentScreenName": {
+    "description": "Consent Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "demographicsScreenName": "{language, select, eng{Demographic Details} ara{التفاصيل الديموغرافية} fra{Détails démographiques} other{Demographic Details}}",
+  "@demographicsScreenName": {
+    "description": "Demographic Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "documentsScreenName": "{language, select, eng{Document Upload} ara{تحميل الوثيقة} fra{Téléchargement de documents} other{Document Upload}}",
+  "@documentsScreenName": {
+    "description": "Document Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "biometricsScreenName": "{language, select, eng{Biometric Details} ara{التفاصيل البيومترية} fra{Détails biométriques} other{Biometric Details}}",
+  "@biometricsScreenName": {
+    "description": "Biometric Screen Name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationLanguage": "{language, select, eng{Preferred Language of Communication} ara{لغة التواصل المفضلة} fra{Langue de communication préférée} hin{संचार की पसंदीदा भाषा} kan{ಸಂವಹನದ ಆದ್ಯತೆಯ ಭಾಷೆ} tam{விருப்பமான தொடர்பு மொழி} other{Notification Languages}}",
+  "@notificationLanguage": {
+    "description": "Notification Language Label",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "dataEntryLanguage": "{language, select, eng{Data Entry Language} ara{لغة إدخال البيانات} fra{Langue de saisie des données} hin{डाटा एंट्री भाषा} kan{ಡೇಟಾ ಎಂಟ್ರಿ ಭಾಷೆ} tam{தரவு நுழைவு மொழி} other{Notification Languages}}",
+  "@dataEntryLanguage": {
+    "description": "Data Entry Language Label",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "upload_document": "ದಯವಿಟ್ಟು ಡಾಕ್ಯುಮೆಂಟ್ ಅನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ",
+  "scan": "ಸ್ಕ್ಯಾನ್",
+  "clear": "ಅಳಿಸಿ",
+  "save": "ಉಳಿಸಿ",
+  "retake": "ರೀಟೇಕ್",
+  "reference_number": "ಉಲ್ಲೇಖ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ",
+  "select_value_message": "ದಯವಿಟ್ಟು ಮೌಲ್ಯವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+  "enter_value_message": "ದಯವಿಟ್ಟು ಒಂದು ಮೌಲ್ಯವನ್ನು ನಮೂದಿಸಿ",
+  "invalid_input": "ಅಮಾನ್ಯ ಇನ್\u200Cಪುಟ್",
+  "reference_number_validation": "ದಯವಿಟ್ಟು ಉಲ್ಲೇಖ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ",
+  "referenceNumber": "{language, select, eng{Reference Number} ara{رقم المرجع} fra{Numéro de réference} kan{ಉಲ್ಲೇಖ ಸಂಖ್ಯೆ} hin{संदर्भ संख्या} tam{குறிப்பு எண்} other{Reference Number}}",
+  "@referenceNumber": {
+    "description": "Document reference number",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "synchronize_data": "ಡೇಟಾವನ್ನು ಸಿಂಕ್ರೊನೈಸ್ ಮಾಡಿ",
+  "registration_tasks": "ನೋಂದಣಿ ಕಾರ್ಯಗಳು",
+  "manage_applications": "ಅಪ್ಲಿಕೇಶನ್‌ಗಳನ್ನು ನಿರ್ವಹಿಸಿ",
+  "search_application": "ಅಪ್ಲಿಕೇಶನ್ ಐಡಿ ಮೂಲಕ ಹುಡುಕಿ",
+  "upload": "ಅಪ್ಲೋಡ್ ಮಾಡಿ",
+  "export": "ರಫ್ತು ಮಾಡಿ",
+  "number_of_application": "{number} ಅಪ್ಲಿಕೇಶನ್‌ಗಳನ್ನು ಪ್ರದರ್ಶಿಸಲಾಗುತ್ತಿದೆ",
+  "@number_of_application": {
+    "description": "A message with a single parameter",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "0"
+      }
+    }
+  },
+  "total_selected_application": "{selected}/{total} ಅಪ್ಲಿಕೇಶನ್\u200Cಗಳನ್ನು ಆಯ್ಕೆಮಾಡಲಾಗಿದೆ",
+  "@total_selected_application": {
+    "description": "A message with a two parameter",
+    "placeholders": {
+      "selected": {
+        "type": "int",
+        "example": "0"
+      },
+      "total": {
+        "type": "int",
+        "example": "0"
+      }
+    }
+  },
+  "client_status": "ಕ್ಲೈಂಟ್ ಸ್ಥಿತಿ",
+  "server_status": "ಸರ್ವರ್ ಸ್ಥಿತಿ",
+  "clear_filter": "Clear Filter",
+  "review_status": "ಪುನರ್ ಪರಿಶೀಲನೆ ಸ್ಥಿತಿ",
+  "serial_number": "ಎಸ್.ಎನ್",
+  "application_id": "ಅಪ್ಲಿಕೇಶನ್ ಐಡಿ",
+  "reg_date": "ರೆಗ್. ದಿನಾಂಕ",
+  "reg_type": "ರೆಗ್. ಪ್ರಕಾರ",
+  "operator_id": "ಆಪರೇಟರ್ ಐಡಿ",
+  "operation_tasks": "ಕಾರ್ಯಾಚರಣೆಯ ಕಾರ್ಯಗಳು",
+  "system_storage_usage": "ಸಿಸ್ಟಮ್ ಶೇಖರಣಾ ಬಳಕೆ",
+  "download_pre_registration_data": "ಪೂರ್ವ-ನೋಂದಣಿ ಡೇಟಾವನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
+  "update_operator_biomterics": "ಆಪರೇಟರ್ ಬಯೋಮೆಟ್ರಿಕ್ಸ್ ಅನ್ನು ನವೀಕರಿಸಿ",
+  "appliction_upload": "ಅಪ್ಲಿಕೇಶನ್ ಅಪ್ಲೋಡ್",
+  "check_updates": "ನವೀಕರಣಗಳನ್ನು ಪರಿಶೀಲಿಸಿ",
+  "center_remap_sync": "ಕೇಂದ್ರ ರೀಮ್ಯಾಪ್ ಸಿಂಕ್.",
+  "center_remap_notification": "ನಿಮ್ಮ ಯಂತ್ರವನ್ನು ಇನ್ನೊಂದು ಕೇಂದ್ರಕ್ಕೆ ಮರು-ಮ್ಯಾಪ್ ಮಾಡಲಾಗಿದೆ. ದಯವಿಟ್ಟು ಬಾಕಿ ಇರುವ ಚಟುವಟಿಕೆಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ.",
+  "remap_operation_blocked": "ಕಾರ್ಯಾಚರಣೆ ಅನುಮತಿಸಲಾಗಿಲ್ಲ. ಯಂತ್ರವನ್ನು ಇನ್ನೊಂದು ಕೇಂದ್ರಕ್ಕೆ ಮರು-ಮ್ಯಾಪ್ ಮಾಡಲಾಗಿದೆ, ದಯವಿಟ್ಟು ಬಾಕಿ ಇರುವ ಚಟುವಟಿಕೆಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ.",
+  "no_center_remap_detected": "ಯಾವುದೇ ಬದಲಾವಣೆಗಳು ಕಂಡುಬಂದಿಲ್ಲ. ಈ ಯಂತ್ರವು ಪ್ರಸ್ತುತ ಕೇಂದ್ರಕ್ಕೆ ನಿಯೋಜಿಸಲ್ಪಟ್ಟಿದೆ.",
+  "complete_pending_activities": "ಪೂರ್ಣಗೊಳಿಸಬೇಕಾದ ಬಾಕಿ ಚಟುವಟಿಕೆಗಳು",
+  "pending_activities_before_remap": "ಕೇಂದ್ರ ರೀಮ್ಯಾಪ್ ಸಿಂಕ್ರೊನೈಸೇಶನ್ ಪ್ರಾರಂಭಿಸುವ ಮೊದಲು ಈ ಕೆಳಗಿನ ಚಟುವಟಿಕೆಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಬೇಕು:",
+  "pending_packets_awaiting_approval": "ಅನುಮೋದನೆಗಾಗಿ ಕಾಯುತ್ತಿರುವ ಪ್ಯಾಕೆಟ್‌ಗಳು",
+  "packets_require_supervisor_approval": "{count} ಪ್ಯಾಕೆಟ್‌ಗಳು ಮೇಲ್ವಿಚಾರಕರ ಅನುಮೋದನೆಗಾಗಿ ಕಾಯುತ್ತಿದ್ದು ಸಿಂಕ್ ಮಾಡುವ ಮೊದಲು ಅನುಮೋದಿಸಬೇಕು.",
+  "@packets_require_supervisor_approval": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "pending_packets_awaiting_upload": "ಸಿಂಕ್ರೊನೈಸೇಶನ್ ಮತ್ತು ಅಪ್‌ಲೋಡ್‌ಗಾಗಿ ಬಾಕಿ ಪ್ಯಾಕೆಟ್‌ಗಳು",
+  "packets_queued_locally": "{count} ಪ್ಯಾಕೆಟ್‌ಗಳು ಸ್ಥಳೀಯ ಸಿಂಕ್ರೊನೈಸೇಶನ್‌ಗಾಗಿ ಬಾಕಿ ಇದ್ದು ಕೇಂದ್ರ ರೀಮ್ಯಾಪ್ ಸಿಂಕ್ರೊನೈಸೇಶನ್ ಪ್ರಾರಂಭಿಸುವ ಮೊದಲು ಸರ್ವರ್‌ಗೆ ಅಪ್‌ಲೋಡ್ ಮಾಡಬೇಕು.",
+  "@packets_queued_locally": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "sync_button_auto_enabled": "ಎರಡೂ ಚಟುವಟಿಕೆಗಳು ಪೂರ್ಣಗೊಂಡ ನಂತರ ಸಿಂಕ್ ಬಟನ್ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಸಕ್ರಿಯಗೊಳ್ಳುತ್ತದೆ.",
+  "okay_got_it": "ಸರಿ",
+  "center_remap_sync_subtitle": "ಕೇಂದ್ರ ರೀಮ್ಯಾಪ್ ಕ್ಲೀನ್‌ಅಪ್ ಪ್ರಾರಂಭಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
+  "remap_sync_screen_title": "ಕೇಂದ್ರ ರೀಮ್ಯಾಪ್ ಸಿಂಕ್",
+  "remap_syncing_message": "ರೀಮ್ಯಾಪ್ ಮಾಡಿದ ಕೇಂದ್ರವನ್ನು ಸಿಂಕ್ ಮಾಡಲಾಗುತ್ತಿದೆ",
+  "remap_sync_in_progress_warning": "ಸಿಂಕ್ ಪ್ರಗತಿಯಲ್ಲಿದೆ. ದಯವಿಟ್ಟು ಅಪ್ಲಿಕೇಶನ್ ಮುಚ್ಚಬೇಡಿ.",
+  "remap_sync_completed_title": "ಕೇಂದ್ರ ರೀಮ್ಯಾಪ್ ಸಿಂಕ್ ಯಶಸ್ವಿಯಾಗಿ ಪೂರ್ಣಗೊಂಡಿದೆ",
+  "remap_sync_completed_subtitle": "ದಯವಿಟ್ಟು ಕೆಳಗಿನ ಮರುಪ್ರಾರಂಭ ಬಟನ್ ಕ್ಲಿಕ್ ಮಾಡಿ. ಮರುಪ್ರಾರಂಭದ ನಂತರ ಸಿಂಕ್ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಪೂರ್ಣಗೊಳ್ಳುತ್ತದೆ.",
+  "remap_synced_at": "ಸಿಂಕ್ ಮಾಡಲಾಗಿದೆ",
+  "remap_sync_failed_title": "ಸಿಂಕ್ ವಿಫಲವಾಗಿದೆ!",
+  "remap_sync_failed_subtitle": "ನೆಟ್ವರ್ಕ್ ಸಮಸ್ಯೆಯಿಂದಾಗಿ ಸಿಂಕ್ ವಿಫಲವಾಗಿದೆ. ಮುಂದುವರಿಸಲು ಮರುಪ್ರಯತ್ನಿಸಿ.",
+  "restart": "ಮರುಪ್ರಾರಂಭಿಸಿ",
+  "sync_activities": "ಸಿಂಕ್ ಮಾಡಿ. ಚಟುವಟಿಕೆಗಳು",
+  "pending_approval": "ಒಪ್ಪಿಗೆಗಾಗಿ ಕಾದಿರುವ",
+  "dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+  "settings": "ಸಂಯೋಜನೆಗಳು",
+  "notifications": "ಅಧಿಸೂಚನೆಗಳು",
+  "profile": "ಪ್ರೊಫೈಲ್",
+  "select_language": "ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+  "select_two_languages": "ಡೇಟಾ ನಮೂದುಗಾಗಿ ದಯವಿಟ್ಟು ಯಾವುದೇ 2 ಭಾಷೆಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+  "language_mandatory": "ಸರ್ಕಾರಿ ಮಾರ್ಗಸೂಚಿಗಳ ಪ್ರಕಾರ ಆಯ್ಕೆ ಮಾಡಲು ನಿವಾಸಿಗಳಿಗೆ {mandatoryLanguage} ಕಡ್ಡಾಯವಾಗಿದೆ. ಆಯ್ಕೆಯ ಕ್ರಮವು ಜನಸಂಖ್ಯಾ ಡೇಟಾಕ್ಕಾಗಿ ಪುಟ ವೀಕ್ಷಣೆಗೆ ಕಾರಣವಾಗುತ್ತದೆ.",
+  "@language_mandatory": {
+    "description": "A message with a single parameter",
+    "placeholders": {
+      "mandatoryLanguage": {
+        "type": "String",
+        "example": "Kannada"
+      }
+    }
+  },
+  "language_selector_note": "ಪೂರ್ವ-ನೋಂದಣಿ ಸಮಯದಲ್ಲಿ ನಮೂದಿಸಿದ ಡೇಟಾವನ್ನು ಆಧರಿಸಿ ಭಾಷೆ ಇರಬಹುದು ಎಂಬುದನ್ನು ದಯವಿಟ್ಟು ಗಮನಿಸಿ.",
+  "cancel": "ರದ್ದುಮಾಡು",
+  "submit": "ಸಲ್ಲಿಸು",
+  "logo_text": "MOSIP ನಿಂದ ನಡೆಸಲ್ಪಡುತ್ತಿದೆ",
+  "get_onboard": "ಆನ್‌ಬೋರ್ಡ್ ಪಡೆಯಿರಿ",
+  "skip_to_home": "ಮನೆಗೆ ತೆರಳಿ",
+  "continue_text": "ಮುಂದುವರಿಸಿ",
+  "authenticate": "ಪ್ರಮಾಣಿತಗೊಳಿಸಿ",
+  "new_registration": "ಹೊಸ ನೋಂದಾಯಿ",
+  "go_back": "ಹಿಂತಿರುಗಿ",
+  "informed": "ಮಾಹಿತಿ ನೀಡಲಾಗಿದೆ",
+  "sync_packet": "ಸಿಂಕ್ ಪ್ಯಾಕೆಟ್",
+  "upload_packet": "ಅಪ್‌ಲೋಡ್ ಪ್ಯಾಕೆಟ್",
+  "authenticate_using_password": "ಪಾಸ್‌ವರ್ಡ್ ಬಳಸಿ ಅಂಗೀಕರಿಸಿ",
+  "registration_acknowledgement": "ನೋಂದಾಯಿತ ಸ್ವೀಕೃತಿ",
+  "print_text": "ಮುದ್ರಿಸಿ",
+  "hello": "ಹಲೋ",
+  "onboard_process_help": "ಆನ್‌ಬೋರ್ಡಿಂಗ್ ಪ್ರಕ್ರಿಯೆಯೊಂದಿಗೆ ಪ್ರಾರಂಭಿಸಲು ದಯವಿಟ್ಟು 'ಆನ್‌ಬೋರ್ಡ್ ಪಡೆಯಿರಿ' ಅನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ.",
+  "default_not_found": "ಅಗತ್ಯವಿರುವ ಪಾತ್ರ ಕಂಡುಬಂದಿಲ್ಲ!",
+  "mark_exception": "ಅಂಶಗೊಳಿಸಲು ಅನುಮತಿಸಿ",
+  "threshold": "ಸೀಮಾಂಕ",
+  "quality": "ಗುಣಮಟ್ಟ",
+  "attempts": "ಪ್ರಯಾಸಗಳು",
+  "comments": "ಕೊರಗುಗಳು",
+  "exception_type": "ಅಂಶದ ಪ್ರಕಾರ",
+  "permanent": "ಸ್ಥಾಯಿ",
+  "temporary": "ಕ್ಷಣಿಕ",
+  "exceptions": "ಅಂಶಗಳು",
+  "add_comments_for_marking_the_exception": "ಅಂಶವನ್ನು ಅಂಶಗೊಳಿಸಲು ಕೊರಗಳನ್ನು ಸೇರಿಸಿ",
+  "rescan": "ಮರು ಸ್ಕ್ಯಾನ್",
+  "marking_exceptions_on": "ವಿನಾಯಿತಿಗಳನ್ನು ಗುರುತಿಸಲಾಗುತ್ತಿದೆ",
+  "is_not_allowed": "ಅನುಮತಿಸಲಾಗುವುದಿಲ್ಲ",
+  "capture": "ಸೆರೆಹಿಡಿಯಿರಿ",
+  "attempts_left": "ಪ್ರಯತ್ನಗಳು ಉಳಿದಿವೆ",
+  "left_hand": "ಎಡ ಕೈ",
+  "left": "ಎಡ",
+  "right": "ಬಲ",
+  "right_hand": "ಬಲ ಕೈ",
+  "iris": "ಐರಿಸ್",
+  "thumbs": "ಬೆರಳುಗಳು",
+  "exception": "ವಿನಾಯಿತಿ",
+  "face": "ಮುಖ",
+  "preview_page": "ಪೂರ್ವದರು",
+  "packet_auth_page": "ಪ್ರಮಾಣಿಕತೆ",
+  "acknowledgement_page": "ಅರ್ಹಿಚ್ಛೆ",
+  "demographic_information": "ಜನಸಂಖ್ಯಾ ಮಾಹಿತಿ",
+  "documents": "ದಾಖಲೆಗಳು",
+  "biometrics": "ಬಯೋಮೆಟ್ರಿಕ್ಸ್",
+  "share": "ಶೇರ್ ಮಾಡಿ",
+  "packets_created": "ಪ್ಯಾಕೆಟ್‌ಗಳನ್ನು ರಚಿಸಲಾಗಿದೆ",
+  "packets_synced": "ಪ್ಯಾಕೆಟ್‌ಗಳನ್ನು ಸಿಂಕ್ ಮಾಡಲಾಗಿದೆ",
+  "packets_uploaded": "ಪ್ಯಾಕೆಟ್‌ಗಳನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಲಾಗಿದೆ",
+  "users": "ಬಳಕೆದಾರರು",
+  "user_id": "ಬಳಕೆದಾರರ ಗುರುತು",
+  "user_name": "ಬಳಕೆದಾರ ಹೆಸರು",
+  "status": "ಸ್ಥಿತಿ",
+  "active_not_onboarded": "ಸಕ್ರಿಯ - ಆನ್‌ಬೋರ್ಡ್ ಮಾಡಲಾಗಿಲ್ಲ",
+  "user_inactive": "ಬಳಕೆದಾರ ನಿಷ್ಕ್ರಿಯ",
+  "onboarded": "ಆನ್‌ಬೋರ್ಡ್ ಮಾಡಲಾಗಿದೆ",
+  "sync_alert_title": "ಮುಂದುವರಿಸಲು ಸಿಂಕ್ ಮಾಡಿ!",
+  "sync_alert_content": "ಯಂತ್ರ ಅಥವಾ ಕೇಂದ್ರ ಸಕ್ರಿಯವಿಲ್ಲ. ಮುಂದುವರಿಸಲು ಸಕ್ರಿಯಗೊಳಿಸಿ ಮತ್ತು ಸಿಂಕ್ ಮಾಡಿ.",
+  "sync_alert_text": "ಸಿಂಕ್ ಮಾಡಿ",
+  "onboarded_successfully": "ನೀವು ಯಶಸ್ವಿಯಾಗಿ ಆನ್‌ಬೋರ್ಡ್ ಮಾಡಿರುವಿರಿ.",
+  "operator_biometric_updated_successfully": "ಆಪರೇಟರ್ ಬಯೋಮೆಟ್ರಿಕ್ಸ್ ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ.",
+  "onboard_operator_biomterics": "ಆಪರೇಟರ್ ಬಯೋಮೆಟ್ರಿಕ್ಸ್ ನೋಂದಣಿ",
+  "home": "ಮನೆ",
+  "verify_and_save": "ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಉಳಿಸಿ",
+  "supervisors_biometric_onboard": "ನಿರೀಕ್ಷಕರ ಬಯೋಮೆಟ್ರಿಕ್ ಔನ್‌ಬೋರ್ಡಿಂಗ್",
+  "supervisors_biometric_update": "ನಿರೀಕ್ಷಕರ ಬಯೋಮೆಟ್ರಿಕ್ ನವೀಕರಣ",
+  "help_topics": "ಸಹಾಯ ವಿಷಯಗಳು",
+  "onboard_request_message": "ಪೋರ್ಟಲ್‌ನಲ್ಲಿ ನಿಮ್ಮನ್ನು ಆನ್‌ಬೋರ್ಡ್ ಮಾಡಲು ದಯವಿಟ್ಟು \"ಆನ್‌ಬೋರ್ಡ್ ಪಡೆಯಿರಿ\" ಬಟನ್ ಅನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ.",
+  "hello_s": "ನಮಸ್ಕಾರ ",
+  "approve": "ಅನುಮೋದಿಸಿ",
+  "reject": "ತಿರಸ್ಕರಿಸು",
+  "reject_dialog_heading": "ಪ್ಯಾಕೆಟ್ ಅನ್ನು ತಿರಸ್ಕರಿಸುವುದೇ?",
+  "reject_dialog_subheading": "ದಯವಿಟ್ಟು ಪ್ಯಾಕೆಟ್ ನಿರಾಕರಣೆಗೆ ಕಾರಣವನ್ನು ಆಯ್ಕೆಮಾಡಿ. ನಂತರ ಪರಿಶೀಲನೆ ಸ್ಥಿತಿಯನ್ನು ಅನುಮೋದಿಸಲು ಅಥವಾ ಮರುಹೊಂದಿಸಲು ನಿಮ್ಮ ವಿಮರ್ಶೆಯನ್ನು ನೀವು ಬದಲಾಯಿಸಬಹುದು.",
+  "reason_rejection": "ನಿರಾಕರಣೆಗೆ ಕಾರಣ",
+  "no_reason_selected": "ದಯವಿಟ್ಟು ಕಾರಣವನ್ನು ಆಯ್ಕೆಮಾಡಿ...",
+  "supervisor_auth_heading": "ಮೇಲ್ವಿಚಾರಕರ ದೃಢೀಕರಣ",
+  "supervisor_auth_subheading": "ಗುಪ್ತಪದವನ್ನು ಬಳಸಿಕೊಂಡು ಮೇಲ್ವಿಚಾರಕರ ದೃಢೀಕರಣ",
+  "uin_number": "UIN ಸಂಖ್ಯೆ",
+  "valid_uin": "ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ UIN ಅನ್ನು ನಮೂದಿಸಿ",
+  "enter_uin": "UIN ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ",
+  "select_update_attributes": "ನವೀಕರಿಸಬೇಕಾದ ಎಲ್ಲಾ ಗುಣಲಕ್ಷಣಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+  "logout_action_required": "ಇನ್ನೂ ಕೆಲವು ಕ್ರಮಗಳ ಅಗತ್ಯವಿದೆ!",
+  "logout_warning_message": "ಲಾಗ್ಔಟ್ ಅನ್ನು ಕ್ಲಿಕ್ ಮಾಡುವುದರಿಂದ ಪ್ರಕ್ರಿಯೆಯನ್ನು ಕೊನೆಗೊಳಿಸುತ್ತದೆ ಮತ್ತು ಡೇಟಾ ನಷ್ಟಕ್ಕೆ ಕಾರಣವಾಗಬಹುದು.",
+  "officer": "ಅಧಿಕಾರಿ",
+  "operator": "ಆಪರೇಟರ್",
+  "supervisor": "ಮೇಲ್ವಿಚಾರಕ",
+  "online": "ಆನ್ಲೈನ್",
+  "offline": "ಆಫ್ಲೈನ್",
+  "enabled": "ಸಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ",
+  "disabled": "ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ",
+  "logout_success": "ನೀವು ಯಶಸ್ವಿಯಾಗಿ ಲಾಗ್ ಔಟ್ ಆಗಿರುವಿರಿ!",
+  "logout_failure": "ಏನೋ ತಪ್ಪಾಗಿದೆ, ದಯವಿಟ್ಟು ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
+  "go_to_home": "ಮನೆಗೆ ಹೋಗು",
+  "errors": "{messages, select, REG_TRY_AGAIN{ಲಾಗಿನ್ ವಿಫಲವಾಗಿದೆ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸು!} REG_INVALID_REQUEST{ಪಾಸ್ ವರ್ಡ್ ತಪ್ಪಾಗಿದೆ!} REG_MACHINE_NOT_FOUND{ಈ ಸಾಧನವನ್ನು ಇನ್ನೂ ಆನ್‌ಬೋರ್ಡ್ ಮಾಡಿಲ್ಲ. ಸಹಾಯಕ್ಕಾಗಿ ದಯವಿಟ್ಟು ನಿಮ್ಮ ನಿರ್ವಾಹಕರನ್ನು ಸಂಪರ್ಕಿಸಿ!} REG_NETWORK_ERROR{ಲಾಗಿನ್ ವಿಫಲವಾಗಿದೆ. ನೆಟ್ವರ್ಕ್ ಸಂಪರ್ಕ ಪರಿಶೀಲಿಸಿ!} REG_CRED_EXPIRED{ರುಜುವಾತುಗಳು ಸಿಗಲಿಲ್ಲ ಅಥವಾ ಅವಧಿ ಮೀರಿದವು. ದಯವಿಟ್ಟು ಆನ್ ಲೈನ್ ಲಾಗಿನ್ ಪ್ರಯತ್ನಿಸಿ!} REG_MACHINE_INACTIVE{ಯಂತ್ರ ಸಕ್ರಿಯವಾಗಿಲ್ಲ!} REG_CENTER_INACTIVE{ಕೇಂದ್ರವು ಸಕ್ರಿಯವಾಗಿಲ್ಲ!} REG_LOGIN_LOCKED{ಗರಿಷ್ಠ ಲಾಗಿನ್ ಪ್ರಯತ್ನದ ಮಿತಿಯನ್ನು ತಲುಪಿದೆ. ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ!} KER_SYN_AUTH_001{ದೃಢೀಕರಣ ಟೋಕನ್ ಪಡೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ!} PAK_APPRVL_MAX_TIME{ಕ್ರಮದ ಅಗತ್ಯವಿದೆ: ಬಾಕಿ ಉಳಿದಿರುವ ನೋಂದಾಯಿತ ಪ್ಯಾಕೆಟ್‌ಗಳು ಅನುಮತಿಸಲಾದ ಅನುಮೋದನೆ ಸಮಯವನ್ನು ಮೀರಿದೆ. ಮುಂದುವರಿಸಲು ದಯವಿಟ್ಟು ಬ್ಯಾಕ್‌ಲಾಗ್ ಅನ್ನು ತೆರವುಗೊಳಿಸಿ.} PAK_UPLOAD_MAX_TIME{ಕ್ರಮದ ಅಗತ್ಯವಿದೆ: ನೋಂದಣಿಯೊಂದಿಗೆ ಮುಂದುವರಿಯುವ ಮೊದಲು ಪ್ಯಾಕೆಟ್‌ಗಳನ್ನು ಸರ್ವರ್‌ಗೆ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ ಅಥವಾ ರಫ್ತು ಮಾಡಿ.} PAK_UPLOAD_MAX_COUNT{ಕ್ರಮದ ಅಗತ್ಯವಿದೆ: ಪ್ಯಾಕೆಟ್ ಮಿತಿಯನ್ನು ತಲುಪಿದೆ. ಹೊಸ ನೋಂದಣಿಗಳನ್ನು ರಚಿಸುವ ಮೊದಲು ದಯವಿಟ್ಟು ಅಸ್ತಿತ್ವದಲ್ಲಿರುವ ಪ್ಯಾಕೆಟ್‌ಗಳನ್ನು ರಫ್ತು ಮಾಡಿ ಅಥವಾ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.} PAK_DISK_SPACE_LOW{ಪ್ಯಾಕೆಟ್ ರಚಿಸಲು ಅಗತ್ಯವಿರುವ ಕನಿಷ್ಟ ಸ್ಥಳಾವಕಾಶ ಲಭ್ಯವಿಲ್ಲ.} REG_PKT_APPRVL_CNT_EXCEED{ಕ್ಲೈಂಟ್‌ನಲ್ಲಿ ಅನುಮೋದನೆಗಾಗಿ ಬಾಕಿ ಉಳಿದಿರುವ ನೋಂದಣಿ ಪ್ಯಾಕೆಟ್‌ಗಳ ಗರಿಷ್ಠ ಸಂಖ್ಯೆಯನ್ನು ತಲುಪಿದೆ. ಈ ನೋಂದಣಿಯೊಂದಿಗೆ ಮುಂದುವರಿಸುವ ಮೊದಲು ದಯವಿಟ್ಟು ಪ್ಯಾಕೆಟ್‌ಗಳನ್ನು ಅನುಮೋದಿಸಿ ಅಥವಾ ತಿರಸ್ಕರಿಸಿ.} OPT_TO_REG_TIME_SYNC_EXCEED{ಕೊನೆಯ ಸಿಂಕ್‌ನಿಂದ ಸಮಯವು ಗರಿಷ್ಠ ಮಿತಿಯನ್ನು ಮೀರಿದೆ. ಈ ನೋಂದಣಿಯೊಂದಿಗೆ ಮುಂದುವರಿಯುವ ಮೊದಲು ದಯವಿಟ್ಟು ಸರ್ವರ್‌ನಿಂದ ಸಿಂಕ್ ಮಾಡಿ.} OPT_TO_REG_OUTSIDE_LOCATION{ನಿಮ್ಮ ಕ್ಲೈಂಟ್ ಯಂತ್ರದ ಸ್ಥಳವು ನೋಂದಣಿ ಕೇಂದ್ರದ ಹೊರಗಿದೆ. ನೋಂದಣಿಯನ್ನು ನೋಂದಣಿ ಕೇಂದ್ರದೊಳಗೆ ಮಾತ್ರ ಮಾಡಬಹುದು ಎಂಬುದನ್ನು ದಯವಿಟ್ಟು ಗಮನಿಸಿ} other{'Some error occurred!'}}",
+  "@errors": {
+    "description": "Error messages",
+    "placeholders": {
+      "messages": {
+        "type": "String"
+      }
+    }
+  },
+  "fetch_data": "ಡೇಟಾವನ್ನು ಪಡೆದುಕೊಳ್ಳಿ",
+  "application_id_not_exist": "ಅಪ್ಲಿಕೇಶನ್ ಐಡಿ ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ!",
+  "correct_application_id": "ದಯವಿಟ್ಟು ನಮೂದಿಸಿದ ಅಪ್ಲಿಕೇಶನ್ ಐಡಿಯನ್ನು ಪರಿಶೀಲಿಸಿ ಅಥವಾ ಸರಿಯಾದ ಐಡಿಯನ್ನು ನಮೂದಿಸಿ ಮತ್ತು ಅದನ್ನು ಮತ್ತೆ ಪಡೆಯಲು ಪ್ರಯತ್ನಿಸಿ.",
+  "enter_application_id": "ದಯವಿಟ್ಟು ಅಪ್ಲಿಕೇಶನ್ ಐಡಿಯನ್ನು ನಮೂದಿಸಿ",
+  "prid_length_greater": "ಅಪ್ಲಿಕೇಶನ್ ID ನಿಖರವಾಗಿ {length} ಅಂಕೆಗಳಾಗಿರಬೇಕು.",
+  "@prid_length_greater": {
+     "placeholders": {
+         "length": {
+          "type": "int"
+         }
+     }
+  },
+  "okay": "ಸರಿ",
+  "no_internet_connection": "ಇಂಟರ್ನೆಟ್ ಸಂಪರ್ಕವಿಲ್ಲ!",
+  "connect_and_retry": "ದಯವಿಟ್ಟು ಇಂಟರ್ನೆಟ್\u200Cನೊಂದಿಗೆ ಸಂಪರ್ಕಿಸಿ ಮತ್ತು ಮರುಪ್ರಯತ್ನಿಸಿ.",
+  "retry": "ಮರುಪ್ರಯತ್ನಿಸಿ",
+  "key": "ಕೀ",
+  "server_value": "ಸರ್ವರ್ ಮೌಲ್ಯ",
+  "local_value": "ಸ್ಥಳೀಯ ಮೌಲ್ಯ",
+  "no_configuration_parameters_found": "ಯಾವುದೇ ಸಂರಚನಾ ನಿಯತಾಂಕಗಳು ಕಂಡುಬರಲಿಲ್ಲ",
+  "no_configurations_found": "ಯಾವುದೇ ಸಂರಚನೆಗಳು ಕಂಡುಬರಲಿಲ್ಲ",
+  "confirm": "ದೃಢೀಕರಿಸಿ",
+  "scan_now": "ಈಗಸ್ಕ್ಯಾನ್ ಮಾಡಿ",
+  "enter_additional_info_req_id": "ಹೆಚ್ಚುವರಿ ಮಾಹಿತಿ ವಿನಂತಿ ಐಡಿ ನಮೂದಿಸಿ",
+  "additional_info_req_id": "ಹೆಚ್ಚುವರಿ ಮಾಹಿತಿ ವಿನಂತಿ ಐಡಿ",
+  "no_access_to_this_page": "ನಿಮಗೆ ಈ ಪುಟಕ್ಕೆ ಪ್ರವೇಶವಿಲ್ಲ",
+  "scheduled_job_settings": "ನಿಗದಿತ ಉದ್ಯೋಗ ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+  "doc_size_exceeded": "ಫೈಲ್ ಗಾತ್ರ ಮಿತಿ {size} ಮೀರಿದೆ",
+  "@doc_size_exceeded": {
+       "placeholders": {
+         "size": {
+           "type": "String"
+         }
+       }
+  },
+  "age_should_not_be_greater": "ವಯಸ್ಸು {age} ವರ್ಷಗಳಿಗಿಂತ ಹೆಚ್ಚಿರಬಾರದು",
+  "@age_should_not_be_greater": {
+       "placeholders": {
+            "age": {
+            "type": "int"
+            }
+       }
+  },
+  "onboard_officer_biometric": "ಅಧಿಕಾರಿಯ ಬಯೋಮೆಟ್ರಿಕ್ ನೋಂದಣಿ",
+  "update_officer_biometric": "ಅಧಿಕಾರಿಯ ಬಯೋಮೆಟ್ರಿಕ್ ನವೀಕರಣ",
+  "submit_changes": "ಬದಲಾವಣೆಗಳನ್ನು ಸಲ್ಲಿಸಿ",
+  "local_preferences_saved_msg": "ಸ್ಥಳೀಯ ಆದ್ಯತೆಗಳನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸಂಗ್ರಹಿಸಲಾಗಿದೆ. ಬದಲಾವಣೆಗಳನ್ನು ನೋಡಲು ಅಪ್ಲಿಕೇಶನ್ ಅನ್ನು ಮರುಪ್ರಾರಂಭಿಸಬೇಕು. ನೀವು ಈಗ ನಿರ್ಗಮಿಸಲು ಬಯಸುವಿರಾ?",
+  "search_for_key": "ಕೀಗಾಗಿ ಹುಡುಕಿ",
+  "no_devices_found": "ಯಾವುದೇ ಸಾಧನಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+  "connect_devices_and_scan": "ದಯವಿಟ್ಟು ನಿಮ್ಮ ಸಾಧನಗಳನ್ನು ಸಂಪರ್ಕಿಸಿ ಮತ್ತು ಅವುಗಳನ್ನು ಪತ್ತೆಹಚ್ಚಲು 'ಸ್ಕ್ಯಾನ್' ಅನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ",
+  "sync_restart_dialog_message": "ನೀವು ಮರುಪ್ರಾರಂಭ ಕ್ಲಿಕ್ ಮಾಡಿದ ನಂತರ ಅಪ್ಲಿಕೇಶನ್ ಮರುಪ್ರಾರಂಭವಾಗುತ್ತದೆ ಮತ್ತು ನಿಮ್ಮನ್ನು ಲಾಗಿನ್ ಪುಟಕ್ಕೆ ಮರುನಿರ್ದೇಶಿಸಲಾಗುತ್ತದೆ.",
+  "sync_restart_button": "ಮರುಪ್ರಾರಂಭ",
+  "app_restart_message": "ಕಾನ್ಫಿಗರೇಶನ್ ಯಶಸ್ವಿಯಾಗಿ ಉಳಿಸಲಾಗಿದೆ. ಅಪ್ಲಿಕೇಶನ್ ಅನ್ನು ಮರುಪ್ರಾರಂಭಿಸಲಾಗುತ್ತಿದೆ...",
+  "select_option": "ಆಯ್ಕೆಯನ್ನು ಆರಿಸಿ",
+  "cron_expression": "ಕ್ರಾನ್ ಎಕ್ಸ್‌ಪ್ರೆಶನ್",
+  "id": "ID",
+  "name": "ಹೆಸರು",
+  "last_sync_time_not_found": "ಕೊನೆಯ ಸಿಂಕ್ ಸಮಯ ಕಂಡುಬಂದಿಲ್ಲ",
+  "not_downloaded_yet": "ಇನ್ನೂ ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗಿಲ್ಲ",
+  "syncing_progress": "ಸಿಂಕ್ ಮಾಡಲಾಗುತ್ತಿದೆ... {progress}%",
+  "@syncing_progress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloading_progress": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ... {progress}%",
+  "@downloading_progress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  }
+}

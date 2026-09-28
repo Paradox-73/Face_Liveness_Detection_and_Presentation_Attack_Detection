@@ -1,0 +1,87 @@
+package io.mosip.registration.clientmanager.dao;
+
+import androidx.room.Dao;
+import androidx.room.Delete;
+import androidx.room.Insert;
+import androidx.room.Query;
+
+import io.mosip.registration.clientmanager.entity.Registration;
+
+import java.util.List;
+
+@Dao
+public interface RegistrationDao {
+
+    @Query("SELECT * FROM registration where packet_id=:packetId")
+    Registration findOneByPacketId(String packetId);
+
+    @Query("SELECT * FROM registration order by cr_dtimes desc")
+    List<Registration> findAll();
+
+    @Query("SELECT * FROM registration where client_status!='UPLOADED' AND client_status!='CREATED' order by cr_dtimes desc")
+    List<Registration> findAllNotUploaded();
+
+    @Query("SELECT * FROM registration where client_status = :status order by cr_dtimes desc limit :batchSize")
+    List<Registration> findRegistrationByStatus(String status, Integer batchSize);
+
+    @Query("SELECT * FROM registration where server_status in (:statuses) order by cr_dtimes desc")
+    List<Registration> findAllByServerStatus(List<String> statuses);
+
+    @Query("SELECT * FROM registration where client_status in (:statuses) order by cr_dtimes desc")
+    List<Registration> findAllByClientStatus(List<String> statuses);
+
+    @Query("SELECT * FROM registration where client_status in (:clientStatuses) and server_status in (:serverStatuses) order by cr_dtimes desc")
+    List<Registration> findAllByClientStatusAndServerStatus(List<String> clientStatuses, List<String> serverStatuses);
+
+    @Query("Update registration set server_status = :status where packet_id = :packetId")
+    void updateServerStatus(String packetId, String status);
+
+    @Query("Update registration set client_status = :status where packet_id = :packetId")
+    void updateClientStatus(String packetId, String status);
+
+    @Query("Update registration set client_status = :clientStatus,  server_status = :serverStatus where packet_id = :packetId")
+    void updateStatus(String packetId, String clientStatus, String serverStatus);
+
+    @Query("Update registration set client_status = :supervisorStatus,  client_status_comment = :supervisorComment where packet_id = :packetId")
+    void updateSupervisorReview(String packetId, String supervisorStatus, String supervisorComment);
+
+    @Insert
+    void insert(Registration registration);
+
+    @Query("delete from registration where packet_id = :packetId")
+    void delete(String packetId);
+
+    @Query("SELECT COUNT (*) FROM registration where client_status = :status")
+    int findAllRegistrationByStatus(String status);
+
+    @Query("SELECT COUNT(*) FROM registration where client_status in (:syncedStatus, :approvedStatus)")
+    int findRegistrationCountBySyncedStatusAndApprovedStatus(String syncedStatus, String approvedStatus);
+
+    @Query("SELECT COUNT(*) FROM registration where client_status in (:syncedStatus)")
+    int findRegistrationCountBySyncedStatus(String syncedStatus);
+
+    @Query("SELECT COUNT(*) FROM registration where cr_dtimes < CURRENT_DATE")
+    int getAllCreatedPacketStatus();
+
+    @Query("SELECT * FROM registration where client_status = :status order by cr_dtimes asc limit 1")
+    Registration findOldestRegistrationByStatus(String status);
+
+    @Query("SELECT COUNT(*) FROM registration where client_status in ('APPROVED', 'REJECTED')")
+    int findApprovedAndRejectedRegistrationCount();
+
+    @Query("SELECT * FROM registration where server_status IN (:serverStatuses) AND cr_dtimes < :timestamp")
+    List<Registration> findByServerStatusAndCrDtimeBefore(List<String> serverStatuses, long timestamp);
+
+    // Update server status with timestamp (for status sync)
+    @Query("UPDATE registration SET server_status = :serverStatus, server_status_dtimes = :timestamp WHERE packet_id = :packetId")
+    void updateServerStatusWithTimestamp(String packetId, String serverStatus, long timestamp);
+
+    @Query("SELECT * FROM registration WHERE client_status IN ('APPROVED', 'SYNCED', 'EXPORTED') ORDER BY cr_dtimes DESC")
+    List<Registration> findAllPendingForProcessing();
+
+    @Query("SELECT COUNT(*) FROM registration WHERE client_status = 'CREATED'")
+    int countByCreatedStatus();
+
+    @Query("SELECT COUNT(*) FROM registration WHERE client_status = 'RE_REGISTER'")
+    int countReRegisterPending();
+}

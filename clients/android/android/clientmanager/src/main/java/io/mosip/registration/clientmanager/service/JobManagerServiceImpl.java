@@ -1,0 +1,244 @@
+package io.mosip.registration.clientmanager.service;
+
+import static android.content.Context.JOB_SCHEDULER_SERVICE;
+
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
+import android.content.Context;
+import android.util.Log;
+
+import org.apache.commons.lang3.NotImplementedException;
+
+import java.text.DateFormat;
+import java.time.Instant;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import io.mosip.registration.clientmanager.R;
+import io.mosip.registration.clientmanager.constant.RegistrationConstants;
+import io.mosip.registration.clientmanager.entity.SyncJobDef;
+import io.mosip.registration.clientmanager.jobs.ConfigDataSyncJob;
+import io.mosip.registration.clientmanager.jobs.DeleteAuditLogsJob;
+import io.mosip.registration.clientmanager.jobs.PacketStatusSyncJob;
+import io.mosip.registration.clientmanager.jobs.RegistrationDeletionJob;
+import io.mosip.registration.clientmanager.repository.SyncJobDefRepository;
+import io.mosip.registration.clientmanager.spi.JobManagerService;
+import io.mosip.registration.clientmanager.spi.JobTransactionService;
+import io.mosip.registration.clientmanager.spi.LocalConfigService;
+import io.mosip.registration.clientmanager.util.CronExpressionParser;
+import io.mosip.registration.clientmanager.util.DateUtil;
+
+/**
+ * @author Anshul vanawat
+ * @since 1.0.0
+ */
+
+public class JobManagerServiceImpl implements JobManagerService {
+
+    private static final String TAG = JobManagerServiceImpl.class.getSimpleName();
+    private static final int JOB_PERIODIC_SECONDS = (15 * 60) * 1000;
+    private static final int NUM_LENGTH_LIMIT = 5;
+
+    Context context;
+    JobScheduler jobScheduler;
+    JobTransactionService jobTransactionService;
+    SyncJobDefRepository syncJobDefRepository;
+    DateUtil dateUtil;
+    LocalConfigService localConfigService;
+
+    public JobManagerServiceImpl(Context context, SyncJobDefRepository syncJobDefRepository, JobTransactionService jobTransactionService, DateUtil dateUtil, LocalConfigService localConfigService) {
+        this.context = context;
+        this.jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
+        this.syncJobDefRepository = syncJobDefRepository;
+        this.jobTransactionService = jobTransactionService;
+        this.dateUtil = dateUtil;
+        this.localConfigService = localConfigService;
+    }
+
+    /**
+     * Fetches all the SyncJobDef from localDB and schedules or cancels scheduled jobs
+     * as per the sync job def.
+     */
+    @Override
+    public void refreshAllJobs() {
+        List<SyncJobDef> syncJobDefList = getAllSyncJobDefList();
+
+        for (SyncJobDef jobDef : syncJobDefList) {
+            refreshJobStatus(jobDef);
+        }
+    }
+
+    /**
+     * refreshes the passed jobDef
+     */
+    @Override
+    public void refreshJobStatus(SyncJobDef jobDef) {
+        int jobId = generateJobServiceId(jobDef.getId());
+
+        boolean isActiveAndImplemented = jobDef.getIsActive() != null && jobDef.getIsActive()
+                && isJobImplementedOnRegClient(jobDef.getApiName());
+
+        if (!isActiveAndImplemented) {
+            cancelJob(jobId);
+            return;
+        }
+
+        // Use getSyncFrequency to check for custom cron expression first
+        String syncFreq = getSyncFrequency(jobDef);
+        if (!isJobScheduled(jobId))
+            scheduleJob(jobId, jobDef.getApiName(), syncFreq);
+    }
+
+    /**
+     * @param jobId    : Id of the job to be scheduled.
+     * @param apiName  : name of the service to be scheduled.
+     * @param syncFreq : syncFreq (Optional). Null or empty to schedule only once
+     * @return 1 for success and 0 for failure
+     */
+    @Override
+    public int scheduleJob(int jobId, String apiName, String syncFreq) {
+        Class<?> clientJobService = getJobServiceImplClass(apiName);
+        if (clientJobService == null) {
+            throw new NotImplementedException("Job service : " + apiName + " not implemented");
+        }
+
+        ComponentName componentName = new ComponentName(context, clientJobService);
+        JobInfo info;
+        //To schedule periodically
+        long periodMillis = JOB_PERIODIC_SECONDS * 1000L;
+        info = new JobInfo.Builder(jobId, componentName)
+                .setRequiresCharging(false)
+                .setPersisted(true)
+                .setPeriodic(periodMillis)
+                .build();
+        return jobScheduler.schedule(info);
+    }
+
+    @Override
+    public boolean triggerJobService(int jobId, String apiName) {
+        JobInfo info = jobScheduler.getPendingJob(jobId);
+        if (info == null) {
+            //Trigger job only once
+            return scheduleJob(jobId, apiName, null) == JobScheduler.RESULT_SUCCESS;
+        } else {
+            jobScheduler.schedule(info);
+            return true;
+        }
+    }
+
+    @Override
+    public void cancelJob(int jobId) {
+        jobScheduler.cancel(jobId);
+    }
+
+    @Override
+    public boolean isJobScheduled(int jobId) {
+        JobInfo jobinfo = jobScheduler.getPendingJob(jobId);
+        if (jobinfo == null) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean isJobImplementedOnRegClient(String jobAPIName) {
+        if (getJobServiceImplClass(jobAPIName) == null) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public List<SyncJobDef> getAllSyncJobDefList() {
+        return syncJobDefRepository.getAllSyncJobDefList();
+    }
+
+    @Override
+    public String getLastSyncTime(int jobId) {
+        long lastSyncTimeSeconds = jobTransactionService.getLastSyncTime(jobId);
+        String lastSync = context.getString(R.string.NA);
+
+        if (lastSyncTimeSeconds > 0) {
+            lastSync = dateUtil.getDateTime(lastSyncTimeSeconds);
+        }
+        return lastSync;
+    }
+
+    @Override
+    public String getNextSyncTime(int jobId) {
+        SyncJobDef jobDef = getJobDefByJobId(jobId);
+        if (jobDef == null) {
+            return "NA";
+        }
+
+        String cronExpression = getSyncFrequency(jobDef);
+        // Try cron-based calculation first
+        if (CronExpressionParser.isValidCronExpression(cronExpression)) {
+            Instant nextExecution = CronExpressionParser.getNextExecutionTime(cronExpression);
+            if (nextExecution != null) {
+                return dateUtil.getDateTime(nextExecution.toEpochMilli());
+            }
+        }
+
+        // Fallback: use last sync time + interval
+        long lastSyncTimeSeconds = jobTransactionService.getLastSyncTime(jobId);
+        if (lastSyncTimeSeconds > 0) {
+            return dateUtil.getDateTime(lastSyncTimeSeconds + JOB_PERIODIC_SECONDS);
+        }
+
+        return "NA";
+    }
+
+    /**
+     * Get sync frequency for a job, checking custom cron expression first, then default
+     * @param syncJob Job definition
+     * @return Cron expression (custom if exists, otherwise default)
+     */
+    private String getSyncFrequency(SyncJobDef syncJob) {
+        if (localConfigService != null) {
+            String localPreference = localConfigService.getValue(syncJob.getId(), RegistrationConstants.PERMITTED_JOB_TYPE);
+            if (localPreference != null && !localPreference.trim().isEmpty()) {
+                return localPreference;
+            }
+        }
+        return syncJob.getSyncFreq();
+    }
+
+    @Override
+    public int generateJobServiceId(String syncJobDefId) {
+        try {
+            String lastCharsWithNumLengthLimit = syncJobDefId.substring(syncJobDefId.length() - NUM_LENGTH_LIMIT);
+            return Integer.parseInt(lastCharsWithNumLengthLimit);
+        } catch (Exception ex) {
+            Log.e(TAG, "Conversion of jobId : " + syncJobDefId + "to int failed for length " + NUM_LENGTH_LIMIT + ex.getMessage());
+            throw ex;
+        }
+    }
+
+    private Class<?> getJobServiceImplClass(String jobAPIName) {
+        switch (jobAPIName) {
+            case "packetSyncStatusJob":
+                return PacketStatusSyncJob.class;
+            case "synchConfigDataJob":
+                return ConfigDataSyncJob.class;
+            case "deleteAuditLogsJob":
+                return DeleteAuditLogsJob.class;
+            case "registrationDeletionJob":
+                return RegistrationDeletionJob.class;
+            default:
+                return null;
+        }
+    }
+
+    private SyncJobDef getJobDefByJobId(int jobId) {
+        List<SyncJobDef> allJobs = syncJobDefRepository.getAllSyncJobDefList();
+        for (SyncJobDef jobDef : allJobs) {
+            if (jobId == generateJobServiceId(jobDef.getId())) {
+                return jobDef;
+            }
+        }
+        return null;
+    }
+}

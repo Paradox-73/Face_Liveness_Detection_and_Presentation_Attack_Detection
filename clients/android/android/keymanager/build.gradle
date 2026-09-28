@@ -1,0 +1,88 @@
+plugins {
+    id 'com.android.library'
+}
+
+apply from: '../jacoco.gradle'
+
+android {
+    namespace 'io.mosip.registration.keymanager'
+    lintOptions {
+        abortOnError false
+        ignoreWarnings true
+    }
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        debug {
+            testCoverageEnabled true
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+
+    libraryVariants.every { variant ->
+        variant.outputs.each { output ->
+            def outputFile = output.outputFile
+            if (outputFile != null && outputFile.name.endsWith('.aar')) {
+                output.outputFile = new File(projectDir, '../app/new_libs/' + outputFile.name)
+            }
+        }
+    }
+}
+
+dependencies {
+
+    implementation "com.google.dagger:dagger:${rootProject.ext.daggerVersion}"
+    implementation "com.google.dagger:dagger-android-support:${rootProject.ext.daggerVersion}"
+    testImplementation project(':clientmanager')
+    annotationProcessor "com.google.dagger:dagger-compiler:${rootProject.ext.daggerVersion}"
+    annotationProcessor "com.google.dagger:dagger-android-processor:${rootProject.ext.daggerVersion}"
+
+    compileOnly "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
+
+    implementation "javax.validation:validation-api:${rootProject.ext.validationApiVersion}"
+
+    testImplementation "junit:junit:${rootProject.ext.junitVersion}"
+    androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.androidxJunitVersion}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
+
+    testImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoCoreVersion}"
+
+    implementation "org.apache.commons:commons-lang3:${rootProject.ext.commonsLang3Version}"
+    implementation "commons-codec:commons-codec:${rootProject.ext.commonsCodecVersion}"
+
+    implementation "androidx.room:room-common:${rootProject.ext.roomVersion}"
+    implementation group: 'commons-io', name: 'commons-io', version: "${rootProject.ext.commonsIoVersion}"
+
+    implementation "org.bouncycastle:bcprov-jdk18on:${rootProject.ext.bouncycastleVersion}"
+    implementation "org.bouncycastle:bcpkix-jdk18on:${rootProject.ext.bouncycastleVersion}"
+
+    implementation "com.fasterxml.jackson.core:jackson-core:${rootProject.ext.jacksonVersion}"
+    implementation "com.fasterxml.jackson.core:jackson-databind:${rootProject.ext.jacksonVersion}"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${rootProject.ext.jacksonVersion}"
+    implementation "org.bitbucket.b_c:jose4j:${rootProject.ext.jose4jVersion}"
+
+    testImplementation "net.bytebuddy:byte-buddy:${rootProject.ext.byteBuddyVersion}"
+    testImplementation "org.objenesis:objenesis:${rootProject.ext.objenesisVersion}"
+
+}

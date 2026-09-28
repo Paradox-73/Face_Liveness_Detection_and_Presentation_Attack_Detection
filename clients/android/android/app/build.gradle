@@ -1,0 +1,250 @@
+plugins {
+    id 'jacoco'
+}
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterRoot = localProperties.getProperty('flutter.sdk')
+if (flutterRoot == null) {
+    throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
+}
+
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
+}
+
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = '1.0'
+}
+
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    localProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
+apply plugin: 'jacoco'
+
+// Ensure bioSdk DEX conversion runs before asset merge
+afterEvaluate {
+    ['mergeDebugAssets', 'mergeReleaseAssets'].each { taskName ->
+        tasks.findByName(taskName)?.dependsOn(':clientmanager:dexifyBiosdkAars')
+    }
+}
+
+android {
+    namespace 'io.mosip.registration_client'
+    lintOptions {
+        abortOnError false
+        ignoreWarnings true
+    }
+    compileSdkVersion 34
+    ndkVersion flutter.ndkVersion
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+        coreLibraryDesugaringEnabled true
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    jacoco {
+        version = "0.8.12"
+    }
+
+    defaultConfig {
+        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        applicationId "io.mosip.registration_client"
+        // You can update the following values to match your application needs.
+        // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
+        minSdkVersion 28
+        targetSdkVersion flutter.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "BASE_URL", rootProject.ext.serverBaseURL)
+        buildConfigField("String", "HEALTH_CHECK_PATH", rootProject.ext.serverHealthCheckPath)
+        buildConfigField("String", "ACTUATOR_INFO_PATH", rootProject.ext.serverActuatorInfoPath)
+    }
+
+    signingConfigs {
+        release {
+            keyAlias = localProperties['keyAlias']
+            keyPassword = localProperties['keyPassword']
+            storeFile = localProperties['storeFile'] ? file(localProperties['storeFile']) : null
+            storePassword = localProperties['storePassword']
+        }
+    }
+
+    buildTypes {
+        debug {
+            testCoverageEnabled = true  // Enable test coverage
+        }
+        release {
+            // TODO: Add your own signing config for the release build.
+            // Signing with the debug keys for now, so `flutter run --release` works.
+            lintOptions {
+                checkReleaseBuilds false
+                abortOnError false
+            }
+            minifyEnabled false
+            shrinkResources false
+            signingConfig localProperties['storeFile'] ? signingConfigs.release : signingConfigs.debug
+            ndk {
+                abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64', 'x86'
+                // architectures: 'armeabi-v7a', 'arm64-v8a', 'armeabi', 'x86', 'x86_64'
+            }
+        }
+    }
+    packagingOptions {
+        resources.merges.add("git.properties")
+        resources.excludes.add("META-INF/LICENSE*")
+        resources.excludes.add("META-INF/NOTICE*")
+        resources.excludes.add("META-INF/DEPENDENCIES")
+        resources.excludes.add("META-INF/AL2.0")
+        resources.excludes.add("META-INF/LGPL2.1")
+        resources.excludes.add("META-INF/*.kotlin_module")
+        resources.excludes.add("META-INF/maven/**")
+        resources.excludes.add("META-INF/versions/**")
+        resources.excludes.add("META-INF/proguard/**")
+        resources.excludes.add("notice.txt")
+        resources.excludes.add("META-INF/spring*")
+        resources.excludes.add("META-INF/spring/**")
+        resources.excludes.add("META-INF/additional-spring*")
+        resources.pickFirsts.add("mozilla/public-suffix-list.txt")
+        resources.excludes.add("META-INF/INDEX.LIST")
+    }
+}
+tasks.register("jacocoTestReport", JacocoReport) {
+    dependsOn "testDebugUnitTest" // Ensure tests run before generating report
+
+    reports {
+        xml.required = true
+        html.required = true
+    }
+
+    sourceDirectories.setFrom(files(["src/main/java"]))
+    classDirectories.setFrom(files([
+            fileTree(dir: "${buildDir}/intermediates/javac/debug", includes: ["**/*.class"]),
+            fileTree(dir: "${buildDir}/tmp/kotlin-classes/debug", includes: ["**/*.class"])
+    ]))
+    executionData.setFrom(fileTree(dir: buildDir, includes: ["**/*.exec", "**/*.ec"]))
+}
+flutter {
+    source '../..'
+}
+
+dependencies {
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:${rootProject.ext.desugarJdkLibsVersion}"
+
+    implementation "javax.inject:javax.inject:${rootProject.ext.javaxInjectVersion}"
+
+    implementation "com.google.dagger:dagger:${rootProject.ext.daggerVersion}"
+    implementation "com.google.dagger:dagger-android-support:${rootProject.ext.daggerVersion}"
+    annotationProcessor "com.google.dagger:dagger-compiler:${rootProject.ext.daggerVersion}"
+    annotationProcessor "com.google.dagger:dagger-android-processor:${rootProject.ext.daggerVersion}"
+
+    compileOnly "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
+
+    implementation "androidx.appcompat:appcompat:${rootProject.ext.appcompatVersion}"
+    implementation "com.google.android.material:material:${rootProject.ext.materialVersion}"
+    implementation "androidx.lifecycle:lifecycle-extensions:${rootProject.ext.lifecycleExtVersion}"
+    implementation "androidx.lifecycle:lifecycle-runtime:${rootProject.ext.lifecycleRuntimeVersion}"
+    implementation "androidx.constraintlayout:constraintlayout:${rootProject.ext.constraintlayoutVersion}"
+    implementation "androidx.fragment:fragment:${rootProject.ext.fragmentVersion}"
+    implementation "androidx.legacy:legacy-support-v4:${rootProject.ext.legacySupportVersion}"
+    implementation "androidx.viewpager2:viewpager2:${rootProject.ext.viewpager2Version}"
+    implementation "androidx.recyclerview:recyclerview:${rootProject.ext.recyclerviewVersion}"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:${rootProject.ext.swipeRefreshVersion}"
+    implementation "androidx.preference:preference:${rootProject.ext.preferenceVersion}"
+    implementation "androidx.navigation:navigation-fragment:${rootProject.ext.navigationVersion}"
+    implementation "androidx.navigation:navigation-ui:${rootProject.ext.navigationVersion}"
+    implementation "androidx.room:room-runtime:${rootProject.ext.roomVersion}"
+    annotationProcessor "androidx.room:room-compiler:${rootProject.ext.roomVersion}"
+    implementation "androidx.work:work-runtime:${rootProject.ext.workVersion}"
+
+    implementation "com.squareup.okhttp3:okhttp:${rootProject.ext.okhttpVersion}"
+    implementation "com.squareup.okio:okio:${rootProject.ext.okioVersion}"
+    implementation "com.squareup.retrofit2:retrofit:${rootProject.ext.retrofitVersion}"
+    implementation "com.squareup.retrofit2:converter-gson:${rootProject.ext.retrofitVersion}"
+
+    implementation "com.google.code.gson:gson:${rootProject.ext.gsonVersion}"
+    implementation "com.cronutils:cron-utils:${rootProject.ext.cronUtilsVersion}"
+    implementation "com.balysv:material-ripple:${rootProject.ext.materialRippleVersion}"
+    implementation "com.github.jai-imageio:jai-imageio-core:${rootProject.ext.jaiImageioVersion}"
+    implementation "com.github.Tgo1014:JP2ForAndroid:${rootProject.ext.jp2ForAndroidVersion}"
+    implementation "com.auth0.android:jwtdecode:${rootProject.ext.jwtDecodeVersion}"
+
+    implementation "com.fasterxml.jackson.core:jackson-core:${rootProject.ext.jacksonVersion}"
+    implementation "com.fasterxml.jackson.core:jackson-databind:${rootProject.ext.jacksonVersion}"
+    implementation "com.fasterxml.jackson.core:jackson-annotations:${rootProject.ext.jacksonVersion}"
+
+    implementation "org.apache.commons:commons-lang3:${rootProject.ext.commonsLang3Version}"
+    implementation group: 'org.apache.commons', name: 'commons-collections4', version: "${rootProject.ext.commonsCollections4Version}"
+    implementation "commons-codec:commons-codec:${rootProject.ext.commonsCodecVersion}"
+    implementation group: 'commons-io', name: 'commons-io', version: "${rootProject.ext.commonsIoVersion}"
+
+    implementation "org.bouncycastle:bcprov-jdk18on:${rootProject.ext.bouncycastleVersion}"
+    implementation "org.aspectj:aspectjrt:${rootProject.ext.aspectjrtVersion}"
+    implementation "org.apache.velocity:velocity:${rootProject.ext.velocityVersion}"
+    implementation "org.mvel:mvel2:${rootProject.ext.mvel2Version}"
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: "${rootProject.ext.slf4jVersion}"
+    runtimeOnly group: 'org.slf4j', name: 'slf4j-nop', version: "${rootProject.ext.slf4jVersion}"
+
+    implementation "javax.validation:validation-api:${rootProject.ext.validationApiVersion}"
+    implementation "io.swagger.core.v3:swagger-annotations:${rootProject.ext.swaggerAnnotationsVersion}"
+
+    implementation("com.tom-roush:pdfbox-android:${rootProject.ext.pdfboxAndroidVersion}") {
+        exclude group: 'org.bouncycastle'
+    }
+    implementation("io.mosip.biometric.util:biometrics-util:${rootProject.ext.biometricsUtilVersion}") {
+        exclude group: 'org.springframework.boot'
+        exclude group: 'org.springframework'
+        exclude group: 'org.springframework.cloud'
+        exclude group: 'org.springframework.data'
+        exclude group: 'ch.qos.logback'
+        exclude group: 'com.fasterxml.jackson.core'
+        exclude group: 'org.projectlombok'
+        exclude group: 'org.openpnp'
+        exclude group: 'org.junit'
+        exclude group: 'jakarta.xml.bind'
+        exclude group: 'jakarta.annotation'
+        exclude group: 'jakarta.activation'
+        exclude group: 'javax.activation'
+        exclude group: 'org.apache.tomcat'
+        exclude group: 'aopalliance'
+        exclude group: 'commons-logging'
+        exclude group: 'com.google.code.findbugs'
+        exclude group: 'org.aspectj', module: 'aspectjweaver'
+    }
+
+    implementation project(':clientmanager')
+    implementation project(':keymanager')
+    implementation project(':packetmanager')
+    implementation project(':transliterationmanager')
+
+    androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.androidxJunitVersion}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
+    androidTestImplementation "com.squareup.okhttp3:mockwebserver:${rootProject.ext.mockwebserverVersion}"
+    androidTestImplementation "org.mockito:mockito-android:${rootProject.ext.mockitoAndroidVersion}"
+    androidTestImplementation "androidx.room:room-runtime:${rootProject.ext.roomVersion}"
+
+    testImplementation "androidx.room:room-runtime:${rootProject.ext.roomVersion}"
+    testImplementation "junit:junit:${rootProject.ext.junitVersion}"
+    testImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoCoreVersion}"
+    testImplementation "org.mockito:mockito-android:${rootProject.ext.mockitoAndroidVersion}"
+    testImplementation "org.robolectric:robolectric:${rootProject.ext.robolectricVersion}"
+}
