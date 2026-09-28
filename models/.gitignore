@@ -1,0 +1,5 @@
+# Private signing keys never go into the repository.
+*.private.pem
+*private*.pem
+*.pk8
+*.p12

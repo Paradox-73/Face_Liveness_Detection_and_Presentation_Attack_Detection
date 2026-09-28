@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "bundle": "mosip-liveness-models",
+  "version": "1.0.0",
+  "models": [
+    {
+      "id": "yunet",
+      "file": "face_detection_yunet_2026may.onnx",
+      "version": "2026may",
+      "sha256": "ebafce4e3c118d6554634be5c27ab333b4c047a9a8c3faf1d7cf93101c22f0f0",
+      "bytes": 229738,
+      "licence": "MIT",
+      "source": "https://github.com/opencv/opencv_zoo/blob/47534e27c9851bb1128ccc0102f1145e27f23f98/models/face_detection_yunet/face_detection_yunet_2026may.onnx",
+      "params": {}
+    },
+    {
+      "id": "facemesh",
+      "file": "face_landmarks_detector_1x3x256x256_fp16w.onnx",
+      "version": "v2-fp16w",
+      "sha256": "db4b768438ee1304d7e22b9cb8447360ba3750f133b377d68bdf484be2b3f886",
+      "bytes": 2581728,
+      "licence": "Apache-2.0",
+      "source": "https://github.com/PINTO0309/PINTO_model_zoo/tree/07938bed3d0bdfe47538277f06d6c6c9af102e9b/410_FaceMeshV2 face_landmarks_detector_1x3x256x256.onnx, weights stored as float16 by models/tools/fp16_weights.py",
+      "params": {}
+    },
+    {
+      "id": "minifasnet-v2",
+      "file": "MiniFASNetV2.onnx",
+      "version": "2.7_80x80",
+      "sha256": "b32929adc2d9c34b9486f8c4c7bc97c1b69bc0ea9befefc380e4faae4e463907",
+      "bytes": 1743581,
+      "licence": "Apache-2.0",
+      "source": "https://github.com/yakhyo/face-anti-spoofing/releases/download/weights/MiniFASNetV2.onnx (weights of https://github.com/minivision-ai/Silent-Face-Anti-Spoofing/tree/b6d5f04ad78778917853b25c778acef6d5626d15)",
+      "params": {"cropScale": "2.7"}
+    },
+    {
+      "id": "minifasnet-v1se",
+      "file": "MiniFASNetV1SE.onnx",
+      "version": "4_0_0_80x80",
+      "sha256": "ebab7f90c7833fbccd46d3a555410e78d969db5438e169b6524be444862b3676",
+      "bytes": 1742335,
+      "licence": "Apache-2.0",
+      "source": "https://github.com/yakhyo/face-anti-spoofing/releases/download/weights/MiniFASNetV1SE.onnx (weights of https://github.com/minivision-ai/Silent-Face-Anti-Spoofing/tree/b6d5f04ad78778917853b25c778acef6d5626d15)",
+      "params": {"cropScale": "4.0"}
+    },
+    {
+      "id": "sface",
+      "file": "face_recognition_sface_2021dec_fp16w.onnx",
+      "version": "2021dec-fp16w",
+      "sha256": "d2899b3ea45696262517b6890f72f22c6500e887d400c678ffd6c4da9a0d62f3",
+      "bytes": 19374457,
+      "licence": "Apache-2.0",
+      "source": "https://github.com/opencv/opencv_zoo/blob/47534e27c9851bb1128ccc0102f1145e27f23f98/models/face_recognition_sface/face_recognition_sface_2021dec.onnx, weights stored as float16 by models/tools/fp16_weights.py",
+      "params": {}
+    }
+  ]
+}
