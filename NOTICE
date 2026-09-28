@@ -1,0 +1,16 @@
+Face liveness and PAD for MOSIP Registration Clients
+Copyright (c) 2026 Team Badmosip
+
+This repository contains source code imported from MOSIP projects:
+
+- clients/desktop/  from https://github.com/mosip/registration-client (commit 22fe01f),
+  licensed under the Mozilla Public License 2.0 (clients/desktop/LICENSE).
+  The upstream design/ folder (design source files) was not imported.
+- clients/android/  from https://github.com/mosip/android-registration-client (commit c4d3ca7),
+  licensed under the MIT License (clients/android/LICENSE).
+- devices/mock-mds/ from https://github.com/mosip/mosip-mock-services (commit 3d2174d, MockMDS/),
+  licensed under the Mozilla Public License 2.0 (devices/mock-mds/LICENSE).
+  The upstream files/sdkDependeny/ folder (third-party binary libraries not used by the mock) was not imported.
+
+Third-party components and model files added by this project are listed with their licences
+in licenses/ and models/SOURCES.md.

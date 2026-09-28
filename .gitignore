@@ -1,0 +1,35 @@
+# Build output
+target/
+build/
+out/
+.gradle/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# Local machine files
+local.properties
+*.log
+.DS_Store
+Thumbs.db
+
+# Evaluation media and volunteer data never go into git (privacy, see docs/eval)
+eval/captures/
+eval/media/
+**/frame-packs/
+*.mp4
+*.avi
+*.mov
+
+# Secrets
+*.p12.local
+.env
