@@ -1,5 +1,7 @@
 # MockMDS
 
+> **Face liveness extensions:** this copy streams real, changing face frames (webcam, video file or image folder), signs RCAPTURE from the streamed frame, injects faults and can act as an L1 device. See [LIVENESS-EXTENSIONS.md](LIVENESS-EXTENSIONS.md).
+
 ## 📌 Overview
 This module provides a mock implementation of the MOSIP Device Service, designed to comply with the defined [SBI specification](https://docs.mosip.io/1.2.0/modules/partner-management-services/pms-existing/device-provider-partner#sbi-secure-biometric-interface). Biometric data for capture is stored in the files/MockMDS/ directory.
 
