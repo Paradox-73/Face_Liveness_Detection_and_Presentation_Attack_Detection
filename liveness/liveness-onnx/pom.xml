@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.mosip.liveness</groupId>
+        <artifactId>liveness-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>liveness-onnx</artifactId>
+    <packaging>jar</packaging>
+
+    <name>MOSIP face liveness ONNX adapters</name>
+    <description>ONNX Runtime adapters for the liveness core: YuNet face detection, MediaPipe Face Mesh landmarks,
+        MiniFASNet passive PAD and SFace embeddings, plus the signed model bundle loader. Runs on Java 11 desktops
+        and on Android API 28; each client supplies its own ONNX Runtime.</description>
+
+    <properties>
+        <!--
+            Desktop ONNX Runtime used for tests. 1.20.0 is the newest version that loads on the Zulu 11.0.8 JRE the
+            desktop client ships (1.21 fails with UnsatisfiedLinkError, 1.30 crashes in msvcp140.dll).
+            Android supplies com.microsoft.onnxruntime:onnxruntime-android instead (same ai.onnxruntime API).
+        -->
+        <onnxruntime.version>1.20.0</onnxruntime.version>
+        <!-- Model bundle at the repository root; tests read it directly and the models jar packages it. -->
+        <liveness.models.dir>${project.basedir}/../../models</liveness.models.dir>
+        <liveness.test.faces.dir>${project.basedir}/src/test/resources/faces</liveness.test.faces.dir>
+        <!-- Timed frames in the latency benchmark test; raise it with -Dliveness.benchmark.frames=500. -->
+        <liveness.benchmark.frames>100</liveness.benchmark.frames>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.mosip.liveness</groupId>
+            <artifactId>liveness-core</artifactId>
+        </dependency>
+        <dependency>
+            <!-- Provided: the desktop client adds onnxruntime, the Android client adds onnxruntime-android. -->
+            <groupId>com.microsoft.onnxruntime</groupId>
+            <artifactId>onnxruntime</artifactId>
+            <version>${onnxruntime.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-nop</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <configuration>
+                            <compilerArgs>
+                                <arg>-Xlint:all</arg>
+                                <!-- Every public and protected element must carry Javadoc. -->
+                                <arg>-Xdoclint:all/protected</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <additionalClasspathElements>
+                        <additionalClasspathElement>${project.build.directory}/model-bundle</additionalClasspathElement>
+                    </additionalClasspathElements>
+                    <systemPropertyVariables>
+                        <liveness.models.dir>${liveness.models.dir}</liveness.models.dir>
+                        <liveness.test.faces.dir>${liveness.test.faces.dir}</liveness.test.faces.dir>
+                        <liveness.benchmark.frames>${liveness.benchmark.frames}</liveness.benchmark.frames>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+            <plugin>
+                <!-- Copies the model bundle into its own directory for the "models" classifier jar. -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-model-bundle</id>
+                        <!-- Early enough for the tests, which load the bundle from the class path as the desktop does. -->
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/model-bundle/io/mosip/liveness/onnx/models</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${liveness.models.dir}</directory>
+                                    <includes>
+                                        <include>manifest.json</include>
+                                        <include>manifest.jws</include>
+                                        <include>*.onnx</include>
+                                        <include>LICENSES/*</include>
+                                        <include>SOURCES.md</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Automatic-Module-Name>io.mosip.liveness.onnx</Automatic-Module-Name>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <!-- liveness-onnx-<version>-models.jar: the signed model bundle for the desktop class path. -->
+                        <id>models-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>models</classifier>
+                            <classesDirectory>${project.build.directory}/model-bundle</classesDirectory>
+                            <archive>
+                                <manifestEntries>
+                                    <Automatic-Module-Name>io.mosip.liveness.onnx.models</Automatic-Module-Name>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- Fails the build if main code calls a Java API that Android API 28 does not provide. -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>animal-sniffer-maven-plugin</artifactId>
+                <configuration>
+                    <signature>
+                        <groupId>com.toasttab.android</groupId>
+                        <artifactId>gummy-bears-api-28</artifactId>
+                        <version>${android.signature.version}</version>
+                    </signature>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>android-api-28</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
