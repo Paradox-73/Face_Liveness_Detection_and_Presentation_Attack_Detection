@@ -1,0 +1,245 @@
+# Desktop Registration Client: build and run locally
+
+This page covers building the MOSIP desktop Registration Client in
+`clients/desktop/` (upstream `mosip/registration-client` at `22fe01f`, version
+1.2.0.2) and starting it on a Windows machine, either against the default MOSIP
+host or against the local MockSync server in `tools/`.
+
+## 1. Prerequisites
+
+| Item | Version used | Notes |
+|---|---|---|
+| Windows | 11 x64 | The client ships with a Windows-only Java runtime and `run.bat`. |
+| Git Bash | any | Runs `scripts/desktop-build.sh`. Needs `curl`, `unzip`, `sha256sum` (all bundled with Git for Windows). |
+| Windows PowerShell | 5.1 | Runs `scripts/desktop-run.ps1` and `scripts/desktop-machine-keys.ps1`. |
+| Maven | 3.9.9 | Must be on `PATH`. |
+| JDK 11 with `javac` | Azul Zulu 11.0.8 with JavaFX (`zulu11.41.23-ca-fx-jdk11.0.8-win_x64`) | Optional: if `JAVA11_HOME`/`JAVA_HOME` do not point at a complete JDK 11, the build script downloads this one (267 MB, SHA-256 checked). |
+| Disk | about 1.5 GB | Maven repository about 630 MB (build plus unit tests), run layout about 550 MB, downloads about 340 MB. |
+| Network | Maven Central, `cdn.azul.com` | Only for the build. The client itself needs a server only for first login and sync. |
+
+**Maven mirror for retired repositories.** The upstream parent POM lists the
+retired `oss.sonatype.org` repository under the id `ossrh`. Route it to Maven
+Central with a settings file and pass it through `MAVEN_ARGS`:
+
+```xml
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+  <mirrors>
+    <mirror>
+      <id>central-for-retired-repos</id>
+      <mirrorOf>ossrh,sonatype-snapshots,snapshots-repo,oss-sonatype,spring-milestones,spring-snapshots</mirrorOf>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </mirror>
+  </mirrors>
+</settings>
+```
+
+```bash
+export MAVEN_ARGS="-s C:/path/to/mirror-settings.xml"
+```
+
+## 2. Build
+
+From the repository root, in Git Bash:
+
+```bash
+bash scripts/desktop-build.sh               # server host dev.mosip.net (upstream default)
+bash scripts/desktop-build.sh --mocksync    # server host localhost:8443 (MockSync)
+bash scripts/desktop-build.sh --hostname api.example.org   # any other host[:port]
+```
+
+The script:
+
+1. picks a JDK 11 that has `javac` and the Java crypto policy files, or downloads
+   the Zulu 11.0.8 FX JDK into `<run root>/cache/`;
+2. runs `mvn -B clean install -DskipTests -Dgpg.skip` (plus `-Pmocksync` or
+   `-Dmosip.hostname=...`) in `clients/desktop/registration/`;
+3. assembles the run layout (section 3).
+
+Other options: `--fast` builds only `registration-client` and the modules it
+needs; `--skip-build` re-assembles from the last build; `--run-dir DIR` changes
+the output folder. `<run root>` is `$MOSIP_RUN_ROOT`, or the folder `run` next
+to the repository.
+
+The same build without the script:
+
+```bash
+cd clients/desktop/registration
+mvn -B clean install -DskipTests -Dgpg.skip              # default host
+mvn -B clean install -DskipTests -Dgpg.skip -Pmocksync   # localhost:8443
+```
+
+**Measured build times** (12-thread laptop, `MAVEN_OPTS=-Xmx1536m`):
+
+| Case | Maven "Total time" |
+|---|---|
+| First build, empty `~/.m2` (all dependencies downloaded) | 5 min 33 s |
+| Rebuild, default host | 1 min 28 s |
+| Rebuild, `-Pmocksync` | 1 min 43 s |
+| Rebuild, `--fast --mocksync` (no `registration-test`) | 1 min 35 s |
+| Rebuild, `--fast --hostname example.org:9443` | 1 min 55 s |
+
+Rebuild times vary by about 20 s with other load on the machine.
+
+### 2.1 Build changes compared with upstream
+
+| File | Change | Why |
+|---|---|---|
+| `registration/registration-services/pom.xml` | `registration-api` and `registration-api-stub-impl` use `${project.version}` (1.2.0.2, built in this reactor) instead of `${mosip.core.kernel.version}` (1.2.0.1 from Maven Central). | Upstream silently used the published 1.2.0.1 jars, so changes to the local API modules never reached the client. The run layout now contains `registration-api-1.2.0.2.jar`. |
+| `registration/pom.xml` | New property `mosip.client.hostname` (default `dev.mosip.net`); profile `mocksync` sets it to `localhost:8443`; profile `hostname-override` copies `-Dmosip.hostname=<host>` into it. | Selects the server host at build time, the same value `configure.sh` writes when MOSIP packages the client. |
+| `registration/registration-services/src/main/resources/props/mosip-application.properties` | `mosip.hostname=${mosip.client.hostname}` (filled in by Maven resource filtering). | A default build still produces `mosip.hostname=dev.mosip.net`. |
+
+Notes:
+
+- The default build and `-Pmocksync` leave the `${mosip.hostname}` placeholders
+  in `spring.properties` for the client to resolve at run time, as upstream does.
+- `-Dmosip.hostname=<host>` also replaces those placeholders at build time,
+  because Maven filters `spring.properties` too. The resulting jar works, but
+  `configure.sh`'s later rewrite of `props/mosip-application.properties` would no
+  longer change the service URLs. Use `-Dmosip.hostname` only for local builds.
+
+## 3. Run layout
+
+`scripts/desktop-build.sh` writes this folder outside the git tree
+(default `<run root>/desktop`, here `E:\Projects\MOSIP\run\desktop`):
+
+| Path | Content |
+|---|---|
+| `jre\` | Zulu 11.0.8 JRE with JavaFX (`zulu11.41.23-ca-fx-jre11.0.8-win_x64`), the runtime MOSIP bundles. Kept across rebuilds, so imported certificates stay. |
+| `lib\` | `registration-client-1.2.0.2.jar`, its 428 dependency jars, `logback.xml`, and `mock-sdk.jar` (MOSIP mock biometric SDK 1.1.5 from Maven Central, the version `configure.sh` installs). Replaced on every rebuild. |
+| `run.bat` | Double-click launcher: `jre\bin\javaw -Xmx2048m -Dfile.encoding=UTF-8 -cp "lib/*" io.mosip.registration.controller.Initialization`. |
+| `BUILD-INFO.txt` | Client version, `mosip.hostname`, `environment`, git commit, time of assembly. |
+| `db\`, `.mosipkeys\`, `logs\` | Created by the client on first start (section 4). Kept across rebuilds. |
+
+Compared with the official `reg-client.zip` built by `configure.sh`, the layout
+has no jar signatures and no `MANIFEST.MF`. The client accepts this only with
+`environment=LOCAL`, which is the value in this repository's
+`props/mosip-application.properties`.
+
+## 4. Run
+
+From the repository root, in PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\desktop-run.ps1          # start in the background
+powershell -ExecutionPolicy Bypass -File scripts\desktop-run.ps1 -Stop    # close it
+```
+
+Options of `desktop-run.ps1`:
+
+| Option | Effect |
+|---|---|
+| `-TrustCert <file>` | Imports a certificate (PEM or DER) into `jre\lib\security\cacerts` under alias `mocksync` (change with `-TrustAlias`). Needed once for MockSync's self-signed HTTPS certificate: the client uses the JRE's default trust store for every server call. |
+| `-Reset` | Deletes `db\`, `.mosipkeys\` and `logs\` so the client starts as a fresh install. |
+| `-Console` | Runs `java.exe` in the current window and waits, instead of `javaw.exe` in the background. |
+| `-MaxHeap 2048m` | Java maximum heap. |
+| `-RunDir <folder>` | Another run layout. |
+
+What happens on start (observed on 2026-09-28):
+
+- The pre-loader window lists the start-up steps, including
+  `mosip.hostname : <host>` and `Machine is ONLINE/OFFLINE`. ONLINE means
+  `GET https://<host>/v1/syncdata/actuator/health` succeeded.
+- The login screen appears after 23-36 s (four starts measured; the slower ones
+  ran next to a Maven test run). `logs\registration.log` then contains
+  `Login screen loaded`.
+- The first start creates the embedded Derby database in `db\reg` and stores its
+  password, encrypted with the machine key, in `.mosipkeys\db.conf`.
+- The first login needs a reachable server: it downloads the configuration,
+  master data, users and certificates. Without MockSync or a MOSIP server the
+  client stops at the login screen.
+
+`-Stop` closes both client windows, which makes the client close its key store
+(`Closed the Client Security Instance` in the log) and exit. It force-stops the
+process only if that takes longer than 20 s, which happens when `-Stop` is used
+before the login screen has appeared.
+
+## 5. Machine keys (needed by the server before first login)
+
+The client signs and decrypts with a machine key pair:
+
+- **TPM 2.0 present** (for example this team's development laptop): the client
+  uses TPM keys. The log shows `TPMClientCryptoServiceImpl ... Instantiating
+  Platform TPM`, and `.mosipkeys\` contains only `db.conf`. No `readme.txt` is
+  written.
+- **No usable TPM**: the log shows `USING LOCAL CLIENT SECURITY INITIALIZED`, and
+  the client writes `reg.key`, `reg.pub` and `readme.txt` (machine name, public
+  key, key index) into `.mosipkeys\` under the working directory (the run layout
+  folder).
+
+To print the values in both cases:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\desktop-machine-keys.ps1 -OutFile E:\Projects\MOSIP\run\desktop\machine-keys.txt
+```
+
+Output fields: `KeyType` (TPM or LOCAL), `MachineName` (lower-case host name, as
+the client reports it), `PublicKey` and `SignPublicKey` (URL-safe Base64),
+`KeyIndex` (the value the client sends in `GET /v1/syncdata/configs/{key_index}`).
+For LOCAL keys the script prints `readme.txt`. The script runs
+`scripts/DesktopMachineKeys.java` with a JDK 11, because Java's source-file mode
+needs the compiler, which the bundled JRE lacks.
+
+TPM keys are the same for every run folder on one machine, so `-Reset` does not
+change them. Local keys are regenerated after `-Reset`, and the server must
+then be given the new values.
+
+## 6. Using the client with MockSync
+
+1. `bash scripts/desktop-build.sh --mocksync`
+2. Start MockSync (see `tools/`) and register the values from section 5 with it.
+3. `powershell -ExecutionPolicy Bypass -File scripts\desktop-run.ps1 -TrustCert <MockSync certificate>`
+4. The pre-loader shows `mosip.hostname : localhost:8443`. With MockSync running
+   and trusted it should also show `Machine is ONLINE`; then log in with a user
+   that MockSync serves. (Checked so far without MockSync: the client calls
+   `https://localhost:8443/v1/syncdata/actuator/health` and reports OFFLINE.)
+
+## 7. Unit tests
+
+```bash
+cd clients/desktop/registration
+mvn -B -pl registration-services test -Dgpg.skip
+```
+
+- The active `unit-test` profile runs surefire 2.12.4 with JUnit 4. Write new
+  tests in this module with JUnit 4; JUnit 5 tests would not run.
+- Baseline on 2026-09-28 (with the build changes in 2.1): 751 run, 0 failures,
+  2 errors, 17 skipped, 9 min 3 s. Maven reports BUILD FAILURE because of the
+  2 errors.
+- Both errors are `java.lang.SecurityException: Trusted certificate is expired`
+  in `ClientIntegrityValidatorTest.integrityCheckTest` and
+  `ManifestCreatorTest.integrityCheckTest`. The test certificate
+  `registration-services/src/test/resources/provider.pem` expired on
+  2024-10-23. These tests fail on any run after that date.
+- The upstream tests write into `registration-services/`: they empty the
+  tracked `MANIFEST.MF` and create `lib/`, `SCHEMA_0.5.json` and
+  `newProcess.json`. Restore `MANIFEST.MF` and delete the three new entries
+  before committing.
+
+## 8. Known issues
+
+- **Incomplete JDK folders fail early.** A JDK without
+  `conf/security/policy/unlimited/*.policy` makes Maven fail on the first
+  download with `java.lang.SecurityException: Can not initialize cryptographic
+  mechanism ... Missing mandatory jurisdiction policy files: unlimited`. A JDK
+  without `bin/javac` cannot compile. `desktop-build.sh` checks both and falls
+  back to downloading a complete JDK.
+- **Jars that `configure.sh` downloads from MOSIP's internal artifactory are
+  missing:** `icu4j.jar`, `kernel-transliteration-icu4j.jar` (transliteration of
+  typed names), `clamav.jar`, `kernel-virusscanner-clamav.jar` (packet virus
+  scan). The client looks these up only when the feature is used; the effect of
+  their absence on registration has not been tested yet.
+- **Upstream log noise on start:**
+  - `startup-err.log` shows `ClassNotFoundException:
+    io.mosip.registration.config.DerbySlf4jBridge`. `DaoConfig` points Derby's
+    error stream at this class, which does not exist in the source tree. Derby
+    keeps working and writes its messages to `startup.log`.
+  - The first start logs `ERROR ... DaoConfig ... derby.connection.requireAuthentication
+    : is not set to preferred value`, and later starts do not.
+  - `SLF4J: The requested version 1.7.16 by your slf4j binding is not compatible
+    with [1.6]` and Java illegal-reflective-access warnings.
+- `mosip.client.upgrade.server.url` stays `https://dev.mosip.net` in every build.
+  The client uses it only for software upgrades, which `environment=LOCAL` skips.
+- The official `run.bat` also sets `-Xms2048m`; the generated one does not, so
+  the client does not reserve 2 GB at start.
+- The bundled JRE is Windows x64 only, so the run layout works only on Windows.
+  The Maven build has not been tried on Linux or macOS.
