@@ -462,7 +462,7 @@
 		<dependency>
 			<groupId>io.mosip.registration</groupId>
 			<artifactId>registration-api</artifactId>
-			<version>${mosip.core.kernel.version}</version>
+			<version>${project.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>io.mosip.kernel</groupId>
@@ -474,7 +474,7 @@
 		<dependency>
 			<groupId>io.mosip.registration</groupId>
 			<artifactId>registration-api-stub-impl</artifactId>
-			<version>${mosip.core.kernel.version}</version>
+			<version>${project.version}</version>
 		</dependency>
 
 		<dependency>
