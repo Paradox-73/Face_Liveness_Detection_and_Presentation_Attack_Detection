@@ -21,4 +21,21 @@ registration clients, for resident face capture, operator authentication and sup
 Each upstream directory was imported unchanged in its own commit, so `git log -- <path>` and
 `git diff <import-commit> -- <path>` show exactly what this project changed.
 
-Status: work in progress.
+## Status (Sep 29, 2026)
+
+| Part | State |
+|---|---|
+| Shared liveness engine (`liveness/`) | Passive check, active challenges, frame-integrity and planarity checks, capture binding, policy/config, audit; 343 tests pass |
+| ONNX models (`models/`) | YuNet, Face Mesh, MiniFASNet V2 + V1SE, SFace; SHA-256 manifest with signature |
+| Mock face device (`devices/mock-mds/`) | Streams image sequences, video or webcam; capture built from the streamed frame; fault injection |
+| Mock MOSIP server (`tools/mock-sync/`) | Desktop client completes first login and initial sync against it |
+| Desktop client | Builds and launches; liveness integration in progress |
+| Android client | Debug APK builds; runs on the emulator; liveness integration in progress |
+
+## Quick start
+
+- Build and test the engine: `mvn -f liveness/pom.xml verify`
+- Desktop client: see `docs/install/desktop.md`
+- Android client: see `docs/install/android.md`
+- Mock MOSIP server: see `tools/mock-sync/README.md`
+- Mock face device: see `devices/mock-mds/LIVENESS-EXTENSIONS.md`

@@ -1,0 +1,51 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  liveness:
+    name: liveness engine (build + tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build and test liveness-core and liveness-onnx
+        run: mvn -B -f liveness/pom.xml verify -Dliveness.benchmark.frames=0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: liveness-coverage
+          path: liveness/*/target/site/jacoco/
+
+  mock-sync:
+    name: mock MOSIP server (build + tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+          cache: maven
+      - run: mvn -B -f tools/mock-sync/pom.xml verify
+
+  dco:
+    name: DCO sign-off check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Every commit carries Signed-off-by
+        run: |
+          missing=$(git log --format='%H %(trailers:key=Signed-off-by,valueonly,separator=%x2C)' \
+            ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | awk 'NF<2 {print $1}')
+          if [ -n "$missing" ]; then echo "Commits without sign-off:"; echo "$missing"; exit 1; fi
