@@ -114,8 +114,10 @@ flutter:
     - assets/
     - assets/images/
     - assets/svg/
-    - .git/
-    - .git/refs/heads/
+    # Upstream also bundled .git/ and .git/refs/heads/ here so the footer can show the
+    # commit id. In the monorepo this app has no .git folder of its own (every build
+    # reported both folders as missing), so the commit id now comes from --dart-define
+    # (see GlobalProvider.setGitHeadAttributes and scripts/android-build.sh).
     - assets/l10n/
 
   # An image asset can refer to one or more resolution-specific "variants", see

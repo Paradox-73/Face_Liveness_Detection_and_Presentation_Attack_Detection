@@ -77,6 +77,10 @@ app.*.map.json
 # Freezed/Generated files
 /lib/model/*.freezed.dart
 /lib/model/*.g.dart
+# Mockito mocks written by build_runner (pigeon.sh)
+/test/*.mocks.dart
+# null/null/id.zip, written by the clientmanager unit tests (testDebugUnitTest)
+/android/clientmanager/null/
 
 # Flutter Pigeon generated files
 /lib/pigeon/

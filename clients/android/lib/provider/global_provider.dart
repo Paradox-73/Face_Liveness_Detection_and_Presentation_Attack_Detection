@@ -480,6 +480,14 @@ class GlobalProvider with ChangeNotifier {
   }
 
   setGitHeadAttributes() async {
+    // Builds that do not bundle a .git folder (for example from a monorepo)
+    // pass the commit with --dart-define=ARC_GIT_COMMIT=... instead.
+    const String definedCommit = String.fromEnvironment('ARC_GIT_COMMIT');
+    if (definedCommit.isNotEmpty) {
+      branchNameApp = const String.fromEnvironment('ARC_GIT_BRANCH');
+      commitIdApp = definedCommit;
+      return;
+    }
     String head = "";
     String branchName = "";
     String commitId = "";
