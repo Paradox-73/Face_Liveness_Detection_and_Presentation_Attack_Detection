@@ -1,0 +1,15 @@
+{
+	"specVersion": ["0.9.5"],
+	"digitalId": "",
+	"deviceId": 2,
+	"deviceCode": "6e7de5df-7ccd-4730-a103-ac776c261436",
+	"purpose": "Registration",
+	"serviceVersion": "MOSIP.MDS.001",
+	"deviceSubId": [1, 2, 3],
+	"firmware": "TCI322L1.0",
+	"deviceStatus": "Active",
+	"status": "Ready",
+	"certification": "L0",
+	"callbackId": "",
+	"env":"Staging"
+}

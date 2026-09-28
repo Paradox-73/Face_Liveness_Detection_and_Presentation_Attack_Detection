@@ -1,0 +1,15 @@
+{
+	"specVersion": ["0.9.5"],
+	"digitalId": "",
+	"deviceId": 3,
+	"deviceCode": "664b0fa7-1fb3-4604-9985-797925e5ae82",
+	"purpose": "Registration",
+	"serviceVersion": "MOSIP.MDS.001",
+	"deviceSubId": [0],
+	"firmware": "Mosip 1.0",
+	"deviceStatus": "Active",
+	"status": "Ready",
+	"certification": "L0",
+	"callbackId": "",
+	"env":"Staging"
+}

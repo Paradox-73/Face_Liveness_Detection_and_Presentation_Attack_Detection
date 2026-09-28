@@ -1,0 +1,15 @@
+{
+	"specVersion": ["0.9.5"],
+	"digitalId": "",
+	"deviceId": 1,
+	"deviceCode": "4b29a76c-6801-4a46-bbc1-6b8c63b8c604",
+	"purpose": "Registration",
+	"serviceVersion": "MOSIP.MDS.001",
+	"deviceSubId": [1, 2, 3],
+	"firmware": "FSM84C1.0",
+	"deviceStatus": "Active",
+	"status": "Ready",
+	"certification": "L0",
+	"callbackId": "",
+	"env":"Staging"
+}
