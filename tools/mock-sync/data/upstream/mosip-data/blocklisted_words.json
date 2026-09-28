@@ -1,0 +1,60 @@
+{
+ "table": "blocklisted_words",
+ "columns": [
+  "lang_code",
+  "word",
+  "descr",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "word": "shit",
+   "descr": "Blacklisted Word",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "word": "damn",
+   "descr": "Blacklisted Word",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "word": "nigga",
+   "descr": "Blacklisted Word",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "word": "dammit",
+   "descr": "Blacklisted Word",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "word": "Merde",
+   "descr": "Mot sur la liste noire",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "word": "Damn",
+   "descr": "Mot sur la liste noire",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "word": "nigga",
+   "descr": "Mot sur la liste noire",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "word": "bon sang",
+   "descr": "Mot sur la liste noire",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/blocklisted_words.xlsx"
+}

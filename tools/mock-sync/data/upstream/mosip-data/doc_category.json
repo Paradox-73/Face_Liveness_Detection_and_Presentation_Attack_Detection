@@ -1,0 +1,118 @@
+{
+ "table": "doc_category",
+ "columns": [
+  "lang_code",
+  "code",
+  "name",
+  "descr",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "code": "POA",
+   "name": "Proof of Address",
+   "descr": "Address Proof",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "POA",
+   "name": "إثبات العنوان",
+   "descr": "إثبات العنوان",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "POA",
+   "name": "Un justificatif de domicile",
+   "descr": "Preuve dadresse",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "POI",
+   "name": "Proof of Identity",
+   "descr": "Identity Proof",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "POI",
+   "name": "إثبات هوية",
+   "descr": "إثبات الهوية",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "POI",
+   "name": "Preuve didentité",
+   "descr": "Preuve didentité",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "POR",
+   "name": "Proof of Relationship",
+   "descr": "Proof Relationship of the person",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "POR",
+   "name": "إثبات العلاقة",
+   "descr": "إثبات علاقة الشخص",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "POR",
+   "name": "Preuve de relation",
+   "descr": "Preuve de relation de la personne",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "POB",
+   "name": "Proof of Birth",
+   "descr": "Proof date of birth of the person",
+   "is_active": false
+  },
+  {
+   "lang_code": "ara",
+   "code": "POB",
+   "name": "إثبات الميلاد",
+   "descr": "إثبات تاريخ ميلاد الشخص",
+   "is_active": false
+  },
+  {
+   "lang_code": "fra",
+   "code": "POB",
+   "name": "Preuve de naissance",
+   "descr": "Preuve de la date de naissance de la personne",
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "code": "POE",
+   "name": "Proof of Biometric Exception",
+   "descr": "Proof of Biometric Exception",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "POE",
+   "name": "إثبات الاستثناء البيومتري",
+   "descr": "إثبات الاستثناء البيومتري",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "POE",
+   "name": "Preuve dexception biométrique",
+   "descr": "Preuve dexception biométrique",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/doc_category.xlsx"
+}

@@ -1,0 +1,55 @@
+{
+ "table": "reason_category",
+ "columns": [
+  "lang_code",
+  "code",
+  "name",
+  "descr",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "code": "MNA",
+   "name": "Manual Adjudication",
+   "descr": "Rejection during Manual Adjudication",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "CLR",
+   "name": "Client Rejection",
+   "descr": "Rejection in Registration Client",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "MNA",
+   "name": "Manuel arbitrage",
+   "descr": "Renvoi en cours de sélection manuelle",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "CLR",
+   "name": "Rejet de client",
+   "descr": "Rejet en enregistrement Client",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "MNA",
+   "name": "الحكم اليدوي",
+   "descr": "الرفض أثناء الحكم اليدوي",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "CLR",
+   "name": "رفض العميل",
+   "descr": "الرفض في تسجيل العميل",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/reason_category.xlsx"
+}

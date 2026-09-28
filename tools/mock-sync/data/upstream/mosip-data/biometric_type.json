@@ -1,0 +1,34 @@
+{
+ "table": "biometric_type",
+ "columns": [
+  "lang_code",
+  "code",
+  "name",
+  "descr",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "code": "FNR",
+   "name": "Fingerprint",
+   "descr": "Finger prints of the applicant",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "IRS",
+   "name": "Iris",
+   "descr": "Iris of the applicant",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "PHT",
+   "name": "Photo",
+   "descr": "Photo of the face of the applicant",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/biometric_type.xlsx"
+}

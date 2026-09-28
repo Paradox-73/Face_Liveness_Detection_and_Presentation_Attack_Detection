@@ -1,0 +1,160 @@
+{
+ "table": "screen_authorization",
+ "columns": [
+  "lang_code",
+  "screen_id",
+  "role_code",
+  "is_permitted",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "screen_id": "eodRoot",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "eodRoot",
+   "role_code": "REGISTRATION_ADMIN",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "reRegisterRoot",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "reRegisterRoot",
+   "role_code": "REGISTRATION_ADMIN",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "lostUINRoot",
+   "role_code": "REGISTRATION_OFFICER",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "lostUINRoot",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "lostUINRoot",
+   "role_code": "REGISTRATION_ADMIN",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "newRegistrationRoot",
+   "role_code": "REGISTRATION_OFFICER",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "newRegistrationRoot",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "newRegistrationRoot",
+   "role_code": "REGISTRATION_ADMIN",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "reportRoot",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "reportRoot",
+   "role_code": "REGISTRATION_ADMIN",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "uinUpdateRoot",
+   "role_code": "REGISTRATION_OFFICER",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "uinUpdateRoot",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "uinUpdateRoot",
+   "role_code": "REGISTRATION_ADMIN",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "uploadPacketRoot",
+   "role_code": "REGISTRATION_OFFICER",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "uploadPacketRoot",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "uploadPacketRoot",
+   "role_code": "REGISTRATION_ADMIN",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "correctionRoot",
+   "role_code": "REGISTRATION_OFFICER",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "correctionRoot",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "is_permitted": true,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "screen_id": "correctionRoot",
+   "role_code": "REGISTRATION_ADMIN",
+   "is_permitted": true,
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/screen_authorization.xlsx"
+}

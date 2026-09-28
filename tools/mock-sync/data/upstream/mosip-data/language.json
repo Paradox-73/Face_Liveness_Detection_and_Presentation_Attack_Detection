@@ -1,0 +1,55 @@
+{
+ "table": "language",
+ "columns": [
+  "code",
+  "name",
+  "family",
+  "native_name",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "code": "eng",
+   "name": "English",
+   "family": "Indo-European",
+   "native_name": "English",
+   "is_active": true
+  },
+  {
+   "code": "fra",
+   "name": "French",
+   "family": "Indo-European",
+   "native_name": "français",
+   "is_active": true
+  },
+  {
+   "code": "ara",
+   "name": "Arabic",
+   "family": "الهندو أوروبية",
+   "native_name": "عربي",
+   "is_active": true
+  },
+  {
+   "code": "kan",
+   "name": "ಕನ್ನಡ",
+   "family": "ಇಂಡೋ-ಯುರೋಪಿಯನ್",
+   "native_name": "Kannada",
+   "is_active": true
+  },
+  {
+   "code": "hin",
+   "name": "हिन्दी",
+   "family": "भारोपीय",
+   "native_name": "Hindi",
+   "is_active": true
+  },
+  {
+   "code": "tam",
+   "name": "தமிழ்",
+   "family": "இந்தோ-ஐரோப்பிய",
+   "native_name": "Tamil",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/language.xlsx"
+}

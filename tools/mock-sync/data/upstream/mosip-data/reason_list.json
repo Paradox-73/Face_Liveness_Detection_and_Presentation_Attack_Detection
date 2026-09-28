@@ -1,0 +1,230 @@
+{
+ "table": "reason_list",
+ "columns": [
+  "lang_code",
+  "code",
+  "name",
+  "descr",
+  "rsncat_code",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "code": "APM",
+   "name": "Age-Photo Mismatch",
+   "descr": "Mismatch between the Age and Photo",
+   "rsncat_code": "CLR",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "GPM",
+   "name": "Gender-Photo Mismatch",
+   "descr": "Gender-Photo Mismatch between Gender and Photo",
+   "rsncat_code": "CLR",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "IAD",
+   "name": "Invalid Address",
+   "descr": "Invalid Address found",
+   "rsncat_code": "CLR",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DPG",
+   "name": "Duplicate Registration",
+   "descr": "Duplicate Registration found",
+   "rsncat_code": "CLR",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "OTH",
+   "name": "Others",
+   "descr": "Others",
+   "rsncat_code": "CLR",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "ADM",
+   "name": "All the Details are matching",
+   "descr": "All the Details are matching",
+   "rsncat_code": "MNA",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "ADD",
+   "name": "All the Demographic Details are Matching",
+   "descr": "All the Demographic Details are Matching",
+   "rsncat_code": "MNA",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "OPM",
+   "name": "Only the Photograph is Matching",
+   "descr": "Only the Photograph is Matching",
+   "rsncat_code": "MNA",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "SDM",
+   "name": "Some of the Demographic Details are Matching",
+   "descr": "Some of the Demographic Details are Matching",
+   "rsncat_code": "MNA",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "APM",
+   "name": "Décalage de lâge-Photo",
+   "descr": "Discordance entre lâge et la Photo",
+   "rsncat_code": "CLR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "GPM",
+   "name": "Incompatibilité de sexe-Photo",
+   "descr": "Sexe-Photo discordance entre le sexe et la Photo",
+   "rsncat_code": "CLR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "IAD",
+   "name": "Adresse non valide",
+   "descr": "Adresse non valide trouvée",
+   "rsncat_code": "CLR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DPG",
+   "name": "Enregistrement en double",
+   "descr": "Double enregistrement trouvé",
+   "rsncat_code": "CLR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "OTH",
+   "name": "Dautres",
+   "descr": "Dautres",
+   "rsncat_code": "CLR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "ADM",
+   "name": "Tous les détails sont adaptent",
+   "descr": "Tous les détails sont adaptent",
+   "rsncat_code": "MNA",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "ADD",
+   "name": "Tous les détails démographiques sont Matching",
+   "descr": "Tous les détails démographiques sont Matching",
+   "rsncat_code": "MNA",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "OPM",
+   "name": "La photographie est le rapprochement",
+   "descr": "La photographie est le rapprochement",
+   "rsncat_code": "MNA",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "SDM",
+   "name": "Certains détails démographiques sont Matching",
+   "descr": "Certains détails démographiques sont Matching",
+   "rsncat_code": "MNA",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "APM",
+   "name": "عدم تطابق الصورة مع العمر",
+   "descr": "عدم التطابق بين العمر والصورة",
+   "rsncat_code": "CLR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "GPM",
+   "name": "عدم تطابق الصورة بين الجنسين",
+   "descr": "عدم تطابق الصورة بين الجنسين والصورة",
+   "rsncat_code": "CLR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "IAD",
+   "name": "عنوان خاطئ",
+   "descr": "تم العثور على عنوان غير صالح",
+   "rsncat_code": "CLR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DPG",
+   "name": "تسجيل مكرر",
+   "descr": "تم العثور على تسجيل مكرر",
+   "rsncat_code": "CLR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "OTH",
+   "name": "آحرون",
+   "descr": "آحرون",
+   "rsncat_code": "CLR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "ADM",
+   "name": "كل التفاصيل متطابقة",
+   "descr": "كل التفاصيل متطابقة",
+   "rsncat_code": "MNA",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "ADD",
+   "name": "جميع التفاصيل الديموغرافية متطابقة",
+   "descr": "جميع التفاصيل الديموغرافية متطابقة",
+   "rsncat_code": "MNA",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "OPM",
+   "name": "فقط الصورة هي المطابقة",
+   "descr": "فقط الصورة هي المطابقة",
+   "rsncat_code": "MNA",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "SDM",
+   "name": "بعض التفاصيل الديموغرافية متطابقة",
+   "descr": "بعض التفاصيل الديموغرافية متطابقة",
+   "rsncat_code": "MNA",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/reason_list.xlsx"
+}

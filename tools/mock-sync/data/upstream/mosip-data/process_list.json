@@ -1,0 +1,118 @@
+{
+ "table": "process_list",
+ "columns": [
+  "lang_code",
+  "id",
+  "name",
+  "descr",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "id": "login_auth",
+   "name": "Login authentication",
+   "descr": "Login authentication",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "eod_auth",
+   "name": "Eod authentication",
+   "descr": "Eod authentication",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "packet_auth",
+   "name": "Packet authentication",
+   "descr": "Packet authentication",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "exception_auth",
+   "name": "Exception authentication",
+   "descr": "Exception authentication",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "onboard_auth",
+   "name": "Onboard authentication",
+   "descr": "Onboard authentication",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "id": "login_auth",
+   "name": "Authentification de connexion",
+   "descr": "Authentification de connexion",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "id": "eod_auth",
+   "name": "Authentification de nem",
+   "descr": "Authentification de nem",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "id": "packet_auth",
+   "name": "Authentification de paquet",
+   "descr": "Authentification de paquet",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "id": "exception_auth",
+   "name": "Authentification d’exception",
+   "descr": "Authentification d’exception",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "id": "onboard_auth",
+   "name": "Authentification intégrée",
+   "descr": "Authentification intégrée",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "id": "login_auth",
+   "name": "مصادقة تسجيل الدخول",
+   "descr": "مصادقة تسجيل الدخول",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "id": "eod_auth",
+   "name": "مصادقة Eod",
+   "descr": "مصادقة Eod",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "id": "packet_auth",
+   "name": "مصادقة الحزمة",
+   "descr": "مصادقة الحزمة",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "id": "exception_auth",
+   "name": "مصادقة الاستثناء",
+   "descr": "مصادقة الاستثناء",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "id": "onboard_auth",
+   "name": "المصادقة على متن الطائرة",
+   "descr": "المصادقة على متن الطائرة",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/process_list.xlsx"
+}

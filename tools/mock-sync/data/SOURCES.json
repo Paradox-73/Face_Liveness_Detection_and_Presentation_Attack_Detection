@@ -1,0 +1,47 @@
+{
+  "mosip-data": {
+    "repo": "https://github.com/mosip/mosip-data",
+    "ref": "1.2.0.1",
+    "commit": "6985016c009ec0334b5e036f45e1c2847d1f5f0b",
+    "path": "mosip_master/xlsx",
+    "licence": "MPL-2.0",
+    "files": {
+      "app_authentication_method.xlsx": "ee756c5cf7b7cda02285f205ec6ff792b8e744c48045de2ad0794124323514da",
+      "app_role_priority.xlsx": "2e96c3754717c23dedd77944002c851760f4f90548bad7aa6a35dc839599db5b",
+      "applicant_valid_document.xlsx": "7ac662aefaac29f3d0b753f627d134f88012a53a73cbd574c1d8c9fed901e5cc",
+      "biometric_attribute.xlsx": "24a0ee2015b0f589da328401e0ae99573293500939739f23cc2ea925d0ca29d8",
+      "biometric_type.xlsx": "8035e08d3754b70bf3e6bb67ef4369ae7186eba6331201f34f0f7f739241a80b",
+      "blocklisted_words.xlsx": "a5ae72c38dea144d2e30ec546b2832e9bed1a1195831621faa41b0e4d45921a6",
+      "doc_category.xlsx": "0464263dd99c21c32d8096a4918c45ad9988282fbff5f29fa3c7aacf0f6b225a",
+      "doc_type.xlsx": "f67055e25b1237d6db435c5badb1d955d88e15fca8af9e5cd4da3549f47eb207",
+      "dynamic_field.xlsx": "66e6293ce1b9947458aac1d66aefac4bb2d2f9af19159860d87c046fb8b551ab",
+      "identity_schema.xlsx": "75f1b7025072268283553cdb878bf3e4487088363dc64eb7aa9bb38718b6af79",
+      "language.xlsx": "3fbd6dff760c1166b6f47113eb7e22881ade96e5e06bb94a5dfa127fc8506d53",
+      "loc_hierarchy_list.xlsx": "5f75a334edc33c3c9f3c09d82e917a034a0e67fc61fa8f19a354ecfd40ee5fe9",
+      "location.xlsx": "795c2b48fa129bff86ecc1b5560060606c3bff1ba7e1805c1a50985282087a04",
+      "machine_spec.xlsx": "3aa7cb026d24953ab8ec1bbf5bbd484d9b7c739066859d16e05ea8a0a55a76c9",
+      "machine_type.xlsx": "08bf68410d4c952b256835db0687c743add01b81f3043fd22a26e3a9f2a3c3a9",
+      "process_list.xlsx": "da89f1ee8856e21d94cd0ac41443e9a5f169c3fe55ba23cc2748e5bc126e4bba",
+      "reason_category.xlsx": "552d1cc893f37f81650fb64cee51089dea500bfb81fbc9849fc0e5a63bbf2a3c",
+      "reason_list.xlsx": "a42d4519eb2039db08d975d92a4b08dc75ab8fff3259a63c312a8242242ad537",
+      "reg_center_type.xlsx": "339e777e95ec8f277f0a2df8361b0593236a8acacf3f64ffa6b93d20fb12bce8",
+      "registration_center.xlsx": "b6e7d0edab8e49105da393fc0d526a98e40997c11344102ff4654fe77ec17dd3",
+      "screen_authorization.xlsx": "3d6e319b76aa5557aa1168493071ce26e0caff00e7a7bfe789df6c6e1f7c533a",
+      "screen_detail.xlsx": "d5ca03663d35df2e7ba88ff2a7229a0c1a22b34d22dfa6a55e4873027c9b6956",
+      "sync_job_def.xlsx": "dcebfca27b68f8d66fc2b78c05e56d593a67ae4eb8b6ecd48d6f37cb4156882f",
+      "template.xlsx": "1022b9cf70c90b1a8feed7fc1bf2e84ad955aba2244dd126491c87896a595ef1",
+      "ui_spec.xlsx": "6156e4c322991907bb5786099c51c9d90f6560adca42f8d3aa277c3cfd0b11ed"
+    }
+  },
+  "mosip-config": {
+    "repo": "https://github.com/mosip/mosip-config",
+    "ref": "v1.2.0.1",
+    "commit": "d4c4f7edf4ef0dc9218a5e036ebe3e20ae99d04f",
+    "licence": "MPL-2.0",
+    "files": {
+      "registration-default.properties": "7335553206ea1f82fd0fd5182b5dc3755b847a0a3dc7c9559e426a2d07212830",
+      "application-default.properties": "600cddf1621997e8ef0884b2e2b9b0566f67891c497dd38bcadca12e478ffa89",
+      "applicanttype.mvel": "d547e83d6cde43d5d886bf1658c06e3141b6ae93dd588f92c83f8b66ee116736"
+    }
+  }
+}

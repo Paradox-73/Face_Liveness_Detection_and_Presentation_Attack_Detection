@@ -1,0 +1,482 @@
+{
+ "table": "applicant_valid_document",
+ "columns": [
+  "lang_code",
+  "apptyp_code",
+  "doccat_code",
+  "doctyp_code",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "apptyp_code": "000",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "000",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "000",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "000",
+   "doccat_code": "POR",
+   "doctyp_code": "CRN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "001",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "001",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "001",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "001",
+   "doccat_code": "POR",
+   "doctyp_code": "CRN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "002",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "002",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "002",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "003",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "003",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "003",
+   "doccat_code": "POR",
+   "doctyp_code": "CRN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "004",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "004",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "005",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "005",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "005",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "005",
+   "doccat_code": "POR",
+   "doctyp_code": "CRN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "006",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "006",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "006",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "007",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "007",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "007",
+   "doccat_code": "POR",
+   "doctyp_code": "CRN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "008",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "008",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "009",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "009",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "009",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "009",
+   "doccat_code": "POR",
+   "doctyp_code": "CRN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "009",
+   "doccat_code": "POE",
+   "doctyp_code": "COE",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "010",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "010",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "010",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "010",
+   "doccat_code": "POE",
+   "doctyp_code": "COE",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "011",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "011",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "011",
+   "doccat_code": "POR",
+   "doctyp_code": "CRN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "011",
+   "doccat_code": "POE",
+   "doctyp_code": "COE",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "012",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "012",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "012",
+   "doccat_code": "POE",
+   "doctyp_code": "COE",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "013",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "013",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "013",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "013",
+   "doccat_code": "POR",
+   "doctyp_code": "CRN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "013",
+   "doccat_code": "POE",
+   "doctyp_code": "COE",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "014",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "014",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "014",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "014",
+   "doccat_code": "POE",
+   "doctyp_code": "COE",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "015",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "015",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "015",
+   "doccat_code": "POR",
+   "doctyp_code": "CRN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "015",
+   "doccat_code": "POE",
+   "doctyp_code": "COE",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "016",
+   "doccat_code": "POI",
+   "doctyp_code": "CIN",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "016",
+   "doccat_code": "POB",
+   "doctyp_code": "COB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "016",
+   "doccat_code": "POE",
+   "doctyp_code": "COE",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "003",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "004",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "007",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "008",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "011",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "012",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "apptyp_code": "015",
+   "doccat_code": "POA",
+   "doctyp_code": "RNC",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/applicant_valid_document.xlsx"
+}

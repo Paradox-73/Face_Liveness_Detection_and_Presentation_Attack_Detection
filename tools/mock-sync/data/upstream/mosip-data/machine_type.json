@@ -1,0 +1,20 @@
+{
+ "table": "machine_type",
+ "columns": [
+  "lang_code",
+  "code",
+  "name",
+  "descr",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "code": "RESIDENT-REG",
+   "name": "Resident services virtual registration machine",
+   "descr": "Non-existent machine created for Resident services",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/machine_type.xlsx"
+}

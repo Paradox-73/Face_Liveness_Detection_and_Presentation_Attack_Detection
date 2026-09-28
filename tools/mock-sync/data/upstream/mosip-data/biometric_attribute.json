@@ -1,0 +1,134 @@
+{
+ "table": "biometric_attribute",
+ "columns": [
+  "lang_code",
+  "code",
+  "name",
+  "descr",
+  "bmtyp_code",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "code": "TM",
+   "name": "Thumbs",
+   "descr": "Print of Left and Right Thumbs",
+   "bmtyp_code": "FNR",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "RH",
+   "name": "Right Slab",
+   "descr": "Print of Right Slab",
+   "bmtyp_code": "FNR",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "LH",
+   "name": "Left Slab",
+   "descr": "Print of Left Slab",
+   "bmtyp_code": "FNR",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "LI",
+   "name": "Left Iris",
+   "descr": "Print of Left Iris",
+   "bmtyp_code": "IRS",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "RI",
+   "name": "Right Iris",
+   "descr": "Print of Right Iris",
+   "bmtyp_code": "IRS",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "TM",
+   "name": "Les pouces",
+   "descr": "Empreinte des pouces gauche et droit",
+   "bmtyp_code": "FNR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "RH",
+   "name": "Dalle droite",
+   "descr": "Impression de la dalle droite",
+   "bmtyp_code": "FNR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "LH",
+   "name": "Dalle gauche",
+   "descr": "Impression de la dalle gauche",
+   "bmtyp_code": "FNR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "LI",
+   "name": "Iris gauche",
+   "descr": "Gravure de Iris Gauche",
+   "bmtyp_code": "IRS",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "RI",
+   "name": "Iris droit",
+   "descr": "Empreinte de l'iris droit",
+   "bmtyp_code": "IRS",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "TM",
+   "name": "الإبهام",
+   "descr": "طباعة الإبهام الأيمن والأيسر",
+   "bmtyp_code": "FNR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "RH",
+   "name": "اللوح الأيمن",
+   "descr": "طباعة اللوح الأيمن",
+   "bmtyp_code": "FNR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "LH",
+   "name": "اللوح الأيسر",
+   "descr": "طباعة اللوح الأيسر",
+   "bmtyp_code": "FNR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "LI",
+   "name": "اليسار ايريس",
+   "descr": "طباعة القزحية اليسرى",
+   "bmtyp_code": "IRS",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "RI",
+   "name": "حق ايريس",
+   "descr": "طباعة القزحية اليمنى",
+   "bmtyp_code": "IRS",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/biometric_attribute.xlsx"
+}

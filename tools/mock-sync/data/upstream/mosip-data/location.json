@@ -1,0 +1,1095 @@
+{
+ "table": "location",
+ "columns": [
+  "lang_code",
+  "code",
+  "name",
+  "hierarchy_level",
+  "hierarchy_level_name",
+  "parent_loc_code",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "code": "MOR",
+   "name": "MyCountry",
+   "hierarchy_level": 0,
+   "hierarchy_level_name": "Country",
+   "parent_loc_code": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "MOR",
+   "name": "مايكونتري",
+   "hierarchy_level": 0,
+   "hierarchy_level_name": "دولة",
+   "parent_loc_code": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "MOR",
+   "name": "Maroc",
+   "hierarchy_level": 0,
+   "hierarchy_level_name": "Pays",
+   "parent_loc_code": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "RSK",
+   "name": "Rabat Sale Kenitra",
+   "hierarchy_level": 1,
+   "hierarchy_level_name": "Region",
+   "parent_loc_code": "MOR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "RSK",
+   "name": "الرباط سلا القنيطرة",
+   "hierarchy_level": 1,
+   "hierarchy_level_name": "المناطق",
+   "parent_loc_code": "MOR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "RSK",
+   "name": "Rabat-Salé-Kénitra",
+   "hierarchy_level": 1,
+   "hierarchy_level_name": "Région",
+   "parent_loc_code": "MOR",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "KTA",
+   "name": "Kenitra",
+   "hierarchy_level": 2,
+   "hierarchy_level_name": "Province",
+   "parent_loc_code": "RSK",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "KTA",
+   "name": "القنيطرة",
+   "hierarchy_level": 2,
+   "hierarchy_level_name": "المحافظة",
+   "parent_loc_code": "RSK",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "KTA",
+   "name": "Kénitra",
+   "hierarchy_level": 2,
+   "hierarchy_level_name": "Province",
+   "parent_loc_code": "RSK",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "KNT",
+   "name": "Kenitra",
+   "hierarchy_level": 3,
+   "hierarchy_level_name": "City",
+   "parent_loc_code": "KTA",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "KNT",
+   "name": "القنيطرة",
+   "hierarchy_level": 3,
+   "hierarchy_level_name": "مدينة",
+   "parent_loc_code": "KTA",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "KNT",
+   "name": "Kénitra",
+   "hierarchy_level": 3,
+   "hierarchy_level_name": "Ville",
+   "parent_loc_code": "KTA",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "BNMR",
+   "name": "Ben Mansour",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "BNMR",
+   "name": "بن منصور",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "BNMR",
+   "name": "Ben Mansour",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "14022",
+   "name": "14022",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "BNMR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "14022",
+   "name": 14022,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "BNMR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "14022",
+   "name": "14022",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "BNMR",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "MNAS",
+   "name": "Mnasra",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "MNAS",
+   "name": "مناصرة",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "MNAS",
+   "name": "Mnasra",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "14053",
+   "name": "14053",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "MNAS",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "14053",
+   "name": 14053,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "MNAS",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "14053",
+   "name": "14053",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "MNAS",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "MOGR",
+   "name": "Mograne",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "MOGR",
+   "name": "صداع نصفي",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "MOGR",
+   "name": "Mograne",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "14023",
+   "name": "14023",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "MOGR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "14023",
+   "name": 14023,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "MOGR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "14023",
+   "name": "14023",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "MOGR",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "ASSM",
+   "name": "Assam",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "ASSM",
+   "name": "آسام",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "ASSM",
+   "name": "Assam",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "14000",
+   "name": "14000",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "ASSM",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "14000",
+   "name": 14000,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "ASSM",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "14000",
+   "name": "14000",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "ASSM",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "MEHD",
+   "name": "Mehdia",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "MEHD",
+   "name": "المهدية",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "MEHD",
+   "name": "Mehdia",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "14110",
+   "name": "14110",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "MEHD",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "14110",
+   "name": 14110,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "MEHD",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "14110",
+   "name": "14110",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "MEHD",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "OLOJ",
+   "name": "Ouled Oujih",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "OLOJ",
+   "name": "أولد أوجيه",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "OLOJ",
+   "name": "Ouled Oujih",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "14080",
+   "name": "14080",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "OLOJ",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "14080",
+   "name": 14080,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "OLOJ",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "14080",
+   "name": "14080",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "OLOJ",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "SDTB",
+   "name": "Sidi Taibi",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "SDTB",
+   "name": "نسبة تاي القاتلة",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "SDTB",
+   "name": "Sidi Taibi",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "14025",
+   "name": "14025",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "SDTB",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "14025",
+   "name": 14025,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "SDTB",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "14025",
+   "name": "14025",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "SDTB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "SATZ",
+   "name": "Sidi Allal Tazi",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "SATZ",
+   "name": "سيدي علال تعزي",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "SATZ",
+   "name": "Sidi Allal Tazi",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "KNT",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "14050",
+   "name": "14050",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "SATZ",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "14050",
+   "name": 14050,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "SATZ",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "14050",
+   "name": "14050",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "SATZ",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "RBT",
+   "name": "Rabat",
+   "hierarchy_level": 2,
+   "hierarchy_level_name": "Province",
+   "parent_loc_code": "RSK",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "RBT",
+   "name": "الرباط",
+   "hierarchy_level": 2,
+   "hierarchy_level_name": "المحافظة",
+   "parent_loc_code": "RSK",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "RBT",
+   "name": "Rabat",
+   "hierarchy_level": 2,
+   "hierarchy_level_name": "Province",
+   "parent_loc_code": "RSK",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "RAB",
+   "name": "Rabat",
+   "hierarchy_level": 3,
+   "hierarchy_level_name": "City",
+   "parent_loc_code": "RBT",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "RAB",
+   "name": "الرباط",
+   "hierarchy_level": 3,
+   "hierarchy_level_name": "مدينة",
+   "parent_loc_code": "RBT",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "RAB",
+   "name": "Rabat",
+   "hierarchy_level": 3,
+   "hierarchy_level_name": "Ville",
+   "parent_loc_code": "RBT",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "AGDL",
+   "name": "Agdal",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "AGDL",
+   "name": "أكدال",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "AGDL",
+   "name": "Agdal",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "10106",
+   "name": "10106",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "AGDL",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "10106",
+   "name": 10106,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "AGDL",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "10106",
+   "name": "10106",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "AGDL",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "QRHS",
+   "name": "Quartier Hassan",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "QRHS",
+   "name": "حى حسن",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "QRHS",
+   "name": "Quartier Hassan",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "10000",
+   "name": "10000",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "QRHS",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "10000",
+   "name": 10000,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "QRHS",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "10000",
+   "name": "10000",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "QRHS",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "SOUS",
+   "name": "Souissi",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "SOUS",
+   "name": "السويسي",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "SOUS",
+   "name": "Souissi",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "10105",
+   "name": "10105",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "SOUS",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "10105",
+   "name": 10105,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "SOUS",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "10105",
+   "name": "10105",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "SOUS",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "MADI",
+   "name": "Madinat Al Irfane",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "MADI",
+   "name": "مدينة أل عرفان",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "MADI",
+   "name": "Madinat Al Irfane",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "10112",
+   "name": "10112",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "MADI",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "10112",
+   "name": 10112,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "MADI",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "10112",
+   "name": "10112",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "MADI",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "HARD",
+   "name": "Hay Riad",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "HARD",
+   "name": "هناك الرياض",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "HARD",
+   "name": "Hay Riad",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "10104",
+   "name": "10104",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "HARD",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "10104",
+   "name": 10104,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "HARD",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "10104",
+   "name": "10104",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "HARD",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "MDDR",
+   "name": "Medina de Rabat",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "MDDR",
+   "name": "مدينة الرباط",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "MDDR",
+   "name": "Médina de Rabat",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "10036",
+   "name": "10036",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "MDDR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "10036",
+   "name": 10036,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "MDDR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "10036",
+   "name": "10036",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "MDDR",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "ELYF",
+   "name": "EL YOUSSOUFIA",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "ELYF",
+   "name": "إل يوسف",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "ELYF",
+   "name": "EL YOUSSOUFIA",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "parent_loc_code": "RAB",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "10190",
+   "name": "10190",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "ELYF",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "10190",
+   "name": 10190,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "ELYF",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "10190",
+   "name": "10190",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "ELYF",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "10110",
+   "name": "10110",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "BNMR",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "10111",
+   "name": "10111",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "BNMR",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "10113",
+   "name": "10113",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "BNMR",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "10114",
+   "name": "10114",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "parent_loc_code": "BNMR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "10111",
+   "name": "10111",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "BNMR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "10110",
+   "name": "10110",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "BNMR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "10113",
+   "name": "10113",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "BNMR",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "10114",
+   "name": 10114,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "parent_loc_code": "BNMR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "10111",
+   "name": 10111,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "BNMR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "10114",
+   "name": 10114,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "BNMR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "10113",
+   "name": 10113,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "BNMR",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "10110",
+   "name": 10110,
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "parent_loc_code": "BNMR",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/location.xlsx"
+}

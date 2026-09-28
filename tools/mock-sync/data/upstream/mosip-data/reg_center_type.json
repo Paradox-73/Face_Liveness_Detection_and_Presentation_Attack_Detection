@@ -1,0 +1,34 @@
+{
+ "table": "reg_center_type",
+ "columns": [
+  "lang_code",
+  "code",
+  "name",
+  "descr",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "code": "REG",
+   "name": "Regular",
+   "descr": "Regular Registration Center",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "REG",
+   "name": "Ordinaire",
+   "descr": "Centre dinscription régulière",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "REG",
+   "name": "عادي",
+   "descr": "مركز التسجيل العادي",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/reg_center_type.xlsx"
+}

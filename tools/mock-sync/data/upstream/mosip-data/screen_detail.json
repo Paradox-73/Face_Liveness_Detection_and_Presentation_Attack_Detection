@@ -1,0 +1,150 @@
+{
+ "table": "screen_detail",
+ "columns": [
+  "lang_code",
+  "id",
+  "app_id",
+  "name",
+  "descr",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "id": "approveRegistrationRoot",
+   "app_id": 10003,
+   "name": "approveRegistrationRoot",
+   "descr": "approveRegistrationRoot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "loginRoot",
+   "app_id": 10003,
+   "name": "loginRoot",
+   "descr": "loginRoot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "lostUINRoot",
+   "app_id": 10003,
+   "name": "lostUINRoot",
+   "descr": "lostUINRoot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "newRegistrationRoot",
+   "app_id": 10003,
+   "name": "newRegistrationRoot",
+   "descr": "newRegistrationRoot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "onBoardRoot",
+   "app_id": 10003,
+   "name": "onBoardRoot",
+   "descr": "onBoardRoot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "registrationCorrectionRoot",
+   "app_id": 10003,
+   "name": "registrationCorrectionRoot",
+   "descr": "registrationCorrectionRoot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "sendPacketServerRoot",
+   "app_id": 10003,
+   "name": "sendPacketServerRoot",
+   "descr": "sendPacketServerRoot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "syncServerClientRoot",
+   "app_id": 10003,
+   "name": "syncServerClientRoot",
+   "descr": "syncServerClientRoot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "uinActivationRoot",
+   "app_id": 10003,
+   "name": "uinActivationRoot",
+   "descr": "uinActivationRoot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "uinUpdateRoot",
+   "app_id": 10003,
+   "name": "uinUpdateRoot",
+   "descr": "uinUpdateRoot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "updateClientSoftwareRoot",
+   "app_id": 10003,
+   "name": "updateClientSoftwareRoot",
+   "descr": "updateClientSoftwareRoot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "reportRoot",
+   "app_id": 10003,
+   "name": "reportRoot",
+   "descr": "reportRoot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "syncClientServerRoot",
+   "app_id": 10003,
+   "name": "syncClientServerRoot",
+   "descr": "syncClientServerRoot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "eodRoot",
+   "app_id": 10003,
+   "name": "eodroot",
+   "descr": "eodroot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "reRegisterRoot",
+   "app_id": 10003,
+   "name": "reRegisterRoot",
+   "descr": "reRegisterRoot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "uploadPacketRoot",
+   "app_id": 10003,
+   "name": "uploadPacketRoot",
+   "descr": "uploadPacketRoot",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "correctionRoot",
+   "app_id": 10003,
+   "name": "correctionRoot",
+   "descr": "correctionRoot",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/screen_detail.xlsx"
+}

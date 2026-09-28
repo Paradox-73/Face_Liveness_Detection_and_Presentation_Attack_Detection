@@ -1,0 +1,609 @@
+{
+ "table": "app_authentication_method",
+ "columns": [
+  "lang_code",
+  "app_id",
+  "process_id",
+  "role_code",
+  "auth_method_code",
+  "method_seq",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "login_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "PWD",
+   "method_seq": 1,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "login_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "OTP",
+   "method_seq": 2,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "login_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "FINGERPRINT",
+   "method_seq": 3,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "login_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "IRIS",
+   "method_seq": 4,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "login_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "FACE",
+   "method_seq": 5,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "login_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "PWD",
+   "method_seq": 1,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "login_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "OTP",
+   "method_seq": 2,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "login_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "FINGERPRINT",
+   "method_seq": 3,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "login_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "IRIS",
+   "method_seq": 4,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "login_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "FACE",
+   "method_seq": 5,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "login_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "PWD",
+   "method_seq": 1,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "login_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "OTP",
+   "method_seq": 2,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "login_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "FINGERPRINT",
+   "method_seq": 3,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "login_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "IRIS",
+   "method_seq": 4,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "login_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "FACE",
+   "method_seq": 5,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "onboard_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "PWD",
+   "method_seq": 1,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "onboard_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "OTP",
+   "method_seq": 2,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "onboard_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "PWD",
+   "method_seq": 1,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "onboard_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "OTP",
+   "method_seq": 2,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "onboard_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "PWD",
+   "method_seq": 1,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "onboard_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "OTP",
+   "method_seq": 2,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "packet_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "PWD",
+   "method_seq": 1,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "packet_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "OTP",
+   "method_seq": 2,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "packet_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "FINGERPRINT",
+   "method_seq": 3,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "packet_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "IRIS",
+   "method_seq": 4,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "packet_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "FACE",
+   "method_seq": 5,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "packet_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "PWD",
+   "method_seq": 1,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "packet_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "OTP",
+   "method_seq": 2,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "packet_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "FINGERPRINT",
+   "method_seq": 3,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "packet_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "IRIS",
+   "method_seq": 4,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "packet_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "FACE",
+   "method_seq": 5,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "packet_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "PWD",
+   "method_seq": 1,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "packet_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "OTP",
+   "method_seq": 2,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "packet_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "FINGERPRINT",
+   "method_seq": 3,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "packet_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "IRIS",
+   "method_seq": 4,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "packet_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "FACE",
+   "method_seq": 5,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "eod_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "PWD",
+   "method_seq": 1,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "eod_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "OTP",
+   "method_seq": 2,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "eod_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "FINGERPRINT",
+   "method_seq": 3,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "eod_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "IRIS",
+   "method_seq": 4,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "eod_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "FACE",
+   "method_seq": 5,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "eod_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "PWD",
+   "method_seq": 1,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "eod_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "OTP",
+   "method_seq": 2,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "eod_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "FINGERPRINT",
+   "method_seq": 3,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "eod_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "IRIS",
+   "method_seq": 4,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "eod_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "FACE",
+   "method_seq": 5,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "eod_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "PWD",
+   "method_seq": 1,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "eod_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "OTP",
+   "method_seq": 2,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "eod_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "FINGERPRINT",
+   "method_seq": 3,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "eod_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "IRIS",
+   "method_seq": 4,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "eod_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "FACE",
+   "method_seq": 5,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "exception_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "PWD",
+   "method_seq": 1,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "exception_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "OTP",
+   "method_seq": 2,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "exception_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "FINGERPRINT",
+   "method_seq": 3,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "exception_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "IRIS",
+   "method_seq": 4,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "exception_auth",
+   "role_code": "REGISTRATION_ADMIN",
+   "auth_method_code": "FACE",
+   "method_seq": 5,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "exception_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "PWD",
+   "method_seq": 1,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "exception_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "OTP",
+   "method_seq": 2,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "exception_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "FINGERPRINT",
+   "method_seq": 3,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "exception_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "IRIS",
+   "method_seq": 4,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "exception_auth",
+   "role_code": "REGISTRATION_SUPERVISOR",
+   "auth_method_code": "FACE",
+   "method_seq": 5,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "exception_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "PWD",
+   "method_seq": 1,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "exception_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "OTP",
+   "method_seq": 2,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "exception_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "FINGERPRINT",
+   "method_seq": 3,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "exception_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "IRIS",
+   "method_seq": 4,
+   "is_active": false
+  },
+  {
+   "lang_code": "eng",
+   "app_id": 10003,
+   "process_id": "exception_auth",
+   "role_code": "REGISTRATION_OFFICER",
+   "auth_method_code": "FACE",
+   "method_seq": 5,
+   "is_active": false
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/app_authentication_method.xlsx"
+}

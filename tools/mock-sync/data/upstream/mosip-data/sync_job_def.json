@@ -1,0 +1,156 @@
+{
+ "table": "sync_job_def",
+ "columns": [
+  "lang_code",
+  "id",
+  "name",
+  "api_name",
+  "parent_syncjob_id",
+  "sync_freq",
+  "lock_duration",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "id": "MDS_J00001",
+   "name": "Master Data Sync",
+   "api_name": "masterSyncJob",
+   "parent_syncjob_id": null,
+   "sync_freq": "0 0 11 * * ?",
+   "lock_duration": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "PDS_J00003",
+   "name": "Pre-registration Data Sync",
+   "api_name": "preRegistrationDataSyncJob",
+   "parent_syncjob_id": null,
+   "sync_freq": "0 0 11 * * ?",
+   "lock_duration": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "POS_J00008",
+   "name": "Policy Sync",
+   "api_name": "keyPolicySyncJob",
+   "parent_syncjob_id": null,
+   "sync_freq": "0 0 11 * * ?",
+   "lock_duration": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "RCS_J00005",
+   "name": "Registration Client Config Sync",
+   "api_name": "synchConfigDataJob",
+   "parent_syncjob_id": null,
+   "sync_freq": "0 0 11 * * ?",
+   "lock_duration": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "RPS_J00006",
+   "name": "Registration Packet Status Reader",
+   "api_name": "packetSyncStatusJob",
+   "parent_syncjob_id": null,
+   "sync_freq": "0 0 11 * * ?",
+   "lock_duration": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "URS_J00007",
+   "name": "User Detail/Role Setup Sync",
+   "api_name": "userDetailServiceJob",
+   "parent_syncjob_id": "MDS_J00001",
+   "sync_freq": "0 0 11 * * ?",
+   "lock_duration": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "DEL_J00013",
+   "name": "Pre Registration Packet Deletion Job",
+   "api_name": "preRegistrationPacketDeletionJob",
+   "parent_syncjob_id": null,
+   "sync_freq": "0 0 11 * * ?",
+   "lock_duration": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "RDJ_J00010",
+   "name": "Registration Packet Deletion Job",
+   "api_name": "registrationDeletionJob",
+   "parent_syncjob_id": null,
+   "sync_freq": "0 0 11 * * ?",
+   "lock_duration": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "ADJ_J00012",
+   "name": "Audit Log Deletion Job",
+   "api_name": "deleteAuditLogsJob",
+   "parent_syncjob_id": null,
+   "sync_freq": "0 0 11 * * ?",
+   "lock_duration": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "RSJ_J00014",
+   "name": "Registration Packet Sync",
+   "api_name": "registrationPacketSyncJob",
+   "parent_syncjob_id": null,
+   "sync_freq": "0 0 11 * * ?",
+   "lock_duration": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "PVS_J00015",
+   "name": "Registration Client Virus Scan",
+   "api_name": "registrationClientVirusScanJob",
+   "parent_syncjob_id": null,
+   "sync_freq": "0 0 11 * * ?",
+   "lock_duration": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "PKS_J00016",
+   "name": "Public key Sync service",
+   "api_name": "publicKeySyncJob",
+   "parent_syncjob_id": null,
+   "sync_freq": "0 0 11 * * ?",
+   "lock_duration": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "PUJ_J00017",
+   "name": "Registration Packet Upload Job",
+   "api_name": "registrationPacketUploadJob",
+   "parent_syncjob_id": null,
+   "sync_freq": "0 0 11 * * ?",
+   "lock_duration": null,
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "id": "SCJ_J00018",
+   "name": "Sync Certificate Job",
+   "api_name": "syncCertificateJob",
+   "parent_syncjob_id": null,
+   "sync_freq": "0 0 11 * * ?",
+   "lock_duration": null,
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/sync_job_def.xlsx"
+}

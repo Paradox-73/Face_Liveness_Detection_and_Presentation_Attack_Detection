@@ -1,0 +1,643 @@
+{
+ "table": "doc_type",
+ "columns": [
+  "lang_code",
+  "code",
+  "name",
+  "descr",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "code": "CIN",
+   "name": "Reference Identity Card",
+   "descr": "Reference Identity Card",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "CIN",
+   "name": "بطاقة الهوية المرجعية",
+   "descr": "بطاقة الهوية المرجعية",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "CIN",
+   "name": "Carte d'identité de référence",
+   "descr": "Carte d'identité de référence",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "RNC",
+   "name": "Rental contract",
+   "descr": "Rental Agreement of address",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "RNC",
+   "name": "عقد ايجار",
+   "descr": "اتفاقية تأجير العنوان",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "RNC",
+   "name": "Contrat de location",
+   "descr": "Contrat de location dadresse",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "COR",
+   "name": "Certificate of residence",
+   "descr": "Proof of Resident",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "COR",
+   "name": "شهادة الاقامة",
+   "descr": "إثبات مقيم",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "COR",
+   "name": "Certificat de résidence",
+   "descr": "Preuve de résidence",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC001",
+   "name": "Passport",
+   "descr": "Proof of Idendity",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC001",
+   "name": "جواز سفر",
+   "descr": "إثبات الفكر",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC001",
+   "name": "Passeport",
+   "descr": "Preuve didentité",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "CRN",
+   "name": "Certificate of Relationship",
+   "descr": "Proof relationship of a person",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "CRN",
+   "name": "شهادة القرابة",
+   "descr": "إثبات علاقة الشخص",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "CRN",
+   "name": "Certificat de relation",
+   "descr": "Preuve de relation dune personne",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "COB",
+   "name": "Certificate of Birth",
+   "descr": "Proof birth and age of a person",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "COB",
+   "name": "شهادة الميلاد",
+   "descr": "إثبات ولادة الشخص وعمره",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "COB",
+   "name": "Certificat de naissance",
+   "descr": "Preuve de naissance et âge dune personne",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "COE",
+   "name": "Certification of Exception",
+   "descr": "Certificate of Exception",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "COE",
+   "name": "شهادة الاستثناء",
+   "descr": "شهادة الاستثناء",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "COE",
+   "name": "Certification dexception",
+   "descr": "Certification dexception",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC002",
+   "name": "PAN card",
+   "descr": "PAN card",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC003",
+   "name": "Either Ration or PDS Photo card",
+   "descr": "Either Ration or PDS Photo card",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC004",
+   "name": "Voter Identification card",
+   "descr": "Voter Identification card",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC005",
+   "name": "Driving licence of the applicant",
+   "descr": "Driving licence of the applicant",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC006",
+   "name": "Photo identification cards issued by the Government",
+   "descr": "Photo identification cards issued by the Government",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC007",
+   "name": "Service photo ID cards that is issued by a PSU",
+   "descr": "Service photo ID cards that is issued by a PSU",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC008",
+   "name": "Licence of Arms",
+   "descr": "Licence of Arms",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC009",
+   "name": "Photo Bank ATM card",
+   "descr": "Photo Bank ATM card",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC010",
+   "name": "Photo Credit card",
+   "descr": "Photo Credit card",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC011",
+   "name": "Photo card of the Freedom Fighter",
+   "descr": "Photo card of the Freedom Fighter",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC012",
+   "name": "Certificate of Marriage",
+   "descr": "Certificate of Marriage",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC013",
+   "name": "Passbook or Bank Statement",
+   "descr": "Passbook or Bank Statement",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC014",
+   "name": "Account statement or passbook of the Post Office",
+   "descr": "Account statement or passbook of the Post Office",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC015",
+   "name": "Ration Card",
+   "descr": "Ration Card",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC016",
+   "name": "PSU issued Service photo ID card with address",
+   "descr": "PSU issued Service photo ID card with address",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC017",
+   "name": "Previous 3 months’ electricity bill",
+   "descr": "Previous 3 months’ electricity bill",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC018",
+   "name": "Water bill as long as it is not more than 3 months’ old",
+   "descr": "Water bill as long as it is not more than 3 months’ old",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC024",
+   "name": "PDS Card",
+   "descr": "PDS Card",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC025",
+   "name": "Medical card issued by the State Govt, CGHS, ECHS and ESIC",
+   "descr": "Medical card issued by the State Government, CGHS, ECHS and also ESIC",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC026",
+   "name": "Canteen card of the Army",
+   "descr": "Canteen card of the Army",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC027",
+   "name": "Family entitlement document",
+   "descr": "Any family entitlement document issued by any Central or State Government",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "DOC028",
+   "name": "Birth Certificate",
+   "descr": "Registrar of Birth/municipal Corporation or any local government Birth Certificate",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC002",
+   "name": "Carte PAN",
+   "descr": "Carte PAN",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC003",
+   "name": "Soit ration ou PDS photo carte",
+   "descr": "Soit ration ou PDS photo carte",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC004",
+   "name": "Carte d’identification des électeurs",
+   "descr": "Carte d’identification des électeurs",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC005",
+   "name": "Permis de conduire du demandeur",
+   "descr": "Permis de conduire du demandeur",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC006",
+   "name": "Cartes d’identité photo émises par le gouvernement",
+   "descr": "Cartes d’identité photo émises par le gouvernement",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC007",
+   "name": "Cartes d’identité de service de photo émises par un PSU",
+   "descr": "Cartes d’identité de service de photo émises par un PSU",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC008",
+   "name": "Licence d’armes",
+   "descr": "Licence d’armes",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC009",
+   "name": "Photo banque carte bancaire",
+   "descr": "Photo banque carte bancaire",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC010",
+   "name": "Carte de crédit photo",
+   "descr": "Carte de crédit photo",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC011",
+   "name": "Carte photo du Freedom Fighter",
+   "descr": "Carte photo du Freedom Fighter",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC012",
+   "name": "Certificat de mariage",
+   "descr": "Certificat de mariage",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC013",
+   "name": "Livret ou relevé bancaire",
+   "descr": "Livret ou relevé bancaire",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC014",
+   "name": "Relevé de compte ou livret du Bureau de poste",
+   "descr": "Relevé de compte ou livret du Bureau de poste",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC015",
+   "name": "Carte de ration",
+   "descr": "Carte de ration",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC016",
+   "name": "PSU a émis la carte didentité de photo de service avec ladresse",
+   "descr": "PSU a émis la carte d’identité de photo de service avec l’adresse",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC017",
+   "name": "Facture d’électricité précédente de 3 mois",
+   "descr": "Facture d’électricité précédente de 3 mois",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC018",
+   "name": "Facture d’eau tant qu’elle n’a pas plus de 3 mois",
+   "descr": "Facture d’eau tant qu’elle n’a pas plus de 3 mois",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC024",
+   "name": "Carte PDS",
+   "descr": "Carte PDS",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC025",
+   "name": "Carte médicale délivrée par le govt de l'État",
+   "descr": "Carte médicale délivrée par le gouvernement de l’État, le CGHS, l’ECHS et également l’ESIC",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC026",
+   "name": "Carte de cantine de l’armée",
+   "descr": "Carte de cantine de l’armée",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC027",
+   "name": "Titre de droit familial",
+   "descr": "Tout document de droit de la famille délivré par un gouvernement central ou",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "DOC028",
+   "name": "Certificat de naissance",
+   "descr": "Registraire de naissance/municipalité ou tout acte de naissance du gouvernement local",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "code": "EOP",
+   "name": "Expetion Photo",
+   "descr": "Expetion Photo",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "code": "EOP",
+   "name": "Photo d exception",
+   "descr": "Expetion Photo",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC002",
+   "name": "بطاقة الطعام",
+   "descr": "بطاقة الطعام",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC003",
+   "name": "إما بطاقة تموينية أو بطاقة صور ",
+   "descr": "إما بطاقة تموينية أو بطاقة صور PDS",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC004",
+   "name": "بطاقة هوية الناخب",
+   "descr": "بطاقة هوية الناخب",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC005",
+   "name": "رخصة القيادة لمقدم الطلب",
+   "descr": "رخصة القيادة لمقدم الطلب",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC006",
+   "name": "بطاقات هوية مصورة صادرة عن الحكومة",
+   "descr": "بطاقات هوية مصورة صادرة عن الحكومة",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC007",
+   "name": "بطاقات هوية تحمل صورة الخدمة الصادرة عن PSU",
+   "descr": "بطاقات هوية تحمل صورة الخدمة الصادرة عن PSU",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC008",
+   "name": "رخصة السلاح",
+   "descr": "رخصة السلاح",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC009",
+   "name": "بطاقة الصراف الآلي لبنك الصور",
+   "descr": "بطاقة الصراف الآلي لبنك الصور",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC010",
+   "name": "بطاقة ائتمان الصور",
+   "descr": "بطاقة ائتمان الصور",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC011",
+   "name": "بطاقة مصورة لمقاتل الحرية",
+   "descr": "بطاقة مصورة لمقاتل الحرية",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC012",
+   "name": "عقد زواج",
+   "descr": "عقد زواج",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC013",
+   "name": "دفتر حسابات أو كشف حساب بنكي",
+   "descr": "دفتر حسابات أو كشف حساب بنكي",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC014",
+   "name": "كشف حساب أو دفتر مرور لمكتب البريد",
+   "descr": "كشف حساب أو دفتر مرور لمكتب البريد",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC015",
+   "name": "البطاقة التموينية",
+   "descr": "البطاقة التموينية",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC016",
+   "name": "أصدرت PSU بطاقة هوية تحمل صورة الخدمة مع العنوان",
+   "descr": "أصدرت PSU بطاقة هوية تحمل صورة الخدمة مع العنوان",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC017",
+   "name": "فاتورة الكهرباء عن الثلاثة أشهر السابقة",
+   "descr": "فاتورة الكهرباء عن الثلاثة أشهر السابقة",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC018",
+   "name": "فاتورة المياه بشرط ألا تزيد عن 3 أشهر",
+   "descr": "فاتورة المياه بشرط ألا تزيد عن 3 أشهر",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC024",
+   "name": "بطاقة PDS",
+   "descr": "بطاقة PDS",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC025",
+   "name": "بطاقة طبية صادرة عن حكومة الدولة و CGHS و ECHS و ESIC",
+   "descr": "بطاقة طبية صادرة عن حكومة الدولة و CGHS و ECHS و ESIC",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC026",
+   "name": "بطاقة مقصف للجيش",
+   "descr": "بطاقة مقصف للجيش",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC027",
+   "name": "وثيقة استحقاق الأسرة",
+   "descr": "أي مستند استحقاق عائلي صادر عن أي حكومة مركزية أو حكومة ولاية",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "DOC028",
+   "name": "شهادة الميلاد",
+   "descr": "مسجل الميلاد / مؤسسة البلدية أو أي شهادة ميلاد حكومية محلية",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "code": "EOP",
+   "name": "إكسبيديشن فوتو",
+   "descr": "إكسبيديشن فوتو",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/doc_type.xlsx"
+}

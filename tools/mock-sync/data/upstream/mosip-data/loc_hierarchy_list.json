@@ -1,0 +1,120 @@
+{
+ "table": "loc_hierarchy_list",
+ "columns": [
+  "lang_code",
+  "hierarchy_level",
+  "hierarchy_level_name",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "hierarchy_level": 0,
+   "hierarchy_level_name": "Country",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "hierarchy_level": 0,
+   "hierarchy_level_name": "دولة",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "hierarchy_level": 0,
+   "hierarchy_level_name": "Pays",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "hierarchy_level": 1,
+   "hierarchy_level_name": "Region",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "hierarchy_level": 1,
+   "hierarchy_level_name": "المناطق",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "hierarchy_level": 1,
+   "hierarchy_level_name": "Région",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "hierarchy_level": 2,
+   "hierarchy_level_name": "Province",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "hierarchy_level": 2,
+   "hierarchy_level_name": "المحافظة",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "hierarchy_level": 2,
+   "hierarchy_level_name": "Province",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "hierarchy_level": 3,
+   "hierarchy_level_name": "City",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "hierarchy_level": 3,
+   "hierarchy_level_name": "مدينة",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "hierarchy_level": 3,
+   "hierarchy_level_name": "Ville",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "منطقة",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "hierarchy_level": 4,
+   "hierarchy_level_name": "Zone",
+   "is_active": true
+  },
+  {
+   "lang_code": "eng",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "Postal Code",
+   "is_active": true
+  },
+  {
+   "lang_code": "ara",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "رمز بريدي",
+   "is_active": true
+  },
+  {
+   "lang_code": "fra",
+   "hierarchy_level": 5,
+   "hierarchy_level_name": "code postal",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/loc_hierarchy_list.xlsx"
+}

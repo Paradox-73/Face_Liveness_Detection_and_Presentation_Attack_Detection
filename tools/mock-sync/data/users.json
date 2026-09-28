@@ -1,0 +1,20 @@
+[
+  {
+    "userId": "officer1",
+    "password": "Mosip@Officer1",
+    "name": "Test Officer One",
+    "roles": ["REGISTRATION_OFFICER"]
+  },
+  {
+    "userId": "officer2",
+    "password": "Mosip@Officer2",
+    "name": "Test Officer Two",
+    "roles": ["REGISTRATION_OFFICER"]
+  },
+  {
+    "userId": "supervisor1",
+    "password": "Mosip@Supervisor1",
+    "name": "Test Supervisor One",
+    "roles": ["REGISTRATION_SUPERVISOR"]
+  }
+]

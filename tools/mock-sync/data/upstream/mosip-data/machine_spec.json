@@ -1,0 +1,28 @@
+{
+ "table": "machine_spec",
+ "columns": [
+  "lang_code",
+  "id",
+  "name",
+  "brand",
+  "model",
+  "mtyp_code",
+  "min_driver_ver",
+  "descr",
+  "is_active"
+ ],
+ "rows": [
+  {
+   "lang_code": "eng",
+   "id": "RESIDENT-1",
+   "name": "Resident Virtual Machine",
+   "brand": "Unkown",
+   "model": "Unknown",
+   "mtyp_code": "RESIDENT-REG",
+   "min_driver_ver": 0,
+   "descr": "Resident Virtual Machine",
+   "is_active": true
+  }
+ ],
+ "source": "https://raw.githubusercontent.com/mosip/mosip-data/6985016c009ec0334b5e036f45e1c2847d1f5f0b/mosip_master/xlsx/machine_spec.xlsx"
+}
