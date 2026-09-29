@@ -420,5 +420,29 @@
         "type": "int"
       }
     }
+  },
+  "liveness_face_verification": "Face verification",
+  "liveness_authenticate_with_face": "Authenticate with face",
+  "liveness_sign_in_with_face": "Sign in with face",
+  "liveness_or_use_password": "Or use the password",
+  "liveness_face_verified": "Face verified",
+  "liveness_face_captured": "Good, face captured successfully",
+  "liveness_auth_errors": "{code, select, FACE_NOT_ENROLLED{No face is enrolled for this user on this device. Use the password, or complete operator onboarding first.} FACE_MISMATCH{The face does not match this user. Please try again.} NOT_SUPERVISOR{This user is not a supervisor. A supervisor must verify.} USER_LOCKED{Maximum login attempt limit reached. Try again later!} MAX_ATTEMPTS{Face verification could not be completed. Maximum attempts reached. Use another sign-in method or contact your supervisor.} LIVENESS_FAILED{Face verification could not be completed. Please try again.} ENGINE_UNAVAILABLE{Face verification is unavailable on this machine. Contact your supervisor.} CANCELLED{Face verification was cancelled.} BUSY{Another face verification is in progress. Close it and try again.} REG_FACE_NOT_VERIFIED{Face verification is required before signing in.} other{Face verification could not be completed. Please try again.}}",
+  "liveness_capture_status": "{status, select, FAILED{We could not verify face liveness. Please try again.} BLOCKED{Face capture could not be completed after the allowed attempts. Please ask your supervisor to follow the recovery process of the centre.} CANCELLED{Face capture was cancelled. The face was not saved.} BUSY{Another face verification is in progress. Close it and try again.} other{We could not verify face liveness. Please try again.}}",
+  "@liveness_auth_errors": {
+    "description": "Face authentication failure, by error code",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "@liveness_capture_status": {
+    "description": "Face capture liveness outcome, by status",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
   }
 }

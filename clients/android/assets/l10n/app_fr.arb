@@ -420,6 +420,14 @@
         "type": "int"
       }
     }
-  }
+  },
+  "liveness_face_verification": "Vérification du visage",
+  "liveness_authenticate_with_face": "S’authentifier par le visage",
+  "liveness_sign_in_with_face": "Se connecter avec le visage",
+  "liveness_or_use_password": "Ou utilisez le mot de passe",
+  "liveness_face_verified": "Visage vérifié",
+  "liveness_face_captured": "Très bien, visage capturé avec succès",
+  "liveness_auth_errors": "{code, select, FACE_NOT_ENROLLED{Aucun visage n’est enregistré pour cet utilisateur sur cet appareil. Utilisez le mot de passe ou terminez d’abord l’intégration de l’opérateur.} FACE_MISMATCH{Le visage ne correspond pas à cet utilisateur. Veuillez réessayer.} NOT_SUPERVISOR{Cet utilisateur n’est pas un superviseur. Un superviseur doit vérifier.} USER_LOCKED{Nombre maximal de tentatives de connexion atteint. Réessayez plus tard !} MAX_ATTEMPTS{La vérification du visage n’a pas pu être effectuée. Nombre maximal de tentatives atteint. Utilisez une autre méthode de connexion ou contactez votre superviseur.} LIVENESS_FAILED{La vérification du visage n’a pas pu être effectuée. Veuillez réessayer.} ENGINE_UNAVAILABLE{La vérification du visage n’est pas disponible sur cet appareil. Contactez votre superviseur.} CANCELLED{La vérification du visage a été annulée.} BUSY{Une autre vérification du visage est en cours. Fermez-la et réessayez.} REG_FACE_NOT_VERIFIED{La vérification du visage est requise avant la connexion.} other{La vérification du visage n’a pas pu être effectuée. Veuillez réessayer.}}",
+  "liveness_capture_status": "{status, select, FAILED{Nous n’avons pas pu vérifier la présence réelle du visage. Veuillez réessayer.} BLOCKED{La capture du visage n’a pas pu être effectuée après les tentatives autorisées. Demandez à votre superviseur de suivre la procédure de reprise du centre.} CANCELLED{La capture du visage a été annulée. Le visage n’a pas été enregistré.} BUSY{Une autre vérification du visage est en cours. Fermez-la et réessayez.} other{Nous n’avons pas pu vérifier la présence réelle du visage. Veuillez réessayer.}}"
 }
 
