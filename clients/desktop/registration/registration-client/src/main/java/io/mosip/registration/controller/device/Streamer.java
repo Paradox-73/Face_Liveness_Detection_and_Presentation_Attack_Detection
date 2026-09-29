@@ -153,8 +153,12 @@ public class Streamer {
 		}
 
 		// 255 indicates the start of the jpeg image
-		while (urlStream.read() != 255) {
-
+		// read() returns -1 forever at end of stream, so stop there instead of spinning
+		int b;
+		while ((b = urlStream.read()) != 255) {
+			if (b == -1) {
+				throw new java.io.EOFException("face stream ended");
+			}
 		}
 
 		// && urlStream.read()!=-1
