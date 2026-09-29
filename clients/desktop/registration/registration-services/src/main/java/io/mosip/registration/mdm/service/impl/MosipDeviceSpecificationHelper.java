@@ -292,4 +292,51 @@ public class MosipDeviceSpecificationHelper {
 				.build();
 		return client.execute(httpUriRequest);
 	}
+
+	/**
+	 * Opens an SBI stream with an explicit socket read timeout, for liveness sessions. The first frame is not
+	 * consumed. Closing the returned stream drops the connection instead of reading the endless body.
+	 *
+	 * @param url             stream URL
+	 * @param method          HTTP method, {@code STREAM}
+	 * @param body            request body
+	 * @param socketTimeoutMs longest wait for stream data before a read fails
+	 * @return the MJPEG body
+	 * @throws IOException if the request fails or the device answers without a body or with an error status
+	 */
+	public InputStream openStream(String url, String method, String body, int socketTimeoutMs) throws IOException {
+		int timeout = getMDMConnectionTimeout(method);
+		RequestConfig requestConfig = RequestConfig.custom()
+				.setConnectTimeout(timeout)
+				.setSocketTimeout(socketTimeoutMs)
+				.setConnectionRequestTimeout(timeout)
+				.build();
+		CloseableHttpClient client = HttpClients.createDefault();
+		CloseableHttpResponse response = null;
+		try {
+			HttpUriRequest httpUriRequest = RequestBuilder.create(method)
+					.setConfig(requestConfig)
+					.setUri(url)
+					.setEntity(new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8)))
+					.build();
+			response = client.execute(httpUriRequest);
+			int status = response.getStatusLine().getStatusCode();
+			if (status >= 300 || response.getEntity() == null) {
+				throw new IOException("stream refused with HTTP status " + status);
+			}
+			// An SBI device answers a refused STREAM with a JSON error body instead of the MJPEG stream.
+			ContentType type = ContentType.get(response.getEntity());
+			if (type != null && type.getMimeType() != null && type.getMimeType().contains("json")) {
+				Matcher code = Pattern.compile("\"errorCode\"\\s*:\\s*\"?(\\w+)").matcher(EntityUtils.toString(response.getEntity()));
+				throw new IOException("stream refused by the device, error " + (code.find() ? code.group(1) : "unknown"));
+			}
+			return new MdmStreamResponse(client, response, response.getEntity().getContent());
+		} catch (IOException | RuntimeException e) {
+			if (response != null) {
+				response.close();
+			}
+			client.close();
+			throw e;
+		}
+	}
 }

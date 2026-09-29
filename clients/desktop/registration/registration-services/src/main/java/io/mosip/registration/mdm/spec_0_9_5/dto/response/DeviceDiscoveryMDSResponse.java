@@ -1,8 +1,11 @@
 package io.mosip.registration.mdm.spec_0_9_5.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import lombok.Data;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DeviceDiscoveryMDSResponse {
 
 	private String deviceId;

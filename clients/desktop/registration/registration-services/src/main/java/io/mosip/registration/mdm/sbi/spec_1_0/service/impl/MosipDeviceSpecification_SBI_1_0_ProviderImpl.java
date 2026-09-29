@@ -17,6 +17,7 @@ import java.util.List;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.core.util.CryptoUtil;
+import io.mosip.liveness.core.device.StreamRequest;
 import org.apache.http.Consts;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -194,6 +195,28 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 
 		}
 
+	}
+
+	@Override
+	public InputStream stream(MdmBioDevice bioDevice, String modality, StreamRequest request)
+			throws RegBaseCheckedException {
+		if (!isDeviceAvailable(bioDevice)) {
+			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
+					RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
+		}
+		try {
+			StreamSbiRequestDTO streamSbiRequestDTO = new StreamSbiRequestDTO();
+			streamSbiRequestDTO.setDeviceSubId(getDeviceSubId(modality));
+			streamSbiRequestDTO.setSerialNo(bioDevice.getSerialNumber());
+			streamSbiRequestDTO.setTimeout(String.valueOf(request.streamTimeoutMs()));
+			return mosipDeviceSpecificationHelper.openStream(
+					mosipDeviceSpecificationHelper.buildUrl(bioDevice.getPort(), MosipBioDeviceConstants.STREAM_ENDPOINT),
+					"STREAM", new ObjectMapper().writeValueAsString(streamSbiRequestDTO), request.socketTimeoutMs());
+		} catch (IOException exception) {
+			LOGGER.error("Liveness stream request failed", exception);
+			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorCode(),
+					RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorMessage(), exception);
+		}
 	}
 
 	@Counted(extraTags = {"version", "1.0"})

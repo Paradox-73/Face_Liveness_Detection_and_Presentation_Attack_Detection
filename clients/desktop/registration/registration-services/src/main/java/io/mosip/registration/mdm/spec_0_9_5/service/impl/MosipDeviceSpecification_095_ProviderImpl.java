@@ -29,6 +29,7 @@ import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.CryptoUtil;
+import io.mosip.liveness.core.device.StreamRequest;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
@@ -171,6 +172,26 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 		}
 		throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorCode(),
 				RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorMessage());
+	}
+
+	@Override
+	public InputStream stream(MdmBioDevice bioDevice, String modality, StreamRequest request)
+			throws RegBaseCheckedException {
+		if (!isDeviceAvailable(bioDevice)) {
+			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
+					RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
+		}
+		try {
+			StreamRequestDTO streamRequestDTO = new StreamRequestDTO(bioDevice.getDeviceId(), getDeviceSubId(modality),
+					String.valueOf(request.streamTimeoutMs()));
+			return mosipDeviceSpecificationHelper.openStream(
+					bioDevice.getCallbackId() + MosipBioDeviceConstants.STREAM_ENDPOINT, "STREAM",
+					objectMapper.writeValueAsString(streamRequestDTO), request.socketTimeoutMs());
+		} catch (IOException exception) {
+			LOGGER.error("Liveness stream request failed", exception);
+			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorCode(),
+					RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorMessage(), exception);
+		}
 	}
 
 	@Counted(extraTags = {"version", "0.9.5"})
@@ -322,7 +343,7 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 			captureRequestBioDTOs.add(
 					new RCaptureRequestBioDTO(bioDevice.getDeviceType(), Integer.toString(mdmRequestDto.getCount()),
 							null, mdmRequestDto.getExceptions(), String.valueOf(mdmRequestDto.getRequestedScore()),
-							bioDevice.getDeviceId(), getDeviceSubId(mdmRequestDto.getModality()), null));
+							bioDevice.getDeviceId(), getDeviceSubId(mdmRequestDto.getModality()), "")); // SBI 0.9.5: previousHash is required; empty for a first capture
 
 			rCaptureRequestDTO = new RCaptureRequestDTO(mdmRequestDto.getEnvironment(), "Registration", "0.9.5",
 					String.valueOf(mdmRequestDto.getTimeout()),

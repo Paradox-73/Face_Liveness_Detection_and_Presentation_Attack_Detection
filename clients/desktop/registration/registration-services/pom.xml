@@ -13,6 +13,11 @@
 	<description>Maven project of MOSIP Registration Service</description>
 	<version>1.2.0.2</version>
 
+	<properties>
+		<liveness.version>1.0.0-SNAPSHOT</liveness.version>
+		<onnxruntime.version>1.20.0</onnxruntime.version>
+	</properties>
+
 	<dependencies>
 		<!-- Lombok -->
 		<dependency>
@@ -512,6 +517,39 @@
 			<artifactId>mockwebserver</artifactId>
 			<version>3.14.4</version>
 		</dependency>
+
+		<!-- Face liveness and presentation attack detection (service/bio/liveness) -->
+		<dependency>
+			<groupId>io.mosip.liveness</groupId>
+			<artifactId>liveness-core</artifactId>
+			<version>${liveness.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.mosip.liveness</groupId>
+			<artifactId>liveness-onnx</artifactId>
+			<version>${liveness.version}</version>
+		</dependency>
+		<dependency>
+			<!-- Signed ONNX model bundle, read from the class path at run time -->
+			<groupId>io.mosip.liveness</groupId>
+			<artifactId>liveness-onnx</artifactId>
+			<version>${liveness.version}</version>
+			<classifier>models</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<!-- Kept at 1.20.0: newer releases fail to load on the bundled Zulu 11.0.8 JRE -->
+			<groupId>com.microsoft.onnxruntime</groupId>
+			<artifactId>onnxruntime</artifactId>
+			<version>${onnxruntime.version}</version>
+		</dependency>
+		<dependency>
+			<!-- SFace face-match SDK (IBioApiV2), selected for FACE by mosip.biometric.sdk.providers.face.* -->
+			<groupId>io.mosip.liveness</groupId>
+			<artifactId>face-match-sdk</artifactId>
+			<version>${liveness.version}</version>
+			<scope>runtime</scope>
+		</dependency>
 	</dependencies>
 	<!--<repositories> <repository> <id>local-maven-repo</id> <url>file:///${basedir}/lib</url>
 		</repository> </repositories> -->
@@ -528,6 +566,11 @@
 						<artifactId>maven-surefire-plugin</artifactId>
 						<version>2.12.4</version>
 						<!--<configuration><skipTests>true</skipTests></configuration>-->
+						<configuration>
+							<systemPropertyVariables>
+								<mosip.liveness.preload>false</mosip.liveness.preload>
+							</systemPropertyVariables>
+						</configuration>
 					</plugin>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
@@ -565,6 +608,9 @@
 						<version>2.12.4</version>
 						<configuration>
 							<skipTests>false</skipTests>
+							<systemPropertyVariables>
+								<mosip.liveness.preload>false</mosip.liveness.preload>
+							</systemPropertyVariables>
 							<excludes>
 								<exclude>**/integrationtest/*.java</exclude>
 							</excludes>

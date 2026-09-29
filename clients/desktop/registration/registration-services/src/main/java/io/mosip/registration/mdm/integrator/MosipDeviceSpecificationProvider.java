@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.util.List;
 
 import io.mosip.kernel.logger.logback.util.MetricTag;
+import io.mosip.liveness.core.device.StreamRequest;
 import org.apache.http.ParseException;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -54,6 +55,26 @@ public interface MosipDeviceSpecificationProvider {
 	public InputStream stream(@MetricTag(value = "device", extractor = "arg.serialNumber") MdmBioDevice bioDevice,
 							  @MetricTag(value = "modality") String modality)
 			throws RegBaseCheckedException;
+
+	/**
+	 * Opens a preview stream for a liveness session, with the stream timeout ({@code liveness.stream.timeout_ms})
+	 * and socket read timeout of the request instead of {@code mosip.registration.capture_time_out}, so active
+	 * challenges are not cut off. Unlike {@link #stream(MdmBioDevice, String)}, the first frame is not consumed,
+	 * and closing the returned stream drops the connection.
+	 * <p>
+	 * The default falls back to {@link #stream(MdmBioDevice, String)} for specification versions without an
+	 * implementation.
+	 *
+	 * @param bioDevice Device Information
+	 * @param modality  modality to find the device sub ID
+	 * @param request   stream and socket timeouts
+	 * @return the MJPEG stream
+	 * @throws RegBaseCheckedException if the device is not available or the stream cannot be opened
+	 */
+	default InputStream stream(MdmBioDevice bioDevice, String modality, StreamRequest request)
+			throws RegBaseCheckedException {
+		return stream(bioDevice, modality);
+	}
 
 	/**
 	 * @param bioDevice     Device Information

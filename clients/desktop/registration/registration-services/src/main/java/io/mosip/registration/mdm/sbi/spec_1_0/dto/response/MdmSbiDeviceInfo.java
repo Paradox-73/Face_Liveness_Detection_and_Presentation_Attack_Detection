@@ -1,8 +1,11 @@
 package io.mosip.registration.mdm.sbi.spec_1_0.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import lombok.Data;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MdmSbiDeviceInfo {
 
 	private String env;
