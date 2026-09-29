@@ -20,7 +20,10 @@ public enum Components {
     PACKET_STATUS_SYNCHED("REG-MOD-107", "PacketStatusSynched"),
     PACKET_SYNCHED("REG-MOD-108", "PacketSynched"),
     PACKETS_UPLOADED("REG-MOD-109", "PacketsUploaded"),
-    CLEAN_UP("REG-MOD-110", "CleanUp");
+    CLEAN_UP("REG-MOD-110", "CleanUp"),
+
+    // Face liveness and presentation attack detection (livenessmanager)
+    LIVENESS("REG-MOD-111", "Liveness");
 
     Components(String id, String name) {
         this.id = id;

@@ -194,7 +194,34 @@ public enum AuditEvent {
     BIO_SDK_DEDUPE_MATCH("REG-EVT-097", SYSTEM_EVENT.getCode(), "BIO_SDK_DEDUPE_MATCH", "Biometric data matched with existing operator biometrics"),
 
     // Center remap
-    MACHINE_REMAPPED("REG-REMAP-001", USER_EVENT.getCode(), "MACHINE_REMAPPED", "Machine has been remapped to a different center");
+    MACHINE_REMAPPED("REG-REMAP-001", USER_EVENT.getCode(), "MACHINE_REMAPPED", "Machine has been remapped to a different center"),
+
+    // Face authentication of staff (liveness, then a match against the onboarding face). Names and IDs as the desktop
+    // client, except the operator event: desktop REG-EVT-054 is CREATE_PACKET_FAILED here, so it uses REG-EVT-115.
+    LOGIN_WITH_FACE("REG-AUTH-008", USER_EVENT.getCode(), "LOGIN_WITH_FACE", "Login with face: Capture and submit"),
+    REG_OPERATOR_AUTH_FACE("REG-EVT-115", USER_EVENT.getCode(), "REG_OPERATOR_AUTH_FACE", "Operator authentication with face: Capture and submit"),
+    REG_SUPERVISOR_AUTH_FACE("REG-EVT-101", USER_EVENT.getCode(), "REG_SUPERVISOR_AUTH_FACE", "Supervisor authentication with face: Capture and submit"),
+
+    // Face liveness and presentation attack detection: the same IDs and names as the desktop client and
+    // io.mosip.liveness.core.audit.AuditEventId. The description is the event's JSON (workflow, session ID,
+    // score buckets and reason codes; never images or raw scores), passed through auditWithArguments.
+    LIVENESS_SESSION_STARTED("REG-EVT-LV01", SYSTEM_EVENT.getCode(), "LIVENESS_SESSION_STARTED", "%s"),
+    LIVENESS_PASSIVE_PASSED("REG-EVT-LV02", SYSTEM_EVENT.getCode(), "LIVENESS_PASSIVE_PASSED", "%s"),
+    LIVENESS_ACTIVE_TRIGGERED("REG-EVT-LV03", SYSTEM_EVENT.getCode(), "LIVENESS_ACTIVE_TRIGGERED", "%s"),
+    LIVENESS_CHALLENGE_ISSUED("REG-EVT-LV04", SYSTEM_EVENT.getCode(), "LIVENESS_CHALLENGE_ISSUED", "%s"),
+    LIVENESS_CHALLENGE_PASSED("REG-EVT-LV05", SYSTEM_EVENT.getCode(), "LIVENESS_CHALLENGE_PASSED", "%s"),
+    LIVENESS_CHALLENGE_FAILED("REG-EVT-LV06", SYSTEM_EVENT.getCode(), "LIVENESS_CHALLENGE_FAILED", "%s"),
+    LIVENESS_TIMEOUT("REG-EVT-LV07", SYSTEM_EVENT.getCode(), "LIVENESS_TIMEOUT", "%s"),
+    LIVENESS_PAD_ATTACK_SUSPECTED("REG-EVT-LV08", SYSTEM_EVENT.getCode(), "LIVENESS_PAD_ATTACK_SUSPECTED", "%s"),
+    LIVENESS_BINDING_FAILED("REG-EVT-LV09", SYSTEM_EVENT.getCode(), "LIVENESS_BINDING_FAILED", "%s"),
+    LIVENESS_PASSED("REG-EVT-LV10", SYSTEM_EVENT.getCode(), "LIVENESS_PASSED", "%s"),
+    LIVENESS_MAX_RETRIES("REG-EVT-LV11", SYSTEM_EVENT.getCode(), "LIVENESS_MAX_RETRIES", "%s"),
+    LIVENESS_DEVICE_ERROR("REG-EVT-LV12", SYSTEM_EVENT.getCode(), "LIVENESS_DEVICE_ERROR", "%s"),
+    LIVENESS_ENGINE_ERROR("REG-EVT-LV13", SYSTEM_EVENT.getCode(), "LIVENESS_ENGINE_ERROR", "%s"),
+    LIVENESS_MODEL_INTEGRITY_FAILED("REG-EVT-LV14", SYSTEM_EVENT.getCode(), "LIVENESS_MODEL_INTEGRITY_FAILED", "%s"),
+    LIVENESS_CONFIG_APPLIED("REG-EVT-LV15", SYSTEM_EVENT.getCode(), "LIVENESS_CONFIG_APPLIED", "%s"),
+    LIVENESS_OVERRIDE_USED("REG-EVT-LV16", USER_EVENT.getCode(), "LIVENESS_OVERRIDE_USED", "%s"),
+    LIVENESS_DIAGNOSTIC_MODE("REG-EVT-LV17", USER_EVENT.getCode(), "LIVENESS_DIAGNOSTIC_MODE", "%s");
 
     AuditEvent(String id, String type, String name, String description) {
         this.id = id;
