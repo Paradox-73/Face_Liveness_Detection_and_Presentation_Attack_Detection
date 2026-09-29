@@ -48,6 +48,9 @@ public class RegProcController {
 	private final MockSyncProperties properties;
 	private final ObjectMapper mapper = new ObjectMapper();
 
+	/** Server status reported for every uploaded packet (registration processor's "packet received" stage). */
+	static final String RECEIVED = "RECEIVED";
+
 	/**
 	 * Creates the controller.
 	 *
@@ -148,13 +151,36 @@ public class RegProcController {
 	}
 
 	/**
-	 * Packet status queries; MockSync keeps no processing state and returns an empty list.
+	 * Packet status queries. MockSync has no processing pipeline, so every packet the client asks about is reported
+	 * with the status {@value #RECEIVED}, under the same key ({@code packetId} or {@code registrationId}) the
+	 * request used. The desktop client treats an empty list as a failed status sync and shows a "Registration
+	 * Packet Status Reader" failure alert after every manual sync.
 	 *
-	 * @return signed envelope with an empty list
+	 * @param body the status request, {@code {"request": [{"packetId": "..."}]}} or with {@code registrationId}
+	 * @return signed envelope with one status per requested packet
 	 */
 	@PostMapping({ "/registrationstatus/search", "/registrationstatus/packetexternalstatus" })
-	public ResponseEntity<byte[]> packetStatus() {
-		return responses.signed("mosip.registration.status", List.of());
+	public ResponseEntity<byte[]> packetStatus(@RequestBody(required = false) Map<String, Object> body) {
+		List<Map<String, String>> statuses = new ArrayList<>();
+		Object request = body == null ? null : body.get("request");
+		if (request instanceof List) {
+			for (Object item : (List<?>) request) {
+				if (!(item instanceof Map)) {
+					continue;
+				}
+				for (String key : List.of("packetId", "registrationId")) {
+					Object id = ((Map<?, ?>) item).get(key);
+					if (id != null) {
+						Map<String, String> status = new LinkedHashMap<>();
+						status.put(key, String.valueOf(id));
+						status.put("statusCode", RECEIVED);
+						statuses.add(status);
+						break;
+					}
+				}
+			}
+		}
+		return responses.signed("mosip.registration.status", statuses);
 	}
 
 	private Map<String, Integer> inspectAuthRequest(Map<String, Object> body) {
