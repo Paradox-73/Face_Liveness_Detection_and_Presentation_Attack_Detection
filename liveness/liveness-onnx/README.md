@@ -36,7 +36,7 @@ The model files, their licences, hashes, input and output shapes, and exact prep
 
 | Package | Contents |
 |---|---|
-| `io.mosip.liveness.onnx` | `OnnxFaceAnalyzer`; `OnnxModelSet`, which loads everything from a verified registry |
+| `io.mosip.liveness.onnx` | `OnnxFaceAnalyzer`; `OnnxModelSet`, which loads everything from a verified registry; `OnnxLivenessEngines` (engine factory), `OnnxLivenessEngine`, `OnnxLivenessEngineProvider` (service-loader entry) |
 | `...onnx.model` | `ModelRegistry` (signed bundle, fail closed); `ModelManifest`, `ModelEntry`, `ManifestSignature` (detached RS256 JWS); `ModelTrustAnchors` (built-in public key); `ModelSources` (class path, directory); `SemanticVersion`, `ModelIds`, `Hex` |
 | `...onnx.runtime` | `OrtModel` (session from verified bytes; float tensor in, named float arrays out); `OnnxRuntimeOptions` (threads, and a hook to add an execution provider such as XNNPACK) |
 | `...onnx.image` | `Rgb8Image` (3-byte working image, zero-copy for RGB888/BGR888); `ImageOps` (bilinear resize, clamped crop, affine warp, grey, tensor normalisation); `AffineTransform` (with the five-point similarity estimate); `TensorFormat` (pinned preprocessing per model) |
@@ -79,6 +79,32 @@ try (OnnxModelSet models = OnnxModelSet.load(registry, OnnxRuntimeOptions.defaul
   - Each model's `run` is synchronised, and each adapter reuses its tensor buffers under that lock, so the
     adapters may be shared between threads (calls are serialised).
   - Create one `OnnxModelSet` per process and `close()` it at shutdown.
+
+### Ready engine: `OnnxLivenessEngines`
+
+Clients normally do not wire the adapters themselves. `OnnxLivenessEngines` verifies the bundle, loads the models
+and returns an `OnnxLivenessEngine` (a `DefaultLivenessEngine` with `OnnxFaceAnalyzer`, `MiniFasPassivePad` and
+`SFaceEmbedder`, plus the ORT sessions it owns):
+
+```java
+OnnxLivenessEngine engine = OnnxLivenessEngines
+        .builder(ModelSources.classpath(getClass().getClassLoader()))   // Android: ModelSource over assets
+        .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION).orElse("1.0.0"))
+        .imageDecoder(clientImageDecoder)
+        .build();                         // blocking (about 1-2 s): not on the UI thread
+LivenessSession session = engine.open(request, listener);
+engine.close();                           // at shutdown, after the last session
+```
+
+- The same engine is found through `ServiceLoader.load(LivenessEngineProvider.class)`:
+  `OnnxLivenessEngineProvider`, engine id `mosip-onnx-default`, registered in
+  `META-INF/services/io.mosip.liveness.core.api.LivenessEngineProvider`.
+- Detection parameters: defaults, then the signed manifest's `engineParams` (`ModelManifest.engineParams()`), then
+  `Builder.parameterOverrides(map)` for calibration runs. Invalid signed values fail with `MODEL_INTEGRITY`,
+  invalid overrides with `CONFIG_INVALID`. The current bundle has no `engineParams`.
+- Threads: `open` is safe from any thread. All sessions share the ORT sessions, whose calls are serialised, so
+  parallel sessions are correct but take turns.
+- Full option list: [../README.md](../README.md#creating-the-default-engine-liveness-onnx).
 
 ## Model bundle and key handling
 
