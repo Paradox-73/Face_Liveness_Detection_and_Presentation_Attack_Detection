@@ -19,12 +19,16 @@ import 'package:registration_client/model/biometric_attribute_data.dart';
 import 'package:registration_client/model/biometrics_dto.dart';
 import 'package:registration_client/model/field.dart';
 import 'package:registration_client/pigeon/biometrics_pigeon.dart';
+import 'package:registration_client/pigeon/liveness_pigeon.dart';
+import 'package:registration_client/platform_spi/liveness_service.dart';
 import 'package:registration_client/provider/biometric_capture_control_provider.dart';
 import 'package:registration_client/provider/global_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:registration_client/utils/app_config.dart';
 import 'package:registration_client/utils/biometrics_utils.dart';
+import 'package:registration_client/ui/liveness/liveness_outcome_banner.dart';
+import 'package:registration_client/ui/liveness/liveness_texts.dart';
 
 class BiometricCaptureScanBlockPortrait extends StatefulWidget {
   const BiometricCaptureScanBlockPortrait({super.key, required this.field});
@@ -39,6 +43,8 @@ class _BiometricCaptureScanBlockPortraitState
     extends State<BiometricCaptureScanBlockPortrait> {
   bool isPortrait = true;
   late GlobalProvider globalProvider;
+  // Face liveness outcome of the last face capture (null: no liveness capture ran)
+  LivenessOutcome? faceLivenessOutcome;
 
   @override
   void initState() {
@@ -597,8 +603,28 @@ class _BiometricCaptureScanBlockPortraitState
               if (biometricAttributeData.attemptNo <
                   biometricAttributeData.noOfCapturesAllowed) {
                 List<Uint8List?> tempImageList = [];
-                await BiometricsApi().invokeDiscoverSbi(widget.field.id!,
+                if (biometricAttributeData.title == "Face") {
+                  await LivenessService()
+                      .setLanguage(globalProvider.selectedLanguage);
+                }
+                String captureStatus = await BiometricsApi().invokeDiscoverSbi(
+                    widget.field.id!,
                     biometricAttributeData.title.replaceAll(" ", ""));
+                if (biometricAttributeData.title == "Face") {
+                  LivenessOutcome outcome = await LivenessService()
+                      .getLastCaptureOutcome(widget.field.id!);
+                  setState(() {
+                    faceLivenessOutcome =
+                        outcome.status == LivenessStatus.notRequired
+                            ? null
+                            : outcome;
+                  });
+                }
+                // Liveness failed, blocked or cancelled, or the device response was
+                // rejected: no face was stored and no attempt is counted.
+                if (captureStatus != "Ok") {
+                  return;
+                }
                 await BiometricsApi()
                     .getBestBiometrics(widget.field.id!,
                     biometricAttributeData.title.replaceAll(" ", ""))
@@ -672,6 +698,16 @@ class _BiometricCaptureScanBlockPortraitState
             ),
           ),
         ),
+        if (faceLivenessOutcome != null &&
+            biometricAttributeData.title == "Face") ...[
+          SizedBox(
+            height: 16.h,
+          ),
+          LivenessOutcomeBanner.capture(
+              captureOutcomeText(
+                  AppLocalizations.of(context)!, faceLivenessOutcome!),
+              faceLivenessOutcome!),
+        ],
         SizedBox(
           height: 20.h,
         ),

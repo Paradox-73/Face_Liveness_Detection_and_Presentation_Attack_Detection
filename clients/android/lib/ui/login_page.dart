@@ -16,7 +16,11 @@ import 'package:provider/provider.dart';
 
 import 'package:registration_client/main.dart';
 
+import 'package:registration_client/pigeon/liveness_pigeon.dart';
 import 'package:registration_client/pigeon/user_pigeon.dart';
+import 'package:registration_client/platform_spi/liveness_service.dart';
+import 'package:registration_client/ui/liveness/face_auth_panel.dart';
+import 'package:registration_client/ui/liveness/liveness_texts.dart';
 
 import 'package:registration_client/provider/auth_provider.dart';
 import 'package:registration_client/provider/sync_provider.dart';
@@ -299,6 +303,27 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     await authProvider.authenticateUser(
         username, password, connectivityProvider.isConnected);
 
+    await _afterAuthentication();
+  }
+
+  /// Face sign-in: the face was verified (liveness, then a match with the
+  /// onboarding face, on the device); the session opens like an offline
+  /// password sign-in.
+  _getFaceLoginAction(LivenessOutcome outcome) async {
+    if (outcome.status != LivenessStatus.passed) {
+      return;
+    }
+    setState(() {
+      authProvider.setIsSyncing(true);
+    });
+    await connectivityProvider.checkNetworkConnection();
+    await authProvider.authenticateUserWithFace(username);
+    await _afterAuthentication();
+    await globalProvider.getThresholdValues();
+  }
+
+  /// Checks and navigation after a password or face sign-in.
+  _afterAuthentication() async {
     if (!authProvider.isLoggedIn) {
       authProvider.setIsSyncing(false);
       _showErrorInSnackbar();
@@ -552,6 +577,19 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                     });
                   },
                   isLoggingIn: authProvider.isSyncing,
+                )
+              : const SizedBox(),
+          context.watch<AuthProvider>().isValidUser &&
+                  !context.watch<AuthProvider>().isNetworkPresent
+              ? Padding(
+                  padding: EdgeInsets.only(top: 16.h),
+                  child: FaceAuthPanel(
+                    userId: username,
+                    workflow: LivenessWorkflow.loginAuth,
+                    languageCode: context.watch<GlobalProvider>().selectedLanguage,
+                    label: appLocalizations.liveness_sign_in_with_face,
+                    onResult: (outcome) => _getFaceLoginAction(outcome),
+                  ),
                 )
               : const SizedBox(),
           context.watch<AuthProvider>().isNetworkPresent

@@ -7,6 +7,11 @@ import 'package:registration_client/utils/app_config.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../../../provider/auth_provider.dart';
+import 'package:registration_client/pigeon/liveness_pigeon.dart';
+import 'package:registration_client/platform_spi/liveness_service.dart';
+import 'package:registration_client/provider/global_provider.dart';
+import 'package:registration_client/ui/liveness/face_auth_panel.dart';
+import 'package:registration_client/ui/liveness/liveness_texts.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class AuthenticateDialogBox extends StatefulWidget {
@@ -73,6 +78,30 @@ class _AuthenticateDialogBoxState extends State<AuthenticateDialogBox> {
       return true;
     }
     return false;
+  }
+
+  /// Supervisor verified by face (liveness, supervisor role, match with the
+  /// onboarding face): the selected packets are submitted without a password.
+  Future<void> _onFaceAuthResult(LivenessOutcome outcome) async {
+    if (outcome.status != LivenessStatus.passed) {
+      return;
+    }
+    setState(() {
+      loading = true;
+    });
+    try {
+      await context.read<ApprovePacketsProvider>().submitSelected();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      log(e.toString());
+    }
+    if (mounted) {
+      setState(() {
+        loading = false;
+      });
+    }
   }
 
   Future<void> submitReviews() async {
@@ -169,6 +198,18 @@ class _AuthenticateDialogBoxState extends State<AuthenticateDialogBox> {
                     ),
                   ),
                   const SizedBox(height: 24.0),
+
+                  // Supervisor face verification (shown when liveness is on for eod_auth)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: FaceAuthPanel(
+                      userId: authProvider.currentUser.userId,
+                      workflow: LivenessWorkflow.eodAuth,
+                      languageCode: context.read<GlobalProvider>().selectedLanguage,
+                      showWhenUnavailable: true,
+                      onResult: _onFaceAuthResult,
+                    ),
+                  ),
 
                   // Username TextFeild
                   Padding(

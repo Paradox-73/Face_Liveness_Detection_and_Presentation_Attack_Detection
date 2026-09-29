@@ -17,6 +17,9 @@ abstract class AuthService {
   Future<AuthResponse> login(
       String username, String password, bool isConnected);
 
+  /// Opens the session after a successful face sign-in (liveness and match).
+  Future<AuthResponse> loginWithFace(String username);
+
   Future<PacketAuth> packetAuthentication(String username, String password);
 
   Future<String> logout();

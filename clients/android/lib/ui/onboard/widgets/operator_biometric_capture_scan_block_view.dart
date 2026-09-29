@@ -9,6 +9,10 @@ import 'package:provider/provider.dart';
 import 'package:registration_client/model/biometric_attribute_data.dart';
 import 'package:registration_client/model/biometrics_dto.dart';
 import 'package:registration_client/pigeon/biometrics_pigeon.dart';
+import 'package:registration_client/pigeon/liveness_pigeon.dart';
+import 'package:registration_client/platform_spi/liveness_service.dart';
+import 'package:registration_client/ui/liveness/liveness_outcome_banner.dart';
+import 'package:registration_client/ui/liveness/liveness_texts.dart';
 // import 'package:registration_client/pigeon/biometrics_pigeon.dart';
 
 import 'package:registration_client/provider/biometric_capture_control_provider.dart';
@@ -31,6 +35,8 @@ class _OperatorBiometricCaptureScanBlockViewState
     extends State<OperatorBiometricCaptureScanBlockView> {
   bool isPortrait = true;
   late GlobalProvider globalProvider;
+  // Face liveness outcome of the operator's last face capture (null: no liveness capture ran)
+  LivenessOutcome? faceLivenessOutcome;
   
   // Helper function to safely convert qualityPercentage to int
   int safeQualityToInt(double qualityPercentage) {
@@ -381,8 +387,28 @@ class _OperatorBiometricCaptureScanBlockViewState
           onPressed: () async {
             if (biometricAttributeData.exceptions.contains(false)) {
               List<Uint8List?> tempImageList = [];
-              await BiometricsApi().invokeDiscoverSbi("operatorBiometrics",
+              if (biometricAttributeData.title == "Face") {
+                await LivenessService()
+                    .setLanguage(globalProvider.selectedLanguage);
+              }
+              String captureStatus = await BiometricsApi().invokeDiscoverSbi(
+                  "operatorBiometrics",
                   biometricAttributeData.title.replaceAll(" ", ""));
+              if (biometricAttributeData.title == "Face") {
+                LivenessOutcome outcome = await LivenessService()
+                    .getLastCaptureOutcome("operatorBiometrics");
+                setState(() {
+                  faceLivenessOutcome =
+                      outcome.status == LivenessStatus.notRequired
+                          ? null
+                          : outcome;
+                });
+              }
+              // The onboarding face is the reference for face authentication:
+              // it is stored only after a liveness pass.
+              if (captureStatus != "Ok") {
+                return;
+              }
               await BiometricsApi()
                   .getBestBiometrics("operatorBiometrics",
                       biometricAttributeData.title.replaceAll(" ", ""))
@@ -452,6 +478,16 @@ class _OperatorBiometricCaptureScanBlockViewState
             ),
           ),
         ),
+        if (faceLivenessOutcome != null &&
+            biometricAttributeData.title == "Face") ...[
+          SizedBox(
+            height: 16.h,
+          ),
+          LivenessOutcomeBanner.capture(
+              captureOutcomeText(
+                  AppLocalizations.of(context)!, faceLivenessOutcome!),
+              faceLivenessOutcome!),
+        ],
         SizedBox(
           height: 20.h,
         ),

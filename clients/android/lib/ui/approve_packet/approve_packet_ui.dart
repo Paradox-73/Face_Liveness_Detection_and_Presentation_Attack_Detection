@@ -6,6 +6,7 @@ import 'package:registration_client/provider/approve_packets_provider.dart';
 import 'package:registration_client/provider/global_provider.dart';
 
 import '../../provider/connectivity_provider.dart';
+import '../../platform_spi/biometrics_service.dart';
 import '../../provider/registration_task_provider.dart';
 import '../../utils/app_config.dart';
 import 'widget/approve_table.dart';
@@ -45,13 +46,23 @@ class _ApprovePacketsPageState extends State<ApprovePacketsPage> {
     );
   }
 
+  /// Supervisor approval works on local data (password or face verification
+  /// on the device), so it may run offline unless the centre switched it off
+  /// (mosip.registration.android.offline_approval.enable=N).
+  Future<bool> _isOfflineApprovalEnabled() async {
+    String value = await BiometricsService()
+        .getMapValue("mosip.registration.android.offline_approval.enable");
+    return value.trim().toUpperCase() != "N";
+  }
+
   Widget submitButton() {
     return ElevatedButton(
       onPressed: (context.read<ApprovePacketsProvider>().countSelected == 0)
           ? null
           : () async {
               await connectivityProvider.checkNetworkConnection();
-              if (!connectivityProvider.isConnected) {
+              if (!connectivityProvider.isConnected &&
+                  !await _isOfflineApprovalEnabled()) {
                 _showInSnackBar(appLocalizations.network_error);
                 return;
               }

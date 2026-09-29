@@ -6,6 +6,7 @@
 */
 
 import 'package:flutter/material.dart';
+import 'package:registration_client/pigeon/auth_response_pigeon.dart';
 import 'package:registration_client/pigeon/user_pigeon.dart';
 
 import 'package:registration_client/platform_spi/auth_service.dart';
@@ -187,6 +188,16 @@ class AuthProvider with ChangeNotifier {
 
   authenticateUser(String username, String password, bool isConnected) async {
     final authResponse = await auth.login(username, password, isConnected);
+    _applyAuthResponse(authResponse);
+  }
+
+  /// Opens the session after a successful face sign-in of [username].
+  authenticateUserWithFace(String username) async {
+    final authResponse = await auth.loginWithFace(username);
+    _applyAuthResponse(authResponse);
+  }
+
+  _applyAuthResponse(AuthResponse authResponse) {
     setIsLoggingIn(true);
     if (authResponse.errorCode != null) {
       _loginError = authResponse.errorCode!;

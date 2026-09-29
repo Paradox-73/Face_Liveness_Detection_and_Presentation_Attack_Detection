@@ -36,6 +36,10 @@ import 'package:registration_client/ui/process_ui/widgets/update_field_selector.
 import 'package:registration_client/utils/app_config.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:registration_client/utils/app_style.dart';
+import 'package:registration_client/pigeon/liveness_pigeon.dart';
+import 'package:registration_client/platform_spi/liveness_service.dart';
+import 'package:registration_client/ui/liveness/face_auth_panel.dart';
+import 'package:registration_client/ui/liveness/liveness_texts.dart';
 
 import '../../utils/life_cycle_event_handler.dart';
 
@@ -73,6 +77,8 @@ class _GenericProcessState extends State<GenericProcess>
 
   String username = '';
   String password = '';
+  // Operator authenticated by face (liveness, then a match with the onboarding face) for this packet
+  bool packetFaceAuthenticated = false;
 
   @override
   void initState() {
@@ -696,8 +702,11 @@ class _GenericProcessState extends State<GenericProcess>
         _nextButtonClickedAudit(process, size);
       } else {
         if (globalProvider.newProcessTabIndex == size + 1) {
-          globalProvider.getAudit("REG_OPERATOR_AUTH_PASSWORD", "REG-MOD-103");
-          bool isPacketAuthenticated = await _authenticatePacket(context);
+          bool isPacketAuthenticated = packetFaceAuthenticated;
+          if (!isPacketAuthenticated) {
+            globalProvider.getAudit("REG_OPERATOR_AUTH_PASSWORD", "REG-MOD-103");
+            isPacketAuthenticated = await _authenticatePacket(context);
+          }
           if (!isPacketAuthenticated) {
             return;
           }
@@ -717,6 +726,7 @@ class _GenericProcessState extends State<GenericProcess>
           setState(() {
             username = '';
             password = '';
+            packetFaceAuthenticated = false;
           });
         }
         if (globalProvider.newProcessTabIndex == size + 2) {
@@ -803,7 +813,8 @@ class _GenericProcessState extends State<GenericProcess>
     });
 
     // Auth button validation for all processes
-    if (username.trim().isNotEmpty && password.trim().isNotEmpty) {
+    if ((username.trim().isNotEmpty && password.trim().isNotEmpty) ||
+        packetFaceAuthenticated) {
       authButton = true;
     }
 
@@ -1281,10 +1292,29 @@ class _GenericProcessState extends State<GenericProcess>
                 height: 11.h,
               ),
               _getPasswordTextField(),
+              _getFaceAuthOption(),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  /// Operator face authentication for the packet, when liveness is on for
+  /// packet_auth and the operator enrolled a face at onboarding.
+  Widget _getFaceAuthOption() {
+    return Padding(
+      padding: EdgeInsets.only(top: 24.h),
+      child: FaceAuthPanel(
+        userId: authProvider.currentUser.userId,
+        workflow: LivenessWorkflow.packetAuth,
+        languageCode: globalProvider.selectedLanguage,
+        onResult: (LivenessOutcome outcome) {
+          setState(() {
+            packetFaceAuthenticated = outcome.status == LivenessStatus.passed;
+          });
+        },
+      ),
     );
   }
 
