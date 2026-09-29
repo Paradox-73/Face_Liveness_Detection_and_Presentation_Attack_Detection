@@ -1,0 +1,18 @@
+# Recorded runs of the automated suite
+
+Outputs of `tools/eval/scenario-runner` and `tools/eval/analyze.py` quoted in [../calibration-notes.md](../calibration-notes.md). Every folder holds `attempts.jsonl` (one JSON line per attempt: decisions, reason codes, scores, timings; never images), `summary.md` (one row per transaction) and `run.json` (models, parameters, platform); the full suites also hold `report.md` (the ISO/IEC 30107-3-style metrics) and `det.png`.
+
+All of it is technology regression data on synthetic attacks and three openly licensed clips, not an ISO/IEC 30107-3 evaluation.
+
+| Folder | What ran | Configuration |
+|---|---|---|
+| `20260930/shipped` | all 39 scenarios | shipped defaults |
+| `20260930/strict` | all 39 scenarios | `policy.registration=ALWAYS_ACTIVE` |
+| `20260930/proposed` | all 39 scenarios | the proposal P1-P3 of the calibration notes: `ALWAYS_ACTIVE` for `registration`, `login_auth` and `onboard_auth`, `passive.min_frames=30`, `quality.min_sharpness=40` |
+| `20260929/shipped`, `20260929/strict` | the first 36 scenarios; only `summary.md` and `run.json` kept | as the 2026-09-30 suites; kept for the per-frame latency on a less loaded machine (decisions identical to 2026-09-30) |
+| `20260930/login-probe` | the 3 `atk-*-login` scenarios alone, before they were added to the suites | shipped defaults |
+| `20260929-latency` | the 6 bona fide registration and always-active scenarios | shipped defaults, 1 ONNX Runtime thread |
+| `20260929-proposed-draft` | 36 scenarios (before the login ones existed) | `passive.min_frames=30`, `quality.min_sharpness=40`, `planarity.min_residual=0.05`: the first draft of the proposal, kept for the loop-detection and planarity-residual evidence |
+| `experiments/smile-ratio-0.25`, `experiments/smile-ratio-0.4` | `bf-s1-active`, `bf-s2-active`, `bf-s3-active` | `active.smile_ratio_increase` 0.25 and 0.4 (shipped 0.12), the rejected parameter fix for the head-turn defect |
+
+Regenerate with `bash tools/eval/run-suites.sh` (see [../README.md](../README.md)); the decisions are reproducible, the wall-clock timings are not.
