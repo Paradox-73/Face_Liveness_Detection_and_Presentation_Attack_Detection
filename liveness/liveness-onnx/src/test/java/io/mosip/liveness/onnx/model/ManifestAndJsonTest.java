@@ -1,10 +1,14 @@
 package io.mosip.liveness.onnx.model;
 
+import io.mosip.liveness.onnx.TestSupport;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -104,6 +108,48 @@ class ManifestAndJsonTest {
         for (String bad : Arrays.asList("1.0", "1.0.0.0", "01.0.0", "a.b.c", "1.0.0-", "1.0.0+build", "")) {
             assertThrows(IllegalArgumentException.class, () -> SemanticVersion.parse(bad), bad);
         }
+    }
+
+    @Test
+    void engineParamsRoundTripAndKeepTheirOrder() {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("planarity.min_residual", "0.03");
+        params.put("acquire.consecutive_frames", "6");
+        ModelManifest m = ModelManifest.of("bundle", "1.2.3", Collections.singletonList(entry("m.onnx", SHA)), params);
+        String json = m.toJson();
+        assertTrue(json.endsWith("  ],\n  \"engineParams\": {\"planarity.min_residual\": \"0.03\", "
+                + "\"acquire.consecutive_frames\": \"6\"}\n}\n"), json);
+        ModelManifest back = ModelManifest.parse(json.getBytes(StandardCharsets.UTF_8));
+        assertEquals(params, back.engineParams());
+        assertEquals(Arrays.asList("planarity.min_residual", "acquire.consecutive_frames"),
+                Arrays.asList(back.engineParams().keySet().toArray()));
+        assertEquals(json, back.toJson());
+        assertEquals(params, back.withModels(back.models()).engineParams(), "the signer's update keeps them");
+    }
+
+    @Test
+    void engineParamsAcceptNumbersAndRejectOtherTypes() {
+        String head = "{\"schema\":1,\"bundle\":\"b\",\"version\":\"1.0.0\",\"models\":[],\"engineParams\":";
+        ModelManifest m = ModelManifest.parse((head + "{\"a.b\":0.25,\"c.d\":3,\"e.f\":\"1e-3\"}}")
+                .getBytes(StandardCharsets.UTF_8));
+        assertEquals("0.25", m.engineParams().get("a.b"));
+        assertEquals("3", m.engineParams().get("c.d"));
+        assertEquals("1e-3", m.engineParams().get("e.f"));
+        for (String bad : Arrays.asList("{\"a\":true}", "{\"a\":null}", "{\"a\":[1]}", "[]", "{\"a\":\" \"}")) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> ModelManifest.parse((head + bad + "}").getBytes(StandardCharsets.UTF_8)), bad);
+        }
+    }
+
+    @Test
+    void aManifestWithoutEngineParamsKeepsItsExactBytes() throws Exception {
+        ModelManifest m = ModelManifest.of("bundle", "1.0.0", Collections.singletonList(entry("m.onnx", SHA)));
+        assertTrue(m.engineParams().isEmpty());
+        assertFalse(m.toJson().contains("engineParams"));
+        byte[] repository = Files.readAllBytes(new File(
+                TestSupport.modelsDir(), ModelRegistry.MANIFEST_FILE).toPath());
+        String text = new String(repository, StandardCharsets.UTF_8);
+        assertEquals(text, ModelManifest.parse(repository).toJson(), "the signed repository manifest is unchanged");
     }
 
     private static ModelEntry entry(String file, String sha) {

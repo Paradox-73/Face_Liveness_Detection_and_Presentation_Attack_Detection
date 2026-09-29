@@ -49,6 +49,15 @@ public final class SFaceEmbedder implements FaceEmbedder {
         this.model = Objects.requireNonNull(model, "model");
     }
 
+    /**
+     * Returns the model identifier recorded in every embedding this embedder makes.
+     *
+     * @return for example {@code "sface@2021dec-fp16w"}
+     */
+    public String modelId() {
+        return modelId;
+    }
+
     @Override
     public FaceEmbedding embed(ImageBuffer image, FaceBox face) throws EngineException {
         return embed(Rgb8Image.of(image), face);

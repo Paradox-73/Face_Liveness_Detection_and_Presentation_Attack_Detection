@@ -12,8 +12,8 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The model bundle manifest ({@code manifest.json}): bundle name, bundle version and one {@link ModelEntry} per
- * model file.
+ * The model bundle manifest ({@code manifest.json}): bundle name, bundle version, one {@link ModelEntry} per
+ * model file and, optionally, the detection parameters of the default engine ({@code engineParams}).
  *
  * <pre>{@code
  * {
@@ -23,12 +23,16 @@ import java.util.Set;
  *   "models": [
  *     { "id": "yunet", "file": "face_detection_yunet_2026may.onnx", "version": "2026may",
  *       "sha256": "...", "bytes": 229738, "licence": "MIT", "source": "https://...@commit", "params": {} }
- *   ]
+ *   ],
+ *   "engineParams": { "planarity.min_residual": "0.02" }
  * }
  * }</pre>
  *
  * <p>The signature in {@code manifest.jws} covers the exact bytes of this file, so parsing does not need a
- * canonical form. Unknown keys are ignored.
+ * canonical form. Unknown keys are ignored. {@code engineParams} is optional; its keys and ranges are checked by
+ * the engine ({@code EngineParameters.fromMap}), not here, so the manifest format stays independent of the
+ * engine version. Because the parameters are signed with the models, a bundle update can recalibrate the
+ * engine but a local edit cannot.
  */
 public final class ModelManifest {
 
@@ -40,11 +44,14 @@ public final class ModelManifest {
     private final String bundle;
     private final SemanticVersion version;
     private final List<ModelEntry> models;
+    private final Map<String, String> engineParams;
 
-    private ModelManifest(String bundle, SemanticVersion version, List<ModelEntry> models) {
+    private ModelManifest(String bundle, SemanticVersion version, List<ModelEntry> models,
+                          Map<String, String> engineParams) {
         this.bundle = bundle;
         this.version = version;
         this.models = models;
+        this.engineParams = engineParams;
     }
 
     /**
@@ -57,6 +64,22 @@ public final class ModelManifest {
      * @throws IllegalArgumentException if a value is invalid or an identifier or file repeats
      */
     public static ModelManifest of(String bundle, String version, List<ModelEntry> models) {
+        return of(bundle, version, models, Collections.<String, String>emptyMap());
+    }
+
+    /**
+     * Creates a manifest with engine parameters.
+     *
+     * @param bundle       bundle name; not empty
+     * @param version      bundle version ({@code MAJOR.MINOR.PATCH})
+     * @param models       model entries with unique identifiers and files; copied
+     * @param engineParams engine parameter keys and values as text, possibly empty; copied in iteration order
+     * @return the manifest
+     * @throws IllegalArgumentException if a value is invalid, an identifier or file repeats, or a parameter key
+     *                                  or value is empty
+     */
+    public static ModelManifest of(String bundle, String version, List<ModelEntry> models,
+                                   Map<String, String> engineParams) {
         if (bundle == null || bundle.trim().isEmpty()) {
             throw new IllegalArgumentException("bundle name missing");
         }
@@ -68,8 +91,17 @@ public final class ModelManifest {
                 throw new IllegalArgumentException("duplicate model id or file: " + m.id());
             }
         }
+        Objects.requireNonNull(engineParams, "engineParams");
+        Map<String, String> params = new LinkedHashMap<>();
+        for (Map.Entry<String, String> e : engineParams.entrySet()) {
+            if (e.getKey() == null || e.getKey().trim().isEmpty() || e.getValue() == null
+                    || e.getValue().trim().isEmpty()) {
+                throw new IllegalArgumentException("engine parameter keys and values must not be empty");
+            }
+            params.put(e.getKey(), e.getValue());
+        }
         return new ModelManifest(bundle, SemanticVersion.parse(version),
-                Collections.unmodifiableList(new ArrayList<>(models)));
+                Collections.unmodifiableList(new ArrayList<>(models)), Collections.unmodifiableMap(params));
     }
 
     /**
@@ -97,7 +129,22 @@ public final class ModelManifest {
         for (Object item : (List<?>) list) {
             entries.add(entry(asObject(item, "model")));
         }
-        return of(string(root, "bundle"), string(root, "version"), entries);
+        return of(string(root, "bundle"), string(root, "version"), entries, engineParams(root.get("engineParams")));
+    }
+
+    private static Map<String, String> engineParams(Object value) {
+        Map<String, String> params = new LinkedHashMap<>();
+        if (value == null) {
+            return params;
+        }
+        for (Map.Entry<String, Object> e : asObject(value, "engineParams").entrySet()) {
+            Object v = e.getValue();
+            if (!(v instanceof String || v instanceof Long || v instanceof Double)) {
+                throw new IllegalArgumentException("engineParams values must be strings or numbers");
+            }
+            params.put(e.getKey(), v.toString());
+        }
+        return params;
     }
 
     private static ModelEntry entry(Map<String, Object> m) {
@@ -164,6 +211,16 @@ public final class ModelManifest {
     }
 
     /**
+     * Returns the engine parameters of the bundle ({@code engineParams}).
+     *
+     * @return an unmodifiable map in manifest order; empty when the manifest has none, so the engine keeps its
+     *         shipped defaults
+     */
+    public Map<String, String> engineParams() {
+        return engineParams;
+    }
+
+    /**
      * Finds a model by identifier.
      *
      * @param id model identifier
@@ -185,12 +242,13 @@ public final class ModelManifest {
      * @return the new manifest
      */
     public ModelManifest withModels(List<ModelEntry> newModels) {
-        return of(bundle, version.toString(), newModels);
+        return of(bundle, version.toString(), newModels, engineParams);
     }
 
     /**
      * Writes the manifest as pretty-printed JSON with a fixed key order and {@code \n} line ends, so the same
-     * manifest always gives the same bytes.
+     * manifest always gives the same bytes. {@code engineParams} is written only when present, so a manifest
+     * without it keeps its exact bytes (and its signature) through a parse and write.
      *
      * @return the JSON text, ending with a line break
      */
@@ -210,18 +268,29 @@ public final class ModelManifest {
             sb.append("      \"bytes\": ").append(m.bytes()).append(",\n");
             field(sb, "      ", "licence", m.licence());
             field(sb, "      ", "source", m.source());
-            sb.append("      \"params\": {");
-            int k = 0;
-            for (Map.Entry<String, String> e : m.params().entrySet()) {
-                sb.append(k++ == 0 ? "" : ", ");
-                Json.quote(e.getKey(), sb);
-                sb.append(": ");
-                Json.quote(e.getValue(), sb);
-            }
-            sb.append("}\n    }").append(i + 1 < models.size() ? "," : "").append('\n');
+            sb.append("      \"params\": ");
+            inlineObject(sb, m.params());
+            sb.append("\n    }").append(i + 1 < models.size() ? "," : "").append('\n');
         }
-        sb.append("  ]\n}\n");
+        sb.append("  ]");
+        if (!engineParams.isEmpty()) {
+            sb.append(",\n  \"engineParams\": ");
+            inlineObject(sb, engineParams);
+        }
+        sb.append("\n}\n");
         return sb.toString();
+    }
+
+    private static void inlineObject(StringBuilder sb, Map<String, String> values) {
+        sb.append('{');
+        int k = 0;
+        for (Map.Entry<String, String> e : values.entrySet()) {
+            sb.append(k++ == 0 ? "" : ", ");
+            Json.quote(e.getKey(), sb);
+            sb.append(": ");
+            Json.quote(e.getValue(), sb);
+        }
+        sb.append('}');
     }
 
     private static void field(StringBuilder sb, String indent, String key, String value) {
@@ -234,6 +303,7 @@ public final class ModelManifest {
 
     @Override
     public String toString() {
-        return "ModelManifest[" + bundle + "@" + version + ", models=" + models.size() + "]";
+        return "ModelManifest[" + bundle + "@" + version + ", models=" + models.size() + ", engineParams="
+                + engineParams.size() + "]";
     }
 }
