@@ -112,6 +112,21 @@ public class AuditFactoryTest {
 		auditFactory.audit(AuditEvent.PACKET_APPROVED, Components.PACKET_CREATOR, "id", "ref");
 	}
 
+	@Test
+	public void auditBeforeLoginIsStored() throws Exception {
+		// Face login runs its liveness check before a session exists: SessionContext.map() is still null.
+		PowerMockito.when(SessionContext.map()).thenReturn(null);
+		PowerMockito.doReturn("NA").when(SessionContext.class, "userId");
+		PowerMockito.doReturn("NA").when(SessionContext.class, "userName");
+		when(auditHandler.addAudit(Mockito.any(AuditRequestDto.class))).thenReturn(true);
+
+		auditFactory.audit(AuditEvent.LIVENESS_SESSION_STARTED, Components.REG_LIVENESS, "REG", "ref",
+				"{\"workflow\":\"login_auth\"}");
+
+		Mockito.verify(auditHandler).addAudit(Mockito.argThat(a -> "REG-EVT-LV01".equals(a.getEventId())
+				&& "{\"workflow\":\"login_auth\"}".equals(a.getDescription())));
+	}
+
 	//Java11 correction
 	@Test
 	public void deleteAuditLogsSuccessTest() {
