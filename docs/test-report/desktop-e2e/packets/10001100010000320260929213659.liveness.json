@@ -1,0 +1,461 @@
+{
+    "packet": "10001100010000320260929213659-10001_10001-20260929220028.zip",
+    "registrationId": "10001100010000320260929213659",
+    "files": [
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_evidence.zip",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_evidence.zip/ID.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_evidence.zip/packet_data_hash.txt",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_evidence.zip/packet_meta_info.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_evidence.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_optional.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_id.zip",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_id.zip/proofOfAddress.PDF",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_id.zip/individualBiometrics_bio_CBEFF.xml",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_id.zip/proofOfIdentity.PDF",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_id.zip/ID.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_id.zip/officer_bio_cbeff.xml",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_id.zip/audit.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_id.zip/packet_operations_hash.txt",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_id.zip/packet_data_hash.txt",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_id.zip/packet_meta_info.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_optional.zip",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_optional.zip/ID.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_optional.zip/packet_data_hash.txt",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_optional.zip/packet_meta_info.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_id.json"
+    ],
+    "faceRecords": [
+        {
+            "file": "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_id.zip/individualBiometrics_bio_CBEFF.xml",
+            "type": "Face",
+            "subtype": "",
+            "liveness": {
+                "LIVENESS_METHOD": "PASSIVE_ACTIVE",
+                "LIVENESS_MODEL_SHA": "ebafce4e,db4b7684,b32929ad,ebab7f90,d2899b3e",
+                "LIVENESS_CHALLENGES": "BLINK:TIMEOUT",
+                "LIVENESS_ENGINE": "mosip-onnx-default@1.0.0",
+                "LIVENESS_DEVICE_LEVEL": "L0",
+                "LIVENESS_DECISION": "OVERRIDE",
+                "LIVENESS_SCORE": "73",
+                "LIVENESS_SESSION": "85452f1e8aaedd0f64d69ca1071ee93b"
+            }
+        },
+        {
+            "file": "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_id.zip/officer_bio_cbeff.xml",
+            "type": "Face",
+            "subtype": "",
+            "liveness": {
+                "LIVENESS_METHOD": "PASSIVE_ACTIVE",
+                "LIVENESS_MODEL_SHA": "ebafce4e,db4b7684,b32929ad,ebab7f90,d2899b3e",
+                "LIVENESS_CHALLENGES": "SMILE:OK,SMILE:OK",
+                "LIVENESS_ENGINE": "mosip-onnx-default@1.0.0",
+                "LIVENESS_DEVICE_LEVEL": "L0",
+                "LIVENESS_DECISION": "PASS",
+                "LIVENESS_BINDING": "90-100",
+                "LIVENESS_SCORE": "73",
+                "LIVENESS_SESSION": "338bbb7a7949dc8819969885f67cbdf2"
+            }
+        }
+    ],
+    "metaInfo": [
+        {
+            "file": "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_evidence.zip/packet_meta_info.json",
+            "path": "/identity/biometrics/individualBiometrics/face",
+            "livenessDecision": "OVERRIDE",
+            "livenessMethod": "PASSIVE_ACTIVE"
+        },
+        {
+            "file": "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_id.zip/packet_meta_info.json",
+            "path": "/identity/biometrics/individualBiometrics/face",
+            "livenessDecision": "OVERRIDE",
+            "livenessMethod": "PASSIVE_ACTIVE"
+        },
+        {
+            "file": "REGISTRATION_CLIENT/NEW/10001100010000320260929213659_optional.zip/packet_meta_info.json",
+            "path": "/identity/biometrics/individualBiometrics/face",
+            "livenessDecision": "OVERRIDE",
+            "livenessMethod": "PASSIVE_ACTIVE"
+        }
+    ],
+    "livenessAudits": [
+        {
+            "eventId": "REG-EVT-LV01",
+            "eventName": "LIVENESS_SESSION_STARTED",
+            "actionTimeStamp": "2026-09-29T21:14:56.622Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"onboard_auth\",\"sessionId\":\"9a34ba5829da2dcd19d52d5c5cb14a01\",\"attempt\":\"1\",\"deviceSerial\":\"2345678901\",\"certification\":\"L0\",\"engine\":\"mosip-onnx-default@1.0.0\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV12",
+            "eventName": "LIVENESS_DEVICE_ERROR",
+            "actionTimeStamp": "2026-09-29T21:14:57.102Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"onboard_auth\",\"sessionId\":\"9a34ba5829da2dcd19d52d5c5cb14a01\",\"errorCode\":\"DISCONNECTED\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV01",
+            "eventName": "LIVENESS_SESSION_STARTED",
+            "actionTimeStamp": "2026-09-29T21:14:57.751Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"onboard_auth\",\"sessionId\":\"ac1a0782e47b2942121a092a3d7e8192\",\"attempt\":\"1\",\"deviceSerial\":\"2345678901\",\"certification\":\"L0\",\"engine\":\"mosip-onnx-default@1.0.0\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV02",
+            "eventName": "LIVENESS_PASSIVE_PASSED",
+            "actionTimeStamp": "2026-09-29T21:14:58.322Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"onboard_auth\",\"sessionId\":\"ac1a0782e47b2942121a092a3d7e8192\",\"scoreBucket\":\"90-100\",\"frames\":\"8\",\"ms\":\"570\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV10",
+            "eventName": "LIVENESS_PASSED",
+            "actionTimeStamp": "2026-09-29T21:14:58.834Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"onboard_auth\",\"sessionId\":\"ac1a0782e47b2942121a092a3d7e8192\",\"method\":\"PASSIVE\",\"totalMs\":\"1082\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV01",
+            "eventName": "LIVENESS_SESSION_STARTED",
+            "actionTimeStamp": "2026-09-29T21:18:41.725Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"onboard_auth\",\"sessionId\":\"8b2d3a8e1aac7a49a42cdcd5da8b6d17\",\"attempt\":\"1\",\"deviceSerial\":\"2345678901\",\"certification\":\"L0\",\"engine\":\"mosip-onnx-default@1.0.0\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV12",
+            "eventName": "LIVENESS_DEVICE_ERROR",
+            "actionTimeStamp": "2026-09-29T21:18:41.756Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"onboard_auth\",\"sessionId\":\"8b2d3a8e1aac7a49a42cdcd5da8b6d17\",\"errorCode\":\"NOT_READY\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV01",
+            "eventName": "LIVENESS_SESSION_STARTED",
+            "actionTimeStamp": "2026-09-29T21:33:08.968Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"e00ff23d994545659d4eca36fd5502ea\",\"attempt\":\"1\",\"deviceSerial\":\"2345678901\",\"certification\":\"L0\",\"engine\":\"mosip-onnx-default@1.0.0\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV03",
+            "eventName": "LIVENESS_ACTIVE_TRIGGERED",
+            "actionTimeStamp": "2026-09-29T21:33:10.015Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"e00ff23d994545659d4eca36fd5502ea\",\"scoreBucket\":\"50-59\",\"reason\":\"BELOW_THRESHOLD\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV04",
+            "eventName": "LIVENESS_CHALLENGE_ISSUED",
+            "actionTimeStamp": "2026-09-29T21:33:14.836Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"e00ff23d994545659d4eca36fd5502ea\",\"type\":\"SMILE\",\"index\":\"0\",\"nonceSha256Prefix\":\"30a6cbcb\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV05",
+            "eventName": "LIVENESS_CHALLENGE_PASSED",
+            "actionTimeStamp": "2026-09-29T21:33:16.746Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"e00ff23d994545659d4eca36fd5502ea\",\"type\":\"SMILE\",\"onsetMs\":\"1466\",\"holdMs\":\"329\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV04",
+            "eventName": "LIVENESS_CHALLENGE_ISSUED",
+            "actionTimeStamp": "2026-09-29T21:33:18.782Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"e00ff23d994545659d4eca36fd5502ea\",\"type\":\"SMILE\",\"index\":\"1\",\"nonceSha256Prefix\":\"2f11f790\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV05",
+            "eventName": "LIVENESS_CHALLENGE_PASSED",
+            "actionTimeStamp": "2026-09-29T21:33:21.079Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"e00ff23d994545659d4eca36fd5502ea\",\"type\":\"SMILE\",\"onsetMs\":\"1599\",\"holdMs\":\"329\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV10",
+            "eventName": "LIVENESS_PASSED",
+            "actionTimeStamp": "2026-09-29T21:33:23.226Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"e00ff23d994545659d4eca36fd5502ea\",\"method\":\"PASSIVE_ACTIVE\",\"totalMs\":\"14259\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV01",
+            "eventName": "LIVENESS_SESSION_STARTED",
+            "actionTimeStamp": "2026-09-29T21:36:44.196Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"09b2566391f00de7a6919d6061b6a3ce\",\"attempt\":\"1\",\"deviceSerial\":\"2345678901\",\"certification\":\"L0\",\"engine\":\"mosip-onnx-default@1.0.0\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV03",
+            "eventName": "LIVENESS_ACTIVE_TRIGGERED",
+            "actionTimeStamp": "2026-09-29T21:36:45.121Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"09b2566391f00de7a6919d6061b6a3ce\",\"scoreBucket\":\"60-69\",\"reason\":\"BELOW_THRESHOLD\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV04",
+            "eventName": "LIVENESS_CHALLENGE_ISSUED",
+            "actionTimeStamp": "2026-09-29T21:36:46.016Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"09b2566391f00de7a6919d6061b6a3ce\",\"type\":\"SMILE\",\"index\":\"0\",\"nonceSha256Prefix\":\"eefd3269\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV05",
+            "eventName": "LIVENESS_CHALLENGE_PASSED",
+            "actionTimeStamp": "2026-09-29T21:36:48.266Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"09b2566391f00de7a6919d6061b6a3ce\",\"type\":\"SMILE\",\"onsetMs\":\"1531\",\"holdMs\":\"327\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV04",
+            "eventName": "LIVENESS_CHALLENGE_ISSUED",
+            "actionTimeStamp": "2026-09-29T21:36:50.383Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"09b2566391f00de7a6919d6061b6a3ce\",\"type\":\"SMILE\",\"index\":\"1\",\"nonceSha256Prefix\":\"4d955737\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV05",
+            "eventName": "LIVENESS_CHALLENGE_PASSED",
+            "actionTimeStamp": "2026-09-29T21:36:52.738Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"09b2566391f00de7a6919d6061b6a3ce\",\"type\":\"SMILE\",\"onsetMs\":\"1646\",\"holdMs\":\"324\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV10",
+            "eventName": "LIVENESS_PASSED",
+            "actionTimeStamp": "2026-09-29T21:36:54.627Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"09b2566391f00de7a6919d6061b6a3ce\",\"method\":\"PASSIVE_ACTIVE\",\"totalMs\":\"10433\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV01",
+            "eventName": "LIVENESS_SESSION_STARTED",
+            "actionTimeStamp": "2026-09-29T21:38:07.880Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"fbb9361e91588f140a903ecd1c5f18f1\",\"attempt\":\"1\",\"deviceSerial\":\"2345678901\",\"certification\":\"L0\",\"engine\":\"mosip-onnx-default@1.0.0\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV03",
+            "eventName": "LIVENESS_ACTIVE_TRIGGERED",
+            "actionTimeStamp": "2026-09-29T21:38:08.549Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"fbb9361e91588f140a903ecd1c5f18f1\",\"scoreBucket\":\"70-79\",\"reason\":\"BELOW_THRESHOLD\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV04",
+            "eventName": "LIVENESS_CHALLENGE_ISSUED",
+            "actionTimeStamp": "2026-09-29T21:38:09.451Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"fbb9361e91588f140a903ecd1c5f18f1\",\"type\":\"BLINK\",\"index\":\"0\",\"nonceSha256Prefix\":\"f8a999a5\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV06",
+            "eventName": "LIVENESS_CHALLENGE_FAILED",
+            "actionTimeStamp": "2026-09-29T21:38:14.447Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"fbb9361e91588f140a903ecd1c5f18f1\",\"type\":\"BLINK\",\"reason\":\"CHALLENGE_TIMEOUT\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV07",
+            "eventName": "LIVENESS_TIMEOUT",
+            "actionTimeStamp": "2026-09-29T21:38:14.456Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"fbb9361e91588f140a903ecd1c5f18f1\",\"phase\":\"CHALLENGE_OBSERVE\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV01",
+            "eventName": "LIVENESS_SESSION_STARTED",
+            "actionTimeStamp": "2026-09-29T21:38:14.753Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"106e40b3cea71adaaeef1733340f5de4\",\"attempt\":\"2\",\"deviceSerial\":\"2345678901\",\"certification\":\"L0\",\"engine\":\"mosip-onnx-default@1.0.0\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV03",
+            "eventName": "LIVENESS_ACTIVE_TRIGGERED",
+            "actionTimeStamp": "2026-09-29T21:38:15.309Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"106e40b3cea71adaaeef1733340f5de4\",\"scoreBucket\":\"70-79\",\"reason\":\"BELOW_THRESHOLD\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV04",
+            "eventName": "LIVENESS_CHALLENGE_ISSUED",
+            "actionTimeStamp": "2026-09-29T21:38:15.931Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"106e40b3cea71adaaeef1733340f5de4\",\"type\":\"BLINK\",\"index\":\"0\",\"nonceSha256Prefix\":\"ae7fed6e\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV06",
+            "eventName": "LIVENESS_CHALLENGE_FAILED",
+            "actionTimeStamp": "2026-09-29T21:38:20.912Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"106e40b3cea71adaaeef1733340f5de4\",\"type\":\"BLINK\",\"reason\":\"CHALLENGE_TIMEOUT\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV07",
+            "eventName": "LIVENESS_TIMEOUT",
+            "actionTimeStamp": "2026-09-29T21:38:20.916Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"106e40b3cea71adaaeef1733340f5de4\",\"phase\":\"CHALLENGE_OBSERVE\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV01",
+            "eventName": "LIVENESS_SESSION_STARTED",
+            "actionTimeStamp": "2026-09-29T21:38:21.037Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"85452f1e8aaedd0f64d69ca1071ee93b\",\"attempt\":\"3\",\"deviceSerial\":\"2345678901\",\"certification\":\"L0\",\"engine\":\"mosip-onnx-default@1.0.0\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV03",
+            "eventName": "LIVENESS_ACTIVE_TRIGGERED",
+            "actionTimeStamp": "2026-09-29T21:38:21.610Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"85452f1e8aaedd0f64d69ca1071ee93b\",\"scoreBucket\":\"70-79\",\"reason\":\"BELOW_THRESHOLD\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV04",
+            "eventName": "LIVENESS_CHALLENGE_ISSUED",
+            "actionTimeStamp": "2026-09-29T21:38:22.950Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"85452f1e8aaedd0f64d69ca1071ee93b\",\"type\":\"BLINK\",\"index\":\"0\",\"nonceSha256Prefix\":\"640bb43e\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV06",
+            "eventName": "LIVENESS_CHALLENGE_FAILED",
+            "actionTimeStamp": "2026-09-29T21:38:27.925Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"85452f1e8aaedd0f64d69ca1071ee93b\",\"type\":\"BLINK\",\"reason\":\"CHALLENGE_TIMEOUT\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV07",
+            "eventName": "LIVENESS_TIMEOUT",
+            "actionTimeStamp": "2026-09-29T21:38:27.932Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"85452f1e8aaedd0f64d69ca1071ee93b\",\"phase\":\"CHALLENGE_OBSERVE\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV11",
+            "eventName": "LIVENESS_MAX_RETRIES",
+            "actionTimeStamp": "2026-09-29T21:38:27.936Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"85452f1e8aaedd0f64d69ca1071ee93b\",\"attempts\":\"3\",\"onMaxFailure\":\"SUPERVISOR_OVERRIDE\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV11",
+            "eventName": "LIVENESS_MAX_RETRIES",
+            "actionTimeStamp": "2026-09-29T21:38:27.941Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"85452f1e8aaedd0f64d69ca1071ee93b\",\"attempts\":\"3\",\"onMaxFailure\":\"SUPERVISOR_OVERRIDE\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV16",
+            "eventName": "LIVENESS_OVERRIDE_USED",
+            "actionTimeStamp": "2026-09-29T21:54:22.649Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"override-lVz9cnpgcBBqOcGP\",\"supervisorId\":\"supervisor1\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV01",
+            "eventName": "LIVENESS_SESSION_STARTED",
+            "actionTimeStamp": "2026-09-29T21:54:44.720Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"ade8714709abd11c0a511bfcaad97f1e\",\"attempt\":\"1\",\"deviceSerial\":\"2345678901\",\"certification\":\"L0\",\"engine\":\"mosip-onnx-default@1.0.0\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV03",
+            "eventName": "LIVENESS_ACTIVE_TRIGGERED",
+            "actionTimeStamp": "2026-09-29T21:54:45.365Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"ade8714709abd11c0a511bfcaad97f1e\",\"scoreBucket\":\"70-79\",\"reason\":\"BELOW_THRESHOLD\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV04",
+            "eventName": "LIVENESS_CHALLENGE_ISSUED",
+            "actionTimeStamp": "2026-09-29T21:54:46.523Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"ade8714709abd11c0a511bfcaad97f1e\",\"type\":\"BLINK\",\"index\":\"0\",\"nonceSha256Prefix\":\"c661f886\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV06",
+            "eventName": "LIVENESS_CHALLENGE_FAILED",
+            "actionTimeStamp": "2026-09-29T21:54:46.794Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"ade8714709abd11c0a511bfcaad97f1e\",\"type\":\"BLINK\",\"reason\":\"ONSET_TOO_FAST\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV01",
+            "eventName": "LIVENESS_SESSION_STARTED",
+            "actionTimeStamp": "2026-09-29T21:57:36.276Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"a09b84f6890b136a8b1a969f08316f09\",\"attempt\":\"2\",\"deviceSerial\":\"2345678901\",\"certification\":\"L0\",\"engine\":\"mosip-onnx-default@1.0.0\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV03",
+            "eventName": "LIVENESS_ACTIVE_TRIGGERED",
+            "actionTimeStamp": "2026-09-29T21:57:37.004Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"a09b84f6890b136a8b1a969f08316f09\",\"scoreBucket\":\"70-79\",\"reason\":\"BELOW_THRESHOLD\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV04",
+            "eventName": "LIVENESS_CHALLENGE_ISSUED",
+            "actionTimeStamp": "2026-09-29T21:57:39.092Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"a09b84f6890b136a8b1a969f08316f09\",\"type\":\"BLINK\",\"index\":\"0\",\"nonceSha256Prefix\":\"62114eda\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV13",
+            "eventName": "LIVENESS_ENGINE_ERROR",
+            "actionTimeStamp": "2026-09-29T21:57:41.305Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"a09b84f6890b136a8b1a969f08316f09\",\"errorCode\":\"INFERENCE_TIMEOUT\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV01",
+            "eventName": "LIVENESS_SESSION_STARTED",
+            "actionTimeStamp": "2026-09-29T22:00:10.264Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"338bbb7a7949dc8819969885f67cbdf2\",\"attempt\":\"2\",\"deviceSerial\":\"2345678901\",\"certification\":\"L0\",\"engine\":\"mosip-onnx-default@1.0.0\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV03",
+            "eventName": "LIVENESS_ACTIVE_TRIGGERED",
+            "actionTimeStamp": "2026-09-29T22:00:11.335Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"338bbb7a7949dc8819969885f67cbdf2\",\"scoreBucket\":\"70-79\",\"reason\":\"BELOW_THRESHOLD\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV04",
+            "eventName": "LIVENESS_CHALLENGE_ISSUED",
+            "actionTimeStamp": "2026-09-29T22:00:16.172Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"338bbb7a7949dc8819969885f67cbdf2\",\"type\":\"SMILE\",\"index\":\"0\",\"nonceSha256Prefix\":\"75725ce9\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV05",
+            "eventName": "LIVENESS_CHALLENGE_PASSED",
+            "actionTimeStamp": "2026-09-29T22:00:18.342Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"338bbb7a7949dc8819969885f67cbdf2\",\"type\":\"SMILE\",\"onsetMs\":\"1489\",\"holdMs\":\"415\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV04",
+            "eventName": "LIVENESS_CHALLENGE_ISSUED",
+            "actionTimeStamp": "2026-09-29T22:00:20.667Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"338bbb7a7949dc8819969885f67cbdf2\",\"type\":\"SMILE\",\"index\":\"1\",\"nonceSha256Prefix\":\"c71dff91\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV05",
+            "eventName": "LIVENESS_CHALLENGE_PASSED",
+            "actionTimeStamp": "2026-09-29T22:00:22.956Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"338bbb7a7949dc8819969885f67cbdf2\",\"type\":\"SMILE\",\"onsetMs\":\"1576\",\"holdMs\":\"315\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV10",
+            "eventName": "LIVENESS_PASSED",
+            "actionTimeStamp": "2026-09-29T22:00:25.577Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"338bbb7a7949dc8819969885f67cbdf2\",\"method\":\"PASSIVE_ACTIVE\",\"totalMs\":\"15315\"}"
+        }
+    ],
+    "otherBiometricRecords": 12
+}

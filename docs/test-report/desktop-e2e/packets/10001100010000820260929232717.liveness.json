@@ -1,0 +1,173 @@
+{
+    "packet": "10001100010000820260929232717-10001_10001-20260929232801.zip",
+    "registrationId": "10001100010000820260929232717",
+    "files": [
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_evidence.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_optional.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_id.zip",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_id.zip/proofOfAddress.PDF",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_id.zip/individualBiometrics_bio_CBEFF.xml",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_id.zip/proofOfIdentity.PDF",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_id.zip/ID.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_id.zip/officer_bio_cbeff.xml",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_id.zip/audit.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_id.zip/packet_operations_hash.txt",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_id.zip/packet_data_hash.txt",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_id.zip/packet_meta_info.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_evidence.zip",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_evidence.zip/ID.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_evidence.zip/packet_data_hash.txt",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_evidence.zip/packet_meta_info.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_optional.zip",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_optional.zip/ID.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_optional.zip/packet_data_hash.txt",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_optional.zip/packet_meta_info.json",
+        "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_id.json"
+    ],
+    "faceRecords": [
+        {
+            "file": "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_id.zip/individualBiometrics_bio_CBEFF.xml",
+            "type": "Face",
+            "subtype": "",
+            "liveness": {
+                "LIVENESS_METHOD": "PASSIVE",
+                "LIVENESS_MODEL_SHA": "ebafce4e,db4b7684,b32929ad,ebab7f90,d2899b3e",
+                "LIVENESS_ENGINE": "mosip-onnx-default@1.0.0",
+                "LIVENESS_DEVICE_LEVEL": "L0",
+                "LIVENESS_DECISION": "PASS",
+                "LIVENESS_BINDING": "90-100",
+                "LIVENESS_SCORE": "84",
+                "LIVENESS_SESSION": "d2735b888d321e65eed4d731b3b8d553"
+            }
+        },
+        {
+            "file": "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_id.zip/officer_bio_cbeff.xml",
+            "type": "Face",
+            "subtype": "",
+            "liveness": {
+                "LIVENESS_METHOD": "PASSIVE",
+                "LIVENESS_MODEL_SHA": "ebafce4e,db4b7684,b32929ad,ebab7f90,d2899b3e",
+                "LIVENESS_ENGINE": "mosip-onnx-default@1.0.0",
+                "LIVENESS_DEVICE_LEVEL": "L0",
+                "LIVENESS_DECISION": "PASS",
+                "LIVENESS_BINDING": "90-100",
+                "LIVENESS_SCORE": "100",
+                "LIVENESS_SESSION": "e7a9525b565dd7d59807ddfc2a489395"
+            }
+        }
+    ],
+    "metaInfo": [
+        {
+            "file": "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_id.zip/packet_meta_info.json",
+            "path": "/identity/biometrics/individualBiometrics/face",
+            "livenessDecision": "PASS",
+            "livenessMethod": "PASSIVE"
+        },
+        {
+            "file": "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_evidence.zip/packet_meta_info.json",
+            "path": "/identity/biometrics/individualBiometrics/face",
+            "livenessDecision": "PASS",
+            "livenessMethod": "PASSIVE"
+        },
+        {
+            "file": "REGISTRATION_CLIENT/NEW/10001100010000820260929232717_optional.zip/packet_meta_info.json",
+            "path": "/identity/biometrics/individualBiometrics/face",
+            "livenessDecision": "PASS",
+            "livenessMethod": "PASSIVE"
+        }
+    ],
+    "livenessAudits": [
+        {
+            "eventId": "REG-EVT-LV15",
+            "eventName": "LIVENESS_CONFIG_APPLIED",
+            "actionTimeStamp": "2026-09-29T23:26:14.223Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"onboard_auth\",\"sessionId\":\"\",\"changed\":\"mosip.registration.liveness.policy.registration\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV01",
+            "eventName": "LIVENESS_SESSION_STARTED",
+            "actionTimeStamp": "2026-09-29T23:26:14.230Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"onboard_auth\",\"sessionId\":\"0d49d00055bae4bf7d1345000471c906\",\"attempt\":\"1\",\"deviceSerial\":\"2345678901\",\"certification\":\"L1\",\"engine\":\"mosip-onnx-default@1.0.0\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV02",
+            "eventName": "LIVENESS_PASSIVE_PASSED",
+            "actionTimeStamp": "2026-09-29T23:26:14.746Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"onboard_auth\",\"sessionId\":\"0d49d00055bae4bf7d1345000471c906\",\"scoreBucket\":\"90-100\",\"frames\":\"8\",\"ms\":\"522\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV10",
+            "eventName": "LIVENESS_PASSED",
+            "actionTimeStamp": "2026-09-29T23:26:15.190Z",
+            "sessionUserId": "supervisor1",
+            "description": "{\"workflow\":\"onboard_auth\",\"sessionId\":\"0d49d00055bae4bf7d1345000471c906\",\"method\":\"PASSIVE\",\"totalMs\":\"965\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV01",
+            "eventName": "LIVENESS_SESSION_STARTED",
+            "actionTimeStamp": "2026-09-29T23:27:14.020Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"98b8006d9534c366ba02de3425dc9fd3\",\"attempt\":\"1\",\"deviceSerial\":\"2345678901\",\"certification\":\"L0\",\"engine\":\"mosip-onnx-default@1.0.0\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV02",
+            "eventName": "LIVENESS_PASSIVE_PASSED",
+            "actionTimeStamp": "2026-09-29T23:27:14.533Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"98b8006d9534c366ba02de3425dc9fd3\",\"scoreBucket\":\"90-100\",\"frames\":\"8\",\"ms\":\"512\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV10",
+            "eventName": "LIVENESS_PASSED",
+            "actionTimeStamp": "2026-09-29T23:27:14.959Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"login_auth\",\"sessionId\":\"98b8006d9534c366ba02de3425dc9fd3\",\"method\":\"PASSIVE\",\"totalMs\":\"939\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV01",
+            "eventName": "LIVENESS_SESSION_STARTED",
+            "actionTimeStamp": "2026-09-29T23:27:49.071Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"d2735b888d321e65eed4d731b3b8d553\",\"attempt\":\"1\",\"deviceSerial\":\"2345678901\",\"certification\":\"L0\",\"engine\":\"mosip-onnx-default@1.0.0\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV02",
+            "eventName": "LIVENESS_PASSIVE_PASSED",
+            "actionTimeStamp": "2026-09-29T23:27:49.594Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"d2735b888d321e65eed4d731b3b8d553\",\"scoreBucket\":\"80-89\",\"frames\":\"8\",\"ms\":\"523\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV10",
+            "eventName": "LIVENESS_PASSED",
+            "actionTimeStamp": "2026-09-29T23:27:49.770Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"registration\",\"sessionId\":\"d2735b888d321e65eed4d731b3b8d553\",\"method\":\"PASSIVE\",\"totalMs\":\"699\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV01",
+            "eventName": "LIVENESS_SESSION_STARTED",
+            "actionTimeStamp": "2026-09-29T23:27:59.917Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"e7a9525b565dd7d59807ddfc2a489395\",\"attempt\":\"1\",\"deviceSerial\":\"2345678901\",\"certification\":\"L0\",\"engine\":\"mosip-onnx-default@1.0.0\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV02",
+            "eventName": "LIVENESS_PASSIVE_PASSED",
+            "actionTimeStamp": "2026-09-29T23:28:00.436Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"e7a9525b565dd7d59807ddfc2a489395\",\"scoreBucket\":\"90-100\",\"frames\":\"8\",\"ms\":\"518\"}"
+        },
+        {
+            "eventId": "REG-EVT-LV10",
+            "eventName": "LIVENESS_PASSED",
+            "actionTimeStamp": "2026-09-29T23:28:00.755Z",
+            "sessionUserId": "officer1",
+            "description": "{\"workflow\":\"packet_auth\",\"sessionId\":\"e7a9525b565dd7d59807ddfc2a489395\",\"method\":\"PASSIVE\",\"totalMs\":\"836\"}"
+        }
+    ],
+    "otherBiometricRecords": 12
+}

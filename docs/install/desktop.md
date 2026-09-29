@@ -185,13 +185,40 @@ then be given the new values.
 
 ## 6. Using the client with MockSync
 
-1. `bash scripts/desktop-build.sh --mocksync`
-2. Start MockSync (see `tools/`) and register the values from section 5 with it.
+1. `bash scripts/desktop-build.sh --mocksync`. The run folder's `lib/` then holds the liveness jars
+   (`liveness-core`, `liveness-onnx`, `liveness-onnx-...-models` with the signed ONNX models), ONNX Runtime 1.20.0,
+   the SFace face-match SDK (`face-match-sdk`, the FACE matcher) and MOSIP's mock SDK (`mock-sdk.jar`, finger and
+   iris; downloaded once into `run/cache/`).
+2. Start MockSync (`tools/mock-sync/scripts/run-mock-sync.sh`) and register the machine from section 5 with it.
 3. `powershell -ExecutionPolicy Bypass -File scripts\desktop-run.ps1 -TrustCert <MockSync certificate>`
-4. The pre-loader shows `mosip.hostname : localhost:8443`. With MockSync running
-   and trusted it should also show `Machine is ONLINE`; then log in with a user
-   that MockSync serves. (Checked so far without MockSync: the client calls
-   `https://localhost:8443/v1/syncdata/actuator/health` and reports OFFLINE.)
+4. The pre-loader shows `mosip.hostname : localhost:8443` and `Machine is ONLINE`. The first login runs the initial
+   sync and ends with a restart alert; after the restart log in again. MockSync's config selects the SFace SDK for
+   FACE (`mosip.biometric.sdk.providers.face.mockvendor.*`); SDK keys apply only after a client restart.
+5. Devices: `scripts/mockmds-run.sh` starts MockMDS on port 4501 with the evaluation frame packs
+   (`run/frame-packs`) allowed as face sources. Operator onboarding asks for the biometrics in
+   `mosip.registration.operator.onboarding.bioattributes` (MockSync override: ten fingers and face).
+
+### 6.1 Scripted end-to-end demo
+
+`scripts/demo-desktop.sh` runs every face liveness flow on the real client with no mouse or keyboard (it also works
+on a locked screen): login, registration (passive pass, active challenges, attacks, device disconnect, maximum
+attempts), reviewer and end-of-day supervisor authentication, a config change by sync, an L1 device, offline, and a
+wrong person refused by the face match. It writes `driver.log`, `results.txt`, masked PNG snapshots and the
+packets' liveness evidence to `run/demo/desktop-<time>/`. Results of the reference run:
+`docs/test-report/desktop-e2e.md`.
+
+```bash
+bash scripts/demo-desktop.sh --restore-golden     # about 10 minutes
+bash scripts/demo-desktop.sh --flow tools/mock-sync/e2e/flows/demo-desktop.flow --out /tmp/demo
+```
+
+### 6.2 Golden snapshot of an onboarded client
+
+Onboarding needs MockSync, MockMDS and several screens, so an onboarded state is kept outside git:
+`bash scripts/demo-desktop.sh --save-golden` (client stopped) copies `run/desktop/db/` and `.mosipkeys/` to
+`run/golden/desktop/`; `--restore-golden` copies them back before a run. The snapshot works only on the machine that
+made it: the database password is sealed with that machine's TPM key, and MockSync must still know the machine
+(`tools/mock-sync/work/machines.json`).
 
 ## 7. Unit tests
 

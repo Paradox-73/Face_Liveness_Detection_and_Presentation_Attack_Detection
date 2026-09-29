@@ -1,0 +1,55 @@
+04:49:01 ==== start: MockMDS face device reset to L0, no fault; client started
+04:50:05 ==== login: officer1 password then face with liveness
+04:50:09 RESULT PASS live face passed on attempt 1
+04:50:10 ==== registration 1: device disconnect and recovery, then passive pass, packet authentication
+04:50:46 RESULT PASS text disconnected 60
+04:50:47 RESULT PASS text Good, face captured successfully 60
+04:50:54 RESULT PASS live face passed on attempt 1
+04:50:58 RESULT PASS text Registration Acknowledgement 60
+04:50:58 ==== registration 2: low passive score, active challenges; finger exception, reviewer authentication
+04:51:34 RESULT PASS text Please (blink|smile) 60
+04:51:41 RESULT PASS live face passed on attempt 1
+04:51:56 RESULT PASS live face passed on attempt 1
+04:52:02 RESULT PASS live face passed on attempt 1
+04:52:06 RESULT PASS text Registration Acknowledgement 60
+04:52:06 ==== registration 3: print, injected still stream and screen replay refused; maximum attempts, recovery guidance
+04:52:46 RESULT PASS text (Face verification could not be completed|We could not verify face liveness) 60
+04:52:48 RESULT PASS text (Face verification could not be completed|We could not verify face liveness) 60
+04:52:49 RESULT PASS text after 3 attempts 60
+04:52:56 ==== end of day: supervisor login, EOD approval with supervisor face, upload
+04:53 RESULT PASS live face passed on attempt 1
+04:53:13 RESULT PASS text (Face verification could not be completed|We could not verify face liveness) 60
+04:53:14 RESULT PASS live face passed on attempt 1
+04:53:14 RESULT PASS alert Authentication successful 30
+04:53:36 RESULT PASS sql no rows: SELECT ID FROM REG.REGISTRATION WHERE CLIENT_STATUS_CODE = 'APPROVED'
+04:53:36 ==== config by sync: policy.registration ALWAYS_ACTIVE, synchronise
+04:53:58 RESULT PASS sql rows>=1: SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'ALWAYS_ACTIVE'
+04:53:58 ==== config by sync: rigid-motion print now refused, live resident answers the challenges
+04:54:33 RESULT PASS text Please (blink|smile) 30
+04:54:38 RESULT PASS text (Face verification could not be completed|We could not verify face liveness) 60
+04:54:47 RESULT PASS live face passed on attempt 1
+04:54:47 RESULT PASS sql rows>=1: SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV15' AND LOG_DESC LIKE '%policy.registration%'
+04:54:55 RESULT PASS live face passed on attempt 1
+04:54:59 RESULT PASS text Registration Acknowledgement 60
+04:54:59 ==== config by sync: key removed, synchronised back
+04:55:20 RESULT PASS sql rows>=1: SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'PASSIVE_THEN_ACTIVE'
+04:55:20 ==== L1 device: FTM-signed device, rescan, operator face capture with liveness
+04:56:15 RESULT PASS live face passed on attempt 1
+04:56:15 RESULT PASS sql rows>=1: SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV01' AND LOG_DESC LIKE '%"certification":"L1"%'
+04:57:07 ==== offline: network cut; login, registration and EOD run locally
+04:57:15 RESULT PASS live face passed on attempt 1
+04:57:49 RESULT PASS text Good, face captured successfully 60
+04:58 RESULT PASS live face passed on attempt 1
+04:58:04 RESULT PASS text Registration Acknowledgement 60
+04:58:12 RESULT PASS live face passed on attempt 1
+04:58:35 RESULT PASS text (Face verification could not be completed|We could not verify face liveness) 60
+04:58:36 RESULT PASS live face passed on attempt 1
+04:58:36 RESULT PASS alert Authentication successful 30
+04:58:39 ==== offline: network back, upload
+04:59:03 RESULT PASS sql no rows: SELECT ID FROM REG.REGISTRATION WHERE CLIENT_STATUS_CODE = 'APPROVED'
+04:59:03 ==== face match: live but wrong person refused, right person accepted
+04:59:16 RESULT PASS live face passed on attempt 3
+04:59:16 RESULT PASS alert Face match not found 30
+04:59:19 RESULT PASS live face passed on attempt 1
+04:59:19 RESULT PASS text Operational Tasks 90
+04:59:19 ==== evidence: liveness audit rows in the client database
