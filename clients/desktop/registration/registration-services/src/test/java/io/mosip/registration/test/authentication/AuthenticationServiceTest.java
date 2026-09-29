@@ -43,6 +43,7 @@ import io.mosip.registration.entity.UserBiometric;
 import io.mosip.registration.entity.id.UserBiometricId;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.login.LoginService;
+import io.mosip.registration.service.bio.liveness.LivenessGate;
 import io.mosip.registration.service.security.impl.AuthenticationServiceImpl;
 import io.mosip.registration.util.common.BIRBuilder;
 import io.mosip.registration.util.common.OTPManager;
@@ -76,6 +77,9 @@ public class AuthenticationServiceTest {
 	
 	@Mock
 	private BioProviderImpl_V_0_9 bioProviderImpl;
+
+	@Mock
+	private LivenessGate livenessGate;
 	
 	@InjectMocks
 	private AuthenticationServiceImpl authenticationServiceImpl;

@@ -394,11 +394,15 @@ public class BioServiceTest {
         captureResponse.setBody(getRCaptureResponse());
         mockWebServer.enqueue(captureResponse); //queued for actual RCAPTURE request
         
+        // This test covers the device capture failure; the liveness gate is covered by BioServiceLivenessGateTest.
+        ApplicationContext.map().put("mosip.registration.liveness.enable", "N");
         String errorCode = null;
         try {
             bioService.captureModality(mdmRequestDto);
         } catch (RegBaseCheckedException e) {
             errorCode = e.getCause() != null ? ((RegBaseCheckedException)e.getCause()).getErrorCode() : e.getErrorCode();
+        } finally {
+            ApplicationContext.map().remove("mosip.registration.liveness.enable");
         }
         Assert.assertEquals("REG-MDS-003", errorCode);
     }

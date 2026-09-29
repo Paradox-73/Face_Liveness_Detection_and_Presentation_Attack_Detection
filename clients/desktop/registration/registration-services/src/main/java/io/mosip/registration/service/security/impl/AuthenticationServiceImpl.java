@@ -38,6 +38,7 @@ import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.security.AuthenticationService;
 import io.mosip.registration.util.common.BIRBuilder;
 import io.mosip.registration.util.common.OTPManager;
+import io.mosip.registration.service.bio.liveness.LivenessGate;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
@@ -75,6 +76,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	@Autowired
 	private ServiceDelegateUtil serviceDelegateUtil;
 
+	@Autowired
+	private LivenessGate livenessGate;
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -86,6 +90,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	public Boolean authValidator(String userId, String modality, List<BiometricsDto> biometrics) {
 		LOGGER.info("OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
 				modality + " >> authValidator invoked.");
+		if (livenessGate.rejectsAuthCapture(modality, biometrics)) {
+			return false;
+		}
 		try {
 			BiometricType biometricType = BiometricType.fromValue(modality);
 			List<BIR> record = new ArrayList<>();

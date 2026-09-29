@@ -38,6 +38,7 @@ import io.mosip.registration.mdm.integrator.MosipDeviceSpecificationProvider;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.bio.BioService;
+import io.mosip.registration.service.bio.liveness.LivenessGate;
 import io.mosip.registration.util.common.BIRBuilder;
 
 /**
@@ -68,6 +69,9 @@ public class BioServiceImpl extends BaseService implements BioService {
 	@Autowired
 	private BIRBuilder birBuilder;
 
+	@Autowired
+	private LivenessGate livenessGate;
+
 	/**
 	 * Gets the registration DTO from session.
 	 *
@@ -81,9 +85,11 @@ public class BioServiceImpl extends BaseService implements BioService {
 	public List<BiometricsDto> captureModality(MDMRequestDto mdmRequestDto) throws RegBaseCheckedException {
 		LOGGER.info("Entering into captureModality method.. {}", System.currentTimeMillis());
 		List<BiometricsDto> list = new ArrayList<BiometricsDto>();
+		LivenessGate.Admission livenessAdmission = null;
 
 		try {
 			MdmBioDevice bioDevice = deviceSpecificationFactory.getDeviceInfoByModality(mdmRequestDto.getModality());
+			livenessAdmission = livenessGate.admit(mdmRequestDto, bioDevice);
 			MosipDeviceSpecificationProvider deviceSpecificationProvider = deviceSpecificationFactory
 					.getMdsProvider(bioDevice.getSpecVersion());
 			List<BiometricsDto> biometricsDtos = deviceSpecificationProvider.rCapture(bioDevice, mdmRequestDto);
@@ -109,9 +115,12 @@ public class BioServiceImpl extends BaseService implements BioService {
 				}
 				list.add(biometricsDto);
 			}
+			livenessGate.complete(livenessAdmission, list);
 		} catch (RegBaseCheckedException e) {
+			livenessGate.abort(livenessAdmission);
 			throw e;
 		} catch (Throwable t) {
+			livenessGate.abort(livenessAdmission);
 			LOGGER.error("Failed in rcapture", t);
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
 					RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage());

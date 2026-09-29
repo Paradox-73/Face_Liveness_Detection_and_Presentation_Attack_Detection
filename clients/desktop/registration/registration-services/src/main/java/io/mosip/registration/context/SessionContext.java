@@ -18,6 +18,7 @@ import org.springframework.context.ApplicationContext;
 
 import io.mosip.kernel.biometrics.constant.BiometricType;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.liveness.core.Workflow;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.LoginMode;
@@ -28,6 +29,7 @@ import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.service.bio.BioService;
+import io.mosip.registration.service.bio.liveness.LivenessOrchestrator;
 import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.security.AuthenticationService;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
@@ -426,6 +428,8 @@ public class SessionContext {
 				.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT), 1, io.mosip.registration.context.ApplicationContext
 				.getIntValueFromApplicationMap(RegistrationConstants.FACE_AUTHENTICATION_THRESHOLD));
 		
+		mdmRequestDto.setLivenessContext(applicationContext.getBean(LivenessOrchestrator.class)
+				.contextFor(Workflow.LOGIN_AUTH, authenticationValidatorDTO.getUserId()));
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 		if(authService.authValidator(authenticationValidatorDTO.getUserId(), BiometricType.FACE.value(), biometrics)) {
 			createSessionContext();
