@@ -19,6 +19,7 @@ import io.flutter.embedding.android.FlutterActivity;
 import io.mosip.registration.clientmanager.config.AppModule;
 import io.mosip.registration.clientmanager.config.NetworkModule;
 import io.mosip.registration.clientmanager.config.RoomModule;
+import io.mosip.registration.livenessmanager.di.LivenessModule;
 
 @Singleton
 @Component(
@@ -28,6 +29,7 @@ import io.mosip.registration.clientmanager.config.RoomModule;
                 RoomModule.class,
                 AppModule.class,
                 HostApiModule.class,
+                LivenessModule.class,
         }
 )
 public interface AppComponent  extends AndroidInjector<FlutterActivity> {
@@ -42,6 +44,7 @@ public interface AppComponent  extends AndroidInjector<FlutterActivity> {
         Builder roomModule(RoomModule roomModule);
         Builder appModule(AppModule appModule);
         Builder hostApiModule(HostApiModule hostApiModule);
+        Builder livenessModule(LivenessModule livenessModule);
 //        Builder activityBuildersModule(ActivityBuildersModule activityBuildersModule);
         AppComponent build();
     }

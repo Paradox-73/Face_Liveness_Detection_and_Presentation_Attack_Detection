@@ -66,6 +66,13 @@ import io.mosip.registration.clientmanager.spi.PacketService;
 import io.mosip.registration.clientmanager.spi.RegistrationService;
 import io.mosip.registration.clientmanager.spi.SyncRestService;
 import io.mosip.registration.clientmanager.util.SyncRestUtil;
+import io.mosip.registration.livenessmanager.LivenessService;
+import io.mosip.registration_client.api_services.LivenessApi;
+import io.mosip.registration_client.liveness.FaceAuthFlow;
+import io.mosip.registration_client.liveness.FaceCaptureLivenessGate;
+import io.mosip.registration_client.liveness.LivenessCaptureLauncher;
+import io.mosip.registration_client.model.LivenessPigeon;
+import io.mosip.registration.livenessmanager.di.LivenessModule;
 import io.mosip.registration.keymanager.spi.ClientCryptoManagerService;
 
 import io.mosip.registration.transliterationmanager.service.TransliterationServiceImpl;
@@ -138,6 +145,17 @@ public class MainActivity extends FlutterActivity {
     JobManagerService jobManagerService;
     @Inject
     IdentitySchemaRepository identitySchemaRepository;
+    // Face liveness: creating it installs the capture screen's runtime and starts loading the models.
+    @Inject
+    LivenessService livenessService;
+    @Inject
+    LivenessCaptureLauncher livenessCaptureLauncher;
+    @Inject
+    FaceCaptureLivenessGate faceCaptureLivenessGate;
+    @Inject
+    FaceAuthFlow faceAuthFlow;
+    @Inject
+    LivenessApi livenessApi;
     @Inject
     UserDetailRepository userDetailRepository;
     @Inject
@@ -385,6 +403,7 @@ public class MainActivity extends FlutterActivity {
                 .roomModule(new RoomModule(getApplication(), getApplicationInfo()))
                 .appModule(new AppModule(getApplication()))
                 .hostApiModule(new HostApiModule(getApplication()))
+                .livenessModule(new LivenessModule(getApplication()))
                 .build();
         appComponent.inject(this);
         initializeAutoSync();
@@ -420,11 +439,22 @@ public class MainActivity extends FlutterActivity {
         GlobalConfigSettingsPigeon.GlobalConfigSettingsApi.setup(flutterEngine.getDartExecutor().getBinaryMessenger(), globalConfigSettingsApi);
         SecureScreenPigeon.SecureScreenApi.setup(flutterEngine.getDartExecutor().getBinaryMessenger(), secureScreenApi);
         secureScreenApi.setCallbackActivity(this);
+        // Face liveness: capture screen for resident and onboarding faces, face authentication for staff
+        livenessCaptureLauncher.attach(this);
+        biometricsDetailsApi.setLivenessGate(faceCaptureLivenessGate, livenessCaptureLauncher);
+        authenticationApi.setFaceAuthFlow(faceAuthFlow);
+        LivenessPigeon.LivenessApi.setup(flutterEngine.getDartExecutor().getBinaryMessenger(), livenessApi);
+        livenessApi.setCallbackActivity(this);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        // Face liveness capture screen: every result code, so a cancelled or failed capture also completes
+        if (livenessCaptureLauncher != null
+                && livenessCaptureLauncher.onActivityResult(requestCode, resultCode, data)) {
+            return;
+        }
         if (resultCode == Activity.RESULT_OK) {
             switch (requestCode) {
                 case 1:
