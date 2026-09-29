@@ -24,7 +24,7 @@
     <modules>
         <module>liveness-core</module>
         <module>liveness-onnx</module>
-        <!-- face-match-sdk is listed here once its pom exists. -->
+        <module>face-match-sdk</module>
     </modules>
 
     <properties>

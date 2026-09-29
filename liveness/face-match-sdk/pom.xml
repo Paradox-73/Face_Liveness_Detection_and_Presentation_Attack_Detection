@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.mosip.liveness</groupId>
+        <artifactId>liveness-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>face-match-sdk</artifactId>
+    <packaging>jar</packaging>
+
+    <name>MOSIP SFace face match SDK</name>
+    <description>MOSIP biometric SDK (IBioApiV2, API version 0.9) for FACE: quality check, template extraction and
+        1:1 / 1:n match with the SFace embedding model of the liveness bundle. Runs in the desktop Registration
+        Client (BioAPIFactory) and the Android Registration Client (BioSdkProviderFactory).</description>
+
+    <properties>
+        <!-- The kernel-biometrics-api version the desktop Registration Client uses (registration/pom.xml
+             mosip.biometric.util.version). Android uses 1.3.0; the IBioApiV2 and entity signatures are identical. -->
+        <kernel.biometrics.api.version>1.2.0.2</kernel.biometrics.api.version>
+        <!-- MOSIP's SDK loader used in the desktop Registration Client (registration/pom.xml mosip.core.kernel.version). -->
+        <kernel.biosdk.provider.version>1.2.0.1</kernel.biosdk.provider.version>
+        <onnxruntime.version>1.20.0</onnxruntime.version>
+        <liveness.models.dir>${project.basedir}/../../models</liveness.models.dir>
+        <facematch.mockmds.dir>${project.basedir}/../../devices/mock-mds</facematch.mockmds.dir>
+        <facematch.faces.dir>${project.basedir}/../liveness-onnx/src/test/resources/faces</facematch.faces.dir>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.mosip.liveness</groupId>
+            <artifactId>liveness-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.mosip.liveness</groupId>
+            <artifactId>liveness-onnx</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <!-- Provided by both clients. Only the API classes are needed; its transitive kernel-core,
+                 Jackson and Lombok stay out of this module. -->
+            <groupId>io.mosip.kernel</groupId>
+            <artifactId>kernel-biometrics-api</artifactId>
+            <version>${kernel.biometrics.api.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <!-- Compile only: the MOSIP entities carry JAXB annotations; without the annotation classes javac warns
+                 "unknown enum constant". Both clients provide JAXB where they use it. -->
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.1</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <!-- Provided: the desktop client adds onnxruntime, the Android client onnxruntime-android. -->
+            <groupId>com.microsoft.onnxruntime</groupId>
+            <artifactId>onnxruntime</artifactId>
+            <version>${onnxruntime.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Tests -->
+        <dependency>
+            <!-- The signed model bundle on the class path, as the desktop client has it (the SDK's default). -->
+            <groupId>io.mosip.liveness</groupId>
+            <artifactId>liveness-onnx</artifactId>
+            <version>${project.version}</version>
+            <classifier>models</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <!-- JPEG 2000 ImageIO reader, as bundled by the desktop Registration Client (test only here). -->
+            <groupId>com.github.jai-imageio</groupId>
+            <artifactId>jai-imageio-jpeg2000</artifactId>
+            <version>1.3.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <!-- MOSIP's own ISO 19794-5 reader, to cross-check FaceIsoRecord (test only). -->
+            <groupId>io.mosip.biometric.util</groupId>
+            <artifactId>biometrics-util</artifactId>
+            <version>${kernel.biometrics.api.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <!-- MOSIP's SDK loader (BioProviderImpl_V_0_9), to run the SDK exactly as the desktop client does. -->
+            <groupId>io.mosip.kernel</groupId>
+            <artifactId>kernel-biosdk-provider</artifactId>
+            <version>${kernel.biosdk.provider.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.mosip.kernel</groupId>
+            <artifactId>kernel-core</artifactId>
+            <version>${kernel.biosdk.provider.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.mosip.kernel</groupId>
+            <artifactId>kernel-logger-logback</artifactId>
+            <version>${kernel.biosdk.provider.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <!-- BioProviderUtil finds the SDK constructor with Spring Data's ReflectionUtils. -->
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+            <version>2.0.7.RELEASE</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>5.0.6.RELEASE</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+            <version>5.0.6.RELEASE</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <!-- The three below only hold annotation classes that MOSIP's loader classes carry; without them javac
+                 warns "Cannot find annotation method" while compiling the tests. Nothing in them runs. -->
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.14.0</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot</artifactId>
+            <version>2.0.2.RELEASE</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <version>1.4.2</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <!-- MOSIP's logger factory needs Logback behind SLF4J 1.7 (the desktop client's versions). -->
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.25</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <configuration>
+                            <compilerArgs>
+                                <arg>-Xlint:all</arg>
+                                <!-- Annotations of the provided MOSIP entities (JAXB, Jackson) are not on the class path. -->
+                                <arg>-Xlint:-classfile</arg>
+                                <arg>-Xdoclint:all/protected</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <liveness.models.dir>${liveness.models.dir}</liveness.models.dir>
+                        <facematch.mockmds.dir>${facematch.mockmds.dir}</facematch.mockmds.dir>
+                        <facematch.faces.dir>${facematch.faces.dir}</facematch.faces.dir>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Automatic-Module-Name>io.mosip.liveness.facematch</Automatic-Module-Name>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <!-- Android API 28 check. Only the desktop decoder package uses ImageIO and AWT (ArchitectureTest). -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>animal-sniffer-maven-plugin</artifactId>
+                <configuration>
+                    <signature>
+                        <groupId>com.toasttab.android</groupId>
+                        <artifactId>gummy-bears-api-28</artifactId>
+                        <version>${android.signature.version}</version>
+                    </signature>
+                    <ignores>
+                        <ignore>javax.imageio.*</ignore>
+                        <ignore>java.awt.*</ignore>
+                    </ignores>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>android-api-28</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
