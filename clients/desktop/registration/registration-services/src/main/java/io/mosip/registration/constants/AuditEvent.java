@@ -316,7 +316,28 @@ public enum AuditEvent {
 	CLIENT_UPGRADE_JARS_DOWNLOADED("REG-UPG-001", USER_EVENT.getCode(), "CLIENT_UPGRADE_JARS_DOWNLOADED",
 			"Client Upgrade: Successfully downloaded all the upgrade jars"),
 	CLIENT_DB_UPGRADE_SCRIPTS("REG-UPG-001", USER_EVENT.getCode(), "CLIENT_DB_UPGRADE_SCRIPTS",
-			"Client Upgrade: SQL scripts execution success");
+			"Client Upgrade: SQL scripts execution success"),
+
+	// Face liveness and presentation attack detection (same IDs as io.mosip.liveness.core.audit.AuditEventId)
+	LIVENESS_SESSION_STARTED("REG-EVT-LV01", SYSTEM_EVENT.getCode(), "LIVENESS_SESSION_STARTED", "Liveness session started"),
+	LIVENESS_PASSIVE_PASSED("REG-EVT-LV02", SYSTEM_EVENT.getCode(), "LIVENESS_PASSIVE_PASSED", "Liveness passive check passed"),
+	LIVENESS_ACTIVE_TRIGGERED("REG-EVT-LV03", SYSTEM_EVENT.getCode(), "LIVENESS_ACTIVE_TRIGGERED", "Liveness active check triggered"),
+	LIVENESS_CHALLENGE_ISSUED("REG-EVT-LV04", SYSTEM_EVENT.getCode(), "LIVENESS_CHALLENGE_ISSUED", "Liveness challenge issued"),
+	LIVENESS_CHALLENGE_PASSED("REG-EVT-LV05", SYSTEM_EVENT.getCode(), "LIVENESS_CHALLENGE_PASSED", "Liveness challenge passed"),
+	LIVENESS_CHALLENGE_FAILED("REG-EVT-LV06", SYSTEM_EVENT.getCode(), "LIVENESS_CHALLENGE_FAILED", "Liveness challenge failed"),
+	LIVENESS_TIMEOUT("REG-EVT-LV07", SYSTEM_EVENT.getCode(), "LIVENESS_TIMEOUT", "Liveness timeout"),
+	LIVENESS_PAD_ATTACK_SUSPECTED("REG-EVT-LV08", SYSTEM_EVENT.getCode(), "LIVENESS_PAD_ATTACK_SUSPECTED",
+			"Liveness presentation attack suspected"),
+	LIVENESS_BINDING_FAILED("REG-EVT-LV09", SYSTEM_EVENT.getCode(), "LIVENESS_BINDING_FAILED", "Liveness capture binding failed"),
+	LIVENESS_PASSED("REG-EVT-LV10", SYSTEM_EVENT.getCode(), "LIVENESS_PASSED", "Liveness passed"),
+	LIVENESS_MAX_RETRIES("REG-EVT-LV11", SYSTEM_EVENT.getCode(), "LIVENESS_MAX_RETRIES", "Liveness maximum attempts reached"),
+	LIVENESS_DEVICE_ERROR("REG-EVT-LV12", SYSTEM_EVENT.getCode(), "LIVENESS_DEVICE_ERROR", "Liveness device error"),
+	LIVENESS_ENGINE_ERROR("REG-EVT-LV13", SYSTEM_EVENT.getCode(), "LIVENESS_ENGINE_ERROR", "Liveness engine error"),
+	LIVENESS_MODEL_INTEGRITY_FAILED("REG-EVT-LV14", SYSTEM_EVENT.getCode(), "LIVENESS_MODEL_INTEGRITY_FAILED",
+			"Liveness model integrity check failed"),
+	LIVENESS_CONFIG_APPLIED("REG-EVT-LV15", SYSTEM_EVENT.getCode(), "LIVENESS_CONFIG_APPLIED", "Liveness configuration applied"),
+	LIVENESS_OVERRIDE_USED("REG-EVT-LV16", USER_EVENT.getCode(), "LIVENESS_OVERRIDE_USED", "Liveness supervisor override used"),
+	LIVENESS_DIAGNOSTIC_MODE("REG-EVT-LV17", USER_EVENT.getCode(), "LIVENESS_DIAGNOSTIC_MODE", "Liveness diagnostic mode changed");
 
 	/**
 	 * The constructor

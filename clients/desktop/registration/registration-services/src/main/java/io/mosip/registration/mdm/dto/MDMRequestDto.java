@@ -17,6 +17,9 @@ public class MDMRequestDto {
 	private int count;
 	private int requestedScore;
 
+	/** Liveness workflow and pass token of a face capture; {@code null} for other modalities. */
+	private LivenessContext livenessContext;
+
 	public MDMRequestDto(String modality, String[] exceptions, String mosipProcess, String environment, int timeout,
 			int count, int requestedScore) {
 		super();

@@ -227,6 +227,26 @@ public enum RegistrationExceptionConstants {
 	MDS_CAPTURE_INVALID_TIME("REG-MDS-008","RCapture Time was Invalid"),
 	MDS_SIGNATURE_EMPTY("REG-MDS-009","Signature is Empty"),
 
+	// Face liveness gate (service/bio/liveness); technical messages, the screens show the liveness.* texts
+	LIVENESS_CONTEXT_MISSING("REG-LIV-001", "Face capture needs a liveness check but the request names no liveness context"),
+	LIVENESS_NOT_VERIFIED("REG-LIV-002", "Face capture has no liveness pass"),
+	LIVENESS_TOKEN_INVALID("REG-LIV-003", "Liveness pass is unknown"),
+	LIVENESS_TOKEN_REUSED("REG-LIV-004", "Liveness pass was already used"),
+	LIVENESS_TOKEN_EXPIRED("REG-LIV-005", "Liveness pass has expired"),
+	LIVENESS_SUBJECT_MISMATCH("REG-LIV-006", "Liveness pass was issued for another person or workflow"),
+	LIVENESS_DEVICE_MISMATCH("REG-LIV-007", "Face was captured on another device than the liveness check"),
+	LIVENESS_BINDING_FAILED("REG-LIV-008", "Captured face does not match the liveness session"),
+	LIVENESS_PAD_FAILED("REG-LIV-009", "Face verification could not be completed"),
+	LIVENESS_ENGINE_ERROR("REG-LIV-010", "Liveness engine is not available"),
+	LIVENESS_DEVICE_ERROR("REG-LIV-011", "Face device is not available for the liveness check"),
+	LIVENESS_CAPTURE_INVALID("REG-LIV-012", "Signed face capture could not be read for the liveness check"),
+	LIVENESS_EXCEPTION_PHOTO_INVALID("REG-LIV-013", "Exception photo request lists no biometric exception"),
+	LIVENESS_MAX_ATTEMPTS("REG-LIV-014", "Maximum number of liveness attempts reached"),
+	LIVENESS_AUTH_REJECTED("REG-LIV-015", "Face authentication without a liveness pass"),
+	LIVENESS_BUSY("REG-LIV-016", "Another liveness check is running"),
+	LIVENESS_OVERRIDE_NOT_ALLOWED("REG-LIV-017", "Supervisor override is not allowed for this liveness result"),
+	LIVENESS_TIMEOUT("REG-LIV-018", "Liveness check did not answer in time"),
+
 	APP_INVALID_STATE("REG-INIT-001", "Application found in invalid state, tampering detected !"),
 	
 	//PRE-REG EXCEPTION CONSTANTS

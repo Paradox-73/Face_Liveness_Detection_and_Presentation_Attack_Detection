@@ -38,6 +38,25 @@ public interface AuditManagerService {
 	 */
 	void audit(AuditEvent auditEventEnum, Components appModuleEnum, String refId,
 			String refIdType);
+
+	/**
+	 * Audits an event like {@link #audit(AuditEvent, Components, String, String)}, but with a description built at
+	 * run time instead of the fixed description of the event. Liveness events use it for their JSON payload,
+	 * which holds no images, templates or raw scores.
+	 * 
+	 * @param auditEventEnum
+	 *            the event
+	 * @param appModuleEnum
+	 *            the application module
+	 * @param refId
+	 *            the ref id of the audit event
+	 * @param refIdType
+	 *            the ref id type of the audit event
+	 * @param description
+	 *            the description; at most 2048 characters (the LOG_DESC column)
+	 */
+	void audit(AuditEvent auditEventEnum, Components appModuleEnum, String refId, String refIdType,
+			String description);
 	
 	/**
 	 * Delete Audit Logs

@@ -52,13 +52,21 @@ public class AuditManagerSerivceImpl extends BaseService implements AuditManager
 	 */
 	@Override
 	public void audit(AuditEvent auditEventEnum, Components appModuleEnum, String refId, String refIdType) {
+		audit(auditEventEnum, appModuleEnum, refId, refIdType, auditEventEnum.getDescription());
+	}
+
+	@Override
+	public void audit(AuditEvent auditEventEnum, Components appModuleEnum, String refId, String refIdType,
+			String description) {
 
 		// Getting Host IP Address and Name
 		String hostIP = "localhost";
 		String hostName = RegistrationSystemPropertiesChecker.getMachineId();
 		hostName = hostName != null ? hostName : String.valueOf(ApplicationContext.map().get(RegistrationConstants.DEFAULT_HOST_NAME));
 
+		// No session map before login: face login (liveness) audits are written before the session exists.
 		if (auditEventEnum.getId().contains(RegistrationConstants.REGISTRATION_EVENTS)
+				&& SessionContext.map() != null
 				&& getRegistrationDTOFromSession() != null
 				&& getRegistrationDTOFromSession().getRegistrationId() != null) {
 			refId = getRegistrationDTOFromSession().getRegistrationId();
@@ -72,7 +80,7 @@ public class AuditManagerSerivceImpl extends BaseService implements AuditManager
 		auditRequestBuilder.setActionTimeStamp(DateUtils.getUTCCurrentDateTime())
 				.setApplicationId(String.valueOf(ApplicationContext.map().get(RegistrationConstants.APP_ID)))
 				.setApplicationName(String.valueOf(ApplicationContext.map().get(RegistrationConstants.APP_NAME)))
-				.setCreatedBy(SessionContext.userName()).setDescription(auditEventEnum.getDescription())
+				.setCreatedBy(SessionContext.userName()).setDescription(description)
 				.setEventId(auditEventEnum.getId()).setEventName(auditEventEnum.getName())
 				.setEventType(auditEventEnum.getType()).setHostIp(hostIP).setHostName(hostName).setId(refId)
 				.setIdType(refIdType).setModuleId(appModuleEnum.getId()).setModuleName(appModuleEnum.getName())
