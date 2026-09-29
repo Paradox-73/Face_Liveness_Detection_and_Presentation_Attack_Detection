@@ -6,8 +6,8 @@ liveness and presentation attack detection (PAD). Licence: MIT.
 | Module | Contents | Status |
 |---|---|---|
 | `liveness-core` | Public API, value types, configuration keys, audit IDs, UI state and message keys, plus the platform-neutral engine (session state machine, passive and active checks, frame integrity, planarity, capture binding, policy resolution, MJPEG reader). No runtime dependencies. | API and engine logic implemented; detection thresholds still to be calibrated on real frames |
-| `liveness-onnx` | ONNX Runtime adapters (YuNet, Face Mesh, MiniFASNet, SFace) and the signed model bundle loader | not yet created |
-| `face-match-sdk` | SFace-based `IBioApiV2` implementation | not yet created |
+| `liveness-onnx` | ONNX Runtime adapters (YuNet, Face Mesh, MiniFASNet, SFace), the signed model bundle loader, and the engine factory `OnnxLivenessEngines` with its `LivenessEngineProvider` (see [liveness-onnx/README.md](liveness-onnx/README.md)) | implemented; thresholds still to be calibrated |
+| `face-match-sdk` | SFace-based MOSIP `IBioApiV2` SDK for FACE 1:1 match on both clients (see [face-match-sdk/README.md](face-match-sdk/README.md)) | implemented |
 
 ## Constraints on `liveness-core`
 
@@ -45,7 +45,8 @@ The contract packages (root, `api`, `config`, `audit`, `ui`, `vision`, `device`,
 
 1. At start-up, find the engine: `ServiceLoader.load(LivenessEngineProvider.class)`, pick the one whose
    `engineId()` equals `mosip.registration.liveness.engine`, and call `create(EngineContext)` with the client's
-   `ConfigSource`, `ModelSource`, `ImageDecoder`, `AuditSink` and `DiagnosticSink`.
+   `ConfigSource`, `ModelSource`, `ImageDecoder`, `AuditSink` and `DiagnosticSink` (or call
+   `OnnxLivenessEngines.builder(...)` directly, next section).
 2. Per attempt, resolve the policy with `new PolicyResolver(config).resolve(workflow).policy()`, keep one
    `LivenessTransaction` per workflow and subject, and open a session:
    `engine.open(SessionRequest.builder(policy, subjectRef, device.describe()).attempt(tx.nextAttempt()).build(), listener)`.
@@ -62,6 +63,50 @@ The contract packages (root, `api`, `config`, `audit`, `ui`, `vision`, `device`,
    `tx.record(result)` decides between Retry, the supervisor override and the lock; `session.close()`.
 
 Callers never choose challenges: the session draws them with `RandomSource.secure()`.
+
+### Creating the default engine (`liveness-onnx`)
+
+`io.mosip.liveness.onnx.OnnxLivenessEngines` verifies the signed model bundle, loads the five models into ONNX
+Runtime and returns an `OnnxLivenessEngine`: a `DefaultLivenessEngine` wired with `OnnxFaceAnalyzer` (YuNet +
+Face Mesh), `MiniFasPassivePad` and `SFaceEmbedder`, plus the native sessions it owns.
+
+```java
+// Direct use (desktop: bundle from liveness-onnx-1.0.0-SNAPSHOT-models.jar on the class path).
+OnnxLivenessEngine engine = OnnxLivenessEngines
+        .builder(ModelSources.classpath(getClass().getClassLoader()))   // Android: a ModelSource over assets/models/
+        .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION).orElse("1.0.0"))
+        .imageDecoder(clientImageDecoder)                              // the client's ImageDecoder
+        .build();                                                      // blocking, about 1-2 s: not on the UI thread
+LivenessSession session = engine.open(request, listener);
+// ... at shutdown, after the last session:
+engine.close();                                                        // closes the engine and the ORT sessions
+
+// Or through the SPI (META-INF/services/io.mosip.liveness.core.api.LivenessEngineProvider):
+EngineContext context = EngineContext.builder().config(configSource)
+        .models(ModelSources.classpath(loader)).imageDecoder(clientImageDecoder)
+        .auditSink(auditSink).diagnosticSink(diagnosticSink).build();
+for (LivenessEngineProvider p : ServiceLoader.load(LivenessEngineProvider.class)) {
+    if (p.engineId().equals(config.get(LivenessConfigKeys.ENGINE).orElse(LivenessConfigKeys.DEFAULT_ENGINE))) {
+        engine = p.create(context);   // OnnxLivenessEngineProvider, engine id "mosip-onnx-default"
+    }
+}
+```
+
+- **Parameters:** shipped defaults, then the manifest's signed `engineParams`, then
+  `Builder.parameterOverrides(map)` (calibration and tests only). Bad signed values fail with `MODEL_INTEGRITY`,
+  bad overrides with `CONFIG_INVALID`. The current bundle has no `engineParams`, so the defaults apply.
+- **Errors:** `MODEL_MISSING`, `MODEL_INTEGRITY` or `MODEL_VERSION` (bundle rejected; the client audits
+  `REG-EVT-LV14` with the workflow that needed the engine), `MODEL_LOAD` (ONNX Runtime missing or a model does
+  not load), `CONFIG_INVALID` (bad `model.min_version` or override).
+- **Other options:** `trustAnchor(PublicKey)` (production signing key; replaces the built-in development key),
+  `runtimeOptions(OnnxRuntimeOptions)`, `detectorOptions(...)`, `withEmbedder(false)` (no same-person or capture
+  similarity checks), `metrics(LivenessMetrics)`. `builder(ModelRegistry)` starts from an already verified bundle.
+- **Accessors:** `info()` (`mosip-onnx-default@1.0.0`, the five models with SHA-256, all 8 challenge types),
+  `engine()` (the `DefaultLivenessEngine`), `modelSet()`, `metrics()`, `parameters()`, `bundleVersion()`.
+- **Threads:** one engine serves the whole application. `open` is safe from any thread; each session belongs to
+  the thread that runs it. The ONNX Runtime sessions are shared and every model call is synchronised, so
+  concurrent sessions are correct but take turns. Close the engine only after the last session: a session still
+  running after `close()` fails with `ENGINE/INFERENCE` (fail closed), it does not crash.
 
 ## Conventions
 
@@ -259,9 +304,13 @@ actions, wrong action, timeout, flat-photo head turn, frozen stream, maximum ret
 
 ```sh
 mvn -f liveness/pom.xml verify           # compile, Android API 28 check, tests, JaCoCo report
-mvn -f liveness/pom.xml install          # also installs io.mosip.liveness:liveness-core:1.0.0-SNAPSHOT locally
+mvn -f liveness/pom.xml install -Dliveness.benchmark.frames=0   # installs core, onnx (+ models) and face-match-sdk locally
 mvn -f liveness/pom.xml -pl liveness-core verify   # the core only
+mvn -f liveness/pom.xml -pl face-match-sdk verify  # the face match SDK only (uses the installed core and onnx jars)
 ```
+
+- Test counts on the last full run: core 264, onnx 93 (2 skipped: the latency benchmark when
+  `-Dliveness.benchmark.frames=0`), face-match-sdk 42.
 
 - Needs a full JDK 11 or newer and Maven 3.9. With JDK 12 or newer, `--release 11` keeps the Java 11 API.
 - Output: `liveness-core/target/liveness-core-1.0.0-SNAPSHOT.jar`; coverage report in
