@@ -1,5 +1,7 @@
 package io.mosip.registration.dto.packetmanager;
 
+import java.util.Map;
+
 import io.mosip.commons.packet.constants.Biometric;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,6 +25,11 @@ public class BiometricsDto {
 	private String payLoad;
 	private String signature;
 	private String specVersion;
+
+	/** Liveness evidence for the BIR others map (LIVENESS_* keys); set by the liveness gate on face captures. */
+	private Map<String, String> livenessEvidence;
+	/** Workflow the liveness gate checked this face capture for; {@code null} when no gate applied. */
+	private String livenessWorkflow;
 	
 
 		

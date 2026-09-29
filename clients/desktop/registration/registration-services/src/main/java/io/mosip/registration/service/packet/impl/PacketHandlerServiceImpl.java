@@ -452,7 +452,8 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			capturedMetaInfo.get(fieldId).put(bioAttribute, new BiometricsMetaInfoDto(
 					registrationDTO.getBiometrics().get(key).getNumOfRetries(),
 					registrationDTO.getBiometrics().get(key).isForceCaptured(),
-					bir.getBdbInfo().getIndex()));
+					bir.getBdbInfo().getIndex(),
+					registrationDTO.getBiometrics().get(key).getLivenessEvidence()));
 		}
 
 		for(String key : registrationDTO.getBiometricExceptions().keySet()) {

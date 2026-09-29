@@ -72,7 +72,7 @@ public class BIRBuilder {
 		otherEntries.add(new Entry(OtherKey.PAYLOAD, payLoad == null ? RegistrationConstants.EMPTY : payLoad));
 		otherEntries.add(new Entry(OtherKey.SPEC_VERSION, bioDto.getSpecVersion() == null ? RegistrationConstants.EMPTY : bioDto.getSpecVersion()));*/
 
-		return new BIR.BIRBuilder().withBdb(bioDto.getAttributeISO() == null ? new byte[0] : bioDto.getAttributeISO())
+		return withLivenessEvidence(new BIR.BIRBuilder().withBdb(bioDto.getAttributeISO() == null ? new byte[0] : bioDto.getAttributeISO())
 				.withVersion(versionType)
 				.withCbeffversion(versionType)
 				.withBirInfo(new BIRInfo.BIRInfoBuilder().withIntegrity(false).build())
@@ -88,7 +88,25 @@ public class BIRBuilder {
 				.withOthers(OtherKey.FORCE_CAPTURED, bioDto.isForceCaptured()+RegistrationConstants.EMPTY)
 				.withOthers(OtherKey.PAYLOAD, payLoad == null ? RegistrationConstants.EMPTY : payLoad)
 				.withOthers(OtherKey.SPEC_VERSION, bioDto.getSpecVersion() == null ? RegistrationConstants.EMPTY : bioDto.getSpecVersion())
-				.build();
+				.build(), bioDto);
+	}
+
+	/**
+	 * Adds the liveness evidence of a face capture (LIVENESS_* keys, design section 4.18) to the BIR others map.
+	 * Captures without evidence are returned unchanged.
+	 *
+	 * @param bir    the built BIR
+	 * @param bioDto the capture
+	 * @return the same BIR
+	 */
+	private BIR withLivenessEvidence(BIR bir, BiometricsDto bioDto) {
+		if (bioDto.getLivenessEvidence() == null || bioDto.getLivenessEvidence().isEmpty()) {
+			return bir;
+		}
+		HashMap<String, String> others = bir.getOthers() == null ? new HashMap<>() : bir.getOthers();
+		others.putAll(bioDto.getLivenessEvidence());
+		bir.setOthers(others);
+		return bir;
 	}
 	
 	public BIR buildBir(String bioAttribute, long qualityScore, byte[] iso, ProcessedLevelType processedLevelType) {
