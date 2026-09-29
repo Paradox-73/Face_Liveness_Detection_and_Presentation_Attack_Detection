@@ -21,4 +21,22 @@ registration clients, for resident face capture, operator authentication and sup
 Each upstream directory was imported unchanged in its own commit, so `git log -- <path>` and
 `git diff <import-commit> -- <path>` show exactly what this project changed.
 
-Status: work in progress.
+## Status (Sep 30, 2026)
+
+| Part | State |
+|---|---|
+| Shared liveness engine (`liveness/`) | Passive check, active challenges, frame-integrity and planarity checks, capture binding, policy/config, audit, engine factory; SFace face-match SDK for MOSIP (IBioApiV2) |
+| ONNX models (`models/`) | YuNet, Face Mesh, MiniFASNet V2 + V1SE, SFace; SHA-256 manifest with signature |
+| Mock face device (`devices/mock-mds/`) | Streams image sequences, video or webcam; capture built from the streamed frame; fault injection |
+| Mock MOSIP server (`tools/mock-sync/`) | Desktop and Android clients complete first login and sync against it |
+| Desktop client | Liveness gates resident capture, onboarding, face login and supervisor approval; end-to-end report in `docs/test-report/desktop-e2e.md` |
+| Android client | Native liveness module on the shared engine; resident capture, face sign-in and supervisor approval wired; end-to-end run pending |
+
+## Quick start
+
+- Build and test the engine: `mvn -f liveness/pom.xml verify`
+- Desktop client: see `docs/install/desktop.md`
+- Android client: see `docs/install/android.md`
+- Mock MOSIP server: see `tools/mock-sync/README.md`
+- Mock face device: see `devices/mock-mds/LIVENESS-EXTENSIONS.md`
+- Evaluation tooling: see `docs/eval/README.md`
