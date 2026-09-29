@@ -94,6 +94,16 @@ public class SessionManager {
         return sharedPreferences.getString(OPERATOR_CAPTURE_TRANSACTION_ID, null);
     }
 
+    /**
+     * Saves the signed-in user's ID (read by operator onboarding and biometric de-duplication through USER_ID).
+     *
+     * @param userId the user ID the operator signed in with
+     */
+    public void saveUserId(String userId) {
+        this.context.getSharedPreferences(this.context.getString(R.string.app_name), Context.MODE_PRIVATE).edit()
+                .putString(USER_ID, userId).apply();
+    }
+
     public String clearAuthToken(){
         SharedPreferences.Editor editor = this.context.getSharedPreferences(
                 this.context.getString(R.string.app_name),Context.MODE_PRIVATE).edit();
@@ -107,6 +117,7 @@ public class SessionManager {
         editor.remove(IS_OFFICER);
         editor.remove(IS_OPERATOR);
         editor.remove(OPERATOR_CAPTURE_TRANSACTION_ID);
+        editor.remove(USER_ID);
         editor.apply();
         return this.context.getSharedPreferences(this.context.getString(R.string.app_name),
                 Context.MODE_PRIVATE).getString(USER_TOKEN, null);

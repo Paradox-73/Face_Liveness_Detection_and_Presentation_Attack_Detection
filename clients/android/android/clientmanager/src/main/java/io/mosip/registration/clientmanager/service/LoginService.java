@@ -92,6 +92,8 @@ public class LoginService {
             long rExpiry = Long.parseLong(jsonObject.getString("refreshExpiryTime"));
             userDetailRepository.saveUserAuthToken(userId, token, refreshToken, tExpiry, rExpiry);
             List<String> roles=this.sessionManager.saveAuthToken(token);
+            // USER_ID was never written, so onboarding stored the operator's templates under an empty user ID
+            this.sessionManager.saveUserId(userId);
             userRoleRepository.saveRoles(userId, roles);
             return roles;
         } catch (Exception ex) {
@@ -106,6 +108,7 @@ public class LoginService {
         if(token != null && !token.isEmpty()) {
             try {
                 this.sessionManager.saveAuthToken(token);
+                this.sessionManager.saveUserId(userId);
             } catch (Exception ex) {
                 Log.e(TAG, ex.getMessage(), ex);
                 throw ex;

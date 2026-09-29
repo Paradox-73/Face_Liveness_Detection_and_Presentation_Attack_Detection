@@ -731,7 +731,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         if(singleType == SingleType.FACE || singleType == SingleType.EXCEPTION_PHOTO)
             biometricsDto.setBioSubType(EMPTY);
 
-        return new BIR.BIRBuilder().withBdb(iso == null ? new byte[0] : iso)
+        BIR.BIRBuilder birBuilder = new BIR.BIRBuilder().withBdb(iso == null ? new byte[0] : iso)
                 .withVersion(versionType)
                 .withCbeffversion(versionType)
                 .withBirInfo(new BIRInfo.BIRInfoBuilder().withIntegrity(false).build())
@@ -746,8 +746,12 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .withOthers(OTHER_KEY_SDK_SCORE, biometricsDto.getSdkScore() + EMPTY)
                 .withOthers(OTHER_KEY_FORCE_CAPTURED, biometricsDto.isForceCaptured() + EMPTY)
                 .withOthers(OTHER_KEY_PAYLOAD, payLoad == null ? EMPTY : payLoad)
-                .withOthers(OTHER_KEY_SPEC_VERSION, biometricsDto.getSpecVersion() == null ? EMPTY : biometricsDto.getSpecVersion())
-                .build();
+                .withOthers(OTHER_KEY_SPEC_VERSION, biometricsDto.getSpecVersion() == null ? EMPTY : biometricsDto.getSpecVersion());
+        // Face liveness evidence (LIVENESS_DECISION, LIVENESS_METHOD, ...), present only for captures that passed liveness
+        if (biometricsDto.getLivenessEvidence() != null) {
+            biometricsDto.getLivenessEvidence().forEach(birBuilder::withOthers);
+        }
+        return birBuilder.build();
     }
 
     private int getAttemptsCount(Modality modality) {

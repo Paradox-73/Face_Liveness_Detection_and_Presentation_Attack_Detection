@@ -546,6 +546,27 @@ public class RegistrationServiceImplTest {
     }
 
     @Test
+    // Face liveness evidence of a capture goes into the BIR "others", next to the upstream entries
+    public void testBuildBIR_LivenessEvidence() {
+        BiometricsDto biometricsDto = new BiometricsDto();
+        biometricsDto.setModality("FACE");
+        biometricsDto.setBioValue("dGVzdA==");
+        biometricsDto.setDecodedBioResponse("{\"bioValue\":\"dGVzdA==\"}");
+        java.util.Map<String, String> evidence = new java.util.LinkedHashMap<>();
+        evidence.put("LIVENESS_DECISION", "PASS");
+        evidence.put("LIVENESS_METHOD", "PASSIVE");
+        biometricsDto.setLivenessEvidence(evidence);
+        BIR bir = ((RegistrationServiceImpl)registrationService).buildBIR(biometricsDto);
+        assertEquals("PASS", bir.getOthers().get("LIVENESS_DECISION"));
+        assertEquals("PASSIVE", bir.getOthers().get("LIVENESS_METHOD"));
+        assertEquals("false", bir.getOthers().get("EXCEPTION"));
+
+        biometricsDto.setLivenessEvidence(null);
+        assertNull(((RegistrationServiceImpl)registrationService).buildBIR(biometricsDto).getOthers()
+                .get("LIVENESS_DECISION"));
+    }
+
+    @Test
     // Test for buildBIR with EXCEPTION_PHOTO modality
     public void testBuildBIR_ExceptionPhoto() {
         BiometricsDto biometricsDto = new BiometricsDto();
