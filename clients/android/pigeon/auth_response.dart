@@ -28,6 +28,10 @@ class AuthResponse {
 abstract class AuthResponseApi {
   @async
   AuthResponse login(String username, String password, bool isConnected);
+  /// Opens the session after a face sign-in (LivenessApi.authenticateFace with
+  /// login_auth) succeeded for [username] in the last minute; works offline.
+  @async
+  AuthResponse loginWithFace(String username);
   @async
   String logout();
   @async

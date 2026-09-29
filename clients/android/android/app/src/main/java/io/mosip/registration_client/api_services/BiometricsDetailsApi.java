@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,6 +42,7 @@ import javax.inject.Singleton;
 import io.mosip.biometrics.util.face.FaceBDIR;
 import io.mosip.biometrics.util.finger.FingerBDIR;
 import io.mosip.biometrics.util.iris.IrisBDIR;
+import io.mosip.registration.clientmanager.config.SessionManager;
 import io.mosip.registration.clientmanager.constant.AuditEvent;
 import io.mosip.registration.clientmanager.constant.Components;
 import io.mosip.registration.clientmanager.constant.Modality;
@@ -59,7 +61,11 @@ import io.mosip.registration.clientmanager.spi.RegistrationService;
 import io.mosip.registration.clientmanager.util.UserInterfaceHelperService;
 import io.mosip.registration.keymanager.util.CryptoUtil;
 import io.mosip.registration.packetmanager.cbeffutil.jaxbclasses.SingleType;
+import io.mosip.registration.livenessmanager.LivenessCaptureResult;
 import io.mosip.registration_client.MainActivity;
+import io.mosip.registration_client.liveness.CaptureOutcome;
+import io.mosip.registration_client.liveness.FaceCaptureLivenessGate;
+import io.mosip.registration_client.liveness.LivenessCaptureLauncher;
 import io.mosip.registration_client.model.BiometricsPigeon;
 
 @Singleton
@@ -109,6 +115,10 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
 
     private Modality currentDeviceListModality;
 
+    // Face liveness: FACE captures of residents and onboarding operators go through the liveness capture screen
+    private FaceCaptureLivenessGate livenessGate;
+    private LivenessCaptureLauncher livenessLauncher;
+
 
 
 
@@ -130,14 +140,111 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
         this.activity = mainActivity;
     }
 
+    /**
+     * Routes FACE captures through face liveness when the workflow's policy requires it.
+     *
+     * @param gate     liveness rule for stored face captures
+     * @param launcher liveness capture screen launcher
+     */
+    public void setLivenessGate(FaceCaptureLivenessGate gate, LivenessCaptureLauncher launcher) {
+        this.livenessGate = gate;
+        this.livenessLauncher = launcher;
+    }
+
     @Override
     public void invokeDiscoverSbi(@NonNull String fieldId, @NonNull String modality,
             @NonNull BiometricsPigeon.Result<String> result) {
         auditManagerService.audit(AuditEvent.BIOMETRIC_CAPTURE, Components.REGISTRATION);
         currentModality = getModality(modality);
         this.fieldId = fieldId;
+        if (startLivenessCapture(result)) {
+            return;
+        }
         discoverSBI();
         biometricResult = result;
+    }
+
+    /**
+     * Opens the liveness capture screen instead of the SBI intents when this FACE capture requires liveness.
+     *
+     * @return {@code true} when the liveness path took over (it completes the Flutter call)
+     */
+    private boolean startLivenessCapture(BiometricsPigeon.Result<String> result) {
+        if (livenessGate == null || currentModality != Modality.FACE) {
+            return false;
+        }
+        if (!livenessGate.isRequired(fieldId)) {
+            livenessGate.clearOutcome(fieldId);
+            return false;
+        }
+        biometricResult = result;
+        String subject = livenessSubject();
+        CaptureOutcome blocked = livenessGate.admit(subject, fieldId);
+        if (blocked != null) {
+            completeCapture(blocked.status().name());
+            return true;
+        }
+        String captureFieldId = fieldId;
+        boolean started = livenessLauncher.launch(FaceCaptureLivenessGate.workflowFor(captureFieldId), subject,
+                captureResult -> onLivenessCapture(subject, captureFieldId, captureResult));
+        if (!started) {
+            completeCapture("BUSY");
+        }
+        return true;
+    }
+
+    /** The registration ID for a resident, the signed-in operator for onboarding. */
+    private String livenessSubject() {
+        try {
+            if (fieldId.equals(OPERATOR_BIOMETRICS)) {
+                return activity.getSharedPreferences(
+                        activity.getString(io.mosip.registration.clientmanager.R.string.app_name),
+                        android.content.Context.MODE_PRIVATE).getString(SessionManager.USER_ID, OPERATOR_BIOMETRICS);
+            }
+            return registrationService.getRegistrationDto().getRId();
+        } catch (Exception e) {
+            return fieldId;
+        }
+    }
+
+    /**
+     * Handles the liveness capture screen's result: only a pass is stored, through the same SBI response checks as
+     * an external device (signature, DEVICE trust, timestamp, transaction ID), with the liveness evidence attached.
+     */
+    private void onLivenessCapture(String subject, String captureFieldId, LivenessCaptureResult captureResult) {
+        CaptureOutcome outcome = livenessGate.record(subject, captureFieldId, captureResult);
+        if (!captureResult.isPass() || captureResult.rCaptureResponse() == null) {
+            completeCapture(outcome.status().name());
+            return;
+        }
+        this.fieldId = captureFieldId;
+        this.currentModality = Modality.FACE;
+        try {
+            if (captureFieldId.equals(OPERATOR_BIOMETRICS)) {
+                userOnboardService.setCaptureTransactionId(captureResult.transactionId());
+            } else {
+                registrationService.getRegistrationDto().setCaptureTransactionId(captureResult.transactionId());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "No registration for the face capture", e);
+            completeCapture(CaptureOutcome.Status.FAILED.name());
+            return;
+        }
+        InputStream response = new ByteArrayInputStream(
+                captureResult.rCaptureResponse().getBytes(StandardCharsets.UTF_8));
+        if (!parseRCaptureResponse(response, captureResult.evidence())) {
+            livenessGate.recordRejected(captureFieldId);
+            completeCapture(CaptureOutcome.Status.FAILED.name());
+        }
+    }
+
+    /** Completes the pending Flutter capture call once; later calls are ignored. */
+    private void completeCapture(String status) {
+        BiometricsPigeon.Result<String> pending = biometricResult;
+        biometricResult = null;
+        if (pending != null) {
+            pending.success(status);
+        }
     }
 
     @Override
@@ -1066,15 +1173,42 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
 
     public void parseRCaptureResponse(Bundle bundle) {
         try {
-
             Uri uri = bundle.getParcelable(RegistrationConstants.SBI_INTENT_RESPONSE_KEY);
             InputStream respData = activity.getContentResolver().openInputStream(uri);
+            if (!parseRCaptureResponse(respData, null)) {
+                completeCapture(CaptureOutcome.Status.FAILED.name());
+            }
+        } catch (Exception e) {
+            auditManagerService.audit(AuditEvent.R_CAPTURE_PARSE_FAILED, Components.REGISTRATION, e.getMessage());
+            Log.e(TAG, "Failed to read rcapture response", e);
+            completeCapture(CaptureOutcome.Status.FAILED.name());
+        }
+    }
+
+    /**
+     * Checks an SBI capture response and stores the biometrics.
+     *
+     * @param respData         the rCapture response JSON
+     * @param livenessEvidence LIVENESS_* packet evidence of a face that passed liveness, or {@code null}
+     * @return {@code true} when the biometrics were stored and the Flutter call completed
+     */
+    private boolean parseRCaptureResponse(InputStream respData, Map<String, String> livenessEvidence) {
+        try {
             boolean isOperatorOnboarding = fieldId.equals(OPERATOR_BIOMETRICS);
             String transactionId = isOperatorOnboarding
                     ? userOnboardService.getCaptureTransactionId()
                     : registrationService.getRegistrationDto().getCaptureTransactionId();
             List<BiometricsDto> biometricsDtoList = biometricsService.handleRCaptureResponse(currentModality, respData,
                     getExceptionAttributes(), transactionId, isOperatorOnboarding);
+            if (livenessEvidence != null) {
+                biometricsDtoList.forEach(dto -> {
+                    dto.setLivenessEvidence(new HashMap<>(livenessEvidence));
+                    // The built-in device signs bioSubType "" for FACE; ARC's face lookups expect null
+                    if (dto.getBioSubType() != null && dto.getBioSubType().isEmpty()) {
+                        dto.setBioSubType(null);
+                    }
+                });
+            }
             // if attempts is zero, there is no need to maintain the counter
             if (fieldId.equals(OPERATOR_BIOMETRICS)) {
                 removeDuplicatesFromOperatorBiometricList(currentModality);
@@ -1097,7 +1231,7 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
                 }
 
 
-                biometricResult.success("Ok");
+                completeCapture("Ok");
             } else {
                 currentAttempt = this.registrationService.getRegistrationDto().getBioAttempt(fieldId, currentModality);
 
@@ -1107,7 +1241,7 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
                             "No biometrics captured. Please try again.",
                             Toast.LENGTH_SHORT
                     ).show();
-                    return;
+                    return false;
                 }
 
                 biometricsDtoList.forEach(dto -> {
@@ -1124,9 +1258,9 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
                         Log.e(TAG, ex.getMessage(), ex);
                     }
                 });
-                biometricResult.success("Ok");
+                completeCapture("Ok");
             }
-
+            return true;
         } catch (BiometricsServiceException e) {
             auditManagerService.audit(AuditEvent.R_CAPTURE_PARSE_FAILED, Components.REGISTRATION, e.getMessage());
             Log.e(TAG, "R-Capture failed: " + e.getErrorCode(), e);
@@ -1136,7 +1270,7 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
             auditManagerService.audit(AuditEvent.R_CAPTURE_PARSE_FAILED, Components.REGISTRATION, e.getMessage());
             Log.e(TAG, "Failed to parse rcapture response", e);
         }
-
+        return false;
     }
 
     private List<String> getExceptionAttributes() {

@@ -38,6 +38,7 @@ import io.mosip.registration.clientmanager.spi.SyncRestService;
 import io.mosip.registration.clientmanager.util.SyncRestUtil;
 import io.mosip.registration.clientmanager.R;
 import io.mosip.registration_client.UploadBackgroundService;
+import io.mosip.registration_client.liveness.FaceAuthFlow;
 import io.mosip.registration_client.model.AuthResponsePigeon;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -60,6 +61,10 @@ public class AuthenticationApi implements AuthResponsePigeon.AuthResponseApi {
     public static final String PREFERRED_USERNAME = "preferred_username";
     public static final String USER_EMAIL = "user_email";
     private static final String LOCKOUT_ERROR_CODE = "REG_LOGIN_LOCKED";
+    private static final String FACE_NOT_VERIFIED_ERROR_CODE = "REG_FACE_NOT_VERIFIED";
+
+    // Face sign-in: holds the one-time grant a successful face authentication leaves for the user
+    private FaceAuthFlow faceAuthFlow;
 
 
     @Inject
@@ -172,6 +177,14 @@ public class AuthenticationApi implements AuthResponsePigeon.AuthResponseApi {
             return;
         }
 
+        openOfflineSession(username, result);
+    }
+
+    /**
+     * Opens the session from the locally stored token of an earlier online sign-in (the offline path shared by
+     * password and face sign-in).
+     */
+    private void openOfflineSession(final String username, AuthResponsePigeon.Result<AuthResponsePigeon.AuthResponse> result) {
         try {
             String token = loginService.saveUserAuthTokenOffline(username);
             String preferredUsername = sharedPreferences.getString(PREFERRED_USERNAME, username);
@@ -209,6 +222,30 @@ public class AuthenticationApi implements AuthResponsePigeon.AuthResponseApi {
         }
         doLogin(username, password, result);
         return;
+    }
+
+    /**
+     * Sets the face authentication flow used by {@link #loginWithFace}.
+     *
+     * @param faceAuthFlow the flow
+     */
+    public void setFaceAuthFlow(FaceAuthFlow faceAuthFlow) {
+        this.faceAuthFlow = faceAuthFlow;
+    }
+
+    @Override
+    public void loginWithFace(@NonNull String username, @NonNull AuthResponsePigeon.Result<AuthResponsePigeon.AuthResponse> result) {
+        if(loginService.isUserLocked(username)) {
+            result.success(getAuthErrorResponse(LOCKOUT_ERROR_CODE));
+            return;
+        }
+        // The session opens only when this process verified the user's face (liveness and match) just before.
+        if(faceAuthFlow == null || !faceAuthFlow.consumeLoginGrant(username)) {
+            result.success(getAuthErrorResponse(FACE_NOT_VERIFIED_ERROR_CODE));
+            return;
+        }
+        // Like offline password sign-in, the session reuses the token of an earlier online sign-in on this device
+        openOfflineSession(username, result);
     }
 
     @Override
