@@ -1,0 +1,7 @@
+# Operator login with face liveness (workflow login_auth): user ID, password, then the face check; the captured
+# face is matched 1:1 against the operator's enrolled face by the SFace SDK.
+label login: officer1 password then face with liveness
+set USER ${OFFICER}
+set PASSWORD ${OFFICER_PASSWORD}
+set OPERATOR ${OFFICER_FACE}
+include lib/face-login.flow

@@ -1,0 +1,19 @@
+# Resident registration, bona fide face with a high passive score (s2): a device disconnect during the check shows
+# the device message and does not use an attempt; after reconnection the passive check passes at once. Then
+# preview and operator packet authentication with face liveness (packet_auth).
+label registration 1: device disconnect and recovery, then passive pass, packet authentication
+set RESIDENT_NAME Asha Resident
+include lib/registration-start.flow
+source s2-main
+mds /admin/fault {"type":"Face","fault":"DISCONNECT","afterFrames":6}
+click #individualBiometricsScanBtn
+expect disconnected 60
+snap device-disconnected
+mds /admin/fault {"type":"Face","fault":"NONE"}
+click #retryButton
+expect Good, face captured successfully 60
+sleep 3000
+snap resident-face-passive
+set PASSWORD ${OFFICER_PASSWORD}
+set OPERATOR ${OFFICER_FACE}
+include lib/registration-finish.flow

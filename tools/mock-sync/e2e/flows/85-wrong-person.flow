@@ -1,0 +1,22 @@
+# Face match: officer1 (enrolled face s3) presents another live person (s1). Liveness passes after challenges, the
+# SFace SDK score is below the threshold and the client answers "Face match not found"; the right face then logs
+# in. Run last: failed liveness attempts here could block officer1's face login for the lock period.
+label face match: live but wrong person refused, right person accepted
+menu Logout
+wait-node #userId 60
+source s1-main
+follow s1
+login ${OFFICER} ${OFFICER_PASSWORD}
+mark
+expect-live 120
+follow off
+expect-alert Face match not found 30
+snap login-wrong-person
+# The liveness window closes a moment after its pass; Submit on the login page works again only then.
+wait-gone Face verification 15
+source ${OFFICER_FACE}-main
+follow ${OFFICER_FACE}
+click text=Submit
+expect-live 90
+follow off
+expect Operational Tasks 90

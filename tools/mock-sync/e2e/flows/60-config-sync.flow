@@ -1,0 +1,39 @@
+# Configuration change by sync: MockSync switches the resident face check (policy.registration) from
+# PASSIVE_THEN_ACTIVE to ALWAYS_ACTIVE, the evaluation's proposal P1 (docs/eval/calibration-notes.md, section 6).
+# After "Synchronize Data" the rigid-motion print, which the passive check accepts, must answer challenges and is
+# refused; a live resident (s3, whose passive score alone would pass) answers them. The key is removed and
+# synchronised back at the end, because MockSync is shared with the Android client.
+label config by sync: policy.registration ALWAYS_ACTIVE, synchronise
+sql SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration'
+http PUT ${MOCKSYNC}/admin/config {"mosip.registration.liveness.policy.registration":"ALWAYS_ACTIVE"}
+click #homeImgView
+sleep 1500
+click #syncDataPane
+sleep 20000
+expect-sql 1 SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'ALWAYS_ACTIVE'
+label config by sync: rigid-motion print now refused, live resident answers the challenges
+set RESIDENT_NAME Esi Resident
+include lib/registration-start.flow
+source a-s2-print-affine
+click #individualBiometricsScanBtn
+expect Please (blink|smile) 30
+expect (Face verification could not be completed|We could not verify face liveness) 60
+snap config-print-refused
+source s3-main
+follow s3
+click #retryButton
+expect-live 120
+follow off
+expect-sql 1 SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV15' AND LOG_DESC LIKE '%policy.registration%'
+sleep 3000
+snap config-resident-active
+set PASSWORD ${SUPERVISOR_PASSWORD}
+set OPERATOR ${SUPERVISOR_FACE}
+include lib/registration-finish.flow
+label config by sync: key removed, synchronised back
+http DELETE ${MOCKSYNC}/admin/config/mosip.registration.liveness.policy.registration
+click #homeImgView
+sleep 1500
+click #syncDataPane
+sleep 20000
+expect-sql 1 SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'PASSIVE_THEN_ACTIVE'

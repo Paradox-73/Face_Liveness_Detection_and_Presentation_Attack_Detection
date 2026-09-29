@@ -1,0 +1,15 @@
+# Operator login: user ID, password, then face with liveness (login_auth). Needs ${USER}, ${PASSWORD} and
+# ${OPERATOR} (frame-pack prefix of the user's face).
+# Log out first when someone is logged in (the menu offers Logout from the home screen).
+if-node #homeImgView click #homeImgView
+sleep 1500
+if-node #confirm click #confirm
+if-node #homeImgView menu Logout
+wait-node #userId 60
+source ${OPERATOR}-main
+follow ${OPERATOR}
+login ${USER} ${PASSWORD}
+expect-live 120
+wait Operational Tasks 90
+follow off
+snap home-${USER}

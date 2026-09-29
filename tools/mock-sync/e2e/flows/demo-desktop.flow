@@ -1,0 +1,17 @@
+# Scripted demo of the PS04 desktop flows on the real Registration Client (run by scripts/demo-desktop.sh).
+# Needs an onboarded client (officer1 and supervisor1 enrolled with face s3), MockSync and MockMDS running, and the
+# evaluation frame packs. Start and login must succeed; each later section fails on its own (see "section" in
+# DesktopFlowDriver) and the demo goes on with the next one. After 00-start and 10-login every section can also be
+# run on its own.
+include 00-start.flow
+include 10-login.flow
+section 20-registration-passive.flow
+section 30-registration-active.flow
+section 40-registration-attacks.flow
+section 50-eod-supervisor.flow
+section 60-config-sync.flow
+section 70-device-l1.flow
+section 80-offline.flow
+section 85-wrong-person.flow
+section 90-evidence.flow
+exit

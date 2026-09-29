@@ -1,0 +1,13 @@
+# Uploads every approved packet to MockSync (Application Upload screen) and lists the packets in the client
+# database. MockSync keeps the uploaded zip in tools/mock-sync/work/packets (scripts/show-packet.sh latest).
+click #homeImgView
+sleep 2000
+click #uploadPacketPane
+sleep 4000
+snap upload-list
+check #selectAllCheckBox true
+click #uploadBtn
+sleep 12000
+snap upload-done
+sql SELECT ID, CLIENT_STATUS_CODE, SERVER_STATUS_CODE, FILE_UPLOAD_STATUS FROM REG.REGISTRATION ORDER BY CR_DTIMES DESC FETCH FIRST 5 ROWS ONLY
+expect-no-rows SELECT ID FROM REG.REGISTRATION WHERE CLIENT_STATUS_CODE = 'APPROVED'

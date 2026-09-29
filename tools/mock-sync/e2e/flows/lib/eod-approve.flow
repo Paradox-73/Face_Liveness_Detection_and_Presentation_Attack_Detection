@@ -1,0 +1,31 @@
+# End-of-day approval of every pending packet (each row of the table), authenticated by the supervisor's password and face with liveness
+# (eod_auth). A replay attack is shown first and must be refused with the generic PAD message; the retry with the
+# supervisor's live face must pass. Needs: ${SUPERVISOR}, ${SUPERVISOR_PASSWORD}, ${SUPERVISOR_FACE} (frame-pack
+# prefix of the supervisor's face) and ${ATTACK} (attack pack folder, for example a-s2-screen-replay).
+mark
+click #homeImgView
+sleep 2000
+click #eodApprovalPane
+sleep 4000
+snap eod-pending
+each-row #table click text=Approve
+sleep 1500
+click text=Authenticate
+sleep 3000
+fill #username ${SUPERVISOR}
+fill #password ${SUPERVISOR_PASSWORD}
+click #submitbtn
+wait-node #faceScanBtn 30
+snap eod-auth-face
+source ${ATTACK}
+click #faceScanBtn
+expect (Face verification could not be completed|We could not verify face liveness) 60
+snap eod-attack-refused
+source ${SUPERVISOR_FACE}-main
+follow ${SUPERVISOR_FACE}
+click #retryButton
+expect-live 120
+follow off
+expect-alert Authentication successful 30
+sleep 3000
+snap eod-approved

@@ -1,0 +1,69 @@
+# New registration up to the face capture: language, consent, demographics (with residence status, which the
+# applicant-type script needs), address and identity proofs (stub scanner), fingers and irises (stock MockMDS
+# images), then the face modality is selected. The calling flow runs the face capture.
+# Needs ${RESIDENT_NAME} and ${LEFT_EXCEPTION}: one command run on the left-hand finger page, "click #leftLittle"
+# to mark that finger as missing (exception) or "sleep 1".
+click #homeImgView
+sleep 1500
+if-node #confirm click #confirm
+click #NEW
+check #eng true
+click #submit
+check #consent true
+click #preferredLangeng
+click #next
+fill #fullNameeng ${RESIDENT_NAME}
+fill #dateOfBirthddTextField 15
+fill #dateOfBirthmmTextField 06
+fill #dateOfBirthyyyyTextField 1990
+click #genderMLE
+click #residenceStatusNFR
+fill #addressLine1eng 12 Main Street
+fill #addressLine2eng Block A
+fill #addressLine3eng Near Park
+select #region 0
+sleep 600
+select #province 0
+sleep 600
+select #city 0
+sleep 600
+select #zone 0
+sleep 600
+select #postalCode 0
+fill #phoneeng 9876543210
+fill #emaileng demo.resident@example.org
+sleep 500
+click #next
+select #proofOfAddress 0
+click #proofOfAddressbutton
+click #captureBtn
+sleep 1500
+click #saveBtn 20
+sleep 1500
+select #proofOfIdentity 0
+click #proofOfIdentitybutton
+click #captureBtn
+sleep 1500
+click #saveBtn 20
+sleep 1500
+click #next
+wait-node #individualBiometricsFACEButton 30
+click #individualBiometricsFINGERPRINT_SLAB_LEFTButton
+sleep 800
+${LEFT_EXCEPTION}
+click #individualBiometricsScanBtn
+sleep 3500
+click #individualBiometricsFINGERPRINT_SLAB_RIGHTButton
+sleep 800
+click #individualBiometricsScanBtn
+sleep 3500
+click #individualBiometricsFINGERPRINT_SLAB_THUMBSButton
+sleep 800
+click #individualBiometricsScanBtn
+sleep 3500
+if-node #individualBiometricsIRIS_DOUBLEButton click #individualBiometricsIRIS_DOUBLEButton
+sleep 800
+click #individualBiometricsScanBtn
+sleep 3500
+click #individualBiometricsFACEButton
+sleep 1000

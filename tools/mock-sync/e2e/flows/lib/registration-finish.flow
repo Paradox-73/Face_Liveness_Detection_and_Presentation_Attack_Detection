@@ -1,0 +1,24 @@
+# From the biometrics page to the acknowledgement: preview, operator packet authentication (password, then face
+# with liveness, workflow packet_auth) and, when exceptions were marked, reviewer authentication (exception_auth).
+# The acknowledgement page shows the resident's photo, so it is not snapped. Needs ${PASSWORD} and ${OPERATOR}
+# (operator password and frame-pack prefix of the operator's face, for example s3); with exceptions also
+# ${SUPERVISOR}, ${SUPERVISOR_PASSWORD} and ${SUPERVISOR_FACE}.
+click #next
+wait-node #PREVIEW 30
+sleep 2000
+snap preview
+click #next
+wait-node #password 30
+fill #password ${PASSWORD}
+source ${OPERATOR}-main
+follow ${OPERATOR}
+click #authenticate
+wait-node #faceScanButton 30
+click #faceScanButton
+expect-live 120
+follow off
+sleep 4000
+# A registration with biometric exceptions asks for a reviewer next.
+if-node #username include reviewer-auth.flow
+expect Registration Acknowledgement 60
+sql SELECT ID, CLIENT_STATUS_CODE, CR_DTIMES FROM REG.REGISTRATION ORDER BY CR_DTIMES DESC FETCH FIRST 1 ROWS ONLY

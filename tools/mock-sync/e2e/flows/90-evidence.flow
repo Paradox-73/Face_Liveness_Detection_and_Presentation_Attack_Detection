@@ -1,0 +1,7 @@
+# Evidence: liveness audit events in the client database (count per event, latest rows), the registrations and the
+# packets MockSync received (scripts/demo-desktop.sh saves their liveness evidence with show-packet.sh).
+label evidence: liveness audit rows in the client database
+sql SELECT EVENT_ID, COUNT(*) AS N FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID LIKE 'REG-EVT-LV%' GROUP BY EVENT_ID ORDER BY EVENT_ID
+sql SELECT EVENT_ID, SESSION_USER_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID LIKE 'REG-EVT-LV%' ORDER BY LOG_DTIMES DESC FETCH FIRST 25 ROWS ONLY
+sql SELECT ID, CLIENT_STATUS_CODE, SERVER_STATUS_CODE FROM REG.REGISTRATION ORDER BY CR_DTIMES DESC FETCH FIRST 6 ROWS ONLY
+http GET ${MOCKSYNC}/admin/packets

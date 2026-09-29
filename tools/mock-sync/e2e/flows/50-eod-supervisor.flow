@@ -1,0 +1,10 @@
+# End of day: log out, supervisor1 logs in with face liveness, approves every pending packet with supervisor
+# authentication (password, then face liveness, workflow eod_auth; a screen replay is refused first) and uploads.
+label end of day: supervisor login, EOD approval with supervisor face, upload
+set USER ${SUPERVISOR}
+set PASSWORD ${SUPERVISOR_PASSWORD}
+set OPERATOR ${SUPERVISOR_FACE}
+include lib/face-login.flow
+set ATTACK a-s2-screen-replay
+include lib/eod-approve.flow
+include lib/upload.flow

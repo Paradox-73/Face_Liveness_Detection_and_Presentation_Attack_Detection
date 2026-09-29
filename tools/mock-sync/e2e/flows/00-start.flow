@@ -1,0 +1,21 @@
+# Starts the client and sets the demo cast. Users and passwords are MockSync's test users; the faces are frame
+# packs under the pack root (-Dframe.packs): s3 is enrolled for officer1 and supervisor1, s2 is a resident with a
+# high passive score, s3n (s3 through a noisy camera) a resident whose passive score is below the resident
+# threshold (80), and s1 another live person who is not enrolled.
+label start: MockMDS face device reset to L0, no fault; client started
+set OFFICER officer1
+set OFFICER_PASSWORD Mosip@Officer1
+set OFFICER_FACE s3
+set SUPERVISOR supervisor1
+set SUPERVISOR_PASSWORD Mosip@Supervisor1
+set SUPERVISOR_FACE s3
+set LEFT_EXCEPTION sleep 1
+set MOCKSYNC http://127.0.0.1:8080
+# Every snapshot hides the camera preview and captured faces, so the PNG files can be published.
+mask on
+mds /admin/fault {"type":"Face","fault":"NONE"}
+mds /admin/certification {"type":"Face","certification":"L0"}
+source s3-main
+start
+wait-login 300
+snap login-screen

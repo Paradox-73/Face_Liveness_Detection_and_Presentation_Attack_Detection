@@ -1,0 +1,37 @@
+# L1 face device: MockMDS signs the digitalId with its FTM key (root CN=RootCAFTM, renewed; MockSync serves it under
+# DEVICE and FTM). After a device rescan the client accepts the device and the liveness session records
+# certification L1. The device is set back to L0 afterwards.
+label L1 device: FTM-signed device, rescan, operator face capture with liveness
+mds /admin/certification {"type":"Face","certification":"L1"}
+click #settingsIconHBox
+sleep 2500
+click text=Device Settings
+sleep 3000
+click text=Scan Now
+sleep 3000
+click #homeImgView 90
+sleep 2000
+click #updateOperatorBiometricsPane
+sleep 3000
+source ${SUPERVISOR_FACE}-main
+follow ${SUPERVISOR_FACE}
+click #FACE
+sleep 800
+click #scanBtn
+expect-live 90
+follow off
+snap l1-device-face
+expect-sql 1 SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV01' AND LOG_DESC LIKE '%"certification":"L1"%'
+mds /admin/certification {"type":"Face","certification":"L0"}
+click #homeImgView
+sleep 1500
+if-node #confirm click #confirm
+sleep 1500
+click #settingsIconHBox
+sleep 2500
+click text=Device Settings
+sleep 3000
+click text=Scan Now
+sleep 3000
+click #homeImgView 90
+sleep 2000

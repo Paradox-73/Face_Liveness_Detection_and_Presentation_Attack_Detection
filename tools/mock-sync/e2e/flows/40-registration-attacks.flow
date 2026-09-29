@@ -1,0 +1,32 @@
+# Resident registration under attack, with the shipped policy (PASSIVE_THEN_ACTIVE): a printed photo held still, an
+# injected still stream (identical frames) and a video replay on a screen. Each attempt is refused with a generic
+# message that does not say which check failed: "Face verification could not be completed" when passive PAD,
+# integrity or binding rejects it, "We could not verify face liveness" when it reaches the challenges and cannot
+# answer them. After the third the window shows the recovery guidance (the centre's supervisor process). The
+# officer has no supervisor role, so no override is offered, and the registration is abandoned.
+# The rigid-motion print (a-s2-print-affine) is not here: with this policy it passes the passive check (score 90,
+# docs/eval/calibration-notes.md 3.2); 60-config-sync.flow shows it refused once the server sets ALWAYS_ACTIVE.
+label registration 3: print, injected still stream and screen replay refused; maximum attempts, recovery guidance
+set RESIDENT_NAME Chen Attacker
+include lib/registration-start.flow
+source a-s2-print-still
+click #individualBiometricsScanBtn
+expect (Face verification could not be completed|We could not verify face liveness) 60
+snap attack-print-still
+source a-s2-identical
+click #retryButton
+sleep 1500
+expect (Face verification could not be completed|We could not verify face liveness) 60
+snap attack-injected-still
+source a-s2-screen-replay
+click #retryButton
+sleep 1500
+expect after 3 attempts 60
+snap attack-max-attempts
+sql SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID IN ('REG-EVT-LV03','REG-EVT-LV06','REG-EVT-LV08','REG-EVT-LV09','REG-EVT-LV11') ORDER BY LOG_DTIMES DESC FETCH FIRST 8 ROWS ONLY
+click #cancelButton
+sleep 2000
+click #homeImgView
+sleep 1500
+if-node #confirm click #confirm
+sleep 2000

@@ -1,0 +1,14 @@
+# Reviewer authentication after the operator's, required when biometric exceptions were marked: the supervisor's
+# user name and password, then face with liveness (workflow exception_auth). Needs ${SUPERVISOR},
+# ${SUPERVISOR_PASSWORD} and ${SUPERVISOR_FACE}.
+fill #username ${SUPERVISOR}
+fill #password ${SUPERVISOR_PASSWORD}
+source ${SUPERVISOR_FACE}-main
+follow ${SUPERVISOR_FACE}
+click #authenticate
+wait-node #faceScanButton 30
+snap reviewer-auth
+click #faceScanButton
+expect-live 120
+follow off
+sleep 4000

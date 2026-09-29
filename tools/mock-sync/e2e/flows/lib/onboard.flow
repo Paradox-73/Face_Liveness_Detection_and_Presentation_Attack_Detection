@@ -1,0 +1,40 @@
+# Operator onboarding or re-onboarding of the logged-in user: fingers (and irises when configured) from MockMDS's
+# stock images, face
+# from the frame pack ${OPERATOR}-main with liveness (workflow onboard), then Save, which sends the biometrics to
+# MockSync's IDA mock and stores the templates in REG.USER_BIOMETRIC. Needs ${OPERATOR} and ${USER}.
+# ${ONBOARD_PANE} is #getOnboardedPane on the first onboarding (after the first login) and
+# #updateOperatorBiometricsPane afterwards.
+if-node #homeImgView click #homeImgView
+sleep 1500
+click ${ONBOARD_PANE}
+sleep 3000
+source ${OPERATOR}-main
+follow ${OPERATOR}
+wait-node #FINGERPRINT_SLAB_RIGHT 60
+# Irises only when mosip.registration.operator.onboarding.bioattributes asks for them.
+if-node #IRIS_DOUBLE click #IRIS_DOUBLE
+if-node #IRIS_DOUBLE click #scanBtn
+sleep 4000
+click #FINGERPRINT_SLAB_RIGHT
+sleep 800
+click #scanBtn
+sleep 4000
+click #FINGERPRINT_SLAB_LEFT
+sleep 800
+click #scanBtn
+sleep 4000
+click #FINGERPRINT_SLAB_THUMBS
+sleep 800
+click #scanBtn
+sleep 4000
+click #FACE
+sleep 800
+click #scanBtn
+expect-live 120
+follow off
+sleep 3000
+snap onboard-before-save
+click #continueBtn
+sleep 15000
+snap onboard-saved
+expect-sql 1 SELECT USR_ID, BMTYP_CODE, QUALITY_SCORE, COALESCE(UPD_DTIMES, CR_DTIMES) AS SAVED FROM REG.USER_BIOMETRIC WHERE USR_ID='${USER}' AND BMTYP_CODE='Face'
