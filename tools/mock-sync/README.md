@@ -58,10 +58,16 @@ end-to-end runner.
 6. **Start the client again and log in again.** Every online login re-runs the sync; the operator home screen
    ("Hi Test Officer One, you are not onboarded into the system") follows.
 
-The client also needs the MOSIP mock biometric SDK (`io.mosip.mock.sdk:mock-sdk:1.1.5`, class
-`io.mosip.mock.sdk.impl.SampleSDK`) in its `lib/` folder after the first sync, because the synced config names it
-(`mosip.biometric.sdk.providers.*.mockvendor.classname`). MOSIP's `configure.sh` normally adds it. Without it the
-second start fails with `BIO_SDK_007 --> SDK provider registry is empty!`.
+The client needs two biometric SDKs in its `lib/` folder; `scripts/desktop-build.sh` puts both there:
+- **FACE:** the project's SFace SDK (`liveness/face-match-sdk`, class `io.mosip.liveness.facematch.SFaceBioApi`,
+  a runtime dependency of registration-services). MockSync selects it with
+  `mosip.biometric.sdk.providers.face.mockvendor.classname` (`data/mock-sync-defaults.properties`), threshold 40
+  (cosine 0.40). The vendor name stays `mockvendor`: the client keeps only one vendor per modality.
+- **FINGER and IRIS:** MOSIP's mock SDK (`io.mosip.mock.sdk:mock-sdk:1.1.5`, class `io.mosip.mock.sdk.impl.SampleSDK`),
+  which MOSIP's `configure.sh` normally adds; the build script downloads it once into `run/cache/`. Without it the
+  second start fails with `BIO_SDK_007 --> SDK provider registry is empty!`.
+
+SDK keys (`mosip.biometric.sdk.*`) take effect after a client restart.
 
 ### Automated end-to-end run (test T-SYNC-03)
 
@@ -75,6 +81,26 @@ EXTRA_LIB=<dir with mock-sdk-1.1.5.jar> e2e/run-desktop-e2e.sh <client working d
 
 `<out dir>/driver.log` lists every screen's text (`STATE`), the typed steps (`ACTION`) and the alerts (`ALERT`).
 Run it twice on a fresh client directory: the first run ends at the restart alert, the second at the home screen.
+
+### Scripted demo of every face liveness flow (desktop)
+
+`e2e/DesktopFlowDriver.java` runs flow scripts (`e2e/flows/*.flow`, one command per line: click, fill, wait,
+expect, switch the MockMDS face source, inject a device fault, query the client database, call an HTTP API, save a
+snapshot). `scripts/demo-desktop.sh` (repository root) starts MockSync and MockMDS when needed and runs
+`e2e/flows/demo-desktop.flow`: operator face login, registration with passive pass, device disconnect and
+recovery, low-confidence face with active challenges, exception photo with reviewer authentication, attacks with
+the maximum-attempts guidance, end-of-day approval with supervisor face, a liveness key changed by sync, an L1
+device, the same flows offline, a wrong person refused by the face match, and the audit and packet evidence.
+The command list is in the Javadoc of the driver; the results are in `docs/test-report/desktop-e2e.md`.
+
+```bash
+scripts/demo-desktop.sh --restore-golden      # from the repository root; about 10 minutes
+```
+
+Offline is simulated inside the driver JVM (`network off`): the client's HTTPS calls go to a closed local proxy
+port, so every server call fails as if MockSync were down, while MockSync keeps serving other clients (the Android
+emulator). Snapshots are masked (`mask on`): the camera preview and captured faces are blank, so they can be
+published.
 
 ## Test users
 
@@ -194,12 +220,12 @@ POST /v1/syncdata/authenticate/useridpwd
 ```
 Decrypted `response`: `{"token":"<JWT>","refreshToken":"<JWT>","expiryTime":15552000,"refreshExpiryTime":15552000}`.
 The JWTs carry `exp`, `name`, `preferred_username`, `realm_access.roles`; both clients only decode them.
-Errors: `KER-ATH-401` (wrong user or password), `KER-SNC-MACHINE-404` (machine not registered).
+Errors: `KER-ATH-401` (wrong user or password), `KER-SNC-155` (machine not registered; the Android client shows this code as "This device has not been onboarded yet").
 
 **Example: unknown machine on a sync call.**
 ```json
 {"id":"mosip.syncdata.configs","version":"1.0","responsetime":"...","metadata":null,"response":null,
- "errors":[{"errorCode":"KER-SNC-MACHINE-404","message":"Machine with key index 00:11 is not registered"}]}
+ "errors":[{"errorCode":"KER-SNC-155","message":"Machine with key index 00:11 is not registered"}]}
 ```
 
 ### Registration processor and IDA (`/registrationprocessor/v1`)
@@ -212,7 +238,7 @@ IDA is MOSIP's ID Authentication service; operator onboarding sends the operator
 | `POST /registrationstatus/auth` | onboarding biometric check | `{"authStatus":true,"authToken":"<uuid>","mockSyncBiometrics":{"FACE":1}}` |
 | `POST /registrationstatus/sync`, `/registrationstatus/syncV2` | packet sync | signed list `[{"registrationId","status":"SUCCESS"}]`, read from the encrypted request |
 | `POST /packetreceiver/registrationpackets` (multipart `file`) | packet upload | signed `{"status":"Packet has reached Packet Receiver"}`; the zip is kept in `work/packets/` |
-| `POST /registrationstatus/search`, `/registrationstatus/packetexternalstatus` | packet status | signed `[]` |
+| `POST /registrationstatus/search`, `/registrationstatus/packetexternalstatus` | packet status | signed `[{"packetId" or "registrationId","statusCode":"RECEIVED"}]`, one per requested packet |
 
 `auth` decrypts the request with the IDA key and reports which modalities it carried (`mockSyncBiometrics`,
 counts only; clients ignore the field). It never compares biometrics: `authStatus` is `mocksync.ida-auth-status`.
@@ -238,8 +264,11 @@ counts only; clients ignore the field). It never compares biometrics: `authStatu
 | `DELETE /admin/config/{key}` | | 204 or 404 |
 | `GET /admin/users` | | user IDs, names, roles |
 | `GET /admin/tls-certificate` | | HTTPS certificate (PEM) |
+| `GET /admin/packets` | | uploaded packets in `work/packets/`, newest first (name, size, time) |
+| `GET /admin/packets/{name}/liveness` (`latest` for the newest) | | the packet decrypted with the machine's REGISTRATION key: `LIVENESS_*` entries of every face record, liveness fields of `packet_meta_info.json`, `REG-EVT-LV*` rows of `audit.json`; no biometric data |
 
-Requests from other machines get HTTP 403.
+Requests from other machines get HTTP 403. `scripts/show-packet.sh [latest|<name>]` prints the packet list or
+one packet's liveness evidence.
 
 ## How responses are protected
 
@@ -299,7 +328,7 @@ Data fixes applied when serving (the real server's data differs from the spreads
 ## Tests
 
 ```bash
-mvn test        # JUnit 5, 23 tests
+mvn test        # JUnit 5, 37 tests
 ```
 - `ClientCryptoTest` (T-SYNC-01): LOCAL cipher text decrypts with keymanager's own `CryptoCore` configured like the
   client; ANDROID uses MGF1 SHA-1 and does not decrypt as LOCAL; TPM uses the TPM OAEP label; key fingerprints match
@@ -308,19 +337,52 @@ mvn test        # JUnit 5, 23 tests
   client-style re-serialisation; a changed body fails; script signatures verify.
 - `SyncEndpointsTest`: a simulated machine with local keys runs login and every sync call; encrypted parts are
   decrypted with keymanager code; checks the fields and Java types the client needs, the admin config change,
-  IDA auth with a request built like the client's, and packet sync decryption.
+  IDA auth with a request built like the client's, packet sync decryption and the packet status answer.
+- `PacketInspectorTest`: a packet built like the client's (packet manager encryption, CBEFF with `others` entries,
+  meta info and audit JSON) is decrypted and only the liveness evidence is reported.
 - `ConfigPlaceholderTest`: placeholder resolution.
+- `AndroidClientContractTest` (T-SYNC-04, T-SYNC-06): a simulated tablet registers with the Machine Keys JSON,
+  logs in and runs the seven sync steps; every encrypted part is decrypted the way the Android client does
+  (RSA-OAEP SHA-256 with MGF1 SHA-1), and each entity row is checked for the keys the app's repositories read.
 
 The keymanager, kernel-core and logger jars are test-only dependencies; the server does its own crypto with the JDK,
 BouncyCastle and TSS.Java.
 
 ## Android client
 
-Implemented and unit-tested: plain HTTP port 8080, `actuator/info`, ANDROID key wrap (`clientType: ANDROID`), the
-same sync endpoints and entity names the Android client reads (checked against its `MasterDataServiceImpl`), script
-URLs built from the request's own host. Register the machine with the name, `publicKey` and `signPublicKey` from the
-Android client's Machine Keys dialog (long-press the login page's bottom bar) and `"clientType":"ANDROID"`.
-Not yet run against the Android client; a face-only UI spec for Android is not included.
+Checked result on 2026-09-29 (Android 14 emulator `arc_api34`, debug APK from `clients/android` pointing at
+`http://127.0.0.1:8080`): first online login as `officer1`, all 7 sync steps ("Sync Completed Successfully"), second
+login to the home screen ("HELLO, Test Officer One"), then offline login with MockSync unreachable.
+
+One command does all of it from the repository root (details: `docs/install/android.md`, section 5):
+```bash
+scripts/android-mocksync-setup.sh --login --offline-check          # --reset first for a new machine identity
+```
+
+What the Android client needs from MockSync:
+- **Plain HTTP on 8080.** The debug APK allows cleartext only to `127.0.0.1`, `localhost` and `10.0.2.2`; `adb reverse tcp:8080 tcp:8080` maps the
+  tablet's port 8080 to the PC.
+- **Online check:** `GET /v1/syncdata/actuator/health` must answer 200 within 2 s, else the app logs in offline.
+- **Version check:** `GET /v1/syncdata/actuator/info` returns `build.version` `1.2.0.2`, so the app uses the v2 sync APIs.
+- **Machine registration before the first login**, with `"clientType":"ANDROID"` and the JSON from the app's
+  "Device Credentials" dialog (long-press the MOSIP footer on the login screen, COPY TEXT). The app creates its
+  machine name and keys on first launch; clearing app data creates new ones, which must be registered again.
+- **Key wrap:** RSA-OAEP with SHA-256 and MGF1 SHA-1 (the Android keystore's default MGF1).
+- **Unknown machine:** error code `KER-SNC-155`, which the app shows as "This device has not been onboarded yet".
+
+Requests seen in the MockSync log for one first login (in order): `actuator/health`, `actuator/info`,
+`authenticate/useridpwd`, `v2/clientsettings` (twice, each followed by `scripts/applicanttype.mvel`),
+`configs/<keyIndex>`, `v2/userdetails`, `latestidschema`, `getCertificate` (policy key), `getcacertificates`,
+`getCertificate` (KERNEL SIGN). The second login sends only `health`, `info`, `useridpwd` and one more `health`; the
+offline login sends nothing. Two app-side `E` log lines during the first sync are expected and harmless (an empty job
+id for the first master-data step, and the expired MockMDS FTM root `rootcaftm.cer` being rejected); details in
+`docs/install/android.md`, section 5.
+
+![Android client: sync result after the first login](docs/android-initial-sync-success.png)
+![Android client home screen after initial sync](docs/android-home-after-sync.png)
+
+Not covered yet: operator onboarding, registration and packet upload from the Android client, and a face-only
+UI spec for Android.
 
 ## Limitations and differences from the real server
 

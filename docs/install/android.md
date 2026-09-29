@@ -183,11 +183,99 @@ Useful on the Login screen:
   launch, so reinstall with `adb install -r` (the run script does) instead of
   uninstalling.
 
-First login needs a reachable server (MockSync): offline login only works for a
-user whose password hash an earlier online login saved
+First login needs a reachable server (MockSync, section 5): offline login only
+works for a user whose password hash an earlier online login saved
 (`AuthenticationApi.offlineLogin` in `android/app`).
 
-## 5. Changes to upstream files for this monorepo
+## 5. First login and sync against MockSync
+
+`scripts/android-mocksync-setup.sh` connects the emulator to MockSync and can run
+the first login, the initial sync and an offline login by itself (it drives the
+app with `adb shell input` and reads the screen with `uiautomator dump`).
+
+```bash
+bash tools/mock-sync/scripts/run-mock-sync.sh &                      # or pass --start-mocksync below
+bash scripts/android-mocksync-setup.sh                                # emulator, adb reverse, register machine
+bash scripts/android-mocksync-setup.sh --login                        # ... then first login + 7/7 sync + home screen
+bash scripts/android-mocksync-setup.sh --login --offline-check        # ... then offline login too
+bash scripts/android-mocksync-setup.sh --reset --login --offline-check  # start from a wiped app (new machine)
+bash scripts/android-mocksync-setup.sh --keys-file keys.json          # register keys copied by hand
+```
+
+Steps the script runs, and what each one needs:
+
+1. **MockSync reachable** at `http://127.0.0.1:8080` on the PC
+   (`GET /v1/syncdata/actuator/health`).
+2. **Emulator booted, `adb reverse tcp:8080 tcp:8080`** (through
+   `scripts/android-run-emulator.sh --no-install`), APK installed if missing,
+   on-screen keyboard hidden (it drops characters typed with `adb shell input`).
+3. **Machine keys read from the app:** long press on the MOSIP footer of the
+   login screen, COPY TEXT in the "Device Credentials" dialog, paste into the
+   user name field, read the text back. Saved to `<out>/machine-keys.json`
+   (`name`, `publicKey`, `signPublicKey`).
+4. **Machine registered in MockSync:** `POST /admin/machines` with
+   `"clientType":"ANDROID"`. The answer (machine id, centre, key index) is saved
+   to `<out>/machine-registration.json`.
+5. **`--login`:** user name, NEXT, password, LOGIN. The app then runs the 7 sync
+   steps and shows "Sync Completed Successfully". The app is meant to restart
+   itself 5 s later (`RestartWidget.restartApp` in `lib/ui/login_page.dart`); the
+   script does not rely on that and restarts the app after 8 s, logs in again
+   and waits for the home screen ("HELLO, Test Officer One").
+6. **`--offline-check`:** removes the `adb reverse` rule so the health check
+   fails, logs in again (offline login uses the password hash saved by the
+   online login) and restores the rule.
+
+`<out>` defaults to `clients/android/build/emulator/mocksync` (git-ignored);
+screenshots `01-device-credentials.png` to `04-home-offline.png` go there too.
+
+Measured on the team laptop (2026-09-29): `--reset --login --offline-check`
+took 4 min 24 s from a stopped emulator (boot 65 s) and 2 min 50 s with the
+emulator already running; both runs ended on the home screen after the offline
+login. MockSync logged, for the first login:
+`actuator/health`, `actuator/info`, `authenticate/useridpwd`,
+`v2/clientsettings` (twice, each followed by `scripts/applicanttype.mvel`),
+`configs/<keyIndex>`, `v2/userdetails`, `latestidschema`, `getCertificate`
+(policy key), `getcacertificates`, `getCertificate` (KERNEL SIGN). The second
+login sent only `health`, `info`, `useridpwd` and one more `health`; the offline
+login sent nothing.
+
+Two `E` lines in `adb logcat -s MasterDataServiceImpl` are expected during the
+first sync and do not stop it:
+
+- `Failed to store master data sync last sync time ...
+  StringIndexOutOfBoundsException: length=0`: the Flutter side looks up the
+  `masterSyncJob` id in the local database before the master data (which holds
+  the job list) has been saved, so the first master-data step runs with an empty
+  job id (`autoSync` in `lib/provider/sync_provider.dart`). Later steps use real
+  ids.
+- `Failed to save CA cert : eebe8676...`: MockSync serves the MockMDS FTM root
+  `rootcaftm.cer`, which expired in 2022, and the app's keymanager rejects it
+  ("Certificate Dates are not valid"). The other DEVICE certificates are saved.
+
+Where the tablet's identity lives (upstream `keymanager` module):
+
+- the signing and encryption key pairs: Android keystore aliases `SIGN` and `ENDEC`;
+- the random 12-character machine name: `.mosipkeys/` in the app's data folder,
+  encrypted with the `ENDEC` key.
+
+Clearing the app's data (`adb shell pm clear io.mosip.registration_client`, or
+`--reset`) creates a new name and new keys on the next launch; the machine must
+then be registered again (`--reset` does this, and removes the old registration
+from MockSync when the old `machine-keys.json` is in `<out>`). Reinstalling with
+`adb install -r` keeps them. Registrations left over from other runs show in
+`curl http://127.0.0.1:8080/admin/machines`; remove one with
+`curl -X DELETE http://127.0.0.1:8080/admin/machines/<name>` (never remove
+`batcomputer`, the desktop client's machine).
+
+If login fails:
+
+| Message in the app | Cause | Fix |
+|---|---|---|
+| "This device has not been onboarded yet" | MockSync does not know the machine (error `KER-SNC-155`) | register it: run the script again, or `--keys-file` |
+| Login fails and the MockSync log shows no request | `adb reverse` missing or MockSync down; app is offline and the user never logged in online | `adb reverse tcp:8080 tcp:8080`; start MockSync |
+| The app closes about 5 s after the sync result dialog | a sync step failed (`SystemNavigator.pop` in `lib/ui/login_page.dart`) | `adb logcat -s MasterDataServiceImpl` and the MockSync log |
+
+## 6. Changes to upstream files for this monorepo
 
 | File | Change | Reason |
 |---|---|---|
@@ -197,7 +285,7 @@ user whose password hash an earlier online login saved
 | `.gitignore` | ignore `/test/*.mocks.dart` and `/android/clientmanager/null/` | `build_runner` (run by `pigeon.sh`) generates `test/login_test.mocks.dart`; the clientmanager unit tests write `android/clientmanager/null/null/id.zip`. |
 | `android/build.gradle`, `android/app/build.gradle`, `android/clientmanager/build.gradle`, `android/app/src/debug/res/xml/network_security_config.xml` | debug-only server URL and plain-HTTP rule | Section 3. |
 
-## 6. Troubleshooting
+## 7. Troubleshooting
 
 - **"Building with plugins requires symlink support. Please enable Developer
   Mode"** during `flutter pub get` on Windows. Flutter creates plugin symlinks
