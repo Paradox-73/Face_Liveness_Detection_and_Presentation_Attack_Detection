@@ -242,6 +242,8 @@ curl -s -X POST http://127.0.0.1:4501/admin/certification -d '{"type":"Face","ce
 - **L1 signing:** for L1 the DeviceInfo `digitalId` is signed with the FTM key `Biometric Devices/Face/Keys/mosipfaceftm.p12`. Its certificate is `CN=MosipFaceFTM`, issued by `CN=RootCAFTM` (`Biometric Devices/rootcaftm.cer`).
   - The DeviceInfo JWT and the capture data stay signed with the device key `mosipface.p12` (`CN=MosipFace`, issued by `CN=RootCA`).
   - A client that checks the digitalId in its `DEVICE` trust domain needs `rootcaftm.cer` in that domain.
+  - **Renewed FTM root.** The upstream `rootcaftm.cer` expired on 2022-06-10, and the Registration Client refuses to store an expired CA (`KER-PCM-004 Certificate Dates are not valid`), so L1 could never be trusted. `scripts/renew-ftm-root.sh` re-issues `CN=RootCAFTM` with the same key pair (valid 2026-01-01 to 2035-12-30) and puts the new root into every chain that ends in it: `mosiprootcaftm.p12` and the five `*ftm.p12` device stores. The device certificates (`CN=MosipFaceFTM` and the finger and iris ones, valid until 2031) are unchanged and verify against the renewed root because its key is the same. Run the script again before the new end date, then rebuild MockMDS (the build copies `Biometric Devices` into `target/`).
+  - MockSync serves `rootcaftm.cer` under the `FTM` and `DEVICE` partner domains (`tools/mock-sync`, `mocksync.ca-certificates`). Checked on 2026-09-30: the desktop client stored the renewed root (`REG.CA_CERT_STORE`, `CN=RootCAFTM`, not after 2035-12-30), accepted the L1 face device after a rescan and ran a liveness session with `certification` `L1` (audit `REG-EVT-LV01`); see `docs/test-report/desktop-e2e.md`.
 - **Re-discovery:** clients cache the level, so they must discover the device again after a switch.
 - **Android client:** the stock Android client accepts only L0 devices.
 
@@ -308,6 +310,7 @@ Test frames are drawn at run time from the stock `0.jpeg`, so no binary fixtures
 | `application.properties` | new calls in `mosip.mock.sbi.allowed.admin.apis`; `mosip.mock.sbi.face.*` keys; error texts 511-517 | configuration |
 | `run_reg.bat`, `run_auth.bat`, `run.sh` | jar name `mock-mds-${project.version}.jar` (filled in by the build) instead of `mock-mds-1.3.0-SNAPSHOT.jar` | the pom builds `mock-mds-1.3.1.jar`; the stock scripts pointed at a missing jar |
 | `README.md` | pointer to this file | discoverability |
+| `Biometric Devices/rootcaftm.cer`, `Biometric Devices/mosiprootcaftm.p12`, `Biometric Devices/*/Keys/*ftm.p12` | FTM root re-issued with the same key and a validity to 2035, chains updated (`scripts/renew-ftm-root.sh`) | the stock root expired in 2022, so L1 devices were never trusted |
 
 New code:
 
