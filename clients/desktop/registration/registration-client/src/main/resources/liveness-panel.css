@@ -1,0 +1,176 @@
+/* Face liveness panel (fxml/LivenessPanel.fxml). Colours keep a contrast of at least 4.5:1 against their
+   background (WCAG 2.1 AA); every state also has a text and an icon, so colour is never the only signal. */
+
+.liveness-panel {
+	-fx-background-color: #FFFFFF;
+	-fx-font-family: Roboto, "Segoe UI", System;
+}
+
+.liveness-title {
+	-fx-font-size: 20px;
+	-fx-font-weight: bold;
+	-fx-text-fill: #004887;
+}
+
+.liveness-offline-badge {
+	-fx-font-size: 13px;
+	-fx-text-fill: #FFFFFF;
+	-fx-background-color: #5B4200;
+	-fx-background-radius: 12;
+	-fx-padding: 4 10 4 10;
+}
+
+.liveness-preview {
+	-fx-background-color: #1B1F24;
+	-fx-background-radius: 8;
+}
+
+.liveness-oval {
+	-fx-fill: transparent;
+	-fx-stroke: #FFFFFF;
+	-fx-stroke-width: 4;
+	-fx-stroke-dash-array: 12 8;
+}
+
+.liveness-panel.liveness-success .liveness-oval {
+	-fx-stroke: #3DDC84;
+	-fx-stroke-dash-array: null;
+}
+
+.liveness-panel.liveness-warning .liveness-oval {
+	-fx-stroke: #FFC107;
+}
+
+.liveness-panel.liveness-error .liveness-oval {
+	-fx-stroke: #FF6F61;
+}
+
+.liveness-banner {
+	-fx-background-radius: 8;
+	-fx-padding: 12 16 12 16;
+	-fx-background-color: #E8F1FA;
+	-fx-border-color: #005BAA;
+	-fx-border-width: 0 0 0 6;
+}
+
+.liveness-icon-box {
+	-fx-background-color: #005BAA;
+	-fx-background-radius: 28;
+}
+
+.liveness-icon {
+	-fx-fill: #FFFFFF;
+}
+
+.liveness-prompt {
+	-fx-font-size: 26px;
+	-fx-font-weight: bold;
+	-fx-text-fill: #0B2E4F;
+}
+
+.liveness-guidance .label {
+	-fx-font-size: 16px;
+	-fx-text-fill: #1F2933;
+}
+
+.liveness-panel.liveness-success .liveness-banner {
+	-fx-background-color: #E6F4EA;
+	-fx-border-color: #1E7B34;
+}
+
+.liveness-panel.liveness-success .liveness-icon-box {
+	-fx-background-color: #1E7B34;
+}
+
+.liveness-panel.liveness-success .liveness-prompt {
+	-fx-text-fill: #14532D;
+}
+
+.liveness-panel.liveness-warning .liveness-banner {
+	-fx-background-color: #FFF4DB;
+	-fx-border-color: #8A5A00;
+}
+
+.liveness-panel.liveness-warning .liveness-icon-box {
+	-fx-background-color: #8A5A00;
+}
+
+.liveness-panel.liveness-warning .liveness-prompt {
+	-fx-text-fill: #5B3B00;
+}
+
+.liveness-panel.liveness-error .liveness-banner {
+	-fx-background-color: #FCE8E6;
+	-fx-border-color: #B3261E;
+}
+
+.liveness-panel.liveness-error .liveness-icon-box {
+	-fx-background-color: #B3261E;
+}
+
+.liveness-panel.liveness-error .liveness-prompt {
+	-fx-text-fill: #7A1712;
+}
+
+.liveness-progress .bar {
+	-fx-background-color: #005BAA;
+	-fx-background-insets: 0;
+	-fx-background-radius: 4;
+}
+
+.liveness-progress .track {
+	-fx-background-color: #DDE3EA;
+	-fx-background-radius: 4;
+}
+
+.liveness-counter {
+	-fx-font-size: 16px;
+	-fx-text-fill: #1F2933;
+}
+
+.liveness-diagnostic {
+	-fx-font-family: Consolas, monospace;
+	-fx-font-size: 12px;
+	-fx-text-fill: #3E4C59;
+	-fx-background-color: #F0F4F8;
+	-fx-padding: 6;
+}
+
+.liveness-primary-button {
+	-fx-background-color: #005BAA;
+	-fx-text-fill: #FFFFFF;
+	-fx-font-size: 16px;
+	-fx-font-weight: bold;
+	-fx-min-height: 44px;
+	-fx-min-width: 120px;
+	-fx-background-radius: 6;
+	-fx-cursor: hand;
+}
+
+.liveness-primary-button:hover {
+	-fx-background-color: #004887;
+}
+
+.liveness-primary-button:focused {
+	-fx-border-color: #0B2E4F;
+	-fx-border-width: 3;
+	-fx-border-radius: 6;
+}
+
+.liveness-secondary-button {
+	-fx-background-color: #FFFFFF;
+	-fx-text-fill: #005BAA;
+	-fx-border-color: #005BAA;
+	-fx-border-width: 2;
+	-fx-border-radius: 6;
+	-fx-background-radius: 6;
+	-fx-font-size: 16px;
+	-fx-min-height: 44px;
+	-fx-min-width: 120px;
+	-fx-cursor: hand;
+}
+
+.liveness-secondary-button:focused {
+	-fx-border-color: #0B2E4F;
+	-fx-border-width: 3;
+}

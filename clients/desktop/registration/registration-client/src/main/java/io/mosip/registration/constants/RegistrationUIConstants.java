@@ -429,4 +429,8 @@ public class RegistrationUIConstants {
 
 	public static final String INVALID_FLOW_TYPE = "INVALID_FLOW_TYPE";
 	public static final String ADDITIONAL_INFO_REQ_ID_MISSING = "ADDITIONAL_INFO_REQ_ID_MISSING";
+
+	// FACE LIVENESS
+	public static final String LIVENESS_CAPTURE_REFUSED = "LIVENESS_CAPTURE_REFUSED";
+	public static final String LIVENESS_MAX_ATTEMPTS_AUTH = "LIVENESS_MAX_ATTEMPTS_AUTH";
 }

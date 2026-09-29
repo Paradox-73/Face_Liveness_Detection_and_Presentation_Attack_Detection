@@ -1,0 +1,52 @@
+key,bundle,source,en,fr,ar
+liveness.status.checking,labels,PS04 UI 2,Checking face liveness…,Vérification de la présence réelle du visage…,جارٍ التحقق من حيوية الوجه…
+liveness.challenge.blink,labels,PS04 UI 3,Please blink,Veuillez cligner des yeux,يرجى الرمش بعينيك
+liveness.challenge.smile,labels,PS04 UI 3,Please smile,Veuillez sourire,يرجى الابتسام
+liveness.challenge.turn_left,labels,PS04 UI 3,Please turn your head to the left,Veuillez tourner la tête vers la gauche,يرجى إدارة رأسك إلى اليسار
+liveness.challenge.turn_right,labels,team,Please turn your head to the right,Veuillez tourner la tête vers la droite,يرجى إدارة رأسك إلى اليمين
+liveness.challenge.look_up,labels,team,Please look up,Veuillez regarder vers le haut,يرجى النظر إلى الأعلى
+liveness.challenge.look_down,labels,team,Please look down,Veuillez regarder vers le bas,يرجى النظر إلى الأسفل
+liveness.challenge.gaze_left,labels,team,Please look to your left without turning your head,Veuillez regarder à votre gauche sans tourner la tête,يرجى النظر إلى يسارك دون إدارة رأسك
+liveness.challenge.gaze_right,labels,team,Please look to your right without turning your head,Veuillez regarder à votre droite sans tourner la tête,يرجى النظر إلى يمينك دون إدارة رأسك
+liveness.feedback.continue,labels,PS04 UI 4,Please continue,Veuillez continuer,يرجى المتابعة
+liveness.feedback.detected,labels,PS04 UI 4,Action detected,Action détectée,تم اكتشاف الحركة
+liveness.feedback.hold_still,labels,PS04 UI 4,Hold still,Ne bougez plus,اثبت دون حركة
+liveness.feedback.success,labels,PS04 UI 4,"Good, face captured successfully","Parfait, visage capturé avec succès",جيد، تم التقاط الوجه بنجاح
+liveness.fail.liveness,labels,PS04 UI 5,We could not verify face liveness. Please try again.,Nous n'avons pas pu vérifier la présence réelle du visage. Veuillez réessayer.,تعذّر التحقق من حيوية الوجه. يرجى المحاولة مرة أخرى.
+liveness.fail.pad,labels,PS04 UI 6,Face verification could not be completed. Please try again.,La vérification du visage n'a pas pu être effectuée. Veuillez réessayer.,تعذّر إكمال التحقق من الوجه. يرجى المحاولة مرة أخرى.
+liveness.guide.look_camera,labels,PS04 UI 5,Look directly at the camera.,Regardez directement la caméra.,انظر مباشرة إلى الكاميرا.
+liveness.guide.face_visible,labels,PS04 UI 5,Ensure your face is clearly visible.,Assurez-vous que votre visage est bien visible.,تأكد من أن وجهك ظاهر بوضوح.
+liveness.guide.lighting,labels,PS04 UI 5,Improve lighting.,Améliorez l'éclairage.,حسّن الإضاءة.
+liveness.guide.in_area,labels,PS04 UI 5,Keep your face within the capture area.,Gardez votre visage dans la zone de capture.,أبقِ وجهك داخل منطقة الالتقاط.
+liveness.guide.follow_action,labels,PS04 UI 5,Follow the prompted action.,Suivez l'action demandée.,اتبع الحركة المطلوبة.
+liveness.retry.available,labels,team,Attempt {0} of {1}. Select Retry to try again.,Tentative {0} sur {1}. Sélectionnez Réessayer pour recommencer.,المحاولة {0} من {1}. اختر إعادة المحاولة للمحاولة مجددًا.
+liveness.retry.max_resident,labels,PS04 UI 7,Face capture could not be completed after {0} attempts. Please ask your supervisor to follow the centre's recovery process.,La capture du visage n'a pas abouti après {0} tentatives. Veuillez demander à votre superviseur d'appliquer la procédure de reprise du centre.,تعذّر إكمال التقاط الوجه بعد {0} محاولات. يرجى الطلب من المشرف اتباع إجراء الاسترداد المعتمد في المركز.
+liveness.retry.max_auth,labels,PS04 UI 7,Face verification could not be completed. Maximum attempts reached. Use another sign-in method or contact your supervisor.,La vérification du visage n'a pas pu être effectuée. Nombre maximal de tentatives atteint. Utilisez une autre méthode de connexion ou contactez votre superviseur.,تعذّر إكمال التحقق من الوجه. تم بلوغ الحد الأقصى للمحاولات. استخدم طريقة تسجيل دخول أخرى أو اتصل بالمشرف.
+liveness.override.confirm,labels,team,Supervisor override: this face will be flagged for review in the packet. Continue?,Dérogation du superviseur : ce visage sera signalé pour contrôle dans le paquet. Continuer ?,تجاوز المشرف: سيتم وضع علامة على هذا الوجه للمراجعة في الحزمة. هل تريد المتابعة؟
+liveness.error.no_face,labels,team,No face detected. Keep your face within the capture area.,Aucun visage détecté. Gardez votre visage dans la zone de capture.,لم يتم اكتشاف أي وجه. أبقِ وجهك داخل منطقة الالتقاط.
+liveness.error.multiple_faces,labels,team,More than one face detected. Only the person being captured should be in view.,Plusieurs visages détectés. Seule la personne capturée doit être visible.,تم اكتشاف أكثر من وجه. يجب أن يظهر الشخص الذي يتم التقاط صورته فقط.
+liveness.error.poor_quality,labels,team,The face image is not clear. Improve lighting and look directly at the camera.,L'image du visage n'est pas nette. Améliorez l'éclairage et regardez directement la caméra.,صورة الوجه غير واضحة. حسّن الإضاءة وانظر مباشرة إلى الكاميرا.
+liveness.error.timeout,labels,team,Time is up for this action. Please try again.,Le temps imparti pour cette action est écoulé. Veuillez réessayer.,انتهى الوقت المخصص لهذه الحركة. يرجى المحاولة مرة أخرى.
+liveness.error.device_unavailable,labels,team,The face camera is not available. Check that it is connected and select Retry.,La caméra de visage n'est pas disponible. Vérifiez qu'elle est connectée et sélectionnez Réessayer.,كاميرا الوجه غير متاحة. تحقق من توصيلها واختر إعادة المحاولة.
+liveness.error.device_disconnected,labels,team,The face camera was disconnected. Reconnect it and select Retry.,La caméra de visage a été déconnectée. Reconnectez-la et sélectionnez Réessayer.,تم فصل كاميرا الوجه. أعد توصيلها واختر إعادة المحاولة.
+liveness.error.device_no_stream,labels,team,This face camera does not support live verification. Connect a supported camera.,Cette caméra ne permet pas la vérification en direct. Connectez une caméra compatible.,كاميرا الوجه هذه لا تدعم التحقق المباشر. وصّل كاميرا مدعومة.
+liveness.error.camera_unavailable,labels,team,The camera could not be opened. Close other apps using the camera and try again.,La caméra n'a pas pu être ouverte. Fermez les autres applications qui l'utilisent et réessayez.,تعذّر فتح الكاميرا. أغلق التطبيقات الأخرى التي تستخدم الكاميرا وحاول مرة أخرى.
+liveness.error.camera_permission,labels,team,Camera access is off for this app. Allow camera access in Settings and select Retry.,L'accès à la caméra est désactivé pour cette application. Autorisez-le dans les Paramètres et sélectionnez Réessayer.,الوصول إلى الكاميرا متوقف لهذا التطبيق. اسمح بالوصول إلى الكاميرا في الإعدادات واختر إعادة المحاولة.
+liveness.error.frames_invalid,labels,team,The camera stream was interrupted. Please try again.,Le flux de la caméra a été interrompu. Veuillez réessayer.,انقطع بث الكاميرا. يرجى المحاولة مرة أخرى.
+liveness.error.engine,labels,team,Face verification is unavailable on this machine. Contact your supervisor.,La vérification du visage n'est pas disponible sur ce poste. Contactez votre superviseur.,التحقق من الوجه غير متاح على هذا الجهاز. اتصل بالمشرف.
+liveness.error.not_supervisor,labels,team,This user is not a supervisor. A supervisor must verify.,Cet utilisateur n'est pas superviseur. Un superviseur doit effectuer la vérification.,هذا المستخدم ليس مشرفًا. يجب أن يقوم مشرف بالتحقق.
+liveness.error.emulator,labels,team,Face verification is not allowed on this device.,La vérification du visage n'est pas autorisée sur cet appareil.,التحقق من الوجه غير مسموح به على هذا الجهاز.
+liveness.title.supervisor,labels,team,Supervisor verification,Vérification du superviseur,تحقق المشرف
+liveness.offline.badge,labels,team,Offline – verification runs on this device,Hors ligne – la vérification s'effectue sur ce poste,غير متصل – يتم التحقق على هذا الجهاز
+liveness.config.updated,labels,team,Face verification settings updated.,Paramètres de vérification du visage mis à jour.,تم تحديث إعدادات التحقق من الوجه.
+liveness.ui.title,labels,desktop,Face verification,Vérification du visage,التحقق من الوجه
+liveness.ui.retry,labels,desktop,Retry,Réessayer,إعادة المحاولة
+liveness.ui.cancel,labels,desktop,Cancel,Annuler,إلغاء
+liveness.ui.close,labels,desktop,Close,Fermer,إغلاق
+liveness.ui.override,labels,desktop,Supervisor override,Dérogation du superviseur,تجاوز المشرف
+liveness.ui.step,labels,desktop,Step {0} of {1},Étape {0} sur {1},الخطوة {0} من {1}
+liveness.ui.attempts,labels,desktop,Attempt {0} of {1},Tentative {0} sur {1},المحاولة {0} من {1}
+liveness.ui.preview,labels,desktop,Camera preview. Keep your face inside the oval.,Aperçu de la caméra. Gardez votre visage dans l'ovale.,معاينة الكاميرا. أبقِ وجهك داخل الشكل البيضاوي.
+liveness.ui.busy,labels,desktop,Another face verification is in progress. Close it and try again.,Une autre vérification du visage est en cours. Fermez-la et réessayez.,يوجد تحقق آخر من الوجه قيد التنفيذ. أغلقه وحاول مرة أخرى.
+LIVENESS_CAPTURE_REFUSED,messages,desktop alert (ERROR),Face verification could not be completed. Please try again.,La vérification du visage n'a pas pu être effectuée. Veuillez réessayer.,تعذّر إكمال التحقق من الوجه. يرجى المحاولة مرة أخرى.
+LIVENESS_MAX_ATTEMPTS_AUTH,messages,desktop alert (ERROR),Face verification could not be completed. Maximum attempts reached. Use another sign-in method or contact your supervisor.,La vérification du visage n'a pas pu être effectuée. Nombre maximal de tentatives atteint. Utilisez une autre méthode de connexion ou contactez votre superviseur.,تعذّر إكمال التحقق من الوجه. تم بلوغ الحد الأقصى للمحاولات. استخدم طريقة تسجيل دخول أخرى أو اتصل بالمشرف.
