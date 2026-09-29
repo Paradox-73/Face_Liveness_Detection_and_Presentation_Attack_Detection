@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only: the capture screen can be started from adb for demos and tests
+     (scripts/android-liveness-demo.sh). Release builds keep it private to the app. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        <activity
+            android:name=".ui.LivenessCaptureActivity"
+            android:exported="true"
+            tools:replace="android:exported" />
+    </application>
+</manifest>

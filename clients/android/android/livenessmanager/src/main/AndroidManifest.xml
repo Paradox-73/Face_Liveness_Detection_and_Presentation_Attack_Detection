@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- The built-in face camera (an SBI L0 device inside the client). -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera.front" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
+    <!-- supportsRtl: without it Android lays out every native view left-to-right, so the Arabic capture screen
+         would not mirror. ARC declares no value; its Flutter screens handle direction themselves. -->
+    <application android:supportsRtl="true">
+        <!-- "locked": keeps the orientation the tablet or phone had when the screen opened, so the camera's
+             target rotation stays valid for the whole session and a landscape tablet is not letterboxed. -->
+        <activity
+            android:name=".ui.LivenessCaptureActivity"
+            android:exported="false"
+            android:screenOrientation="locked"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:theme="@style/Theme.Liveness" />
+    </application>
+</manifest>

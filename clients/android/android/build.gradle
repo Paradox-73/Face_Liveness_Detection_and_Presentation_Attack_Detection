@@ -47,6 +47,12 @@ allprojects {
         mavenCentral()
         maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
         maven { url 'https://jitpack.io' }
+        // Face liveness engine (io.mosip.liveness:*), built from this repository's liveness/ folder into
+        // the local Maven repository; never looked up in a public repository.
+        exclusiveContent {
+            forRepository { mavenLocal() }
+            filter { includeGroup 'io.mosip.liveness' }
+        }
     }
 }
 
@@ -153,6 +159,13 @@ ext {
     simpleXmlVersion           = "2.7.1"
     desugarJdkLibsVersion      = "2.0.4"
     r8Version                  = "3.0.73"
+
+    // Face liveness (livenessmanager). ONNX Runtime stays on 1.28.0: 1.29 and later add a telemetry
+    // initializer (checked by :livenessmanager:verifyNoOnnxTelemetry). CameraX 1.5 needs compileSdk 35.
+    livenessEngineVersion      = "1.0.0-SNAPSHOT"
+    onnxruntimeAndroidVersion  = "1.28.0"
+    cameraxVersion             = "1.4.2"
+    androidxTestRunnerVersion  = "1.6.2"
 
     // Test
     junitVersion               = "4.13.2"
@@ -263,7 +276,7 @@ subprojects { project ->
     }
     // Suppress lint errors in third-party Flutter plugin subprojects whose
     // source we cannot modify. Own modules (app, *manager) are excluded.
-    def ownModules = ['app', 'clientmanager', 'keymanager', 'packetmanager', 'transliterationmanager']
+    def ownModules = ['app', 'clientmanager', 'keymanager', 'packetmanager', 'transliterationmanager', 'livenessmanager']
     if (!ownModules.contains(project.name)) {
         project.afterEvaluate {
             if (project.extensions.findByName("android") != null) {

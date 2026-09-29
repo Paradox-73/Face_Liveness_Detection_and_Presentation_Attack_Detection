@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="liveness_status_checking">Vérification de la présence réelle du visage…</string>
+    <string name="liveness_challenge_blink">Veuillez cligner des yeux</string>
+    <string name="liveness_challenge_smile">Veuillez sourire</string>
+    <string name="liveness_challenge_turn_left">Veuillez tourner la tête vers la gauche</string>
+    <string name="liveness_challenge_turn_right">Veuillez tourner la tête vers la droite</string>
+    <string name="liveness_challenge_look_up">Veuillez regarder vers le haut</string>
+    <string name="liveness_challenge_look_down">Veuillez regarder vers le bas</string>
+    <string name="liveness_challenge_gaze_left">Veuillez regarder à votre gauche sans tourner la tête</string>
+    <string name="liveness_challenge_gaze_right">Veuillez regarder à votre droite sans tourner la tête</string>
+    <string name="liveness_feedback_continue">Veuillez continuer</string>
+    <string name="liveness_feedback_detected">Action détectée</string>
+    <string name="liveness_feedback_hold_still">Ne bougez plus</string>
+    <string name="liveness_feedback_success">Parfait, visage capturé avec succès</string>
+    <string name="liveness_fail_liveness">Nous n\'avons pas pu vérifier la présence réelle du visage. Veuillez réessayer.</string>
+    <string name="liveness_fail_pad">La vérification du visage n\'a pas pu être effectuée. Veuillez réessayer.</string>
+    <string name="liveness_guide_look_camera">Regardez directement la caméra.</string>
+    <string name="liveness_guide_face_visible">Assurez-vous que votre visage est bien visible.</string>
+    <string name="liveness_guide_lighting">Améliorez l\'éclairage.</string>
+    <string name="liveness_guide_in_area">Gardez votre visage dans la zone de capture.</string>
+    <string name="liveness_guide_follow_action">Suivez l\'action demandée.</string>
+    <string name="liveness_retry_available">Tentative {0} sur {1}. Sélectionnez Réessayer pour recommencer.</string>
+    <string name="liveness_retry_max_resident">La capture du visage n\'a pas abouti après {0} tentatives. Veuillez demander à votre superviseur d\'appliquer la procédure de reprise du centre.</string>
+    <string name="liveness_retry_max_auth">La vérification du visage n\'a pas pu être effectuée. Nombre maximal de tentatives atteint. Utilisez une autre méthode de connexion ou contactez votre superviseur.</string>
+    <string name="liveness_override_confirm">Dérogation du superviseur : ce visage sera signalé pour contrôle dans le paquet. Continuer ?</string>
+    <string name="liveness_error_no_face">Aucun visage détecté. Gardez votre visage dans la zone de capture.</string>
+    <string name="liveness_error_multiple_faces">Plusieurs visages détectés. Seule la personne capturée doit être visible.</string>
+    <string name="liveness_error_poor_quality">L\'image du visage n\'est pas nette. Améliorez l\'éclairage et regardez directement la caméra.</string>
+    <string name="liveness_error_timeout">Le temps imparti pour cette action est écoulé. Veuillez réessayer.</string>
+    <string name="liveness_error_device_unavailable">La caméra de visage n\'est pas disponible. Vérifiez qu\'elle est connectée et sélectionnez Réessayer.</string>
+    <string name="liveness_error_device_disconnected">La caméra de visage a été déconnectée. Reconnectez-la et sélectionnez Réessayer.</string>
+    <string name="liveness_error_device_no_stream">Cette caméra ne permet pas la vérification en direct. Connectez une caméra compatible.</string>
+    <string name="liveness_error_camera_unavailable">La caméra n\'a pas pu être ouverte. Fermez les autres applications qui l\'utilisent et réessayez.</string>
+    <string name="liveness_error_camera_permission">L\'accès à la caméra est désactivé pour cette application. Autorisez-le dans les Paramètres et sélectionnez Réessayer.</string>
+    <string name="liveness_error_frames_invalid">Le flux de la caméra a été interrompu. Veuillez réessayer.</string>
+    <string name="liveness_error_engine">La vérification du visage n\'est pas disponible sur cet appareil. Contactez votre superviseur.</string>
+    <string name="liveness_error_not_supervisor">Cet utilisateur n\'est pas superviseur. Un superviseur doit effectuer la vérification.</string>
+    <string name="liveness_error_emulator">La vérification du visage n\'est pas autorisée sur cet appareil.</string>
+    <string name="liveness_title_supervisor">Vérification du superviseur</string>
+    <string name="liveness_offline_badge">Hors ligne – la vérification s\'effectue sur cet appareil</string>
+    <string name="liveness_config_updated">Paramètres de vérification du visage mis à jour.</string>
+
+    <string name="liveness_ui_title">Vérification du visage</string>
+    <string name="liveness_ui_retry">Réessayer</string>
+    <string name="liveness_ui_cancel">Annuler</string>
+    <string name="liveness_ui_settings">Ouvrir les paramètres</string>
+    <string name="liveness_ui_step">Étape {0} sur {1}</string>
+    <string name="liveness_ui_attempts">Tentative {0} sur {1}</string>
+    <string name="liveness_ui_preview">Aperçu de la caméra. Gardez votre visage dans l\'ovale.</string>
+    <string name="liveness_ui_replay_badge">Relecture (version de débogage)</string>
+</resources>

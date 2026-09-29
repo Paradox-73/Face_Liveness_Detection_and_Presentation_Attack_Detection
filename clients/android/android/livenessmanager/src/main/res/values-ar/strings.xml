@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="liveness_status_checking">جارٍ التحقق من حيوية الوجه…</string>
+    <string name="liveness_challenge_blink">يرجى الرمش بعينيك</string>
+    <string name="liveness_challenge_smile">يرجى الابتسام</string>
+    <string name="liveness_challenge_turn_left">يرجى إدارة رأسك إلى اليسار</string>
+    <string name="liveness_challenge_turn_right">يرجى إدارة رأسك إلى اليمين</string>
+    <string name="liveness_challenge_look_up">يرجى النظر إلى الأعلى</string>
+    <string name="liveness_challenge_look_down">يرجى النظر إلى الأسفل</string>
+    <string name="liveness_challenge_gaze_left">يرجى النظر إلى يسارك دون إدارة رأسك</string>
+    <string name="liveness_challenge_gaze_right">يرجى النظر إلى يمينك دون إدارة رأسك</string>
+    <string name="liveness_feedback_continue">يرجى المتابعة</string>
+    <string name="liveness_feedback_detected">تم اكتشاف الحركة</string>
+    <string name="liveness_feedback_hold_still">اثبت دون حركة</string>
+    <string name="liveness_feedback_success">جيد، تم التقاط الوجه بنجاح</string>
+    <string name="liveness_fail_liveness">تعذّر التحقق من حيوية الوجه. يرجى المحاولة مرة أخرى.</string>
+    <string name="liveness_fail_pad">تعذّر إكمال التحقق من الوجه. يرجى المحاولة مرة أخرى.</string>
+    <string name="liveness_guide_look_camera">انظر مباشرة إلى الكاميرا.</string>
+    <string name="liveness_guide_face_visible">تأكد من أن وجهك ظاهر بوضوح.</string>
+    <string name="liveness_guide_lighting">حسّن الإضاءة.</string>
+    <string name="liveness_guide_in_area">أبقِ وجهك داخل منطقة الالتقاط.</string>
+    <string name="liveness_guide_follow_action">اتبع الحركة المطلوبة.</string>
+    <string name="liveness_retry_available">المحاولة {0} من {1}. اختر إعادة المحاولة للمحاولة مجددًا.</string>
+    <string name="liveness_retry_max_resident">تعذّر إكمال التقاط الوجه بعد {0} محاولات. يرجى الطلب من المشرف اتباع إجراء الاسترداد المعتمد في المركز.</string>
+    <string name="liveness_retry_max_auth">تعذّر إكمال التحقق من الوجه. تم بلوغ الحد الأقصى للمحاولات. استخدم طريقة تسجيل دخول أخرى أو اتصل بالمشرف.</string>
+    <string name="liveness_override_confirm">تجاوز المشرف: سيتم وضع علامة على هذا الوجه للمراجعة في الحزمة. هل تريد المتابعة؟</string>
+    <string name="liveness_error_no_face">لم يتم اكتشاف أي وجه. أبقِ وجهك داخل منطقة الالتقاط.</string>
+    <string name="liveness_error_multiple_faces">تم اكتشاف أكثر من وجه. يجب أن يظهر الشخص الذي يتم التقاط صورته فقط.</string>
+    <string name="liveness_error_poor_quality">صورة الوجه غير واضحة. حسّن الإضاءة وانظر مباشرة إلى الكاميرا.</string>
+    <string name="liveness_error_timeout">انتهى الوقت المخصص لهذه الحركة. يرجى المحاولة مرة أخرى.</string>
+    <string name="liveness_error_device_unavailable">كاميرا الوجه غير متاحة. تحقق من توصيلها واختر إعادة المحاولة.</string>
+    <string name="liveness_error_device_disconnected">تم فصل كاميرا الوجه. أعد توصيلها واختر إعادة المحاولة.</string>
+    <string name="liveness_error_device_no_stream">كاميرا الوجه هذه لا تدعم التحقق المباشر. وصّل كاميرا مدعومة.</string>
+    <string name="liveness_error_camera_unavailable">تعذّر فتح الكاميرا. أغلق التطبيقات الأخرى التي تستخدم الكاميرا وحاول مرة أخرى.</string>
+    <string name="liveness_error_camera_permission">الوصول إلى الكاميرا متوقف لهذا التطبيق. اسمح بالوصول إلى الكاميرا في الإعدادات واختر إعادة المحاولة.</string>
+    <string name="liveness_error_frames_invalid">انقطع بث الكاميرا. يرجى المحاولة مرة أخرى.</string>
+    <string name="liveness_error_engine">التحقق من الوجه غير متاح على هذا الجهاز. اتصل بالمشرف.</string>
+    <string name="liveness_error_not_supervisor">هذا المستخدم ليس مشرفًا. يجب أن يقوم مشرف بالتحقق.</string>
+    <string name="liveness_error_emulator">التحقق من الوجه غير مسموح به على هذا الجهاز.</string>
+    <string name="liveness_title_supervisor">تحقق المشرف</string>
+    <string name="liveness_offline_badge">غير متصل – يتم التحقق على هذا الجهاز</string>
+    <string name="liveness_config_updated">تم تحديث إعدادات التحقق من الوجه.</string>
+
+    <string name="liveness_ui_title">التحقق من الوجه</string>
+    <string name="liveness_ui_retry">إعادة المحاولة</string>
+    <string name="liveness_ui_cancel">إلغاء</string>
+    <string name="liveness_ui_settings">فتح الإعدادات</string>
+    <string name="liveness_ui_step">الخطوة {0} من {1}</string>
+    <string name="liveness_ui_attempts">المحاولة {0} من {1}</string>
+    <string name="liveness_ui_preview">معاينة الكاميرا. أبقِ وجهك داخل الشكل البيضاوي.</string>
+    <string name="liveness_ui_replay_badge">إعادة تشغيل (نسخة تصحيح)</string>
+</resources>

@@ -1,0 +1,257 @@
+// Face liveness and presentation attack detection for the Android Registration Client.
+//
+// The engine is the same Java code the desktop client runs: io.mosip.liveness:liveness-core and
+// liveness-onnx, installed into the local Maven repository (~/.m2) from the liveness/ folder of this
+// repository. scripts/android-build.sh installs them when they are missing; by hand:
+//   mvn -f liveness/pom.xml -pl liveness-core,liveness-onnx -am install -DskipTests
+//
+// The signed model bundle (repository folder models/) is verified with the engine's own ModelRegistry
+// (manifest signature and the SHA-256 of every model) and copied into the APK assets under
+// liveness/models/. The app verifies it again when it loads the models.
+
+import io.mosip.liveness.onnx.model.ModelEntry
+import io.mosip.liveness.onnx.model.ModelRegistry
+import io.mosip.liveness.onnx.model.ModelSources
+
+buildscript {
+    repositories {
+        mavenLocal {
+            content { includeGroup 'io.mosip.liveness' }
+        }
+    }
+    dependencies {
+        classpath "io.mosip.liveness:liveness-onnx:${rootProject.ext.livenessEngineVersion}"
+        classpath "io.mosip.liveness:liveness-core:${rootProject.ext.livenessEngineVersion}"
+    }
+}
+
+plugins {
+    id 'com.android.library'
+}
+
+def repoModelsDir = rootProject.file('../../../models')
+
+android {
+    namespace 'io.mosip.registration.livenessmanager'
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+        buildConfigField("String", "ONNXRUNTIME_VERSION", "\"${rootProject.ext.onnxruntimeAndroidVersion}\"")
+        buildConfigField("String", "LIVENESS_ENGINE_VERSION", "\"${rootProject.ext.livenessEngineVersion}\"")
+    }
+
+    lint {
+        abortOnError false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+            returnDefaultValues = true
+        }
+    }
+
+    // The instrumented-test APK packs clientmanager's dependencies too; the same exclusions as the app.
+    packagingOptions {
+        resources.merges.add("git.properties")
+        resources.excludes.add("META-INF/DEPENDENCIES")
+        resources.excludes.add("META-INF/LICENSE*")
+        resources.excludes.add("META-INF/NOTICE*")
+        resources.excludes.add("META-INF/AL2.0")
+        resources.excludes.add("META-INF/LGPL2.1")
+        resources.excludes.add("META-INF/*.kotlin_module")
+        resources.excludes.add("META-INF/maven/**")
+        resources.excludes.add("META-INF/versions/**")
+        resources.excludes.add("META-INF/proguard/**")
+        resources.excludes.add("META-INF/INDEX.LIST")
+        resources.excludes.add("META-INF/spring*")
+        resources.excludes.add("META-INF/spring/**")
+        resources.excludes.add("META-INF/additional-spring*")
+        resources.excludes.add("notice.txt")
+        resources.pickFirsts.add("mozilla/public-suffix-list.txt")
+    }
+}
+
+/**
+ * Verifies the signed model bundle with the engine's ModelRegistry and copies the manifest, its signature,
+ * the models and their licence files into a generated assets folder (liveness/models/). A modified model,
+ * manifest or signature fails the build.
+ */
+abstract class PrepareLivenessModels extends DefaultTask {
+
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
+    abstract DirectoryProperty getBundleDir()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDir()
+
+    @TaskAction
+    void prepare() {
+        File bundle = bundleDir.get().asFile
+        ModelRegistry registry = ModelRegistry.open(ModelSources.directory(bundle))
+        registry.verifyAll()
+        File out = new File(outputDir.get().asFile, 'liveness/models')
+        out.deleteDir()
+        out.mkdirs()
+        List<String> files = [ModelRegistry.MANIFEST_FILE, ModelRegistry.SIGNATURE_FILE, 'SOURCES.md']
+        for (ModelEntry entry : registry.manifest().models()) {
+            files.add(entry.file())
+        }
+        new File(bundle, 'LICENSES').listFiles()?.each { files.add('LICENSES/' + it.name) }
+        files.each { name ->
+            File source = new File(bundle, name)
+            if (source.isFile()) {
+                File target = new File(out, name)
+                target.parentFile.mkdirs()
+                target.bytes = source.bytes
+            }
+        }
+        logger.lifecycle("Liveness model bundle ${registry.bundleName()} ${registry.bundleVersion()}: " +
+                "${registry.models().size()} models verified")
+    }
+}
+
+def prepareLivenessModels = tasks.register('prepareLivenessModels', PrepareLivenessModels) {
+    bundleDir.set(repoModelsDir)
+    outputDir.set(layout.buildDirectory.dir('generated/liveness-models'))
+}
+
+/**
+ * Copies the replay frame packs of debug builds into a generated assets folder (liveness-replay/<pack>/). The
+ * frames stay where they are maintained (MockMDS's face stream image, MPL-2.0) instead of a second copy in git.
+ */
+abstract class PrepareReplayFrames extends DefaultTask {
+
+    @InputFile
+    @PathSensitive(PathSensitivity.NONE)
+    abstract RegularFileProperty getStillFrame()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDir()
+
+    @TaskAction
+    void prepare() {
+        File pack = new File(outputDir.get().asFile, 'liveness-replay/mockmds-still')
+        pack.deleteDir()
+        pack.mkdirs()
+        new File(pack, 'frame_00000.jpg').bytes = stillFrame.get().asFile.bytes
+    }
+}
+
+def prepareReplayFrames = tasks.register('prepareReplayFrames', PrepareReplayFrames) {
+    stillFrame.set(rootProject.file('../../../devices/mock-mds/Biometric Devices/Face/Stream Image/0.jpeg'))
+    outputDir.set(layout.buildDirectory.dir('generated/liveness-replay'))
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.sources.assets?.addGeneratedSourceDirectory(prepareLivenessModels, PrepareLivenessModels::getOutputDir)
+    }
+    // Replay frames are for tests and emulator demos: debug builds only.
+    onVariants(selector().withBuildType('debug')) { variant ->
+        variant.sources.assets?.addGeneratedSourceDirectory(prepareReplayFrames, PrepareReplayFrames::getOutputDir)
+    }
+}
+
+// ONNX Runtime for Android 1.29 and later registers a telemetry initializer. This check fails the build if
+// any Android library on the runtime class path declares one, or if the ONNX Runtime library asks for a
+// permission.
+tasks.register('verifyNoOnnxTelemetry') {
+    def manifests = configurations.named('debugRuntimeClasspath').map { cfg ->
+        cfg.incoming.artifactView {
+            attributes { attribute(Attribute.of('artifactType', String), 'android-manifest') }
+        }.files
+    }
+    inputs.files(manifests)
+    doLast {
+        int checked = 0
+        manifests.get().each { File manifest ->
+            String text = manifest.text
+            checked++
+            if (text.contains('TelemetryInitializer')) {
+                throw new GradleException("Telemetry initializer declared in ${manifest}")
+            }
+            if (text.contains('package="ai.onnxruntime"') && text.contains('uses-permission')) {
+                throw new GradleException("ONNX Runtime asks for a permission in ${manifest}")
+            }
+        }
+        logger.info("verifyNoOnnxTelemetry: ${checked} library manifests checked")
+    }
+}
+tasks.named('preBuild') { dependsOn 'verifyNoOnnxTelemetry' }
+
+dependencies {
+    // api: LivenessService and the Dagger module expose core types (Workflow, LivenessPolicy, AuditSink).
+    api "io.mosip.liveness:liveness-core:${rootProject.ext.livenessEngineVersion}"
+    implementation "io.mosip.liveness:liveness-onnx:${rootProject.ext.livenessEngineVersion}"
+    implementation "com.microsoft.onnxruntime:onnxruntime-android:${rootProject.ext.onnxruntimeAndroidVersion}"
+    // One-to-one face matching for operator and supervisor face authentication (the SFaceMatcher core of the
+    // desktop client's SFace SDK). Not transitive: liveness-core and liveness-onnx come from the lines above, the
+    // models from the APK assets (its models jar would add a second copy), and the MOSIP SDK API it also
+    // implements is not used here.
+    implementation("io.mosip.liveness:face-match-sdk:${rootProject.ext.livenessEngineVersion}") {
+        transitive = false
+    }
+
+    implementation "androidx.camera:camera-core:${rootProject.ext.cameraxVersion}"
+    implementation "androidx.camera:camera-camera2:${rootProject.ext.cameraxVersion}"
+    implementation "androidx.camera:camera-lifecycle:${rootProject.ext.cameraxVersion}"
+    implementation "androidx.camera:camera-view:${rootProject.ext.cameraxVersion}"
+
+    implementation "androidx.appcompat:appcompat:${rootProject.ext.appcompatVersion}"
+    implementation "com.google.android.material:material:${rootProject.ext.materialVersion}"
+    implementation "androidx.constraintlayout:constraintlayout:${rootProject.ext.constraintlayoutVersion}"
+
+    implementation "com.google.dagger:dagger:${rootProject.ext.daggerVersion}"
+    annotationProcessor "com.google.dagger:dagger-compiler:${rootProject.ext.daggerVersion}"
+    implementation "javax.inject:javax.inject:${rootProject.ext.javaxInjectVersion}"
+
+    implementation project(':clientmanager')
+
+    // ISO/IEC 19794-5 face record (the same library and exclusions as clientmanager) and its JPEG 2000 image.
+    implementation "com.github.Tgo1014:JP2ForAndroid:${rootProject.ext.jp2ForAndroidVersion}"
+    implementation("io.mosip.biometric.util:biometrics-util:${rootProject.ext.biometricsUtilVersion}") {
+        exclude group: 'org.springframework.boot'
+        exclude group: 'org.springframework'
+        exclude group: 'org.springframework.data'
+        exclude group: 'com.fasterxml.jackson.core'
+        exclude group: 'org.projectlombok'
+        exclude group: 'org.openpnp'
+        exclude group: 'org.junit'
+        exclude group: 'jakarta.xml.bind'
+        exclude group: 'jakarta.annotation'
+        exclude group: 'jakarta.activation'
+        exclude group: 'javax.activation'
+        exclude group: 'org.apache.tomcat'
+        exclude group: 'aopalliance'
+        exclude group: 'commons-logging'
+        exclude group: 'com.google.code.findbugs'
+        exclude group: 'org.aspectj', module: 'aspectjweaver'
+    }
+
+    testImplementation "junit:junit:${rootProject.ext.junitVersion}"
+    testImplementation "org.robolectric:robolectric:${rootProject.ext.robolectricVersion}"
+    testImplementation "androidx.test:core:${rootProject.ext.androidxTestCoreVersion}"
+    testImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoCoreVersion}"
+    // ARC parses SBI payloads with Jackson; the tests check the built-in capture against ARC's own DTOs.
+    testImplementation "com.fasterxml.jackson.core:jackson-databind:${rootProject.ext.jacksonVersion}"
+
+    androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.androidxJunitVersion}"
+    androidTestImplementation "androidx.test:runner:${rootProject.ext.androidxTestRunnerVersion}"
+    androidTestImplementation "androidx.test:core:${rootProject.ext.androidxTestCoreVersion}"
+}

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="liveness_status_checking">चेहरे की जीवंतता जाँची जा रही है…</string>
+    <string name="liveness_challenge_blink">कृपया पलक झपकाएँ</string>
+    <string name="liveness_challenge_smile">कृपया मुस्कुराएँ</string>
+    <string name="liveness_challenge_turn_left">कृपया अपना सिर बाईं ओर घुमाएँ</string>
+    <string name="liveness_challenge_turn_right">कृपया अपना सिर दाईं ओर घुमाएँ</string>
+    <string name="liveness_challenge_look_up">कृपया ऊपर देखें</string>
+    <string name="liveness_challenge_look_down">कृपया नीचे देखें</string>
+    <string name="liveness_challenge_gaze_left">कृपया सिर घुमाए बिना अपनी बाईं ओर देखें</string>
+    <string name="liveness_challenge_gaze_right">कृपया सिर घुमाए बिना अपनी दाईं ओर देखें</string>
+    <string name="liveness_feedback_continue">कृपया जारी रखें</string>
+    <string name="liveness_feedback_detected">क्रिया पहचानी गई</string>
+    <string name="liveness_feedback_hold_still">स्थिर रहें</string>
+    <string name="liveness_feedback_success">बढ़िया, चेहरा सफलतापूर्वक कैप्चर हो गया</string>
+    <string name="liveness_fail_liveness">हम चेहरे की जीवंतता सत्यापित नहीं कर सके। कृपया फिर से प्रयास करें।</string>
+    <string name="liveness_fail_pad">चेहरे का सत्यापन पूरा नहीं हो सका। कृपया फिर से प्रयास करें।</string>
+    <string name="liveness_guide_look_camera">सीधे कैमरे की ओर देखें।</string>
+    <string name="liveness_guide_face_visible">सुनिश्चित करें कि आपका चेहरा साफ़ दिखाई दे।</string>
+    <string name="liveness_guide_lighting">रोशनी बेहतर करें।</string>
+    <string name="liveness_guide_in_area">अपना चेहरा कैप्चर क्षेत्र के भीतर रखें।</string>
+    <string name="liveness_guide_follow_action">बताई गई क्रिया का पालन करें।</string>
+    <string name="liveness_retry_available">प्रयास {1} में से {0}। फिर से प्रयास करने के लिए पुनः प्रयास चुनें।</string>
+    <string name="liveness_retry_max_resident">{0} प्रयासों के बाद भी चेहरा कैप्चर पूरा नहीं हो सका। कृपया अपने पर्यवेक्षक से केंद्र की पुनर्प्राप्ति प्रक्रिया अपनाने को कहें।</string>
+    <string name="liveness_retry_max_auth">चेहरे का सत्यापन पूरा नहीं हो सका। अधिकतम प्रयास पूरे हो गए। कोई अन्य साइन-इन विधि उपयोग करें या अपने पर्यवेक्षक से संपर्क करें।</string>
+    <string name="liveness_override_confirm">पर्यवेक्षक ओवरराइड: इस चेहरे को पैकेट में समीक्षा के लिए चिह्नित किया जाएगा। जारी रखें?</string>
+    <string name="liveness_error_no_face">कोई चेहरा नहीं मिला। अपना चेहरा कैप्चर क्षेत्र के भीतर रखें।</string>
+    <string name="liveness_error_multiple_faces">एक से अधिक चेहरे मिले। केवल वही व्यक्ति दिखना चाहिए जिसका कैप्चर हो रहा है।</string>
+    <string name="liveness_error_poor_quality">चेहरे की छवि साफ़ नहीं है। रोशनी बेहतर करें और सीधे कैमरे की ओर देखें।</string>
+    <string name="liveness_error_timeout">इस क्रिया का समय समाप्त हो गया। कृपया फिर से प्रयास करें।</string>
+    <string name="liveness_error_device_unavailable">फेस कैमरा उपलब्ध नहीं है। जाँचें कि वह जुड़ा है और पुनः प्रयास चुनें।</string>
+    <string name="liveness_error_device_disconnected">फेस कैमरा डिस्कनेक्ट हो गया। उसे फिर से जोड़ें और पुनः प्रयास चुनें।</string>
+    <string name="liveness_error_device_no_stream">यह फेस कैमरा लाइव सत्यापन का समर्थन नहीं करता। समर्थित कैमरा जोड़ें।</string>
+    <string name="liveness_error_camera_unavailable">कैमरा खोला नहीं जा सका। कैमरा उपयोग कर रहे अन्य ऐप बंद करें और फिर से प्रयास करें।</string>
+    <string name="liveness_error_camera_permission">इस ऐप के लिए कैमरा एक्सेस बंद है। सेटिंग्स में कैमरा एक्सेस की अनुमति दें और पुनः प्रयास चुनें।</string>
+    <string name="liveness_error_frames_invalid">कैमरा स्ट्रीम बाधित हो गई। कृपया फिर से प्रयास करें।</string>
+    <string name="liveness_error_engine">इस डिवाइस पर चेहरे का सत्यापन उपलब्ध नहीं है। अपने पर्यवेक्षक से संपर्क करें।</string>
+    <string name="liveness_error_not_supervisor">यह उपयोगकर्ता पर्यवेक्षक नहीं है। सत्यापन किसी पर्यवेक्षक को करना होगा।</string>
+    <string name="liveness_error_emulator">इस डिवाइस पर चेहरे के सत्यापन की अनुमति नहीं है।</string>
+    <string name="liveness_title_supervisor">पर्यवेक्षक सत्यापन</string>
+    <string name="liveness_offline_badge">ऑफ़लाइन – सत्यापन इसी डिवाइस पर होता है</string>
+    <string name="liveness_config_updated">चेहरा सत्यापन सेटिंग्स अपडेट हो गईं।</string>
+
+    <string name="liveness_ui_title">चेहरे का सत्यापन</string>
+    <string name="liveness_ui_retry">पुनः प्रयास</string>
+    <string name="liveness_ui_cancel">रद्द करें</string>
+    <string name="liveness_ui_settings">सेटिंग्स खोलें</string>
+    <string name="liveness_ui_step">चरण {1} में से {0}</string>
+    <string name="liveness_ui_attempts">प्रयास {1} में से {0}</string>
+    <string name="liveness_ui_preview">कैमरा पूर्वावलोकन। अपना चेहरा अंडाकार के भीतर रखें।</string>
+    <string name="liveness_ui_replay_badge">रीप्ले (डीबग बिल्ड)</string>
+</resources>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Face liveness messages. Names are the shared message keys (docs: plan section 11.2) with '.' replaced
+     by '_'; {0} and {1} are filled by the screen. The same keys exist on the desktop client. -->
+<resources>
+    <string name="liveness_status_checking">Checking face liveness…</string>
+    <string name="liveness_challenge_blink">Please blink</string>
+    <string name="liveness_challenge_smile">Please smile</string>
+    <string name="liveness_challenge_turn_left">Please turn your head to the left</string>
+    <string name="liveness_challenge_turn_right">Please turn your head to the right</string>
+    <string name="liveness_challenge_look_up">Please look up</string>
+    <string name="liveness_challenge_look_down">Please look down</string>
+    <string name="liveness_challenge_gaze_left">Please look to your left without turning your head</string>
+    <string name="liveness_challenge_gaze_right">Please look to your right without turning your head</string>
+    <string name="liveness_feedback_continue">Please continue</string>
+    <string name="liveness_feedback_detected">Action detected</string>
+    <string name="liveness_feedback_hold_still">Hold still</string>
+    <string name="liveness_feedback_success">Good, face captured successfully</string>
+    <string name="liveness_fail_liveness">We could not verify face liveness. Please try again.</string>
+    <string name="liveness_fail_pad">Face verification could not be completed. Please try again.</string>
+    <string name="liveness_guide_look_camera">Look directly at the camera.</string>
+    <string name="liveness_guide_face_visible">Ensure your face is clearly visible.</string>
+    <string name="liveness_guide_lighting">Improve lighting.</string>
+    <string name="liveness_guide_in_area">Keep your face within the capture area.</string>
+    <string name="liveness_guide_follow_action">Follow the prompted action.</string>
+    <string name="liveness_retry_available">Attempt {0} of {1}. Select Retry to try again.</string>
+    <string name="liveness_retry_max_resident">Face capture could not be completed after {0} attempts. Please ask your supervisor to follow the centre\'s recovery process.</string>
+    <string name="liveness_retry_max_auth">Face verification could not be completed. Maximum attempts reached. Use another sign-in method or contact your supervisor.</string>
+    <string name="liveness_override_confirm">Supervisor override: this face will be flagged for review in the packet. Continue?</string>
+    <string name="liveness_error_no_face">No face detected. Keep your face within the capture area.</string>
+    <string name="liveness_error_multiple_faces">More than one face detected. Only the person being captured should be in view.</string>
+    <string name="liveness_error_poor_quality">The face image is not clear. Improve lighting and look directly at the camera.</string>
+    <string name="liveness_error_timeout">Time is up for this action. Please try again.</string>
+    <string name="liveness_error_device_unavailable">The face camera is not available. Check that it is connected and select Retry.</string>
+    <string name="liveness_error_device_disconnected">The face camera was disconnected. Reconnect it and select Retry.</string>
+    <string name="liveness_error_device_no_stream">This face camera does not support live verification. Connect a supported camera.</string>
+    <string name="liveness_error_camera_unavailable">The camera could not be opened. Close other apps using the camera and try again.</string>
+    <string name="liveness_error_camera_permission">Camera access is off for this app. Allow camera access in Settings and select Retry.</string>
+    <string name="liveness_error_frames_invalid">The camera stream was interrupted. Please try again.</string>
+    <string name="liveness_error_engine">Face verification is unavailable on this machine. Contact your supervisor.</string>
+    <string name="liveness_error_not_supervisor">This user is not a supervisor. A supervisor must verify.</string>
+    <string name="liveness_error_emulator">Face verification is not allowed on this device.</string>
+    <string name="liveness_title_supervisor">Supervisor verification</string>
+    <string name="liveness_offline_badge">Offline – verification runs on this device</string>
+    <string name="liveness_config_updated">Face verification settings updated.</string>
+
+    <!-- Screen labels (Android only) -->
+    <string name="liveness_ui_title">Face verification</string>
+    <string name="liveness_ui_retry">Retry</string>
+    <string name="liveness_ui_cancel">Cancel</string>
+    <string name="liveness_ui_settings">Open settings</string>
+    <string name="liveness_ui_step">Step {0} of {1}</string>
+    <string name="liveness_ui_attempts">Attempt {0} of {1}</string>
+    <string name="liveness_ui_preview">Camera preview. Keep your face inside the oval.</string>
+    <string name="liveness_ui_replay_badge">Replay (debug build)</string>
+</resources>

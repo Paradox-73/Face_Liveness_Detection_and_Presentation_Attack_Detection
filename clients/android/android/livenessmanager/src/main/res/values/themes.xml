@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Liveness" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/liveness_accent</item>
+        <item name="colorAccent">@color/liveness_accent</item>
+        <item name="android:windowBackground">@color/liveness_background</item>
+        <item name="android:statusBarColor">@color/liveness_background</item>
+        <item name="android:navigationBarColor">@color/liveness_background</item>
+    </style>
+</resources>

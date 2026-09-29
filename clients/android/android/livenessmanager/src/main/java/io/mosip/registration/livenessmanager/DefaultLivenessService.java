@@ -1,0 +1,57 @@
+package io.mosip.registration.livenessmanager;
+
+import android.content.Context;
+import android.content.Intent;
+
+import java.util.Objects;
+
+import io.mosip.liveness.core.Workflow;
+import io.mosip.liveness.core.config.LivenessPolicy;
+import io.mosip.registration.livenessmanager.ui.LivenessCaptureActivity;
+
+/**
+ * Default {@link LivenessService} over the process-wide {@link LivenessRuntime}.
+ */
+public final class DefaultLivenessService implements LivenessService {
+
+    private final LivenessRuntime runtime;
+
+    /**
+     * Creates the service.
+     *
+     * @param runtime the installed runtime
+     */
+    public DefaultLivenessService(LivenessRuntime runtime) {
+        this.runtime = Objects.requireNonNull(runtime, "runtime");
+    }
+
+    @Override
+    public LivenessPolicy policy(Workflow workflow) {
+        return runtime.resolve(Objects.requireNonNull(workflow, "workflow")).policy();
+    }
+
+    @Override
+    public boolean isEnforced(Workflow workflow) {
+        return policy(workflow).isEnabled();
+    }
+
+    @Override
+    public Intent newCaptureIntent(Context context, LivenessCaptureRequest request) {
+        return request.writeTo(new Intent(context, LivenessCaptureActivity.class));
+    }
+
+    @Override
+    public LivenessCaptureResult parseResult(int resultCode, Intent data) {
+        return LivenessCaptureResult.fromIntent(data);
+    }
+
+    @Override
+    public void preload() {
+        runtime.engines().preload();
+    }
+
+    @Override
+    public boolean isBuiltInDeviceProvisioned() {
+        return runtime.deviceSigner().isProvisioned();
+    }
+}

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="liveness_status_checking">முகத்தின் உயிர்ப்புத்தன்மை சரிபார்க்கப்படுகிறது…</string>
+    <string name="liveness_challenge_blink">தயவுசெய்து கண் சிமிட்டவும்</string>
+    <string name="liveness_challenge_smile">தயவுசெய்து புன்னகைக்கவும்</string>
+    <string name="liveness_challenge_turn_left">தயவுசெய்து உங்கள் தலையை இடப்பக்கம் திருப்பவும்</string>
+    <string name="liveness_challenge_turn_right">தயவுசெய்து உங்கள் தலையை வலப்பக்கம் திருப்பவும்</string>
+    <string name="liveness_challenge_look_up">தயவுசெய்து மேலே பார்க்கவும்</string>
+    <string name="liveness_challenge_look_down">தயவுசெய்து கீழே பார்க்கவும்</string>
+    <string name="liveness_challenge_gaze_left">தயவுசெய்து தலையைத் திருப்பாமல் உங்கள் இடப்பக்கம் பார்க்கவும்</string>
+    <string name="liveness_challenge_gaze_right">தயவுசெய்து தலையைத் திருப்பாமல் உங்கள் வலப்பக்கம் பார்க்கவும்</string>
+    <string name="liveness_feedback_continue">தயவுசெய்து தொடரவும்</string>
+    <string name="liveness_feedback_detected">செயல் கண்டறியப்பட்டது</string>
+    <string name="liveness_feedback_hold_still">அசையாமல் இருக்கவும்</string>
+    <string name="liveness_feedback_success">நன்று, முகம் வெற்றிகரமாகப் பதிவுசெய்யப்பட்டது</string>
+    <string name="liveness_fail_liveness">முகத்தின் உயிர்ப்புத்தன்மையைச் சரிபார்க்க இயலவில்லை. மீண்டும் முயலவும்.</string>
+    <string name="liveness_fail_pad">முகச் சரிபார்ப்பை முடிக்க இயலவில்லை. மீண்டும் முயலவும்.</string>
+    <string name="liveness_guide_look_camera">கேமராவை நேராகப் பார்க்கவும்.</string>
+    <string name="liveness_guide_face_visible">உங்கள் முகம் தெளிவாகத் தெரிவதை உறுதிசெய்யவும்.</string>
+    <string name="liveness_guide_lighting">வெளிச்சத்தை மேம்படுத்தவும்.</string>
+    <string name="liveness_guide_in_area">உங்கள் முகத்தைப் பதிவுப் பகுதிக்குள் வைத்திருக்கவும்.</string>
+    <string name="liveness_guide_follow_action">கேட்கப்பட்ட செயலைப் பின்பற்றவும்.</string>
+    <string name="liveness_retry_available">முயற்சி {0} / {1}. மீண்டும் முயல மறுமுயற்சியைத் தேர்ந்தெடுக்கவும்.</string>
+    <string name="liveness_retry_max_resident">{0} முயற்சிகளுக்குப் பிறகும் முகப் பதிவை முடிக்க இயலவில்லை. மையத்தின் மீட்பு நடைமுறையைப் பின்பற்ற உங்கள் மேற்பார்வையாளரிடம் கேட்கவும்.</string>
+    <string name="liveness_retry_max_auth">முகச் சரிபார்ப்பை முடிக்க இயலவில்லை. அதிகபட்ச முயற்சிகள் முடிந்துவிட்டன. வேறு உள்நுழைவு முறையைப் பயன்படுத்தவும் அல்லது உங்கள் மேற்பார்வையாளரைத் தொடர்புகொள்ளவும்.</string>
+    <string name="liveness_override_confirm">மேற்பார்வையாளர் மேலெழுதல்: இந்த முகம் தொகுப்பில் மறுஆய்வுக்காகக் குறிக்கப்படும். தொடரவா?</string>
+    <string name="liveness_error_no_face">முகம் எதுவும் கண்டறியப்படவில்லை. உங்கள் முகத்தைப் பதிவுப் பகுதிக்குள் வைத்திருக்கவும்.</string>
+    <string name="liveness_error_multiple_faces">ஒன்றுக்கு மேற்பட்ட முகங்கள் கண்டறியப்பட்டன. பதிவுசெய்யப்படும் நபர் மட்டுமே தெரிய வேண்டும்.</string>
+    <string name="liveness_error_poor_quality">முகப் படம் தெளிவாக இல்லை. வெளிச்சத்தை மேம்படுத்தி கேமராவை நேராகப் பார்க்கவும்.</string>
+    <string name="liveness_error_timeout">இந்தச் செயலுக்கான நேரம் முடிந்துவிட்டது. மீண்டும் முயலவும்.</string>
+    <string name="liveness_error_device_unavailable">முகக் கேமரா கிடைக்கவில்லை. அது இணைக்கப்பட்டுள்ளதா எனச் சரிபார்த்து மறுமுயற்சியைத் தேர்ந்தெடுக்கவும்.</string>
+    <string name="liveness_error_device_disconnected">முகக் கேமரா துண்டிக்கப்பட்டது. மீண்டும் இணைத்து மறுமுயற்சியைத் தேர்ந்தெடுக்கவும்.</string>
+    <string name="liveness_error_device_no_stream">இந்த முகக் கேமரா நேரடிச் சரிபார்ப்பை ஆதரிக்கவில்லை. ஆதரிக்கப்படும் கேமராவை இணைக்கவும்.</string>
+    <string name="liveness_error_camera_unavailable">கேமராவைத் திறக்க இயலவில்லை. கேமராவைப் பயன்படுத்தும் பிற செயலிகளை மூடிவிட்டு மீண்டும் முயலவும்.</string>
+    <string name="liveness_error_camera_permission">இந்தச் செயலிக்குக் கேமரா அணுகல் முடக்கப்பட்டுள்ளது. அமைப்புகளில் கேமரா அணுகலை அனுமதித்து மறுமுயற்சியைத் தேர்ந்தெடுக்கவும்.</string>
+    <string name="liveness_error_frames_invalid">கேமரா ஒளிபரப்பு தடைபட்டது. மீண்டும் முயலவும்.</string>
+    <string name="liveness_error_engine">இந்தச் சாதனத்தில் முகச் சரிபார்ப்பு கிடைக்கவில்லை. உங்கள் மேற்பார்வையாளரைத் தொடர்புகொள்ளவும்.</string>
+    <string name="liveness_error_not_supervisor">இந்தப் பயனர் மேற்பார்வையாளர் அல்ல. ஒரு மேற்பார்வையாளர் சரிபார்க்க வேண்டும்.</string>
+    <string name="liveness_error_emulator">இந்தச் சாதனத்தில் முகச் சரிபார்ப்புக்கு அனுமதி இல்லை.</string>
+    <string name="liveness_title_supervisor">மேற்பார்வையாளர் சரிபார்ப்பு</string>
+    <string name="liveness_offline_badge">இணைப்பில்லை – சரிபார்ப்பு இந்தச் சாதனத்திலேயே நடக்கிறது</string>
+    <string name="liveness_config_updated">முகச் சரிபார்ப்பு அமைப்புகள் புதுப்பிக்கப்பட்டன.</string>
+
+    <string name="liveness_ui_title">முகச் சரிபார்ப்பு</string>
+    <string name="liveness_ui_retry">மறுமுயற்சி</string>
+    <string name="liveness_ui_cancel">ரத்துசெய்</string>
+    <string name="liveness_ui_settings">அமைப்புகளைத் திற</string>
+    <string name="liveness_ui_step">படி {0} / {1}</string>
+    <string name="liveness_ui_attempts">முயற்சி {0} / {1}</string>
+    <string name="liveness_ui_preview">கேமரா முன்னோட்டம். உங்கள் முகத்தை நீள்வட்டத்துக்குள் வைத்திருக்கவும்.</string>
+    <string name="liveness_ui_replay_badge">மறுஒளிபரப்பு (பிழைத்திருத்தப் பதிப்பு)</string>
+</resources>

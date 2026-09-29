@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text on the dark panel meets 4.5:1 contrast (white and #E0E0E0 on #E6121A21). -->
+    <color name="liveness_background">#FF000000</color>
+    <color name="liveness_panel">#E6121A21</color>
+    <color name="liveness_text">#FFFFFFFF</color>
+    <color name="liveness_text_secondary">#FFE0E0E0</color>
+    <color name="liveness_info">#FFFFFFFF</color>
+    <color name="liveness_success">#FF81C784</color>
+    <color name="liveness_warning">#FFFFD54F</color>
+    <color name="liveness_error">#FFFF8A80</color>
+    <color name="liveness_dot_used">#FFFF8A80</color>
+    <color name="liveness_dot_free">#66FFFFFF</color>
+    <color name="liveness_accent">#FF4FC3F7</color>
+</resources>
