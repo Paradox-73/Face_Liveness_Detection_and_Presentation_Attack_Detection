@@ -1,0 +1,19 @@
+# Scenario for tools/eval/scenario-runner (format: docs/eval/README.md). Technology regression test,
+# not an ISO/IEC 30107-3 evaluation result.
+id: bf-s2-active
+title: Genuine S2, two challenges forced (T-SCN-L-03..06)
+kind: bona_fide
+subject: S2
+condition: C1
+workflow: registration
+repeat: 4
+config:
+  policy.registration: ALWAYS_ACTIVE
+  active.challenge_types: TURN_LEFT,TURN_RIGHT
+stream:
+  main: s2-main
+  actions:
+    TURN_LEFT: s2-turn-left
+    TURN_RIGHT: s2-turn-right
+expect:
+  outcome: accept

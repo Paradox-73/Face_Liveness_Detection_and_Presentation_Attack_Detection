@@ -1,0 +1,15 @@
+# Scenario for tools/eval/scenario-runner (format: docs/eval/README.md). Technology regression test,
+# not an ISO/IEC 30107-3 evaluation result.
+id: other-no-face
+title: Empty scene, no face (T-SCN-L-09)
+kind: other
+subject: none
+condition: C1
+workflow: registration
+repeat: 1
+stream:
+  main: q-blank
+expect:
+  outcome: no_response
+  layers:
+  - quality

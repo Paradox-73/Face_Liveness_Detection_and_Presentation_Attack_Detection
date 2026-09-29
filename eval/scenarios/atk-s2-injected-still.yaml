@@ -1,0 +1,16 @@
+# Scenario for tools/eval/scenario-runner (format: docs/eval/README.md). Technology regression test,
+# not an ISO/IEC 30107-3 evaluation result.
+id: atk-s2-injected-still
+title: 'S2: one image injected as every frame (T-SCN-P-08 frozen frame)'
+kind: attack
+species: SYN-A1
+subject: S2
+condition: C1
+workflow: registration
+repeat: 2
+stream:
+  main: a-s2-identical
+expect:
+  outcome: reject
+  layers:
+  - integrity

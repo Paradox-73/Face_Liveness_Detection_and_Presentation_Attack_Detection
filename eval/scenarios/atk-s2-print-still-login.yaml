@@ -1,0 +1,17 @@
+# Scenario for tools/eval/scenario-runner (format: docs/eval/README.md). Technology regression test,
+# not an ISO/IEC 30107-3 evaluation result.
+id: atk-s2-print-still-login
+title: 'S2: hand-held colour print at operator login (passive threshold 95, T-SCN-P-01)'
+kind: attack
+species: SYN-A2
+subject: S2
+condition: C1
+workflow: login_auth
+repeat: 4
+config:
+  active.challenge_types: TURN_LEFT,TURN_RIGHT
+stream:
+  main: a-s2-print-still
+expect:
+  outcome: reject
+notes: Same print pack as atk-s2-print-still, on the authentication policy (passive threshold 95 instead of 80).

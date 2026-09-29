@@ -1,0 +1,15 @@
+# Scenario for tools/eval/scenario-runner (format: docs/eval/README.md). Technology regression test,
+# not an ISO/IEC 30107-3 evaluation result.
+id: other-blurred
+title: Camera out of focus (T-SCN-L-11)
+kind: other
+subject: S3
+condition: C1
+workflow: registration
+repeat: 1
+stream:
+  main: q-s3-blur
+expect:
+  outcome: no_response
+  layers:
+  - quality

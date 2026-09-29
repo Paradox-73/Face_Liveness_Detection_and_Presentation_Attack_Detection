@@ -1,0 +1,23 @@
+# Scenario for tools/eval/scenario-runner (format: docs/eval/README.md). Technology regression test,
+# not an ISO/IEC 30107-3 evaluation result.
+id: atk-s3-adaptive-wrong-clip
+title: 'S3: replay attacker plays a genuine clip of the wrong action for each prompt'
+kind: attack
+species: SYN-A9
+subject: S3
+condition: C1
+workflow: registration
+repeat: 4
+config:
+  policy.registration: ALWAYS_ACTIVE
+  active.challenge_types: BLINK,SMILE
+stream:
+  main: s3-main
+  actions:
+    BLINK: s3-blink
+    SMILE: s3-smile
+  on_prompt: mismatch
+expect:
+  outcome: reject
+  layers:
+  - challenge

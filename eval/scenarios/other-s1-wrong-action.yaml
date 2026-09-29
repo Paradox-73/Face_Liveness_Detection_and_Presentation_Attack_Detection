@@ -1,0 +1,22 @@
+# Scenario for tools/eval/scenario-runner (format: docs/eval/README.md). Technology regression test,
+# not an ISO/IEC 30107-3 evaluation result.
+id: other-s1-wrong-action
+title: Genuine S1 performs the other action than the one prompted (T-SCN-L-07)
+kind: other
+subject: S1
+condition: C1
+workflow: registration
+repeat: 2
+config:
+  policy.registration: ALWAYS_ACTIVE
+  active.challenge_types: BLINK,SMILE
+stream:
+  main: s1-main
+  actions:
+    BLINK: s1-blink
+    SMILE: s1-smile
+  on_prompt: mismatch
+expect:
+  outcome: reject
+  layers:
+  - challenge

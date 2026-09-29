@@ -1,0 +1,18 @@
+# Scenario for tools/eval/scenario-runner (format: docs/eval/README.md). Technology regression test,
+# not an ISO/IEC 30107-3 evaluation result.
+id: other-stream-ends
+title: Device stops streaming after 3 s while no face is in view (camera unplugged)
+kind: other
+subject: none
+condition: C1
+workflow: registration
+repeat: 1
+stream:
+  main: q-blank
+  at_end: end
+expect:
+  outcome: no_response
+  layers:
+  - error
+notes: q-blank has 45 frames (3 s at 15 fps), less than passive.timeout_ms, so the stream ends before the no-face
+  timeout.

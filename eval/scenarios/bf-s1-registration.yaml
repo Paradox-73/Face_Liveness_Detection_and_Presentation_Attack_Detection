@@ -1,0 +1,18 @@
+# Scenario for tools/eval/scenario-runner (format: docs/eval/README.md). Technology regression test,
+# not an ISO/IEC 30107-3 evaluation result.
+id: bf-s1-registration
+title: Genuine S1, shipped registration policy (passive, then challenges if needed)
+kind: bona_fide
+subject: S1
+condition: C1
+workflow: registration
+repeat: 4
+config:
+  active.challenge_types: BLINK,SMILE
+stream:
+  main: s1-main
+  actions:
+    BLINK: s1-blink
+    SMILE: s1-smile
+expect:
+  outcome: accept

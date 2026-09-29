@@ -1,0 +1,20 @@
+# Scenario for tools/eval/scenario-runner (format: docs/eval/README.md). Technology regression test,
+# not an ISO/IEC 30107-3 evaluation result.
+id: atk-s2-print-tilted
+title: 'S2: flat print tilted to fake each prompted head turn (T-SCN-P-02 curved/tilted print)'
+kind: attack
+species: SYN-A4
+subject: S2
+condition: C1
+workflow: registration
+repeat: 4
+config:
+  policy.registration: ALWAYS_ACTIVE
+  active.challenge_types: TURN_LEFT,TURN_RIGHT
+stream:
+  main: a-s2-print-still
+  actions:
+    TURN_LEFT: a-s2-print-yaw-left
+    TURN_RIGHT: a-s2-print-yaw-right
+expect:
+  outcome: reject
