@@ -1,0 +1,3 @@
+# Python caches of the eval tools and their tests
+__pycache__/
+.pytest_cache/

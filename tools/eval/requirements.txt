@@ -1,0 +1,6 @@
+# Python packages for tools/eval (frame-pack generators, analysis and their tests).
+PyYAML>=6.0
+Pillow>=10.0
+numpy>=1.26
+matplotlib>=3.8
+pytest>=8.0

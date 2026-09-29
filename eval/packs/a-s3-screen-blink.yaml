@@ -1,0 +1,49 @@
+# Frame pack manifest. The recipe is edited by hand; the outputs block is written by
+# tools/eval/fetch-frame-packs.py or tools/eval/make-attack-packs.py with --update-manifests.
+# The frames themselves are never committed; regenerate them with those scripts.
+id: a-s3-screen-blink
+kind: synthetic_attack
+subject: S3
+description: 'Action clip s3-blink replayed on a screen and filmed, for the adaptive replay attack. SYNTHETIC: simulated
+  in software from a bona fide pack; not a physical presentation attack instrument.'
+recipe:
+  type: synthetic
+  generator: video
+  base: s3-blink
+  look: screen
+  fps: 15
+  seed: 160
+  params:
+    noise_sigma: 2.0
+labels:
+  species: SYN-A7
+  action: BLINK
+outputs:
+  generator: tools/eval/make-attack-packs.py with Pillow 12.3.0, numpy 2.5.3
+  width: 640
+  height: 480
+  fps: 15
+  frames: 21
+  tree_sha256: 1e56be75ff792d1b260d794295a007f396d5dcaf5c530d34af55d6b2435abb7e
+  files:
+    frame_00000.jpg: e800848d5f550c83673fcb45f0a7dc3891354b507581519b2a6e7614b1453015
+    frame_00001.jpg: 03f588d8653652ac807d87164b44337f9a7237eac97b6b4ee5a7714d4d704134
+    frame_00002.jpg: ff8b14dcf9a925a1b0ce0dfb53592e4f1fd40c0bf81c9d3a53285dda8d5d9d2b
+    frame_00003.jpg: 5bfb693d94aa934d9d89af1c2cf71bd2d551ec1f3e6c03b6ed79f7f978f04e40
+    frame_00004.jpg: 8122e190f57bda22c42a1ec5868f30ca1670893e6eb4a827e4ee15b23c8b9582
+    frame_00005.jpg: f46f5cdf58d849c64326b687fd4321b33e2b1be5b611fd9ce069a337ee2a7caf
+    frame_00006.jpg: 29f21e23590db2831bfa2a2b6e6984828d848f4996358c07b21c38eddc2517c9
+    frame_00007.jpg: 5754da8c771b9862c29b89c9b6710a4eaa3a0259bdaf92a20d7e435300e7a180
+    frame_00008.jpg: 67144c8adc9ec26fade2d0e642eb8ee0f4e45aae2dd57ddbac49a734a29da019
+    frame_00009.jpg: 88f0588656bfc8f48efac66f9e6b58a3eadf0d19c26d428ab671ee7eb59865c2
+    frame_00010.jpg: 6f7c96e43da02e501320b5c0036af81944ceb340c3fab26983000a8ffdcdfa9f
+    frame_00011.jpg: 947c6e3d4650941beb4558e8c4968f36b6d491669040e3b0dd3064425c3a9cb8
+    frame_00012.jpg: 9010a8895be60f38ec428cffb5fadabbae3d2f3832ea98a235aeaff036113526
+    frame_00013.jpg: cabb964e6c0e0ccea096882b37e36da369e530153788c537bd79f897f838d7d7
+    frame_00014.jpg: 089a0ba47c0f1acb8df852ff7cab28551d021dd96dc9d39c72e9e36e9340aee3
+    frame_00015.jpg: d56fa7f2a79984480cd7cae628a9aecf5c1a151ae97f8d5ea4d19f287ae15c3b
+    frame_00016.jpg: 27e50faf929ef72dff4cf0b63794355e222c8e97bd5c2a9409c82b3ae9bc858d
+    frame_00017.jpg: 6bd51d0ddfa00e9736f14af13349ba34192147a484fe2d6ed8b80383073dbedd
+    frame_00018.jpg: 1411964343ea9ddb31c1388cd347d26b5a8cd75a361aa9ec9a309672cf21bbdc
+    frame_00019.jpg: a77742653eb90d3167811f4b61271404fcbf4ddf831295e3e0a7136d6b39a7d8
+    frame_00020.jpg: 578580bb4bcc62f21d3b11e5ea6c259293da1f193c88cec2acc2a4994cbccafe

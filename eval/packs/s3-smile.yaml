@@ -1,0 +1,74 @@
+# Frame pack manifest. The recipe is edited by hand; the outputs block is written by
+# tools/eval/fetch-frame-packs.py or tools/eval/make-attack-packs.py with --update-manifests.
+# The frames themselves are never committed; regenerate them with those scripts.
+id: s3-smile
+kind: bona_fide
+subject: S3
+description: 'Subject S3: neutral for 0.6 s, then a broad smile held about 2 s.'
+recipe:
+  type: video_cut
+  source: pexels-6781549
+  filter: crop=ih*4/3:ih,scale=640:480,fps=15
+  fps: 15
+  first: 90
+  last: 134
+labels:
+  action: SMILE
+  onset_frame: 10
+outputs:
+  generator: ffmpeg version 9.0-full_build-www.gyan.dev (bit-exact flags)
+  width: 640
+  height: 480
+  fps: 15
+  frames: 45
+  tree_sha256: 3c8c5517d4fc0710a855a3aa15c218c981a836bad136e1e5fe71c47c3c08bd35
+  files:
+    frame_00000.jpg: 5c0b58698cd04b83a0e8c2de4701f38791277c20c12fad7206ea477f16c889d0
+    frame_00001.jpg: e16f485852068e706c4165769d4e284ac1bb76add2b65bd9ef9d161a2eb4acf5
+    frame_00002.jpg: 15263dcc3b55bcb190ae5b7674c61bbcd5d2b75d6bc75c52fda38e8d81bc739a
+    frame_00003.jpg: 572837f6269cbbd51c16cbb9fecf78afc1975a9120d56c2f9cf63e3b343374b3
+    frame_00004.jpg: 6f10f9291c76b0404f78952988507860a397f5d3795cedfbf615ffb672cad472
+    frame_00005.jpg: 95f4a0808c8b4ef3ca8f0b361efb8d8d51341d5c1d6e8ad00dd10721e96605a5
+    frame_00006.jpg: 455125f8073a4ad06caf513c63dea02660a02c19d66244a73d6e37dd86dfaba5
+    frame_00007.jpg: bb6ec5bd5ccb16570dc40d04832ceb82ff264f6e8e74fdfeb6f3a6b76c384956
+    frame_00008.jpg: b862640715df3e1bd0ed2391ddb7079b766bee5cb42f5aefcfdef3c779d96956
+    frame_00009.jpg: 161d2d58916fe0badea76486734952c745e702e15f1b1fa105017ece10ee4bc7
+    frame_00010.jpg: a8c209cdce9bba86b24c235543e0b0612a656baec3b0feb7b1be993212960e58
+    frame_00011.jpg: 8b0d73f18ff0af28d0a511b7aeabe32eb8f74f76f7db7c5d0eb1e37b0e182349
+    frame_00012.jpg: ed0ba2dd0d29448e25926d5eae4c07c965a2c3cdea90dbfdbdbe3ce3d0f7f7e8
+    frame_00013.jpg: 45a913bb5829fa8110b042aecb91b674ecb844a4db5b9cdd7e265213eacd87f8
+    frame_00014.jpg: 188324931d505aa0040f8153386a4a10c13524541a396eda4931edd7654e1b47
+    frame_00015.jpg: 84f9d7d6db6a45a70b3e95c701346c2d34b520f226324fdcc1a7a1d4fb39be23
+    frame_00016.jpg: 029db11a5e3943a7c425ce3fb84ea6367f2ba10ff6d8f741fe8b3a0fcb103b0e
+    frame_00017.jpg: c1b10eeeec10b3583ef453263e22ebfee33e3407f06acd595b39f77f2b46bb08
+    frame_00018.jpg: 8c1e3cfbec9429d10d9393e09d57dfc9f4ee60601df00d3f31dca776edc1b53b
+    frame_00019.jpg: e827da5ba5b2b9592207288a4a1e0772f5edd4e5eb1bc473fe2b1e01d9752446
+    frame_00020.jpg: 93e87266a0f69f62cb21920621a9415bf574349929d644c3b8fafcf74558a969
+    frame_00021.jpg: 039a4c579e0f2e7a10a3157fd8abfc54f46db1e302206fe07343a7fb436300aa
+    frame_00022.jpg: 49b9872a6a51de35329c3e87d3a8b7f2fbca56f500e2b527e47076c6ee95f481
+    frame_00023.jpg: fbeae8a7544b6640973fb9f1fcd0af58ce3fe79a0bfc90b8b162d0de3cc41bf9
+    frame_00024.jpg: e399808c8e9b31c72364fccbb785a8deafb1c8b86322af70c84f86f6d5ee342a
+    frame_00025.jpg: 37072a6132d6fc958cdd19d87d8b0c4589174ecae3d8015e175766c1f397185f
+    frame_00026.jpg: fef4d356d9332ad58487d9b6a50ba5e1ba5d524b10609f38ede422451f0febe2
+    frame_00027.jpg: 2fe638581910de5e75a6744b069235278fe71c3af1392f362c0deb398f4a281d
+    frame_00028.jpg: 5617045093deb95764087ddf1be2b8d8a9c46c8aa946b72fcb6137c73503fe37
+    frame_00029.jpg: 1bf4f431304aa85642d57579239eebeccc3875d0689f080eae3f6cbbe8ef1ad8
+    frame_00030.jpg: 7c9ffd928a3f0c0f5bc3db7516f278a1b9dd16cde10fb7434315907a2326d217
+    frame_00031.jpg: 504cb6ed214784f3251afada174ab50f275612de67928ece6c630859c2d9b394
+    frame_00032.jpg: f7a64de4d1c52c33efeabb4af7c32785ec9681c8a198f8c6d7a06ce49d0930df
+    frame_00033.jpg: 77293c4c5a1a6b2582b774f78438616581916d5eaaf607329fc94e3aeec4b045
+    frame_00034.jpg: 08ebb0c0fda96ae9a89b1ced2f949a3ed757b2e8793f5a5dc4e33c42ba33912d
+    frame_00035.jpg: a58f6f6855836cdb4fe8d283320b8dcb435ad6f42a2aec4c06603c412ae4e9f8
+    frame_00036.jpg: 3fc894136d6d58376d3f472221e6f3a2ed63dc42882773884d19116a467e7489
+    frame_00037.jpg: 42a6cb260f1d9619f4f9012f869f2ab9dc29b4ce542dc576fa9e218c9dc6f2d4
+    frame_00038.jpg: 61d1931f48cb41aba9002b05e0dde630c8fd747693be3016042f8032fd0b3ad6
+    frame_00039.jpg: 6a428e9d4c1ee6530ba7f0cb725c7feee32e881dd229e38fbc831e5222cf598d
+    frame_00040.jpg: 4bcd2910eaeda6ba9795117630550e5fca625b92c684f3ff969cdce8e2504476
+    frame_00041.jpg: b2af5e7c9bfd291cbbe7c5929efe4eec7648ef30528f3bac5e897a0c200a4f51
+    frame_00042.jpg: 51b3fbf41d06c1bc1ba6933aeef0e2bd4593e27cd72f3933e514057146d7c325
+    frame_00043.jpg: 5836501cfc2f934e200f2c1bb4e72955531cff5a51fb935e178b5c70e47ffe76
+    frame_00044.jpg: 2c5390e6f5f396a4cd448221b8fc431e557ce1e4407bd18824a50e69e7c4ffe4
+  command: ffmpeg -hide_banner -loglevel error -y -threads 1 -i <root>/_sources/pexels-6781549-hd_1920_1080_30fps.mp4
+    -vf crop=ih*4/3:ih,scale=640:480,fps=15 -sws_flags bicubic+accurate_rnd+full_chroma_int+bitexact -fflags +bitexact
+    -flags:v +bitexact -map_metadata -1 -q:v 3 -start_number 0 <root>/_full/<clip>/%05d.jpg ; then frames 90-134
+    copied as frame_00000.jpg on

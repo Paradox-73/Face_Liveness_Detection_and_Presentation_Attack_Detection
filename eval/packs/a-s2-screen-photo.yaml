@@ -1,0 +1,94 @@
+# Frame pack manifest. The recipe is edited by hand; the outputs block is written by
+# tools/eval/fetch-frame-packs.py or tools/eval/make-attack-packs.py with --update-manifests.
+# The frames themselves are never committed; regenerate them with those scripts.
+id: a-s2-screen-photo
+kind: synthetic_attack
+subject: S2
+description: 'Subject S2: photo shown on a phone or laptop screen (moire, sub-pixel grid, colour cast, glare, flicker),
+  moved slightly. SYNTHETIC: simulated in software from a bona fide pack; not a physical presentation attack instrument.'
+recipe:
+  type: synthetic
+  generator: photo
+  base: s2-main
+  base_frame: 38
+  look: screen
+  motion: affine
+  frames: 60
+  fps: 15
+  seed: 131
+  params:
+    pan_px: 8
+    zoom: 0.02
+    roll_deg: 2
+    tremor_px: 0.8
+    noise_sigma: 2.5
+labels:
+  species: SYN-A5
+outputs:
+  generator: tools/eval/make-attack-packs.py with Pillow 12.3.0, numpy 2.5.3
+  width: 640
+  height: 480
+  fps: 15
+  frames: 60
+  tree_sha256: 53e6e37bc0b6adc87f9bacb04c43e415e3bf397ea55c11fd1a8e60d087a75b83
+  files:
+    frame_00000.jpg: d834fc21b2670bc10da404d3fa8cbc7b6626b863a2db75ce3d001113c5fbbcd7
+    frame_00001.jpg: 46fce70a1aaab56547d38777330a2eadd76f962887740e0f483ab740da58a83d
+    frame_00002.jpg: d352584d34a250a82e92a5437be203bab32e43425983de53a937f53623f4b34b
+    frame_00003.jpg: d783745ca502d6b4bb806cf3d2b0fa20b0e786d6ea4a33930cd4857289c2c919
+    frame_00004.jpg: 2d398323aa84a50f26843d368a30a0ed1772c43b8d25098d471bb319e9c9298d
+    frame_00005.jpg: c8633231bdc02e50ffb1b59318dadc94cfadd527775d1f9ff3c21ae72407a599
+    frame_00006.jpg: 467c723e1889d5282bddfa676523f0c4230d8236359fb45a6f216be895347b58
+    frame_00007.jpg: 1f46371a0606752f36d8cc11daab9c085ace29746b73f770efd30f692c6cc121
+    frame_00008.jpg: 1fec9e8d8eb10dfe2d6655476d4d1c0ab850aa81b740bc6ede2cc4deab89619f
+    frame_00009.jpg: 1a640545f936e4fc874615d1210c77b6886790b8b54656f884deab193d9903e0
+    frame_00010.jpg: 18579e1d2a7b3e340a50fd28beac029ae77bdc98786d0ae8816e7f145c7f9eac
+    frame_00011.jpg: 8371e49ddd28a13b9146b39fad02a0ce1db1be184c2e293a3d1311ea378e5f18
+    frame_00012.jpg: 400145fbec4a725a25ca522657aa866fb7c33045fbcd5de5fed43bdbdb3df519
+    frame_00013.jpg: 173ffb414a26292af75064b4ffaf0cf0a362493613c7cdfe6d2fd4cad5fadc16
+    frame_00014.jpg: 8d93c7c1bde381247d446602ffef806e2da48bac8743548b84f9758e54905c37
+    frame_00015.jpg: f533e45a7d26effe9afa835fb0639a1f512ec7d7dac333ce457d9d1efaf98ee6
+    frame_00016.jpg: fc2d39fd5f96cd26f0b3dea758ffc9412460df2649205cd62405efc46f065e23
+    frame_00017.jpg: f884bf0f4840a6c77aa6ac2a8f030fe3fb588a38860194abae5d44c79f172419
+    frame_00018.jpg: 1c29089b3dd3be8f0f09e8e3f0a4a444bea42d8b08e0382d6011ecf6d79a59c5
+    frame_00019.jpg: 73f234dc4f9646427228ce473ef8e15c3d39ce4abc7cf746ae5f8ce49e90f44d
+    frame_00020.jpg: 158d958ff554056f2193fd3dfe90440428ca817ba9cd74cfdf025f2d9f3caf41
+    frame_00021.jpg: c5bdf4c80a17b96dceed0abaaad2dcca47365bd09e6617cc176028a48007a7a8
+    frame_00022.jpg: 7fe3050d516571e26687501a1c3f43176193acfd66fd8ebc171ccc158bfb68a0
+    frame_00023.jpg: c076a5d7fe651749b3908e0479761369cdb3068c43ad608b866b50f229a10d10
+    frame_00024.jpg: 1c1c5db28900c36bc01418a778b995670770be38026adac2070bee6c7006b53f
+    frame_00025.jpg: e02fbe939984a23bf07e676c1630d6fa71710ef2bc4fb6f35e7267b2bd4dd162
+    frame_00026.jpg: 1375bcfb7ec45a2c03b98dbecf1ddbfafadfcd802ec82d7fa8e1db4c6b3787d3
+    frame_00027.jpg: 81a26888fe77943344e4a63d029de6e8aaf69cad1cf55f3a232b41702578cfb7
+    frame_00028.jpg: 06a2969f68028373f50f3b4b53b1f255d72dd6948b5666ee4002b1558cac3259
+    frame_00029.jpg: 6c08d61db2acaaf0a23f95ff09b3bd440ae9144a3afdb489f3b8718c190604b7
+    frame_00030.jpg: 892ded02bde0802cded693fc3f47c0622d91e3e4c42b9555d0efc3ed879fa40f
+    frame_00031.jpg: 5878e6ca9f2fea2d4a280ae82422529189470a616ad9a03d8228cca3ea20ac8b
+    frame_00032.jpg: a7c226ff93b28e63036a22569e4c3fb9ccb243e7b13a8fb0c9644dde472f390a
+    frame_00033.jpg: af113d9dd3b7fbcdda8c0623af98a9056a8a5c5403144e62cec1d560f8287cae
+    frame_00034.jpg: f9c60564d395fc9bf09b2eb3e818e3b1fb95fad0ab7add03bdd786f67ec8f3e8
+    frame_00035.jpg: bc4e783d6e64ee04d090afae427cf412a63ab138d98a852da525621a0b7dcb82
+    frame_00036.jpg: ab141def67648a095842005cd1e8090ccd4287faaadb6af703612a6b95187cc5
+    frame_00037.jpg: 5d01d2007b9d2e2568a9b53c12f0c42f586f2280376dcaa0f2a8690732a46289
+    frame_00038.jpg: e0967f20df281b597bd4040ab8e8fd1efdc5fe0e4900f1c18b276874039b4998
+    frame_00039.jpg: 78a9f5c64f62e53e79c75f1c988dd9aaf3bbc0dba51de58b547db81bcc042a1d
+    frame_00040.jpg: f2a790c0f6e4e13db342a59d6b1cfba4f76659fbc837ae63d07df58b154bf634
+    frame_00041.jpg: 613f366bccd21c33c33fdda5a22e74ace7b77cd1ea1a6e1d25e9b6f111ed31b2
+    frame_00042.jpg: e554e67f4cedbe6b095f648d78d6f8fbd7dd232ac95a74e88da4fb7f37453ad2
+    frame_00043.jpg: 0e117d836f9ba330f51a96df5535250d326bac8e1c761aff793cbb5949366831
+    frame_00044.jpg: 2698c15322a4d9c006fbea5a419b968c0e0ab33e502cbe4e3427e938819a21bb
+    frame_00045.jpg: cfd012e07ab09f5c172acf5045edcf944c1c26e4717e3f04be61cf9146567057
+    frame_00046.jpg: 8e64a5667ff962b7e4555630c1ee479d1b0d2cd4e0e229211de7a0f8d5704971
+    frame_00047.jpg: 19a15c1ca083dd1403a8acb745df72101c2bad2909fba227d55372dfd83cf011
+    frame_00048.jpg: f18d5a1da0dd509c3966f9b93ed20833388872a823fce06322c5a4c13f9f798a
+    frame_00049.jpg: a1c9bdce78ad03d0c82c9d4ecd95b52cb0d86e8eff54b06824d27718eeb35049
+    frame_00050.jpg: 0b8a0dc652bb2ec34272d2e5ea1f94407b6f97aff274068c9c74011b6aac12d2
+    frame_00051.jpg: dfd0732bc0a164df6dd9cc33b90d8c4cb8244b54e657bf8345e3f1ae5796ce2c
+    frame_00052.jpg: 69e222b1e6d9a09ea0ba1d9cbaaed4b09ecd3d29d01b43ace555d3215965603e
+    frame_00053.jpg: 61708ac2137ca21a8bb1dd63a88c87b1901b15337f4458074619d896861f4819
+    frame_00054.jpg: e3a89cbe9cc051ed4b528d279a7810a4e255c2bd799cb8c50c283b7366e44a5d
+    frame_00055.jpg: dce9fa5e60e6e1137e32c3da741d39c2d015e6ab53fe0f2cac003788e77e983b
+    frame_00056.jpg: 9cfc02ea06c436c0232e00d50cf699c65f6293aa78262aaaa0d9d18db4088178
+    frame_00057.jpg: 5a88abc56dc2d9b5b885a71974c578d172a63c641f967d9cc6fa966db43e1426
+    frame_00058.jpg: 42968ac1f9d0609de6987b18763ed168781cc42383ec938df28558d25829b297
+    frame_00059.jpg: 72c891d5fb93ef6d12e880dfb537bab677171a44830f8a7f74f4d3faf3ebe2ae

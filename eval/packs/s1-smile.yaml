@@ -1,0 +1,78 @@
+# Frame pack manifest. The recipe is edited by hand; the outputs block is written by
+# tools/eval/fetch-frame-packs.py or tools/eval/make-attack-packs.py with --update-manifests.
+# The frames themselves are never committed; regenerate them with those scripts.
+id: s1-smile
+kind: bona_fide
+subject: S1
+description: 'Subject S1: neutral for 0.4 s, then a smile held about 2.5 s.'
+recipe:
+  type: video_cut
+  source: commons-cbl-smiling
+  filter: crop=ih*4/3:ih,scale=640:480,fps=15
+  fps: 15
+  first: 0
+  last: 49
+labels:
+  action: SMILE
+  onset_frame: 6
+outputs:
+  generator: ffmpeg version 9.0-full_build-www.gyan.dev (bit-exact flags)
+  width: 640
+  height: 480
+  fps: 15
+  frames: 50
+  tree_sha256: bde2ac4ed29926e25e2b9318f9874634d4a481d3bddb1f8d9ba0778335225683
+  files:
+    frame_00000.jpg: 7e29d6b2d06ad6c412e6e6fa6c964d6f7052f61dd01ac20bb960a3096db1cc5b
+    frame_00001.jpg: 62380391d65ada5aca3ccd72e31bb9d9e41377a574f786d2e775f0cc4c280383
+    frame_00002.jpg: 4d8168fbef480bbbade7d6897e2dae42a7da0b020351a98c044b13598689fb93
+    frame_00003.jpg: b75a0cdb974b435cdcfd1442625892d8cc94bcdd104ee4b0eccfab82111c8d31
+    frame_00004.jpg: 4531cb90d0644e645868c986bbcd75b378905ca8c67d5ecffd3fe07997fb3c94
+    frame_00005.jpg: c8077b81fb4ae2b4202678aed3547e99df6223fc39ea41a4c4b57b476d2690b1
+    frame_00006.jpg: d2325988f5a4c5de6026c36c6003f51415f42085ab8d1c88d9d165051a683c95
+    frame_00007.jpg: d56c18481ba6059d0379fe8d1c130b7364fa69aa546dab232bb7372030153c43
+    frame_00008.jpg: efe80225e0ad5cfe7bca8eff7f6d3ed6333a38f341870ea27d9bebc2fb66341f
+    frame_00009.jpg: 1c7ead3be69df02753d3b59d7e32c6faa963b66cb8172f3fe6adafa6c91efc7b
+    frame_00010.jpg: 9db07861530c8155cc15919c4e7a6e88d83fdbda157dcc13f73089b32b4308fc
+    frame_00011.jpg: cc7f7dbacc2c8c66f264e29d87572c977e96033e4a06ada71089dd2b75d9c291
+    frame_00012.jpg: 5a333828e4c460986159bce2a7984995e46db698798de4c13d75108083ccf9e6
+    frame_00013.jpg: bc1d739f012d0c3f75c53847d665e307ef44ba12ee2e7150576ed70aabb5cc83
+    frame_00014.jpg: f361120237c98644031388722452e6b947d997ab4fba73e13f04f0027c92b575
+    frame_00015.jpg: 8b25e531226176d875bdf073916f38661c3b675b21053758c9dae89f7e082db3
+    frame_00016.jpg: 0e2b278355e477354a7e9602fc9d6fa665224282d26e110bb6c471f4c3b89626
+    frame_00017.jpg: 55701dd9a75fb62377529cde950ab1a66ef7090c20f33e7b8e27ff850280d8d1
+    frame_00018.jpg: 1a4e7640174f23422d016f498a0c5810e2d7e43f6ab6039416ae18806c60ed8f
+    frame_00019.jpg: fe0fcc353d8ee635917e5c3728b6eeb2b472f2c6ec4134d58da0ae92bcc90e8a
+    frame_00020.jpg: 5bb3242a5caaf61aa6c6c28e529bde008c698821a31e4b570da59297d2675ef2
+    frame_00021.jpg: 598592cf499c10911ac943d0bda858fe46c1f73a22bf47d8eb05a26c1f158baf
+    frame_00022.jpg: f05596426c6d86f7c4604188ca8182c292f74e7bbb25355054747e86c2ba78bf
+    frame_00023.jpg: 8239662d92bffd1da6396ea5e2721512ce8cff3abaadfb3de3feb7cc956c959e
+    frame_00024.jpg: 869178f6b0b5273da007584df2ac5f16ba3ec7d2b6c5bb152a70e5dd7355049e
+    frame_00025.jpg: a746bae05944e52e6b40ba66a9e15e32e9d6fb2098a3c75a7088b9ad1147daae
+    frame_00026.jpg: 8166197dd9a33adc635c13808650d4d71d0627d3e93fdd602f0efa4586ea2ce5
+    frame_00027.jpg: 440d2ae91bff944b731813f4657e4034e5166352507d8c4de142b4ef1c83c909
+    frame_00028.jpg: cb65aef51d02b39ebec72a60bdf96491397b3aeb7545104a7cbccea3db3c7dc2
+    frame_00029.jpg: 28a43fd53bc5ba1e389e3620666225e2c1c902b92899ce049a05bd082ca4ba0e
+    frame_00030.jpg: 42bc7336644cad3299bfd979723a22cfcc16a3e57456c082a4912e2b36f44d37
+    frame_00031.jpg: 3ded609684229c063f0845f13a889596602632c917de6a13d5e13a591473b55c
+    frame_00032.jpg: c09777d6208acc52f067948e6cde1f2d9596e14cc3a55f67bd9e0e4287147b10
+    frame_00033.jpg: 8058e543dbb68ad9c827a6e3dea328dfdec0a6ca72bde53f91d81c8aa2da1119
+    frame_00034.jpg: 108c52f1e1453872cc9ff6db28daf55a6877ae46f4579ed885c48e84a1e542e9
+    frame_00035.jpg: e65028ad980ae90fdbccc60f43ca892ce3cb471b2f842fa868043d3386945945
+    frame_00036.jpg: 52430e5dd3ff822ac496934e22981de00e0d549409dbbee44fec334c561078d6
+    frame_00037.jpg: 914265504a2de3cca927d0a3daea2b10258766b1bca210516ed3753764cd5b1b
+    frame_00038.jpg: fe8ffe2982d924f0d9d40d410b143c431141cb9e3ae6c851e1cbbc859eb3e741
+    frame_00039.jpg: d61145f466dc29e297be1b55f846319d10f452a9f8a81a3dcf14bde7a6b4f3b4
+    frame_00040.jpg: e71568be54e4722996f845d2f118573e0a06a0be7388e906d7d2a3aa0ffd1d56
+    frame_00041.jpg: 3595c7d2a787484b37189a52751fbd94a061e1b3db21099d3fbb4f4fd77d5b49
+    frame_00042.jpg: 7192fdc74610b2fcbc405663163d4852592acd7f92c284ceceaa03a5b8959ef6
+    frame_00043.jpg: 37cf5d53b07c8e5a97cc5a1dec8cd856e346f690199312f24e39fffab03883f2
+    frame_00044.jpg: 91f7bbbb8b05841d91f49326df378d550ea20f533d2926d46f22448deeb826e1
+    frame_00045.jpg: db226136cd7fb15a3b0af58405bc716ed1beb860761af3ecb2faa54f19d92c04
+    frame_00046.jpg: d32d785ad3d5a67ac613e74baed58d4a7481fcf0358106b503595187d8fe28b7
+    frame_00047.jpg: 216a3144b98033ee6a118e63c0c8cb8c0097b521ded72e6e26c105fa444a8109
+    frame_00048.jpg: 039d3a06b7b3444d00dd4a3662bc61b24288d4ef6134766fb6860d529152366e
+    frame_00049.jpg: 54a3c36c1e1b7630e48e1ca73ed6aeab04f63168768445bc2e590a91ea8db59a
+  command: ffmpeg -hide_banner -loglevel error -y -threads 1 -i <root>/_sources/commons-cbl-smiling.webm -vf crop=ih*4/3:ih,scale=640:480,fps=15
+    -sws_flags bicubic+accurate_rnd+full_chroma_int+bitexact -fflags +bitexact -flags:v +bitexact -map_metadata
+    -1 -q:v 3 -start_number 0 <root>/_full/<clip>/%05d.jpg ; then frames 0-49 copied as frame_00000.jpg on

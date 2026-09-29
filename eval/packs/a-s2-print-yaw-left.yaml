@@ -1,0 +1,66 @@
+# Frame pack manifest. The recipe is edited by hand; the outputs block is written by
+# tools/eval/fetch-frame-packs.py or tools/eval/make-attack-packs.py with --update-manifests.
+# The frames themselves are never committed; regenerate them with those scripts.
+id: a-s2-print-yaw-left
+kind: synthetic_attack
+subject: S2
+description: 'Subject S2: flat print tilted about its vertical axis by 35 degrees to fake a head turn to the left.
+  SYNTHETIC: simulated in software from a bona fide pack; not a physical presentation attack instrument.'
+recipe:
+  type: synthetic
+  generator: photo
+  base: s2-main
+  base_frame: 38
+  look: print
+  motion: yaw
+  frames: 30
+  fps: 15
+  seed: 141
+  params:
+    yaw_deg: 35
+    pre_frames: 6
+    ramp_frames: 6
+    focal_px: 700
+    tremor_px: 0.8
+    noise_sigma: 2.5
+labels:
+  species: SYN-A4
+  action: TURN_LEFT
+outputs:
+  generator: tools/eval/make-attack-packs.py with Pillow 12.3.0, numpy 2.5.3
+  width: 640
+  height: 480
+  fps: 15
+  frames: 30
+  tree_sha256: 332f3befeae91a665b13c3c49e66e5815bb6e74fa923711e91e7d422722aa66e
+  files:
+    frame_00000.jpg: 5faa218257280b8942bb7d3fc715acd715e6a1670726834960eb05fd19367329
+    frame_00001.jpg: 01031e36252a3f02ff5fdba61092ffba0fa8d293340097898a5930b3356d4864
+    frame_00002.jpg: e53f9df3b10e3f4c8627357e304e2eb3110868194cf8fea291bdefb402d02a6f
+    frame_00003.jpg: 63c5ef9f74e399faffe13d88ef1ac040a6f6d2a2d39336f96c45fda15b66c0fe
+    frame_00004.jpg: 9e52109a067783a64030c9e86747ff6bc075e75838c104116c9beed27062c535
+    frame_00005.jpg: 1da3db86b164a738de26e66a29ed5c5a88788c42080f1e849aaaf040c5ce08ed
+    frame_00006.jpg: 56c3238fd3cf6ca9f1609870740b954869bdc9ce150fbf6a20e4621ca99d5fc6
+    frame_00007.jpg: eb83d3a1d2712ab22f7f4d527c13f2699e6ee4d35eb64689d44d1902c3fe84be
+    frame_00008.jpg: d133629593d3b12441438a4313969f60e9039fdbb1f91a2829fd8fbf66f5d625
+    frame_00009.jpg: 3b6cee8f66cbecff21eda18954eec3981141e3a7861805203ecb532145acc529
+    frame_00010.jpg: 3b6ae7b50475a6d13697aa5757f9a2f3a67622cdb0cc637f3ebbe91126f3be02
+    frame_00011.jpg: f701cb61d53038388fd7598ad61ece9b09f6b30fd33ef817b1a8f524e96582ca
+    frame_00012.jpg: e8c5a1bd7fac6c552b03f4ece8d04871b57ed7cc1c585c904b8444b99196c877
+    frame_00013.jpg: 4283e8646f0b8d55227d8c1bb6336a9172efe1e84a8939a806f2c3bd7bf7dae8
+    frame_00014.jpg: bdf18ac04c9e33980869aa5fd424959e0d10e506aa74564f9a4692109c6c044b
+    frame_00015.jpg: bf8610f67559ae9685c1893ff0f63a33f7084256c179f23521634b32367a9e82
+    frame_00016.jpg: 7c81f05f05c04ccfe8817e4ae7cdd34f56ebfb8c9656efd947d412c6195644bc
+    frame_00017.jpg: 6397682da714c14d00607135ee3e15e506a53ec7854ebb8e35ad260550fae28c
+    frame_00018.jpg: 9b2fa259b0c0391741cc8b23e8de9eb6f3513394eccb581dbaa3b5010024b43e
+    frame_00019.jpg: 60471a3ea81d705c037ca86d0f7a8d3db7ed4da7b6fccbeb750f4b1b71bedbcd
+    frame_00020.jpg: 26ae516ac11039231de4490b428dd3964f166f34ceaabbd9849ff2cf87209d05
+    frame_00021.jpg: 0b7d5519b7d843203fbc0acb18d078390e8fc49b67fab7ecaec8dfd9dca8f167
+    frame_00022.jpg: d9ac1ff1784ada423b19496b4bd680ad5df50a3e8bcb4ece4b126210f55d8b65
+    frame_00023.jpg: e2e932c840cb096d8b4d4e9f705a3fc73ea1ca20771bcec664d08b80f8b23aca
+    frame_00024.jpg: 4dd8c9cc00e066d94f4a86ed97a091b13e39ddf5c3f5d0158cafff7448e60c3f
+    frame_00025.jpg: b9c9f828343f9a007bca39d9f5db472f5f63e0740d569d226f42e8aed76cf7dd
+    frame_00026.jpg: ffae601b992610cfab33f0974eeaf4355f0a821201c0d6f8dccff51490ce3c1b
+    frame_00027.jpg: 17a9b5747810245b17309943d3fe55f2393b8824f5c9eb48e78168c6730b2fa9
+    frame_00028.jpg: b03cd3e97a24ae8a73ece74674c3c25e3ecef65c3e5e600e4d3bf087cb34af08
+    frame_00029.jpg: c7cbebca5f2da7f8a4a523aa0620282f4d69450d225fc18788fdd1d48da4eaf6

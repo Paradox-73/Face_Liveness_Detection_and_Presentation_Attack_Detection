@@ -1,0 +1,68 @@
+# Openly licensed source clips for the bona fide frame packs. The clips and the frames cut from them are
+# never committed: tools/eval/fetch-frame-packs.py downloads each file, checks its SHA-256 and cuts the packs.
+# Licences were read on the source pages on 2026-09-28. The people in these clips are not project members;
+# their frames are used only for automated technology regression tests, never shown in the demo video,
+# slides or repository, and never used to train a model.
+sources:
+  - id: commons-cbl-blinking
+    subject: S1
+    file: commons-cbl-blinking.webm
+    url: https://upload.wikimedia.org/wikipedia/commons/9/9c/20140529_-_Blinking.webm
+    page: https://commons.wikimedia.org/wiki/File:20140529_-_Blinking.webm
+    licence: CC BY-SA 3.0
+    licence_url: https://creativecommons.org/licenses/by-sa/3.0/
+    author: Clément Bucco-Lechat
+    attribution: '"20140529 - Blinking" by Clément Bucco-Lechat, Wikimedia Commons, CC BY-SA 3.0 (own work)'
+    notes: 1280x720, 30 fps, 5.8 s. Frontal face, plain background, repeated deliberate blinks. The Commons
+      page carries a personality-rights warning; the frames stay local and are not republished.
+    sha1_commons: faab2e7a395c4113876f984549312abe3e3c39c9
+    sha256: d3c9945f617f24091bc900d87042d5ee26283fe8df1bfacaa95375efa9ebf50b
+  - id: commons-cbl-smiling
+    subject: S1
+    file: commons-cbl-smiling.webm
+    url: https://upload.wikimedia.org/wikipedia/commons/b/b9/20140529_-_Smiling.webm
+    page: https://commons.wikimedia.org/wiki/File:20140529_-_Smiling.webm
+    licence: CC BY-SA 3.0
+    licence_url: https://creativecommons.org/licenses/by-sa/3.0/
+    author: Clément Bucco-Lechat
+    attribution: '"20140529 - Smiling" by Clément Bucco-Lechat, Wikimedia Commons, CC BY-SA 3.0 (own work)'
+    notes: 1280x720, 30 fps, 3.3 s. Same person and session as commons-cbl-blinking; neutral face, then a smile.
+    sha1_commons: 7189d1550bd079a6c992f50722c5437edfdc3292
+    sha256: c7d89664aa3a68aac641160633c0e99e9f53e28eb463cbfa3c939f2b1f765cf7
+  - id: pexels-5474329
+    subject: S2
+    file: pexels-5474329-hd_2048_1080_25fps.mp4
+    url: https://videos.pexels.com/video-files/5474329/5474329-hd_2048_1080_25fps.mp4
+    page: https://www.pexels.com/video/a-bearded-man-looking-at-the-camera-5474329/
+    licence: Pexels License
+    licence_url: https://www.pexels.com/license/
+    author: cottonbro studio
+    attribution: Video by cottonbro studio from Pexels (attribution not required by the Pexels License)
+    notes: 2048x1080, 25 fps, 19.4 s. Frontal man with glasses and beard, white background, looking at the
+      camera. The Pexels License allows free use and modification; it forbids showing identifiable people in
+      a bad light, implying endorsement, and redistributing unaltered copies on other stock sites.
+    sha256: 7efb9a0b8a3ff8291b7bb7eb778227381e1d4f7df8975fbfc0778313c2159237
+  - id: pexels-5474326
+    subject: S2
+    file: pexels-5474326-hd_2048_1080_25fps.mp4
+    url: https://videos.pexels.com/video-files/5474326/5474326-hd_2048_1080_25fps.mp4
+    page: https://www.pexels.com/video/a-man-turning-his-head-sideways-5474326/
+    licence: Pexels License
+    licence_url: https://www.pexels.com/license/
+    author: cottonbro studio
+    attribution: Video by cottonbro studio from Pexels (attribution not required by the Pexels License)
+    notes: 2048x1080, 25 fps, 25.5 s. Same person and session as pexels-5474329; frontal, turns to his left
+      (profile), back to frontal, turns to his right (profile), back.
+    sha256: e401a1cc953f919730eed205def342ac3d73ce46c15bf1f66069d66e89646978
+  - id: pexels-6781549
+    subject: S3
+    file: pexels-6781549-hd_1920_1080_30fps.mp4
+    url: https://videos.pexels.com/video-files/6781549/6781549-hd_1920_1080_30fps.mp4
+    page: https://www.pexels.com/video/close-up-view-of-a-woman-smiling-6781549/
+    licence: Pexels License
+    licence_url: https://www.pexels.com/license/
+    author: Artem Podrez
+    attribution: Video by Artem Podrez from Pexels (attribution not required by the Pexels License)
+    notes: 1920x1080, 30 fps, 10.1 s. Frontal woman in warm indoor light with a lamp in the frame; neutral with
+      natural blinks, then a broad smile, then looks down to her left.
+    sha256: 0bfe6a2ef71cdb8c6d3d895ac2aa5b5e3cbc2ba671a6c9bd519ed58e8f5921c5

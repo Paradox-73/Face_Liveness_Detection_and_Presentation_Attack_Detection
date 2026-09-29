@@ -1,0 +1,72 @@
+# Frame pack manifest. The recipe is edited by hand; the outputs block is written by
+# tools/eval/fetch-frame-packs.py or tools/eval/make-attack-packs.py with --update-manifests.
+# The frames themselves are never committed; regenerate them with those scripts.
+id: a-s2-screen-turn-right
+kind: synthetic_attack
+subject: S2
+description: 'Action clip s2-turn-right replayed on a screen and filmed, for the adaptive replay attack. SYNTHETIC:
+  simulated in software from a bona fide pack; not a physical presentation attack instrument.'
+recipe:
+  type: synthetic
+  generator: video
+  base: s2-turn-right
+  look: screen
+  fps: 15
+  seed: 163
+  params:
+    noise_sigma: 2.0
+labels:
+  species: SYN-A7
+  action: TURN_RIGHT
+outputs:
+  generator: tools/eval/make-attack-packs.py with Pillow 12.3.0, numpy 2.5.3
+  width: 640
+  height: 480
+  fps: 15
+  frames: 44
+  tree_sha256: eea3e17a5db75481e36f7aeead1bc9ac731a07a610e4dec62b77a54b9e6ddfe5
+  files:
+    frame_00000.jpg: dd6638445c309f3de8c2f2da9dd7f1809c2c9624bb36f0bad63f67c474288516
+    frame_00001.jpg: 5eaf10ab92ec3a7a61ed8d7eabe0757eb7e8e23b6887a2653795a11c8962b107
+    frame_00002.jpg: 26194ac3545c7ba87c276ff847b00d1dc27a3dccfb83b01b535255508c3f83a7
+    frame_00003.jpg: 6cf02d67be8e291ee17467e5b9a588bbb0000794c1577ad9492b030a4ee27d2d
+    frame_00004.jpg: ce39de095ae2f3384e565fb5e3f126b65c4c7b03ffc275e9fc47139d462e8132
+    frame_00005.jpg: 5932548be8a6fce086765e96926d19f998e12eaa1e9ebd039fb794bf75f947a7
+    frame_00006.jpg: 29bcd5c728287fdbdf6291b722556d3824f908309da37661870ec309bdbe0706
+    frame_00007.jpg: ca03d3140c24f79cb0fc2b905b7b6bc7098d9272149d297fcb25a71089f59360
+    frame_00008.jpg: 0d9e810830bbc32a8852aac93ae00601bf0f5bfee0c6695710148570315882e9
+    frame_00009.jpg: ee037b1fb81071a2aea0b3f2695ae454b824d68b99fef4110eeb2b4c5d8f6008
+    frame_00010.jpg: 95cb56e44a1b0c414ece40fcd148977b77b9f017e6003e8ef9eab64483065092
+    frame_00011.jpg: a280938d4e150ba0b390dcf6a9bb0ffe7be11b50031115612dabc3f07f9f0e4e
+    frame_00012.jpg: 288bb906edac25b7213e8e9b20cd3a41dd1db10811d3144ab07bed54217f28ca
+    frame_00013.jpg: 7f2d1fda42f8c89bf4b48ad59bd7638b0456e01a01fa4de1737de014c2d39ea6
+    frame_00014.jpg: 1e560b8665ee4e7a66ab5fe54d30fc9eab351186696f2c8cdb9399c7c0baea03
+    frame_00015.jpg: 797b41bb0ebd483653ce64c2971f4e00a918b3e00c312cec2f961b6cefee7d93
+    frame_00016.jpg: abd85bc1eb608be91b8e7ff9dd84909e1dd613f4d08a7576af857bbbb4883fb0
+    frame_00017.jpg: ed212e778552d146b6bd6df1d644fe32be49127bfe8b7b36aa33c4366cbd5ab7
+    frame_00018.jpg: f7f8d75edfc6bede5a498c85eb4979aba6342a940aa5e04c6629baeed70bec8b
+    frame_00019.jpg: 6715a868f9ff11295a7c0cdcf9aacde5c4f38233293dd1eee215c1dca18691f1
+    frame_00020.jpg: 73088de8eab4280172e37319ead8e75adebf595f1fc95986a0715d31bc38307c
+    frame_00021.jpg: 3b32713254b77649e420a39c3798fe7ec240bb84f5279e895f58393c6f193893
+    frame_00022.jpg: 62791a73db0e0d153eb83a03adceeea09d7eafd7df8b39dc0da0f6b07465a1df
+    frame_00023.jpg: 6e842a346cca414c2fa35a64a89672b74fc79a0c884d506759775ac15ebe6928
+    frame_00024.jpg: 1362ec60557cab25859a6289271fc675f16c36e2c9c14ff4a26a2c5ee9a66982
+    frame_00025.jpg: 0ca00935a2a20aa019d6a731cdc3641b256a2ba0d152ac3d10a30a332c553ea7
+    frame_00026.jpg: ccdf6508b0474df9a6d9d55166ca166e87f1a177e1dc42d1e36db0d7eabeaa5b
+    frame_00027.jpg: f6f61503fa803827869490b6c8f171f507f33489ef76ccb364d7f53ae9bb0309
+    frame_00028.jpg: 10b8c429f2a948b96d4ba5d4c8491053c6333bf0570c182f491f3fa3b782c42b
+    frame_00029.jpg: 7012fed6c60785dceabf64e9e633f70894ce8075eba8585097c475cb6ad861af
+    frame_00030.jpg: 074d6a9090b318400e92fef79d79d8551c184cba66b23bb149ea28980c9cf830
+    frame_00031.jpg: 407d71094671c5dcc43f879e5f9b286d5177a7a3e6eb195d46f13e10c84c169c
+    frame_00032.jpg: 4a9d41e6fa942cae56068179afa7225181f9b56b62b104c484f09c0b3c29678a
+    frame_00033.jpg: 17fb809e2e3b9e3916071b78a2d7cd16985908ea020a189bc4340eec361fd8e9
+    frame_00034.jpg: 885078a016783f03b481b8d0041bfdc0304bff0c66b4f20d3d82d81792b88422
+    frame_00035.jpg: 13fd95d2e0c2c987cb1b5460f8db3a42f8508c637a2fe0423c2e486a37abae64
+    frame_00036.jpg: 977db96858a39b66b8e9cd550c731f723836f21a2b58f4d891a3d3ce7db77a10
+    frame_00037.jpg: 4ef67b70f1a50cfd9f8d797e1a1d9796c9df4238a6defe92fed7fbcd87cc4ce1
+    frame_00038.jpg: c8b89d8065a2d0137c4284177cf89ad3a049cd7c0dc65dcdd8c19c667daf6d12
+    frame_00039.jpg: c25c73854f85184a68bf176bd6198d907005826342578d6a153773a6f3a2dc93
+    frame_00040.jpg: a5af1c6e7cbc92e9888fafb90f435166855c2a0a1b8d436c1d4ec2e163e2239c
+    frame_00041.jpg: 17e0e4a391a3127ba2c21c1a673615a060334c6e6f4da82b10a96232952d304c
+    frame_00042.jpg: 94a4ac4655a345947f4588b555b4519dc923f25a1812d40550b17c69da48b3fc
+    frame_00043.jpg: 0b818409979ee98ed2875c75b31f08dff4c1789b44a5848f812b38c9f8d5b984

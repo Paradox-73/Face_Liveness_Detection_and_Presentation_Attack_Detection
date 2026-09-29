@@ -1,0 +1,42 @@
+# Frame pack manifest. The recipe is edited by hand; the outputs block is written by
+# tools/eval/fetch-frame-packs.py or tools/eval/make-attack-packs.py with --update-manifests.
+# The frames themselves are never committed; regenerate them with those scripts.
+id: s1-blink
+kind: bona_fide
+subject: S1
+description: 'Subject S1: eyes open about 0.5 s, then one blink (closed about 200 ms).'
+recipe:
+  type: video_cut
+  source: commons-cbl-blinking
+  filter: crop=ih*4/3:ih,scale=640:480,fps=15
+  fps: 15
+  first: 20
+  last: 33
+labels:
+  action: BLINK
+  onset_frame: 9
+outputs:
+  generator: ffmpeg version 9.0-full_build-www.gyan.dev (bit-exact flags)
+  width: 640
+  height: 480
+  fps: 15
+  frames: 14
+  tree_sha256: 00c5b38fe790080d1663ecb6d863fd1d0e69f01cbd820d2ab83d06c6ef0bddbf
+  files:
+    frame_00000.jpg: 0e83ff6d6d31aa8f187bdd06e592844ee5afcdd435ac6ff9a083c03397fe61c1
+    frame_00001.jpg: be1f3f2414eb7c9b9ea61b87a7309fe250a58c81d11da60c2a8c869611d78ecb
+    frame_00002.jpg: 81c69bcfafc3a42f236c777aee353994401654042196f63c93fa7453c4dbd528
+    frame_00003.jpg: 03a74d6b5d54d05e016e06798a0a37a74232ea818fcd3ccfe57a537caa11896f
+    frame_00004.jpg: cd914450e7eeac023bc952a76b81f54f9c158b066130212c557a45bb89a27f95
+    frame_00005.jpg: 207d10a4d76baafe93e4c46073459de7319da7391c6745569d60315c9b9e1a33
+    frame_00006.jpg: 4fc1bf9b74ed1f950b24fe54bbbd0d93770663a996750187b78869feed2ca2e2
+    frame_00007.jpg: 2431a8df56081217c935af216ae0c1245f07e6ee14f372c65014df525204ef70
+    frame_00008.jpg: ef17da1a4dbcf44087023e91ca670f713c673cd4de3cae5dbf66e70c0322a52a
+    frame_00009.jpg: 88c0f255dac2774e2f797083898116bd4b70c7e0e7d6c07a30c563806358eb23
+    frame_00010.jpg: 600cc9d41826a19e6d1965aa8e23b5f2f55991796633289808e1a57b570d476d
+    frame_00011.jpg: f82f1067a0f74d9d4d634c8d0de351d720da3af908aa3350f6f596f173023197
+    frame_00012.jpg: 93cfb849a898e3667797639f1458cce308ddd19223f8b7b4958d4e70a5983cec
+    frame_00013.jpg: 319dc2a6a679281e01a410134b8d7552546933bdb7c2f9a7d41ca288c48d517f
+  command: ffmpeg -hide_banner -loglevel error -y -threads 1 -i <root>/_sources/commons-cbl-blinking.webm -vf crop=ih*4/3:ih,scale=640:480,fps=15
+    -sws_flags bicubic+accurate_rnd+full_chroma_int+bitexact -fflags +bitexact -flags:v +bitexact -map_metadata
+    -1 -q:v 3 -start_number 0 <root>/_full/<clip>/%05d.jpg ; then frames 20-33 copied as frame_00000.jpg on

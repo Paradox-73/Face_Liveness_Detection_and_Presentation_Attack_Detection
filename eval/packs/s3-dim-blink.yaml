@@ -1,0 +1,50 @@
+# Frame pack manifest. The recipe is edited by hand; the outputs block is written by
+# tools/eval/fetch-frame-packs.py or tools/eval/make-attack-packs.py with --update-manifests.
+# The frames themselves are never committed; regenerate them with those scripts.
+id: s3-dim-blink
+kind: synthetic_bona_fide
+subject: S3
+description: 'Bona fide s3-blink darkened to 45% brightness with extra sensor noise (dim room, condition C2). SYNTHETIC:
+  simulated in software from a bona fide pack; not a physical presentation attack instrument.'
+recipe:
+  type: synthetic
+  generator: video
+  base: s3-blink
+  look: dark
+  fps: 15
+  seed: 181
+  params:
+    brightness: 0.45
+    noise_sigma: 3.5
+labels:
+  condition: C2-dim
+  action: BLINK
+outputs:
+  generator: tools/eval/make-attack-packs.py with Pillow 12.3.0, numpy 2.5.3
+  width: 640
+  height: 480
+  fps: 15
+  frames: 21
+  tree_sha256: dbf1f610c2d93cad2bfa074ed05ae2563b62d6f65f59de01b2bf9ccd8deca1e0
+  files:
+    frame_00000.jpg: 9d345b958a61f6bdc1ec046ce76047225219d3a64999b7c0e61ea5906aa604a2
+    frame_00001.jpg: cb2afa28bde5cc151ef71b7fd04fe7e1cf71a4596bd4b0e4b0e52360887224d0
+    frame_00002.jpg: 88ba473da11e3784af994b5aa4815fda056d716576572f5c6a1e06db19219033
+    frame_00003.jpg: a5216bf3b52fb2189adf657873c1ed85182242b837eb52fafe54d17c78042944
+    frame_00004.jpg: 06969cff1839a83d9d38363a3afa3b418661f71007a6f87daad78ccbda540e5a
+    frame_00005.jpg: bab63176fe75f2e508dfcf6f3cff7238b903236c609d215d126a3cc05f296999
+    frame_00006.jpg: 86293c2335795afcf6a572b2755d62e46c96c31b0a2a08af7973ffcada906518
+    frame_00007.jpg: 26f1dc154bff94900d7968fca0fa1147be48fecf2f5c71642cec691683540612
+    frame_00008.jpg: 197b6185d32f98a181664943bf0f9027d646a05d25d0c5ffc37feeeca79cbb8e
+    frame_00009.jpg: 29639a0bde4223bebe63ee377d346f261bf8879bb8820a4f614424a53b149316
+    frame_00010.jpg: 15cdcfdfb62ee856e6734cdbb204112021669fcb200b31ae548b95a00992efc6
+    frame_00011.jpg: bc6fb24c31020c4ddb94b38919fd91bdfca4979ddb8e7be164295629d650873b
+    frame_00012.jpg: a3261f1e85ec6c4cb60359aa9428c54d2dd72da88686580a2bb210782b1108cc
+    frame_00013.jpg: 129da4ef5e8bae83f51502fcf9a7e2611e48acfbeb5472ad41882bd2b46fb4fa
+    frame_00014.jpg: b9598d9ee6e2e5f6ea45504a86c4119dc9fdca51082bda99a3a717c3d102f23c
+    frame_00015.jpg: b92ec856c97086c66ba1dc7a778e894657cde2db51c85605be237761b321da1c
+    frame_00016.jpg: da233d77e8928bb4eb20ebd5400ec2c22bed3693e3c1ae13c883e9f00499f4c0
+    frame_00017.jpg: 6ad8f246a44a9f958f846905229f7729bef6d5cca0a1f6a56714cb8fff64cf70
+    frame_00018.jpg: 1aff782c776b37e34d650d79607e1ce76c4f9571f6e54533ce875655a4981a68
+    frame_00019.jpg: 83401b52204b225b0a0b5bc6eaaa250b8b8e7dd1fff2b4a78c9a0ebb986cce7f
+    frame_00020.jpg: 5e7bf50f999626ab7b9e4245de36927fed71f26779e7718e9a0ba201fa6de3fb

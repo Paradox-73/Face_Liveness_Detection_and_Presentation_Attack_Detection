@@ -1,0 +1,50 @@
+# Frame pack manifest. The recipe is edited by hand; the outputs block is written by
+# tools/eval/fetch-frame-packs.py or tools/eval/make-attack-packs.py with --update-manifests.
+# The frames themselves are never committed; regenerate them with those scripts.
+id: s3-blink
+kind: bona_fide
+subject: S3
+description: 'Subject S3: neutral, then one natural blink.'
+recipe:
+  type: video_cut
+  source: pexels-6781549
+  filter: crop=ih*4/3:ih,scale=640:480,fps=15
+  fps: 15
+  first: 62
+  last: 82
+labels:
+  action: BLINK
+  onset_frame: 9
+outputs:
+  generator: ffmpeg version 9.0-full_build-www.gyan.dev (bit-exact flags)
+  width: 640
+  height: 480
+  fps: 15
+  frames: 21
+  tree_sha256: 9903f30215ebbb83c49b72128c0929bdb64e04fe78b053d99334f45ed3749617
+  files:
+    frame_00000.jpg: 830aa3e0a144f096f0495b2fb4abddd650d81e4cc6f923cc46be4b57923a67e7
+    frame_00001.jpg: 51f15a5257366198deecd1d0d0bc3cb405a3fccba4bedc0d186c47c73dfa4f40
+    frame_00002.jpg: 485822023436cc31a01387836b1a07c118003cec1b9554438ab1d61571a225ed
+    frame_00003.jpg: cf8976d3a5c5ae08712a35fb199123eeeb04ef9ad6439d18445a8b25f5c598c0
+    frame_00004.jpg: 2ebbc6fa5e6c0e9de36a18bd88e8e2047a6b15a2d4dbf9ba1d965af52441b42f
+    frame_00005.jpg: 8eaab2178168d06758948fda49ccce49877fef53f5d3dd1429270844ba1dcd55
+    frame_00006.jpg: 77a38afe89af366fd3d490f89fe6d6b467d84cb5f349a2eff9bc222ac844fe76
+    frame_00007.jpg: f40d7d968c20b69e373cc85575a3261a0d3932def026dcae330cf7abdabe5c93
+    frame_00008.jpg: c4a5586e1ff107bf00c5037417293fef9d11f1bed88d4bed1f5eb7910300e91b
+    frame_00009.jpg: 4cc65b247ff247c4b2317152eda288691bfd84e1f48dce6b53e302b1cb5ca611
+    frame_00010.jpg: b1f3389ec5f609ba8c9f4e77af0c7aa9cdb6d99f570a3935f87e87605421194e
+    frame_00011.jpg: 02a8f7dc1b91e713136d2b4aa59778b4642fa076811f68845611b5766b341c7c
+    frame_00012.jpg: 58eed41304861b4e53d727116f95504a03734f9b1c0461d48a3f3dea2ee256e3
+    frame_00013.jpg: 800a46b9b4f916ed4f394b392422823996e98f541fb05460081494c43310ce87
+    frame_00014.jpg: 10e73a3cc8fb910ee0df7869016a5f3ece431bf680ed1517d0574f73e72372ae
+    frame_00015.jpg: 878d3ef60cdd2d9ace7ca19fb8b601c3c4e0d345bcacb0d6f840d7c8d6705b5c
+    frame_00016.jpg: 88dcea85d616e1153af477e31a4c5b4787e56971dd345efb856b7663e037b96e
+    frame_00017.jpg: 0aa8789e9cc1350eb860c198c2a6e3c50f4cfb860630d8d017601e7d3a0664b4
+    frame_00018.jpg: aad83e6def946356dcf8cdb3c69a3ec0e60983641768aff55c9efffcdf9188fc
+    frame_00019.jpg: 60917def545df8b5c317d979023ba0251458703ca019c0fb49d3a19521185747
+    frame_00020.jpg: c431e433528e213ba26f84463ff0d0abf84f9f5056ee7440e00c183348c462b0
+  command: ffmpeg -hide_banner -loglevel error -y -threads 1 -i <root>/_sources/pexels-6781549-hd_1920_1080_30fps.mp4
+    -vf crop=ih*4/3:ih,scale=640:480,fps=15 -sws_flags bicubic+accurate_rnd+full_chroma_int+bitexact -fflags +bitexact
+    -flags:v +bitexact -map_metadata -1 -q:v 3 -start_number 0 <root>/_full/<clip>/%05d.jpg ; then frames 62-82
+    copied as frame_00000.jpg on

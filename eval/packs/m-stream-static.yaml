@@ -1,0 +1,114 @@
+# Frame pack manifest. The recipe is edited by hand; the outputs block is written by
+# tools/eval/fetch-frame-packs.py or tools/eval/make-attack-packs.py with --update-manifests.
+# The frames themselves are never committed; regenerate them with those scripts.
+id: m-stream-static
+kind: synthetic_attack
+subject: M
+description: 'Stock MockMDS face stream: the same JPEG (Biometric Devices/Face/Stream Image/0.jpeg, MPL-2.0) sent
+  as every frame. Species SYN-P0.'
+recipe:
+  type: image_repeat
+  file: devices/mock-mds/Biometric Devices/Face/Stream Image/0.jpeg
+  frames: 90
+  fps: 15
+labels:
+  species: SYN-P0
+outputs:
+  generator: byte copy
+  width: 490
+  height: 360
+  fps: 15
+  frames: 90
+  tree_sha256: c56e846202a70d3631ae6ce3aa8376066e00bcffda316eaed65be505aed6b39b
+  files:
+    frame_00000.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00001.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00002.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00003.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00004.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00005.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00006.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00007.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00008.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00009.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00010.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00011.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00012.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00013.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00014.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00015.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00016.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00017.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00018.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00019.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00020.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00021.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00022.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00023.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00024.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00025.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00026.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00027.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00028.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00029.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00030.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00031.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00032.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00033.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00034.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00035.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00036.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00037.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00038.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00039.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00040.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00041.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00042.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00043.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00044.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00045.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00046.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00047.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00048.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00049.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00050.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00051.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00052.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00053.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00054.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00055.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00056.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00057.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00058.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00059.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00060.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00061.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00062.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00063.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00064.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00065.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00066.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00067.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00068.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00069.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00070.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00071.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00072.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00073.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00074.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00075.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00076.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00077.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00078.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00079.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00080.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00081.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00082.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00083.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00084.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00085.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00086.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00087.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00088.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+    frame_00089.jpg: 244e8d97f4abfebb7cf96f39ba1f3b48add8d2f056090c76e252cf753e5b0d57
+  command: read devices/mock-mds/Biometric Devices/Face/Stream Image/0.jpeg, write the same bytes 90 times

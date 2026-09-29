@@ -1,0 +1,74 @@
+# Frame pack manifest. The recipe is edited by hand; the outputs block is written by
+# tools/eval/fetch-frame-packs.py or tools/eval/make-attack-packs.py with --update-manifests.
+# The frames themselves are never committed; regenerate them with those scripts.
+id: s3-dim-smile
+kind: synthetic_bona_fide
+subject: S3
+description: 'Bona fide s3-smile darkened to 45% brightness with extra sensor noise (dim room, condition C2). SYNTHETIC:
+  simulated in software from a bona fide pack; not a physical presentation attack instrument.'
+recipe:
+  type: synthetic
+  generator: video
+  base: s3-smile
+  look: dark
+  fps: 15
+  seed: 182
+  params:
+    brightness: 0.45
+    noise_sigma: 3.5
+labels:
+  condition: C2-dim
+  action: SMILE
+outputs:
+  generator: tools/eval/make-attack-packs.py with Pillow 12.3.0, numpy 2.5.3
+  width: 640
+  height: 480
+  fps: 15
+  frames: 45
+  tree_sha256: e8ca15990179d6d6be2be9a1f4d300c1161667c53931899d331862056c498a07
+  files:
+    frame_00000.jpg: cf9018d6b835986e05f8620b172f35398fc9d4f51a47536f79ca2393b4facc7c
+    frame_00001.jpg: ad8de954d26a924d27264b909527a0531c3f22fa60a7c5248d499b2a17f24b06
+    frame_00002.jpg: e87e5087e161675c4df46330deb9d78b8ca29e06fcce2acf90dd326b2468d613
+    frame_00003.jpg: 4f6bcdb4a364771d3cf2940df420ddb608649db3523e9513989de4544b69a32c
+    frame_00004.jpg: 1fada961e6c963e9b9f9f5b6ec061d3b785a23651957f6bd5079aa9ae8f64af8
+    frame_00005.jpg: f116cc9cad592d82308a8fd680b51ed483d9785af32944df5b1b48d9655c1ea8
+    frame_00006.jpg: ab05aaeefb259a822ce6ddb8ed87706dcfd013a54d962ffd34157e76da33dc72
+    frame_00007.jpg: f04682f315c50a568e3f884039d46701918a1155d0a5cfa3f3d0e9cde23199f9
+    frame_00008.jpg: b7bff2a5c33d44715b37d06b325c2db1196d5817489f8dc6228dbfca64363132
+    frame_00009.jpg: 55792db6135dbd34e37bf4bf5467ea14ae9e5c846b3660cb923e2defca5eec3f
+    frame_00010.jpg: 6a154a9897ef3359541b037d394e3c00ffdda0f3fbde6dc527baaac798e8a82f
+    frame_00011.jpg: c367e69b9c7f0f096b378dc789e23878b902bb630e71339fefc634ced7e2520f
+    frame_00012.jpg: 1d51625a57a8dd0719a198d6a3ce7449a992db7e7ea4b342cc310644e00eee52
+    frame_00013.jpg: d5886c85e6896e4632c4258ad16f010452ecdbd9d0978a9831ee738924c73ec0
+    frame_00014.jpg: 838ef175597bd070dbcb18ff3837cbe349ab57e7189b1647bd41f2d0dd1246cd
+    frame_00015.jpg: afd3e72f37bf03e09e6a6f6bcbf0ef01b929d959f88ef8469f43406e1293ccdb
+    frame_00016.jpg: cc35a3dad4373f55006e8a1c93b7ab2d08b0a8112908c56d82b0c14328491f25
+    frame_00017.jpg: 98a94139beead59b76abe7f2d5d4df570f8930a7d0fe2e582d9fa22e3b6b5d07
+    frame_00018.jpg: de7098c0c694b781360d94baa464dd73e0080e7e1dd0a645a9f10dc332342d79
+    frame_00019.jpg: 9d62055441f85cf73986893a5c6ca86818a00782f9da8adcc7b00c6433fa5359
+    frame_00020.jpg: fcc9c88d91703394c7f23b870437db3a4a3af14b5cc3f6046555de4e9ab60a61
+    frame_00021.jpg: 866287d1c07e49c427940e8865c42961058f5a5c76db5e7451f0c5a3af0388c6
+    frame_00022.jpg: d21e9c119f2f42d0da409e7cdaf18d7823c875b1d650b48340cd3ae937ee3365
+    frame_00023.jpg: b76dc949d42aa1ba0fb0c3cd78b2b2edbdb110bf53a5eede9beb033dc433246e
+    frame_00024.jpg: 7c735ec1974bb7ea84c743f5f9d8a3c98a1b5bd1a553381375626b6b264d8b06
+    frame_00025.jpg: dff32232d1fca414bfe9ed0cf5a867f896cfab4bc9a5eb5b8d98941526c8c538
+    frame_00026.jpg: 4737ee28a83904c1c2e671bc31d033c829599203d016e6e0d62fd9cf8b09e827
+    frame_00027.jpg: b65e52cc431c8df7639dd59295ca0e2eb7d7b5d0e1e45d94e5f00a32b840745e
+    frame_00028.jpg: 0bb43016227d218a5d102a56ba6c6b5325c2fb6007bca34a46693b0c6870b339
+    frame_00029.jpg: f1903ed4ae16c241061f3c73052076191ba4eb50f1d4f4664a2ff644ccd85f51
+    frame_00030.jpg: 2d88e4ea6d326446d5127923a0b804ce6c36aaf19bcea020f60ed3abcd23b98e
+    frame_00031.jpg: ba9ec68941289facf4619005dbe331dde82296e1cd5c509dfe57f3e01e7dda9b
+    frame_00032.jpg: 1ffd981766c4bb1d2a4e425e876dc6eb1a07ca4836814542a6f0dfffd23ae47b
+    frame_00033.jpg: b8a885f85e733d605e556ddf8a4e60943c46aa1551a8bc7215c51b204834cc40
+    frame_00034.jpg: b9f15dfc372798429fffe5bc5d0c1de71f33c2ac54d9a754f71a29e3048c4ec5
+    frame_00035.jpg: 5ffe7ed8fe03ddc8314e1a75f6a2d325161b603170ce85825b917c0c7e2aee43
+    frame_00036.jpg: ecf2306cfdd4021b280cad8b88cea25a0df836059af1dd8ed00416417ff508b3
+    frame_00037.jpg: b1fdaf6892942ad3ec6432d97343dd5262a954b8631179e622ca3a7ce0064dc8
+    frame_00038.jpg: a7168b8de0429ebb6203afb9ca72e974fafdf705b8716dc920465433a78c049f
+    frame_00039.jpg: 5b250e4a9f14376d5c09a9e9b217692de1f34c57714f1b2f9e0647c2faf510c2
+    frame_00040.jpg: f4e03277f42e6dd5837291ad902d6bdfbccf15013a64afdfe7b03282a41379be
+    frame_00041.jpg: 868d28967e6984291f4b32e643f5e583724df1602f4aecb110da93240086da13
+    frame_00042.jpg: e3a5e99cdcd210c7bb6ae7773c7a5b385c33ee9939a7f02ece2f3c4aee6c14bf
+    frame_00043.jpg: de93e8efb871edd339b9f2be2ec18207c755e9d14802b3a433fc4539c42165f2
+    frame_00044.jpg: 8f337a1293ba35d63caa634d43b0f5708224c17260628a7abe088cd655db6ab9
