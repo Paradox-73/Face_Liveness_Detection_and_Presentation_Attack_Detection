@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Timer;
@@ -41,6 +42,7 @@ import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.liveness.core.Workflow;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
@@ -48,6 +50,8 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.context.SessionContext.UserContext;
+import io.mosip.registration.controller.liveness.LivenessDialog;
 import io.mosip.registration.controller.device.BiometricsController;
 import io.mosip.registration.controller.device.ScanPopUpViewController;
 import io.mosip.registration.controller.eodapproval.RegistrationApprovalController;
@@ -67,14 +71,18 @@ import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.entity.UserBiometric;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RemapException;
+import io.mosip.registration.mdm.dto.LivenessContext;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.scheduler.SchedulerUtil;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.bio.BioService;
+import io.mosip.registration.service.bio.liveness.LivenessOrchestrator;
+import io.mosip.registration.service.bio.liveness.LivenessOutcome;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
@@ -121,6 +129,7 @@ import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.stage.Window;
 import javafx.util.Duration;
 
 
@@ -150,6 +159,9 @@ public class BaseController {
 
 	@Autowired
 	protected ServiceDelegateUtil serviceDelegateUtil;
+
+	@Autowired
+	protected LivenessOrchestrator livenessOrchestrator;
 
 	@Autowired
 	protected FXComponents fXComponents;
@@ -1718,6 +1730,8 @@ public class BaseController {
 						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
 				1, io.mosip.registration.context.ApplicationContext
 				.getIntValueFromApplicationMap(RegistrationConstants.FACE_AUTHENTICATION_THRESHOLD));
+		// the pass of the liveness session run by the screen for this user, if any; the liveness gate checks it
+		mdmRequestDto.setLivenessContext(livenessOrchestrator.contextFor(faceAuthWorkflow(isPacketAuth, isReviewer), userId));
 
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 
@@ -1738,6 +1752,106 @@ public class BaseController {
 					.get(RegistrationConstants.REGISTRATION_DATA);
 			registrationDTO.addOfficerBiometrics(biometrics);
 		}
+	}
+
+	/**
+	 * Returns the face liveness workflow of an operator or supervisor authentication.
+	 *
+	 * @param isPacketAuth {@code true} for packet authentication, {@code false} for end-of-day approval
+	 * @param isReviewer   {@code true} for the reviewer (supervisor) step of packet authentication
+	 * @return {@code packet_auth}, {@code exception_auth} or {@code eod_auth}
+	 */
+	protected Workflow faceAuthWorkflow(boolean isPacketAuth, boolean isReviewer) {
+		if (!isPacketAuth) {
+			return Workflow.EOD_AUTH;
+		}
+		return isReviewer ? Workflow.EXCEPTION_AUTH : Workflow.PACKET_AUTH;
+	}
+
+	/**
+	 * Tells whether a face capture in a workflow must pass face liveness first (read at each call, so a config sync
+	 * applies to the next capture).
+	 *
+	 * @param workflow the liveness workflow
+	 * @return {@code true} when liveness is on and the workflow's policy is not {@code OFF}
+	 */
+	protected boolean isLivenessEnforced(Workflow workflow) {
+		return livenessOrchestrator != null && livenessOrchestrator.isEnforced(workflow);
+	}
+
+	/**
+	 * Opens the face liveness window for a capture. The screen runs its existing capture task from
+	 * {@link LivenessDialog.Callbacks#captureReady}.
+	 *
+	 * @param workflow   the liveness workflow
+	 * @param subjectRef registration ID (resident) or user ID (operator, supervisor)
+	 * @param owner      window the dialog is modal to; {@code null} uses the main window
+	 * @param callbacks  capture, pass and close handlers
+	 * @return the open dialog
+	 */
+	protected LivenessDialog openLivenessDialog(Workflow workflow, String subjectRef, Window owner,
+			LivenessDialog.Callbacks callbacks) {
+		LivenessDialog.Options options = new LivenessDialog.Options(workflow, subjectRef)
+				.owner(owner != null ? owner : fXComponents.getStage())
+				.language(ApplicationContext.applicationLanguage(), applicationContext.isPrimaryLanguageRightToLeft())
+				.onlineCheck(() -> serviceDelegateUtil.isNetworkAvailable())
+				.supervisorId(BaseController::loggedInSupervisorId);
+		return LivenessDialog.open(livenessOrchestrator, options, callbacks);
+	}
+
+	/**
+	 * Runs an operator or supervisor face authentication behind face liveness: opens the liveness window, then runs
+	 * the screen's existing capture-and-match task once liveness passed. Authentication is blocked when liveness
+	 * fails; after the last attempt the recovery message is shown.
+	 *
+	 * @param workflow        {@code packet_auth}, {@code exception_auth} or {@code eod_auth}
+	 * @param userId          the user being authenticated
+	 * @param anchor          a node of the calling screen (owner of the window)
+	 * @param captureAndMatch the existing capture and 1:1 match task
+	 * @return the open dialog
+	 */
+	protected LivenessDialog authenticateFaceWithLiveness(Workflow workflow, String userId, Node anchor,
+			Runnable captureAndMatch) {
+		Window owner = anchor != null && anchor.getScene() != null ? anchor.getScene().getWindow() : null;
+		return openLivenessDialog(workflow, userId, owner, new LivenessDialog.Callbacks() {
+			@Override
+			public void captureReady(LivenessContext context) {
+				// captureAndValidateFace picks up the pending pass of this session for the same user
+				captureAndMatch.run();
+			}
+
+			@Override
+			public void closedWithoutPass(Optional<LivenessOutcome> lastOutcome) {
+				if (lastOutcome.isPresent() && lastOutcome.get().isLockRequired()) {
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
+							.getMessageLanguageSpecific(RegistrationUIConstants.LIVENESS_MAX_ATTEMPTS_AUTH));
+				}
+			}
+		});
+	}
+
+	/**
+	 * Tells whether a capture failed because the face liveness gate refused it ({@code REG-LIV-*}).
+	 *
+	 * @param failure the exception of the capture task
+	 * @return {@code true} for a liveness refusal
+	 */
+	protected static boolean isLivenessRefusal(Throwable failure) {
+		for (Throwable t = failure; t != null; t = t.getCause()) {
+			if (t instanceof RegBaseCheckedException && ((RegBaseCheckedException) t).getErrorCode() != null
+					&& ((RegBaseCheckedException) t).getErrorCode().startsWith("REG-LIV-")) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static Optional<String> loggedInSupervisorId() {
+		UserContext user = SessionContext.isSessionContextAvailable() ? SessionContext.userContext() : null;
+		if (user == null || user.getRoles() == null || !user.getRoles().contains(Role.REGISTRATION_SUPERVISOR.name())) {
+			return Optional.empty();
+		}
+		return Optional.ofNullable(user.getUserId());
 	}
 	
 	protected void showAlertAndLogout() {
