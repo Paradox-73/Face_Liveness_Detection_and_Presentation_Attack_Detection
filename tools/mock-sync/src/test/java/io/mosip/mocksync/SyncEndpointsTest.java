@@ -47,6 +47,7 @@ import io.mosip.mocksync.crypto.ClientCrypto;
 import io.mosip.mocksync.crypto.KeyMaterial;
 import io.mosip.mocksync.web.ResponseFactory;
 import io.mosip.mocksync.web.ScriptController;
+import io.mosip.mocksync.web.SyncDataController;
 
 /**
  * Endpoint shape tests: a simulated desktop machine with local (non-TPM) keys goes through first login and every
@@ -119,7 +120,8 @@ class SyncEndpointsTest {
 	@Test
 	void loginRejectsWrongPasswordAndUnknownMachine() throws Exception {
 		assertEquals("KER-ATH-401", firstErrorCode(login("officer1", "wrong", machineKeys)));
-		assertEquals("KER-SNC-MACHINE-404", firstErrorCode(login("officer1", "Mosip@Officer1", KeyMaterial.newRsaKeyPair())));
+		assertEquals(SyncDataController.MACHINE_NOT_FOUND,
+				firstErrorCode(login("officer1", "Mosip@Officer1", KeyMaterial.newRsaKeyPair())));
 	}
 
 	@Test
@@ -312,6 +314,19 @@ class SyncEndpointsTest {
 		assertSigned(response);
 		List<?> statuses = (List<?>) json(response).get("response");
 		assertEquals(Map.of("registrationId", "10001100011000120260928120000", "status", "SUCCESS"), statuses.get(0));
+	}
+
+	@Test
+	void packetStatusAnswersEveryRequestedPacket() throws Exception {
+		// RegPacketStatusServiceImpl.syncServerStatus: an empty or missing list counts as a failed status sync.
+		String request = MAPPER.writeValueAsString(Map.of("id", "mosip.registration.packet.external.status", "request",
+				List.of(Map.of("packetId", "p1"), Map.of("registrationId", "r2"))));
+		MockHttpServletResponse response = mvc.perform(post("/registrationprocessor/v1/registrationstatus/packetexternalstatus")
+				.contentType(MediaType.APPLICATION_JSON).content(request)).andReturn().getResponse();
+		assertSigned(response);
+		List<?> statuses = (List<?>) json(response).get("response");
+		assertEquals(List.of(Map.of("packetId", "p1", "statusCode", "RECEIVED"),
+				Map.of("registrationId", "r2", "statusCode", "RECEIVED")), statuses);
 	}
 
 	private Map<String, String> registrationConfig() throws Exception {

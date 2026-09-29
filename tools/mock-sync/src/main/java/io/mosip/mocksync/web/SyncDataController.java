@@ -48,6 +48,13 @@ public class SyncDataController {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SyncDataController.class);
 
+	/**
+	 * Error code for a machine MockSync does not know. The Android client maps exactly this code to its
+	 * "This device has not been onboarded yet" login message ({@code AuthenticationApi}); the desktop client shows
+	 * its generic login error for any code.
+	 */
+	public static final String MACHINE_NOT_FOUND = "KER-SNC-155";
+
 	private final MachineRegistry machines;
 	private final UserStore users;
 	private final TokenService tokens;
@@ -137,7 +144,7 @@ public class SyncDataController {
 		Optional<Machine> machine = machines.findBySignKeyIndex(kid);
 		if (machine.isEmpty()) {
 			LOGGER.warn("Login from unregistered machine (signing key {}); register it first", kid);
-			return responses.error(id, "KER-SNC-MACHINE-404", "Machine not registered in MockSync (key " + kid
+			return responses.error(id, MACHINE_NOT_FOUND, "Machine not registered in MockSync (key " + kid
 					+ "). Register it with scripts/register-machine and retry.");
 		}
 		logSignatureCheck(machine.get(), parts);
@@ -210,7 +217,7 @@ public class SyncDataController {
 		Optional<Machine> known = machines.findByKeyIndex(keyIndex);
 		if (known.isEmpty()) {
 			if (!properties.isAutoRegisterMachines()) {
-				return responses.error(id, "KER-SNC-MACHINE-404", "Machine " + name + " is not registered");
+				return responses.error(id, MACHINE_NOT_FOUND, "Machine " + name + " is not registered");
 			}
 			machines.register(name, publicKey, signKey == null ? null : signKey.toString(), null, "auto");
 		}
@@ -329,7 +336,7 @@ public class SyncDataController {
 
 	private ResponseEntity<byte[]> unknownMachine(String id, String keyIndex) {
 		LOGGER.warn("Request from unregistered machine key index {}", keyIndex);
-		return responses.error(id, "KER-SNC-MACHINE-404", "Machine with key index " + keyIndex + " is not registered");
+		return responses.error(id, MACHINE_NOT_FOUND, "Machine with key index " + keyIndex + " is not registered");
 	}
 
 	private String encryptFor(Machine machine, String json) {
