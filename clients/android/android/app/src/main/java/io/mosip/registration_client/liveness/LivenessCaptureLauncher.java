@@ -110,12 +110,24 @@ public class LivenessCaptureLauncher {
      */
     public synchronized boolean launch(Workflow workflow, String subjectRef, boolean photoWhenOff,
                                        int priorAttempts, Callback callback) {
+        return launch(LivenessCaptureRequest.builder(workflow, subjectRef).photoWhenOff(photoWhenOff)
+                .priorAttempts(priorAttempts), callback);
+    }
+
+    /**
+     * Opens the capture screen for any request (for example the supervisor override screens). The screen's
+     * language is set here; debug builds apply the replay source.
+     *
+     * @param request  the request to complete and send
+     * @param callback receives the result
+     * @return {@code false} when no activity is attached or another capture is open (nothing started)
+     */
+    public synchronized boolean launch(LivenessCaptureRequest.Builder request, Callback callback) {
         if (activity == null || pending != null) {
             Log.w(TAG, "Capture screen not opened: " + (activity == null ? "no activity" : "another capture is open"));
             return false;
         }
-        LivenessCaptureRequest.Builder request = LivenessCaptureRequest.builder(workflow, subjectRef)
-                .language(language).photoWhenOff(photoWhenOff).priorAttempts(priorAttempts);
+        request.language(language);
         if (BuildConfig.DEBUG) {
             DebugReplay.apply(activity, request);
         }

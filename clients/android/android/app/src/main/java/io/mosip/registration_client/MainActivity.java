@@ -71,6 +71,7 @@ import io.mosip.registration_client.api_services.LivenessApi;
 import io.mosip.registration_client.liveness.FaceAuthFlow;
 import io.mosip.registration_client.liveness.FaceCaptureLivenessGate;
 import io.mosip.registration_client.liveness.LivenessCaptureLauncher;
+import io.mosip.registration_client.liveness.SupervisorOverrideFlow;
 import io.mosip.registration_client.model.LivenessPigeon;
 import io.mosip.registration.livenessmanager.di.LivenessModule;
 import io.mosip.registration.keymanager.spi.ClientCryptoManagerService;
@@ -154,6 +155,8 @@ public class MainActivity extends FlutterActivity {
     FaceCaptureLivenessGate faceCaptureLivenessGate;
     @Inject
     FaceAuthFlow faceAuthFlow;
+    @Inject
+    SupervisorOverrideFlow supervisorOverrideFlow;
     @Inject
     LivenessApi livenessApi;
     @Inject
@@ -442,6 +445,7 @@ public class MainActivity extends FlutterActivity {
         // Face liveness: capture screen for resident and onboarding faces, face authentication for staff
         livenessCaptureLauncher.attach(this);
         biometricsDetailsApi.setLivenessGate(faceCaptureLivenessGate, livenessCaptureLauncher);
+        biometricsDetailsApi.setSupervisorOverrideFlow(supervisorOverrideFlow);
         authenticationApi.setFaceAuthFlow(faceAuthFlow);
         LivenessPigeon.LivenessApi.setup(flutterEngine.getDartExecutor().getBinaryMessenger(), livenessApi);
         livenessApi.setCallbackActivity(this);

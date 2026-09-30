@@ -11,8 +11,13 @@ import org.junit.Test;
 import io.mosip.liveness.core.Decision;
 import io.mosip.liveness.core.FailureReason;
 import io.mosip.liveness.core.Workflow;
+import io.mosip.liveness.core.api.PacketEvidenceKeys;
+import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.ui.MessageKeys;
 import io.mosip.registration.livenessmanager.LivenessCaptureResult;
+import io.mosip.registration.livenessmanager.auth.FaceAuthOutcome;
+import io.mosip.registration.livenessmanager.auth.FaceAuthStatus;
+import io.mosip.registration.livenessmanager.ui.MessageResolver;
 
 public class FaceCaptureLivenessGateTest {
 
@@ -123,6 +128,63 @@ public class FaceCaptureLivenessGateTest {
         assertEquals(CaptureOutcome.Status.FAILED, rejected.status());
         gate.clearOutcome(FIELD);
         assertEquals(CaptureOutcome.Status.NOT_REQUIRED, gate.lastOutcome(FIELD).status());
+    }
+
+    @Test
+    public void overrideIsKeptOnlyWhenThePolicyAndTheFailureAllowIt() {
+        gate.record(RID, FIELD, failure(FailureReason.ACTIVE, 3, false).toBuilder().overrideAllowed(true).build());
+        assertNull("shipped policy BLOCK: no override", gate.overrideEvidence(RID, FIELD));
+
+        allowOverride();
+        gate.record("rid-2", FIELD, failure(FailureReason.PAD, 3, false));
+        assertNull("the engine refused the override after a suspected attack", gate.overrideEvidence("rid-2", FIELD));
+
+        gate.record(RID, FIELD, overridable());
+        assertEquals("S-1", gate.overrideEvidence(RID, FIELD).get(PacketEvidenceKeys.SESSION));
+        assertEquals(CaptureOutcome.Status.BLOCKED, gate.admit(RID, FIELD).status());
+    }
+
+    @Test
+    public void overridePhotoUnblocksTheFieldWithTheOverrideMessage() {
+        allowOverride();
+        gate.record(RID, FIELD, overridable());
+        LivenessCaptureResult photo = LivenessCaptureResult.builder(Workflow.REGISTRATION, Decision.PASS)
+                .reasonCodes(java.util.Collections.singletonList(LivenessCaptureResult.REASON_SUPERVISOR_OVERRIDE))
+                .evidence(PacketEvidenceKeys.DECISION, PacketEvidenceKeys.DECISION_OVERRIDE).build();
+
+        CaptureOutcome outcome = gate.recordOverride(RID, FIELD, photo);
+
+        assertEquals(CaptureOutcome.Status.PASSED, outcome.status());
+        assertEquals(MessageResolver.OVERRIDE_USED, outcome.messageKey());
+        assertNull(gate.overrideEvidence(RID, FIELD));
+        assertNull(gate.admit(RID, FIELD));
+    }
+
+    @Test
+    public void refusedSupervisorKeepsTheFieldBlockedAndTheOfferOpen() {
+        allowOverride();
+        gate.record(RID, FIELD, overridable());
+
+        CaptureOutcome outcome = gate.recordOverrideRefused(RID, FIELD, FaceAuthOutcome.early(
+                Workflow.EXCEPTION_AUTH, FaceAuthStatus.NOT_SUPERVISOR, MessageKeys.ERROR_NOT_SUPERVISOR));
+
+        assertEquals(CaptureOutcome.Status.BLOCKED, outcome.status());
+        assertEquals(MessageKeys.ERROR_NOT_SUPERVISOR, outcome.messageKey());
+        assertTrue(gate.overrideEvidence(RID, FIELD) != null);
+        LivenessCaptureResult cancelled = LivenessCaptureResult.builder(Workflow.REGISTRATION, Decision.CANCELLED)
+                .failureReason(FailureReason.CANCELLED).build();
+        assertEquals(CaptureOutcome.Status.BLOCKED, gate.recordOverride(RID, FIELD, cancelled).status());
+    }
+
+    private void allowOverride() {
+        liveness.config.put(LivenessConfigKeys.workflowKey(Workflow.REGISTRATION,
+                LivenessConfigKeys.WORKFLOW_ON_MAX_FAILURE_SUFFIX), "SUPERVISOR_OVERRIDE");
+    }
+
+    private static LivenessCaptureResult overridable() {
+        return failure(FailureReason.ACTIVE, 3, false).toBuilder().overrideAllowed(true)
+                .evidence(PacketEvidenceKeys.SESSION, "S-1")
+                .evidence(PacketEvidenceKeys.DECISION, PacketEvidenceKeys.DECISION_FAIL).build();
     }
 
     private static LivenessCaptureResult pass() {

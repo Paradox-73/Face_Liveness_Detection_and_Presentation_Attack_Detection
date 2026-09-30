@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import io.mosip.liveness.core.Clock;
 import io.mosip.liveness.core.Workflow;
@@ -18,18 +19,23 @@ import io.mosip.liveness.core.audit.DiagnosticSink;
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.engine.AuditPayloadBuilder;
+import io.mosip.liveness.core.engine.LivenessMetrics;
 import io.mosip.liveness.core.policy.PolicyResolution;
 import io.mosip.liveness.core.policy.PolicyResolver;
+import io.mosip.registration.livenessmanager.audit.DiagnosticModeTracker;
 import io.mosip.registration.livenessmanager.audit.LogcatSinks;
 import io.mosip.registration.livenessmanager.config.GlobalParamConfigSource;
 import io.mosip.registration.livenessmanager.device.AndroidKeystoreSigner;
 import io.mosip.registration.livenessmanager.device.DeviceSigner;
+import io.mosip.registration.livenessmanager.engine.AcceleratorCustomizer;
 import io.mosip.registration.livenessmanager.engine.EngineLoader;
 import io.mosip.registration.livenessmanager.image.AndroidImageDecoder;
+import io.mosip.registration.livenessmanager.metrics.MetricsLog;
+import io.mosip.registration.livenessmanager.metrics.MetricsReport;
 
 /**
  * The process-wide pieces the liveness screen and service share: configuration, audit and diagnostic sinks,
- * image decoder, engine loader, device identity and key.
+ * image decoder, engine loader, device identity and key, and the anonymised metrics of all sessions.
  *
  * <p>Inside ARC the Dagger {@code LivenessModule} installs it with ARC's configuration and audit service when the
  * app starts. When the capture screen is started on its own (a debug launch from adb before ARC was opened), a
@@ -39,6 +45,8 @@ public final class LivenessRuntime {
 
     private static final String PREFS = "io.mosip.registration.livenessmanager";
     private static final String PREF_SERIAL = "device.serial";
+    private static final String PREF_DIAGNOSTIC = "diagnostic.last";
+    private static final String METRICS_TAG = "LivenessMetrics";
     private static volatile LivenessRuntime installed;
     private static volatile LivenessRuntime standalone;
 
@@ -48,8 +56,12 @@ public final class LivenessRuntime {
     private final DiagnosticSink diagnostics;
     private final AndroidImageDecoder decoder;
     private final EngineLoader engines;
+    private final LivenessMetrics metrics;
+    private final MetricsLog metricsLog;
+    private final DiagnosticModeTracker diagnosticMode;
     private final Clock clock;
     private final boolean isStandalone;
+    private volatile Supplier<String> userId = () -> "";
     private volatile DeviceSigner signer;
 
     private LivenessRuntime(Context context, ConfigSource config, AuditSink audit, boolean isStandalone) {
@@ -58,9 +70,25 @@ public final class LivenessRuntime {
         this.audit = Objects.requireNonNull(audit, "audit");
         this.diagnostics = LogcatSinks.diagnostics();
         this.decoder = new AndroidImageDecoder();
-        this.engines = EngineLoader.onnx(this.context.getAssets(), config, decoder);
+        this.metrics = new LivenessMetrics();
+        this.engines = EngineLoader.onnx(this.context.getAssets(), config, decoder, metrics,
+                AcceleratorCustomizer.ortProviders());
         this.clock = Clock.system();
         this.isStandalone = isStandalone;
+        this.metricsLog = new MetricsLog(new File(new File(this.context.getFilesDir(), "liveness"), "metrics.log"),
+                MetricsLog.DEFAULT_MAX_BYTES, e -> Log.w(METRICS_TAG, "Metrics not written: " + e.getMessage()));
+        SharedPreferences prefs = this.context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        this.diagnosticMode = new DiagnosticModeTracker(new DiagnosticModeTracker.Store() {
+            @Override
+            public String load() {
+                return prefs.getString(PREF_DIAGNOSTIC, null);
+            }
+
+            @Override
+            public void save(String value) {
+                prefs.edit().putString(PREF_DIAGNOSTIC, value).apply();
+            }
+        }, audit, clock, () -> userId.get());
     }
 
     /**
@@ -129,7 +157,63 @@ public final class LivenessRuntime {
             }
         }
         resolution.configAppliedEvent(clock.now()).ifPresent(audit::emit);
+        if (!isStandalone) {
+            diagnosticMode.observe(workflow, resolution.policy().isDiagnosticEnabled());
+        }
         return resolution;
+    }
+
+    /**
+     * Sets who is signed in, for audit {@code REG-EVT-LV17} (diagnostic mode changed).
+     *
+     * @param userId returns the signed-in user's ID, or blank
+     */
+    public void setUserIdSupplier(Supplier<String> userId) {
+        this.userId = Objects.requireNonNull(userId, "userId");
+    }
+
+    /**
+     * Returns the signed-in user's ID as ARC last reported it.
+     *
+     * @return the user ID, or an empty string
+     */
+    public String currentUserId() {
+        String id = userId.get();
+        return id == null ? "" : id.trim();
+    }
+
+    /**
+     * Returns the anonymised metrics of every session in this process (counts, times, retry and failure rates).
+     *
+     * @return the shared collector
+     */
+    public LivenessMetrics metrics() {
+        return metrics;
+    }
+
+    /**
+     * Writes the current metrics as one line to {@code files/liveness/metrics.log} and to Logcat (tag
+     * {@code LivenessMetrics}), unless {@code metrics.enable} is {@code N}. Called after every attempt; returns at
+     * once (the file is written on a background thread).
+     *
+     * @param enabled the policy's {@code metrics.enable}
+     */
+    public void publishMetrics(boolean enabled) {
+        if (!enabled) {
+            return;
+        }
+        String line = MetricsReport.line(metrics.snapshot(), clock.now());
+        Log.i(METRICS_TAG, line);
+        metricsLog.append(line);
+    }
+
+    /**
+     * Returns the metrics log.
+     *
+     * @return the log writer
+     */
+    public MetricsLog metricsLog() {
+        return metricsLog;
     }
 
     /**

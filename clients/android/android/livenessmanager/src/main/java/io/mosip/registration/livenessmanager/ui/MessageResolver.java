@@ -22,6 +22,15 @@ import io.mosip.registration.livenessmanager.R;
  */
 public final class MessageResolver {
 
+    /**
+     * Android-only message: the resident's face was stored under a supervisor override (shown by ARC's Flutter
+     * screens under the Scan button).
+     */
+    public static final String OVERRIDE_USED = "liveness.override.used";
+    /** Message keys that exist only on Android, in addition to {@link MessageKeys#all()}. */
+    public static final java.util.List<String> ANDROID_ONLY_KEYS =
+            Collections.unmodifiableList(java.util.Arrays.asList(OVERRIDE_USED));
+
     private static final Map<String, Integer> IDS = buildIds();
 
     private final Resources resources;
@@ -54,7 +63,7 @@ public final class MessageResolver {
     /**
      * Returns the keys that have a string resource.
      *
-     * @return all mapped keys (the 40 {@link MessageKeys#all()} keys)
+     * @return all mapped keys: the {@link MessageKeys#all()} keys and {@link #ANDROID_ONLY_KEYS}
      */
     public static Map<String, Integer> mappedKeys() {
         return Collections.unmodifiableMap(IDS);
@@ -162,6 +171,7 @@ public final class MessageResolver {
         m.put(MessageKeys.TITLE_SUPERVISOR, R.string.liveness_title_supervisor);
         m.put(MessageKeys.OFFLINE_BADGE, R.string.liveness_offline_badge);
         m.put(MessageKeys.CONFIG_UPDATED, R.string.liveness_config_updated);
+        m.put(OVERRIDE_USED, R.string.liveness_override_used);
         return m;
     }
 }

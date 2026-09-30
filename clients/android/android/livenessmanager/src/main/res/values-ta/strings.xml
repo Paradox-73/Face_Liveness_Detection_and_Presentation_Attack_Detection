@@ -40,6 +40,7 @@
     <string name="liveness_title_supervisor">மேற்பார்வையாளர் சரிபார்ப்பு</string>
     <string name="liveness_offline_badge">இணைப்பில்லை – சரிபார்ப்பு இந்தச் சாதனத்திலேயே நடக்கிறது</string>
     <string name="liveness_config_updated">முகச் சரிபார்ப்பு அமைப்புகள் புதுப்பிக்கப்பட்டன.</string>
+    <string name="liveness_override_used">மேற்பார்வையாளர் மேலெழுதலுடன் முகம் சேமிக்கப்பட்டது. தொகுப்பில் மறுஆய்வுக்காக இது குறிக்கப்பட்டுள்ளது.</string>
 
     <string name="liveness_ui_title">முகச் சரிபார்ப்பு</string>
     <string name="liveness_ui_retry">மறுமுயற்சி</string>
@@ -49,4 +50,8 @@
     <string name="liveness_ui_attempts">முயற்சி {0} / {1}</string>
     <string name="liveness_ui_preview">கேமரா முன்னோட்டம். உங்கள் முகத்தை நீள்வட்டத்துக்குள் வைத்திருக்கவும்.</string>
     <string name="liveness_ui_replay_badge">மறுஒளிபரப்பு (பிழைத்திருத்தப் பதிப்பு)</string>
+    <string name="liveness_ui_override">மேற்பார்வையாளர் மேலெழுதல்</string>
+    <string name="liveness_ui_supervisor_id">மேற்பார்வையாளர் பயனர் ஐடி</string>
+    <string name="liveness_ui_supervisor_id_missing">மேற்பார்வையாளரின் பயனர் ஐடியை உள்ளிடவும்.</string>
+    <string name="liveness_ui_diagnostics">கண்டறிதல்</string>
 </resources>

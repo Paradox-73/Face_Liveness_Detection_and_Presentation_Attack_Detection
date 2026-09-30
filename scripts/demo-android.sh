@@ -18,8 +18,13 @@
 #               until the maximum attempts block the capture for that registration
 #   approval    supervisor face sign-in, end-of-day approval with face (eod_auth: replay refused, live face
 #               accepted), packet upload, liveness evidence of the uploaded packets read back from MockSync
-#   config      MockSync changes policy.registration to ALWAYS_ACTIVE, ARC synchronises, a resident capture now
-#               asks for challenges; the change is reverted and synchronised back
+#   config      MockSync changes policy.packet_auth to ALWAYS_ACTIVE, ARC synchronises, the operator's packet
+#               authentication by face now asks for challenges; the change is reverted and synchronised back
+#   override    MockSync sets registration.on_max_failure=SUPERVISOR_OVERRIDE (one attempt, challenges always,
+#               diagnostic mode on); a resident who does not answer the challenge fails, the capture screen offers
+#               "Supervisor override", supervisor1 verifies with face liveness, the resident's photo is stored
+#               flagged OVERRIDE (REG-EVT-LV16); diagnostic panel, REG-EVT-LV17 and the metrics file are checked;
+#               the settings are reverted. The approval section then uploads the packet and checks OVERRIDE in it.
 #   offline     MockSync unreachable (adb reverse removed, so the server is gone for the tablet) and no network
 #               (airplane mode): password sign-in, registration with packet authentication by face, supervisor
 #               face sign-in and approval by face; upload fails; network back, upload succeeds
@@ -30,6 +35,13 @@
 #   scripts/demo-android.sh --sections "login resident"
 #   scripts/demo-android.sh --out DIR               # output folder (default $MOSIP_RUN_ROOT/demo/android-<time>)
 #   . scripts/demo-android.sh --out DIR             # only defines the functions, for running single steps
+#
+# Replay profile: the recorded frame packs are 4-6 s long, and a clip that repeats is (correctly) refused as a
+# replayed video. MockSync's shipped policy (challenges always for residents and operator sign-in, 30 passive
+# frames) needs longer clips, so the demo first sets the policy the packs were recorded for (DEMO_PROFILE below:
+# passive first, 8 passive frames) and synchronises. ARC keeps a synchronised value when the server stops sending
+# the key, so every key the demo changes is put back by setting MockSync's own value again (read at the start) and
+# synchronising; the demo's MockSync overrides are removed at the end, when they equal the shipped values.
 #
 # Output: results.txt (one PASS/FAIL line per check), demo.log, logcat-<section>.txt (tags Liveness,
 # AuthenticationApi, RegistrationServiceImpl), screenshots <nn>-<name>.png, packets/<rid>.liveness.json,
@@ -66,7 +78,7 @@ PACKAGE="io.mosip.registration_client"
 REPLAY_DIR="/sdcard/Android/data/$PACKAGE/files/liveness-replay"
 PACK_LIST="s1-main s1-blink s1-smile s3-main s3-blink s3-smile s3n-main s3n-blink s3n-smile a-s2-print-still
   a-s2-identical a-s2-screen-replay a-s3-screen-replay"
-ALL_SECTIONS="login resident attacks approval config offline latency"
+ALL_SECTIONS="login resident attacks override approval config offline latency"
 SECTIONS="$ALL_SECTIONS"
 OUT="$RUN_ROOT/demo/android-$(date +%Y%m%d-%H%M%S)"
 export ANDROID_SERIAL="emulator-$PORT"
@@ -131,7 +143,8 @@ logcat_clear() {
   return 1
 }
 logcat_dump() {
-  adb logcat -d -v time -s Liveness AuthenticationApi RegistrationServiceImpl 2>/dev/null | tr -d '\r'
+  adb logcat -d -v time -s Liveness LivenessMetrics AuthenticationApi RegistrationServiceImpl 2>/dev/null \
+    | tr -d '\r'
 }
 # logcat_save: adds the current Logcat lines to the section's file (each line once, in time order).
 logcat_save() {
@@ -367,8 +380,8 @@ scan() {
 
 # close_capture_dialog: closes ARC's "Face Capture" / "Exception Capture" dialog that shows the stored image.
 close_capture_dialog() {
-  sleep 3
-  ui_dump
+  # The dialog can take several seconds to appear on a loaded emulator.
+  ui_wait_any 15 "attempts left" "attempt left" >/dev/null
   if ui_has "attempts left" || ui_has "attempt left"; then
     adb shell input tap 1090 118
     sleep 2
@@ -522,13 +535,15 @@ section_login() {
   shot home-officer
 
   app_restart
-  replay s3-main
+  replay "follow s3"
   enter_user "$OFFICER"
   check A-L2 "\"Sign in with face\" offered to an onboarded operator" screen_has "Sign in with face"
   shot password-step-with-face
   logcat_clear
   ui_tap "Sign in with face"
-  check A-L3 "face sign-in (login_auth): liveness PASS" capture_run 1
+  # Two tries: on a loaded emulator the first frames after the app start can exceed engine.inference_slow_ms,
+  # which ends the attempt with an engine error that uses no attempt (the operator presses Retry).
+  check A-L3 "face sign-in (login_auth): liveness PASS" capture_run 2
   check A-L4 "face sign-in: 1:1 match with the onboarding face" \
     wait_log "Face authentication login_auth: FaceMatch\[MATCHED" 60
   check A-L5 "face sign-in reaches the home screen" ui_wait "New Registration" 60
@@ -638,9 +653,153 @@ section_attacks() {
   home
 }
 
+# Policy the recorded frame packs fit (see "Replay profile" at the top).
+DEMO_PROFILE="mosip.registration.liveness.policy.registration=PASSIVE_THEN_ACTIVE
+mosip.registration.liveness.policy.login_auth=PASSIVE_THEN_ACTIVE
+mosip.registration.liveness.policy.onboard_auth=PASSIVE_THEN_ACTIVE
+mosip.registration.liveness.passive.min_frames=8"
+
+# Shipped value of a liveness key as MockSync serves it without the demo's overrides (read once at the start;
+# keys MockSync does not send get the engine default of LivenessConfigKeys).
+declare -A SHIPPED=(
+  [mosip.registration.liveness.registration.max_retries]=3
+  [mosip.registration.liveness.registration.on_max_failure]=BLOCK
+)
+read_shipped() {
+  local key value
+  while IFS='=' read -r key value; do
+    [ -n "$key" ] && SHIPPED[$key]="$value"
+  done < <(curl -sf -m 5 "$MOCKSYNC_URL/admin/config" \
+    | python -c 'import json,sys; [print(k + "=" + v) for k, v in json.load(sys.stdin)["liveness"].items()]' \
+    | tr -d '\r')
+}
+
+# settings set|restore|forget LIST: applies the key=value lines; restore sets each key back to its shipped value
+# (so the tablet gets it at the next synchronisation); forget removes the overrides from MockSync.
+settings() {
+  local line key
+  for line in $2; do
+    key="${line%%=*}"
+    case "$1" in
+      set) mocksync_set "$key" "${line#*=}" || return 1 ;;
+      restore) mocksync_set "$key" "${SHIPPED[$key]:?no shipped value for $key}" || return 1 ;;
+      forget) mocksync_unset "$key" || return 1 ;;
+    esac
+  done
+}
+
+# demo_profile: MockSync gets the replay profile and the tablet synchronises it.
+demo_profile() {
+  # Also puts back values an interrupted earlier run may have left on the tablet.
+  settings restore "$OVERRIDE_SETTINGS" && settings restore "$CONFIG_SETTINGS" || return 1
+  settings set "$DEMO_PROFILE" || return 1
+  app_restart
+  login_password "$OFFICER" "$OFFICER_PASSWORD" || return 1
+  sync_now
+}
+
+# The override section's settings: challenges always, one attempt, a short challenge time (the replayed resident
+# does not answer, so the attempt ends before its clip would repeat), supervisor override, diagnostic mode.
+OVERRIDE_SETTINGS="mosip.registration.liveness.policy.registration=ALWAYS_ACTIVE
+mosip.registration.liveness.registration.on_max_failure=SUPERVISOR_OVERRIDE
+mosip.registration.liveness.registration.max_retries=1
+mosip.registration.liveness.active.challenge_timeout_ms=2000
+mosip.registration.liveness.diagnostic.enable=Y"
+
+# override_settings set|unset: unset puts back the shipped values and the replay profile's policy.registration.
+override_settings() {
+  if [ "$1" = "set" ]; then
+    settings set "$OVERRIDE_SETTINGS"
+  else
+    settings restore "$OVERRIDE_SETTINGS" && settings set "$DEMO_PROFILE"
+  fi
+}
+
+# sync_now: manual synchronisation from the home screen.
+sync_now() {
+  home
+  ui_tap "Synchronize Data" || return 1
+  ui_wait "Sync Completed" 240 || return 1
+  after_sync
+}
+
+# after_sync: a synchronisation that changed the configuration asks to restart the app; restart and sign in again.
+after_sync() {
+  sleep 2
+  if screen_has "=Restart"; then
+    ui_tap "=Restart"
+    sleep 5
+    ui_wait "=NEXT" 120 || return 1
+    ui_tap "=English" || true
+    sleep 1
+    login_password "$OFFICER" "$OFFICER_PASSWORD"
+  fi
+}
+
+# metrics_file_has TEXT: the app's metrics log (files/liveness/metrics.log, debug build: run-as) contains TEXT.
+metrics_file_has() {
+  adb shell "run-as $PACKAGE cat files/liveness/metrics.log" 2>/dev/null | grep -q -- "$1"
+}
+
+# override_dialog SUPERVISOR: "Supervisor override" on the capture screen, supervisor user ID, confirm.
+override_dialog() {
+  ui_tap "=Supervisor override" || ui_tap "=SUPERVISOR OVERRIDE" || return 1
+  ui_wait "flagged for review" 20 || return 1
+  shot override-confirm
+  ui_fill 1 "$1" || return 1
+  ui_tap "=SUPERVISOR OVERRIDE" || ui_tap "=Supervisor override"
+}
+
+section_override() {
+  check A-V1 "MockSync: supervisor override policy for residents" override_settings set
+  app_restart
+  login_password "$OFFICER" "$OFFICER_PASSWORD" || true
+  check A-V2 "synchronised: override policy on the tablet" sync_now
+  lost_uin_start
+  face_page
+  # A live resident who does not answer the challenge (the replay does not follow prompts): TIMEOUT, which
+  # allows an override (a suspected attack would not).
+  replay s1-main
+  scan
+  check A-V3 "resident fails the only attempt without a suspected attack" wait_log "Liveness attempt ended" 90
+  sleep 2
+  check A-V4 "failure allows an override (not PAD, integrity or binding)" attempt_matches "FAIL_LIVENESS|TIMEOUT"
+  check A-V5 "capture screen offers \"Supervisor override\"" ui_wait_any 20 "=Supervisor override" "=SUPERVISOR OVERRIDE"
+  check A-V6 "diagnostic panel shows metrics and the execution provider" screen_has "retry rate"
+  shot override-offered
+  check A-V7 "diagnostic mode switched on is audited (REG-EVT-LV17)" audited REG-EVT-LV17
+  # The supervisor verifies with the enrolled face (answers the prompts).
+  replay "follow s3"
+  logcat_clear
+  check A-V8 "operator asks for the override and enters the supervisor" override_dialog "$SUPERVISOR"
+  check A-V9 "supervisor face authentication (exception_auth): liveness and match" \
+    wait_log "Face authentication exception_auth: FaceMatch\[MATCHED" 120
+  check A-V10 "resident photo taken under the override and returned" wait_log "Capture screen result OK" 90
+  check A-V11 "override photo flagged SUPERVISOR_OVERRIDE" logcat_has "SUPERVISOR_OVERRIDE"
+  check A-V12 "override audited with the supervisor (REG-EVT-LV16)" audited REG-EVT-LV16
+  logcat_save
+  close_capture_dialog
+  adb shell input swipe 640 550 640 250 400
+  sleep 1
+  shot override-stored
+  check A-V13 "ARC shows the override message under Scan" screen_has "supervisor override"
+  check A-V14 "anonymised metrics written to files/liveness/metrics.log" metrics_file_has "liveness sessions="
+  check A-V15 "metrics lines carry no user or registration ID" \
+    bash -c "! adb shell 'run-as $PACKAGE cat files/liveness/metrics.log' | grep -Eq '$OFFICER|$SUPERVISOR|1000[0-9]{25}'"
+  exception_photo_and_preview
+  replay s3-main
+  check A-V16 "packet with the override face authenticated by face and created" packet_auth_face
+  OVERRIDE_PACKET=1
+  logcat_save
+  home
+  check A-V17 "MockSync: override settings reverted" override_settings unset
+  check A-V18 "synchronised back to the shipped policy" sync_now
+  home
+}
+
 section_approval() {
   app_restart
-  replay s3-main
+  replay "follow s3"
   check A-E1 "supervisor face sign-in" login_face "$SUPERVISOR"
   check A-E2 "pending applications reviewed and approved" open_and_approve_pending
   shot eod-pending-approved
@@ -661,36 +820,50 @@ section_approval() {
     check "A-E7-$(basename "$f" .liveness.json | tail -c 7)" \
       "packet $(basename "$f" .liveness.json): LIVENESS_* in the face BIR, LV audits, meta info" packet_evidence_ok "$f"
   done
+  if [ -n "${OVERRIDE_PACKET:-}" ]; then
+    check A-E8 "the override registration's packet carries LIVENESS_DECISION OVERRIDE and REG-EVT-LV16" \
+      bash -c "grep -l 'OVERRIDE' '$OUT'/packets/*.liveness.json | xargs grep -l 'REG-EVT-LV16'"
+  fi
   logcat_save
 }
 
+CONFIG_SETTINGS="mosip.registration.liveness.policy.packet_auth=ALWAYS_ACTIVE"
+
 section_config() {
-  check A-C1 "MockSync: policy.registration=ALWAYS_ACTIVE" mocksync_set mosip.registration.liveness.policy.registration ALWAYS_ACTIVE
+  check A-C1 "MockSync: policy.packet_auth=ALWAYS_ACTIVE" mocksync_set mosip.registration.liveness.policy.packet_auth ALWAYS_ACTIVE
   app_restart
   login_password "$OFFICER" "$OFFICER_PASSWORD" || true
   logcat_clear
   ui_tap "Synchronize Data"
   check A-C2 "manual synchronisation completes" ui_wait "Sync Completed" 240
   shot config-sync-done
+  after_sync
   home
   lost_uin_start
   face_page
   replay "follow s3"
   scan
-  check A-C3 "after the sync a live resident with a high passive score gets challenges" \
-    shot_on_log "Screen state CHALLENGE liveness.challenge" config-challenge 60
-  check A-C4 "capture passes with method ACTIVE" wait_log "Capture screen result OK" 90
-  check A-C5 "configuration change audited (REG-EVT-LV15)" audited REG-EVT-LV15
+  wait_log "Capture screen result OK" 120
   logcat_save
   close_capture_dialog
   exception_photo_and_preview
-  replay s3-main
-  check A-C6 "packet authenticated by face and created" packet_auth_face
+  # The enrolled operator answers the prompts: before the sync packet_auth passed on the passive check alone.
+  replay "follow s3"
+  logcat_clear
+  ui_tap "Authenticate with face"
+  check A-C3 "after the sync the operator's packet authentication asks for a challenge" \
+    shot_on_log "Screen state CHALLENGE liveness.challenge" config-challenge 60
+  check A-C4 "packet authentication passes with the challenge answered" \
+    wait_log "Face authentication packet_auth: FaceMatch\[MATCHED" 120
+  check A-C5 "configuration change audited (REG-EVT-LV15)" audited REG-EVT-LV15
+  sleep 2
+  adb shell input swipe 640 550 640 250 400; sleep 1
+  ui_tap "=AUTHENTICATE"
+  check A-C6 "packet created" ui_wait "Registration Acknowledgement" 90
   logcat_save
   home
-  check A-C7 "MockSync: policy.registration reverted" mocksync_unset mosip.registration.liveness.policy.registration
-  ui_tap "Synchronize Data"
-  check A-C8 "synchronised back to the shipped policy" ui_wait "Sync Completed" 240
+  check A-C7 "MockSync: policy.packet_auth back to the shipped value" settings restore "$CONFIG_SETTINGS"
+  check A-C8 "synchronised back to the shipped policy" sync_now
   home
 }
 
@@ -715,7 +888,7 @@ section_offline() {
   check A-O4 "offline: packet authentication by face" packet_auth_face
   logcat_save
   app_restart
-  replay s3-main
+  replay "follow s3"
   check A-O5 "offline: supervisor face sign-in" login_face "$SUPERVISOR"
   open_and_approve_pending
   supervisor_auth_face a-s2-screen-replay A-O6
@@ -762,6 +935,9 @@ main() {
   adb shell settings put global hide_error_dialogs 1 >/dev/null 2>&1 || true
   adb shell settings put secure show_ime_with_hard_keyboard 0 >/dev/null 2>&1 || true
   push_packs || { log "frame packs could not be pushed"; exit 1; }
+  read_shipped
+  SECTION=profile
+  check A-P0 "replay profile set on MockSync and synchronised" demo_profile
   local s
   for s in $SECTIONS; do
     SECTION="$s"
@@ -771,6 +947,13 @@ main() {
     logcat_save
   done
   SECTION=end
+  # Back to the shipped policy on the tablet, then MockSync without the demo's overrides.
+  settings restore "$DEMO_PROFILE"
+  app_restart
+  login_password "$OFFICER" "$OFFICER_PASSWORD" && sync_now || log "final synchronisation failed"
+  settings forget "$DEMO_PROFILE"
+  settings forget "$OVERRIDE_SETTINGS"
+  settings forget "$CONFIG_SETTINGS"
   adb shell "rm -f $REPLAY_DIR/flow-source.txt"
   log "checks: $PASSED passed, $FAILED failed (results: $OUT/results.txt)"
   [ "$FAILED" -eq 0 ]

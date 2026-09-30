@@ -42,6 +42,7 @@
     <string name="liveness_title_supervisor">Supervisor verification</string>
     <string name="liveness_offline_badge">Offline – verification runs on this device</string>
     <string name="liveness_config_updated">Face verification settings updated.</string>
+    <string name="liveness_override_used">Face stored with a supervisor override. It is flagged for review in the packet.</string>
 
     <!-- Screen labels (Android only) -->
     <string name="liveness_ui_title">Face verification</string>
@@ -52,4 +53,8 @@
     <string name="liveness_ui_attempts">Attempt {0} of {1}</string>
     <string name="liveness_ui_preview">Camera preview. Keep your face inside the oval.</string>
     <string name="liveness_ui_replay_badge">Replay (debug build)</string>
+    <string name="liveness_ui_override">Supervisor override</string>
+    <string name="liveness_ui_supervisor_id">Supervisor user ID</string>
+    <string name="liveness_ui_supervisor_id_missing">Enter the user ID of the supervisor.</string>
+    <string name="liveness_ui_diagnostics">Diagnostics</string>
 </resources>

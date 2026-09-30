@@ -40,6 +40,7 @@
     <string name="liveness_title_supervisor">تحقق المشرف</string>
     <string name="liveness_offline_badge">غير متصل – يتم التحقق على هذا الجهاز</string>
     <string name="liveness_config_updated">تم تحديث إعدادات التحقق من الوجه.</string>
+    <string name="liveness_override_used">تم حفظ الوجه بتجاوز من المشرف. تم وضع علامة عليه للمراجعة في الحزمة.</string>
 
     <string name="liveness_ui_title">التحقق من الوجه</string>
     <string name="liveness_ui_retry">إعادة المحاولة</string>
@@ -49,4 +50,8 @@
     <string name="liveness_ui_attempts">المحاولة {0} من {1}</string>
     <string name="liveness_ui_preview">معاينة الكاميرا. أبقِ وجهك داخل الشكل البيضاوي.</string>
     <string name="liveness_ui_replay_badge">إعادة تشغيل (نسخة تصحيح)</string>
+    <string name="liveness_ui_override">تجاوز المشرف</string>
+    <string name="liveness_ui_supervisor_id">معرّف مستخدم المشرف</string>
+    <string name="liveness_ui_supervisor_id_missing">أدخل معرّف مستخدم المشرف.</string>
+    <string name="liveness_ui_diagnostics">التشخيص</string>
 </resources>

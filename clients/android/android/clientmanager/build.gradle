@@ -138,6 +138,7 @@ android {
             buildConfigField("String", "BASE_URL", rootProject.ext.debugServerBaseURL)
         }
         release {
+            buildConfigField("String", "BASE_URL", rootProject.ext.releaseServerBaseURL)
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }

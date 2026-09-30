@@ -40,6 +40,7 @@
     <string name="liveness_title_supervisor">पर्यवेक्षक सत्यापन</string>
     <string name="liveness_offline_badge">ऑफ़लाइन – सत्यापन इसी डिवाइस पर होता है</string>
     <string name="liveness_config_updated">चेहरा सत्यापन सेटिंग्स अपडेट हो गईं।</string>
+    <string name="liveness_override_used">पर्यवेक्षक ओवरराइड के साथ चेहरा सहेजा गया। इसे पैकेट में समीक्षा के लिए चिह्नित किया गया है।</string>
 
     <string name="liveness_ui_title">चेहरे का सत्यापन</string>
     <string name="liveness_ui_retry">पुनः प्रयास</string>
@@ -49,4 +50,8 @@
     <string name="liveness_ui_attempts">प्रयास {1} में से {0}</string>
     <string name="liveness_ui_preview">कैमरा पूर्वावलोकन। अपना चेहरा अंडाकार के भीतर रखें।</string>
     <string name="liveness_ui_replay_badge">रीप्ले (डीबग बिल्ड)</string>
+    <string name="liveness_ui_override">पर्यवेक्षक ओवरराइड</string>
+    <string name="liveness_ui_supervisor_id">पर्यवेक्षक उपयोगकर्ता आईडी</string>
+    <string name="liveness_ui_supervisor_id_missing">पर्यवेक्षक की उपयोगकर्ता आईडी दर्ज करें।</string>
+    <string name="liveness_ui_diagnostics">निदान</string>
 </resources>

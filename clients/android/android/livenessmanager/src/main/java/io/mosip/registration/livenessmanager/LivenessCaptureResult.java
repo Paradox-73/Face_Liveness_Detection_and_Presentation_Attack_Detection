@@ -33,6 +33,11 @@ public final class LivenessCaptureResult {
      * {@code OFF} (the exception photo by default). Such a result is a pass without packet evidence.
      */
     public static final String REASON_LIVENESS_NOT_REQUIRED = "LIVENESS_NOT_REQUIRED";
+    /**
+     * Reason code of a resident photo stored under a supervisor override ({@link SupervisorOverride}): a pass
+     * whose packet evidence says {@code LIVENESS_DECISION=OVERRIDE}.
+     */
+    public static final String REASON_SUPERVISOR_OVERRIDE = "SUPERVISOR_OVERRIDE";
 
     static final String EXTRA_DECISION = "liveness.result.decision";
     static final String EXTRA_FAILURE = "liveness.result.failure";
@@ -52,6 +57,7 @@ public final class LivenessCaptureResult {
     static final String EXTRA_RCAPTURE = "liveness.result.rcapture";
     static final String EXTRA_PROVISIONED = "liveness.result.device_provisioned";
     static final String EXTRA_EVIDENCE = "liveness.result.evidence";
+    static final String EXTRA_OVERRIDE_REQUEST = "liveness.result.override_requested_by";
 
     private final Decision decision;
     private final FailureReason failureReason;
@@ -71,6 +77,7 @@ public final class LivenessCaptureResult {
     private final String rCaptureResponse;
     private final boolean deviceProvisioned;
     private final Map<String, String> evidence;
+    private final String overrideRequestedBy;
 
     private LivenessCaptureResult(Builder b) {
         this.decision = b.decision;
@@ -91,6 +98,7 @@ public final class LivenessCaptureResult {
         this.rCaptureResponse = b.rCaptureResponse;
         this.deviceProvisioned = b.deviceProvisioned;
         this.evidence = Collections.unmodifiableMap(new LinkedHashMap<>(b.evidence));
+        this.overrideRequestedBy = b.overrideRequestedBy;
     }
 
     /**
@@ -133,7 +141,8 @@ public final class LivenessCaptureResult {
                 .lockRequired(x.getBoolean(EXTRA_LOCK))
                 .capture(x.getString(EXTRA_TRANSACTION), x.getByteArray(EXTRA_ISO), x.getString(EXTRA_RCAPTURE),
                         x.getBoolean(EXTRA_PROVISIONED))
-                .tokenNonce(x.getString(EXTRA_TOKEN_NONCE));
+                .tokenNonce(x.getString(EXTRA_TOKEN_NONCE))
+                .overrideRequestedBy(x.getString(EXTRA_OVERRIDE_REQUEST));
         String onMax = x.getString(EXTRA_ON_MAX);
         if (onMax != null) {
             b.onMaxFailure(OnMaxFailure.valueOf(onMax));
@@ -180,7 +189,38 @@ public final class LivenessCaptureResult {
             ev.putString(e.getKey(), e.getValue());
         }
         i.putExtra(EXTRA_EVIDENCE, ev);
+        i.putExtra(EXTRA_OVERRIDE_REQUEST, overrideRequestedBy);
         return i;
+    }
+
+    /**
+     * Returns a copy of this failed result in which the operator asked for a supervisor override; the caller then
+     * verifies the supervisor's face before any photo is taken.
+     *
+     * @param supervisorId user ID the supervisor entered on the capture screen
+     * @return the copy
+     * @throws IllegalStateException if this result does not allow an override
+     */
+    public LivenessCaptureResult withOverrideRequest(String supervisorId) {
+        if (!overrideAllowed) {
+            throw new IllegalStateException("this result does not allow a supervisor override");
+        }
+        return toBuilder().overrideRequestedBy(supervisorId).build();
+    }
+
+    /**
+     * Returns a builder holding every value of this result.
+     *
+     * @return a new builder
+     */
+    public Builder toBuilder() {
+        Builder b = builder(workflow, decision).failureReason(failureReason).reasonCodes(reasonCodes)
+                .messageKey(messageKey).sessionId(sessionId).attempts(attemptsUsed, maxAttempts)
+                .retryAllowed(retryAllowed).overrideAllowed(overrideAllowed).lockRequired(lockRequired)
+                .onMaxFailure(onMaxFailure).tokenNonce(tokenNonce)
+                .capture(transactionId, faceIso, rCaptureResponse, deviceProvisioned)
+                .evidence(evidence).overrideRequestedBy(overrideRequestedBy);
+        return b;
     }
 
     /**
@@ -208,6 +248,24 @@ public final class LivenessCaptureResult {
      */
     public boolean isLivenessChecked() {
         return !reasonCodes.contains(REASON_LIVENESS_NOT_REQUIRED);
+    }
+
+    /**
+     * Tells whether this is a resident photo stored under a supervisor override.
+     *
+     * @return {@code true} for a pass with {@link #REASON_SUPERVISOR_OVERRIDE}
+     */
+    public boolean isSupervisorOverride() {
+        return isPass() && reasonCodes.contains(REASON_SUPERVISOR_OVERRIDE);
+    }
+
+    /**
+     * Returns the supervisor user ID the operator entered when asking for an override on the capture screen.
+     *
+     * @return the user ID, or {@code null} when no override was asked for
+     */
+    public String overrideRequestedBy() {
+        return overrideRequestedBy;
     }
 
     /**
@@ -370,7 +428,8 @@ public final class LivenessCaptureResult {
     public String toString() {
         return "LivenessCaptureResult[" + workflow.id() + ", " + decision
                 + (failureReason != null ? "/" + failureReason : "") + ", reasons=" + reasonCodes
-                + ", attempts=" + attemptsUsed + "/" + maxAttempts + ", capture=" + (faceIso != null) + "]";
+                + ", attempts=" + attemptsUsed + "/" + maxAttempts + ", capture=" + (faceIso != null)
+                + (overrideRequestedBy != null ? ", override requested" : "") + "]";
     }
 
     /** Builder of {@link LivenessCaptureResult}. */
@@ -394,6 +453,7 @@ public final class LivenessCaptureResult {
         private String rCaptureResponse;
         private boolean deviceProvisioned;
         private final Map<String, String> evidence = new LinkedHashMap<>();
+        private String overrideRequestedBy;
 
         private Builder(Workflow workflow, Decision decision) {
             this.workflow = Objects.requireNonNull(workflow, "workflow");
@@ -551,6 +611,18 @@ public final class LivenessCaptureResult {
          */
         public Builder evidence(Map<String, String> values) {
             values.forEach(this::evidence);
+            return this;
+        }
+
+        /**
+         * Records that the operator asked for a supervisor override on the capture screen.
+         *
+         * @param supervisorId the entered supervisor user ID; blank means none
+         * @return this builder
+         */
+        public Builder overrideRequestedBy(String supervisorId) {
+            this.overrideRequestedBy = supervisorId == null || supervisorId.trim().isEmpty() ? null
+                    : supervisorId.trim();
             return this;
         }
 

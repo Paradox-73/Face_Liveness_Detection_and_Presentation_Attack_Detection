@@ -5,7 +5,9 @@ import android.content.Intent;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import io.mosip.liveness.core.Decision;
@@ -26,12 +28,13 @@ final class FakeLivenessService implements LivenessService {
 
     final Set<Workflow> enforced = EnumSet.noneOf(Workflow.class);
     final List<LivenessCaptureRequest> requests = new ArrayList<>();
+    /** Synced configuration values; empty means the shipped defaults. */
+    final Map<String, String> config = new HashMap<>();
     LivenessCaptureResult nextResult;
-    private final PolicyResolver defaults = new PolicyResolver(ConfigSource.empty());
 
     @Override
     public LivenessPolicy policy(Workflow workflow) {
-        return defaults.resolve(workflow).policy();
+        return new PolicyResolver(ConfigSource.of(config)).resolve(workflow).policy();
     }
 
     @Override

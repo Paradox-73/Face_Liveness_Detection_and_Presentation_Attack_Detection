@@ -73,6 +73,22 @@ def arcDebugServerBaseUrl = {
     return value ? value.toString().trim() : ''
 }.call()
 
+// Optional server URL for release builds, for example a local MockSync reached through
+// `adb reverse tcp:8080 tcp:8080` for a demo, or the MOSIP server of a pilot. Same lookup
+// order as above: Gradle property arcReleaseServerBaseUrl, environment variable
+// ARC_RELEASE_SERVER_BASE_URL, then arcReleaseServerBaseUrl in local.properties. Empty means
+// "use serverBaseURL" (upstream behaviour).
+def arcReleaseServerBaseUrl = {
+    def value = project.findProperty('arcReleaseServerBaseUrl') ?: System.getenv('ARC_RELEASE_SERVER_BASE_URL')
+    def localFile = file('local.properties')
+    if (!value && localFile.exists()) {
+        def local = new Properties()
+        localFile.withReader('UTF-8') { local.load(it) }
+        value = local.getProperty('arcReleaseServerBaseUrl')
+    }
+    return value ? value.toString().trim() : ''
+}.call()
+
 ext {
     compileSdkVersion = 34
     buildToolsVersion = "34.0.0"
@@ -85,8 +101,12 @@ ext {
     clientmanagerLibVersionName = "\"1.0.0\""
 
     serverBaseURL = "\"https://api-internal.sandbox.xyz.net\""
-    // Debug builds use arcDebugServerBaseUrl when it is set; release builds always use serverBaseURL.
+    // Debug builds use arcDebugServerBaseUrl, release builds arcReleaseServerBaseUrl, when set; else serverBaseURL.
     debugServerBaseURL = arcDebugServerBaseUrl ? "\"${arcDebugServerBaseUrl}\"" : serverBaseURL
+    releaseServerBaseURL = arcReleaseServerBaseUrl ? "\"${arcReleaseServerBaseUrl}\"" : serverBaseURL
+    // Plain HTTP to this device itself (adb reverse); the release APK then allows cleartext to 127.0.0.1 and
+    // localhost only (app/src/releaseLoopback). Any other release server must use HTTPS.
+    releaseServerIsLoopbackHttp = arcReleaseServerBaseUrl ==~ /(?i)http:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/.*)?/
     serverHealthCheckPath = "\"/v1/syncdata/actuator/health\""
     serverActuatorInfoPath = "\"/v1/syncdata/actuator/info\""
     debugPassword = "\"your-debug-password\""

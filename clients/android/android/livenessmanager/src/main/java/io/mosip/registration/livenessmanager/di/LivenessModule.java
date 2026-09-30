@@ -1,6 +1,7 @@
 package io.mosip.registration.livenessmanager.di;
 
 import android.app.Application;
+import android.content.Context;
 
 import javax.inject.Singleton;
 
@@ -8,6 +9,7 @@ import dagger.Module;
 import dagger.Provides;
 import io.mosip.liveness.core.audit.AuditSink;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.registration.clientmanager.config.SessionManager;
 import io.mosip.registration.clientmanager.repository.GlobalParamRepository;
 import io.mosip.registration.clientmanager.repository.UserBiometricRepository;
 import io.mosip.registration.clientmanager.service.LoginService;
@@ -77,7 +79,12 @@ public class LivenessModule {
     @Provides
     @Singleton
     LivenessRuntime provideLivenessRuntime(GlobalParamConfigSource config, AuditSink audit) {
-        return LivenessRuntime.install(application, config, audit);
+        LivenessRuntime runtime = LivenessRuntime.install(application, config, audit);
+        // The signed-in user as SessionManager keeps it (audit REG-EVT-LV17, supervisor override prompt).
+        runtime.setUserIdSupplier(() -> application.getSharedPreferences(
+                application.getString(io.mosip.registration.clientmanager.R.string.app_name), Context.MODE_PRIVATE)
+                .getString(SessionManager.USER_ID, ""));
+        return runtime;
     }
 
     /**

@@ -53,6 +53,18 @@ public final class LivenessCaptureRequest {
     public static final String EXTRA_PHOTO_WHEN_OFF = "liveness.photo_when_off";
     /** Extra: attempts the subject already used for this capture on earlier screens (resident capture). */
     public static final String EXTRA_PRIOR_ATTEMPTS = "liveness.prior_attempts";
+    /**
+     * Extra: {@code true} opens the screen at the end of a resident transaction whose attempts are used up, only
+     * to offer the supervisor override again (no session runs).
+     */
+    public static final String EXTRA_OVERRIDE_OFFER = "liveness.override_offer";
+    /**
+     * Extra: user ID of the supervisor who verified with face liveness and granted an override; the screen then
+     * takes the resident's photo without a liveness check and flags it {@code LIVENESS_DECISION=OVERRIDE}.
+     */
+    public static final String EXTRA_OVERRIDE_SUPERVISOR = "liveness.override_supervisor";
+    /** Extra: packet evidence of the failed transaction the override replaces (a {@link Bundle}). */
+    public static final String EXTRA_OVERRIDE_EVIDENCE = "liveness.override_evidence";
     /** Extra: prefix of configuration values that replace synced ones (debug builds only). */
     public static final String EXTRA_CONFIG_PREFIX = "config.";
 
@@ -74,6 +86,8 @@ public final class LivenessCaptureRequest {
     private final boolean replayMasked;
     private final boolean photoWhenOff;
     private final int priorAttempts;
+    private final boolean overrideOffer;
+    private final SupervisorOverride override;
     private final Map<String, String> configOverrides;
 
     private LivenessCaptureRequest(Builder b) {
@@ -87,6 +101,8 @@ public final class LivenessCaptureRequest {
         this.replayMasked = b.replayMasked;
         this.photoWhenOff = b.photoWhenOff;
         this.priorAttempts = b.priorAttempts;
+        this.overrideOffer = b.overrideOffer;
+        this.override = b.override;
         this.configOverrides = Collections.unmodifiableMap(new LinkedHashMap<>(b.configOverrides));
     }
 
@@ -116,7 +132,12 @@ public final class LivenessCaptureRequest {
         Builder b = builder(workflow, extras.getString(EXTRA_SUBJECT, ""))
                 .language(extras.getString(EXTRA_LANGUAGE, "eng"))
                 .photoWhenOff(parseBoolean(extras.get(EXTRA_PHOTO_WHEN_OFF)))
-                .priorAttempts(parseInt(extras.get(EXTRA_PRIOR_ATTEMPTS), 0));
+                .priorAttempts(parseInt(extras.get(EXTRA_PRIOR_ATTEMPTS), 0))
+                .overrideOffer(parseBoolean(extras.get(EXTRA_OVERRIDE_OFFER)));
+        String supervisor = extras.getString(EXTRA_OVERRIDE_SUPERVISOR, "");
+        if (!supervisor.trim().isEmpty()) {
+            b.override(new SupervisorOverride(supervisor, toMap(extras.getBundle(EXTRA_OVERRIDE_EVIDENCE))));
+        }
         if ("replay".equalsIgnoreCase(extras.getString(EXTRA_SOURCE, ""))) {
             b.replay(extras.getString(EXTRA_REPLAY, ""), parseInt(extras.get(EXTRA_REPLAY_FPS), 15));
             b.replayFollow(parseBoolean(extras.get(EXTRA_REPLAY_FOLLOW)));
@@ -145,6 +166,13 @@ public final class LivenessCaptureRequest {
         intent.putExtra(EXTRA_LANGUAGE, language);
         intent.putExtra(EXTRA_PHOTO_WHEN_OFF, photoWhenOff);
         intent.putExtra(EXTRA_PRIOR_ATTEMPTS, priorAttempts);
+        intent.putExtra(EXTRA_OVERRIDE_OFFER, overrideOffer);
+        if (override != null) {
+            intent.putExtra(EXTRA_OVERRIDE_SUPERVISOR, override.supervisorId());
+            Bundle evidence = new Bundle();
+            override.failedEvidence().forEach(evidence::putString);
+            intent.putExtra(EXTRA_OVERRIDE_EVIDENCE, evidence);
+        }
         if (source == Source.REPLAY) {
             intent.putExtra(EXTRA_SOURCE, "replay");
             intent.putExtra(EXTRA_REPLAY, replayPack);
@@ -249,6 +277,24 @@ public final class LivenessCaptureRequest {
     }
 
     /**
+     * Tells whether the screen only offers the supervisor override of a transaction whose attempts are used up.
+     *
+     * @return {@code true} for the override offer
+     */
+    public boolean isOverrideOffer() {
+        return overrideOffer;
+    }
+
+    /**
+     * Returns the supervisor override granted for this capture.
+     *
+     * @return the override; {@code null} for a normal capture
+     */
+    public SupervisorOverride override() {
+        return override;
+    }
+
+    /**
      * Returns configuration values that replace synced ones. Only debug builds apply them.
      *
      * @return key-value pairs
@@ -270,7 +316,21 @@ public final class LivenessCaptureRequest {
     public String toString() {
         return "LivenessCaptureRequest[" + workflow.id() + ", lang=" + language + ", source=" + source
                 + (source == Source.REPLAY ? ":" + replayPack + (replayFollow ? " (follows prompts)" : "") : "")
+                + (overrideOffer ? ", override offer" : "") + (override != null ? ", supervisor override" : "")
                 + "]";
+    }
+
+    private static Map<String, String> toMap(Bundle bundle) {
+        Map<String, String> map = new LinkedHashMap<>();
+        if (bundle != null) {
+            for (String key : bundle.keySet()) {
+                String value = bundle.getString(key);
+                if (value != null) {
+                    map.put(key, value);
+                }
+            }
+        }
+        return map;
     }
 
     private static boolean parseBoolean(Object value) {
@@ -301,6 +361,8 @@ public final class LivenessCaptureRequest {
         private boolean replayMasked;
         private boolean photoWhenOff;
         private int priorAttempts;
+        private boolean overrideOffer;
+        private SupervisorOverride override;
         private final Map<String, String> configOverrides = new LinkedHashMap<>();
 
         private Builder(Workflow workflow, String subjectRef) {
@@ -380,6 +442,30 @@ public final class LivenessCaptureRequest {
          */
         public Builder priorAttempts(int attempts) {
             this.priorAttempts = Math.max(0, attempts);
+            return this;
+        }
+
+        /**
+         * Opens the screen only to offer the supervisor override again, after the resident's attempts were used
+         * up on an earlier screen.
+         *
+         * @param offer {@code true} for the override offer
+         * @return this builder
+         */
+        public Builder overrideOffer(boolean offer) {
+            this.overrideOffer = offer;
+            return this;
+        }
+
+        /**
+         * Takes the resident's photo under a supervisor override granted after the supervisor's own face
+         * verification (resident workflows with {@code on_max_failure=SUPERVISOR_OVERRIDE} only).
+         *
+         * @param grant the override; {@code null} for a normal capture
+         * @return this builder
+         */
+        public Builder override(SupervisorOverride grant) {
+            this.override = grant;
             return this;
         }
 

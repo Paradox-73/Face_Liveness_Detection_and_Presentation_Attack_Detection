@@ -29,6 +29,7 @@ import io.mosip.liveness.core.ui.PromptIcon;
 import io.mosip.liveness.core.ui.Severity;
 import io.mosip.liveness.core.ui.UiPhase;
 import io.mosip.registration.livenessmanager.LivenessCaptureResult;
+import io.mosip.registration.livenessmanager.SupervisorOverride;
 import io.mosip.registration.livenessmanager.device.BuiltInCameraL0Device;
 
 /**
@@ -43,6 +44,10 @@ import io.mosip.registration.livenessmanager.device.BuiltInCameraL0Device;
  * response, device key). No liveness check runs and no liveness evidence is attached: the result carries
  * {@link LivenessCaptureResult#REASON_LIVENESS_NOT_REQUIRED}. A camera that delivers no frame gives the usual
  * camera error with Retry.
+ *
+ * <p>The same photo is taken for a resident face accepted under a {@link SupervisorOverride}: the result then
+ * carries {@link LivenessCaptureResult#REASON_SUPERVISOR_OVERRIDE} and the override's packet evidence
+ * ({@code LIVENESS_DECISION=OVERRIDE}).
  */
 public final class PhotoCaptureRunner implements CaptureRunner {
 
@@ -56,6 +61,7 @@ public final class PhotoCaptureRunner implements CaptureRunner {
     private final Workflow workflow;
     private final BuiltInCameraL0Device device;
     private final LivenessRunner.Listener listener;
+    private final SupervisorOverride override;
     private final ExecutorService worker = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "liveness-photo");
         t.setDaemon(true);
@@ -74,9 +80,24 @@ public final class PhotoCaptureRunner implements CaptureRunner {
      * @param listener receiver of states and the outcome (same contract as {@link LivenessRunner})
      */
     public PhotoCaptureRunner(Workflow workflow, BuiltInCameraL0Device device, LivenessRunner.Listener listener) {
+        this(workflow, device, listener, null);
+    }
+
+    /**
+     * Creates the runner of a resident photo accepted under a supervisor override; nothing happens until
+     * {@link #start()}.
+     *
+     * @param workflow the resident workflow
+     * @param device   the built-in camera
+     * @param listener receiver of states and the outcome (same contract as {@link LivenessRunner})
+     * @param override the override, or {@code null} for a photo whose workflow's liveness is off
+     */
+    public PhotoCaptureRunner(Workflow workflow, BuiltInCameraL0Device device, LivenessRunner.Listener listener,
+                              SupervisorOverride override) {
         this.workflow = Objects.requireNonNull(workflow, "workflow");
         this.device = Objects.requireNonNull(device, "device");
         this.listener = Objects.requireNonNull(listener, "listener");
+        this.override = override;
     }
 
     @Override
@@ -163,12 +184,28 @@ public final class PhotoCaptureRunner implements CaptureRunner {
         SignedFaceCapture capture = device.capture(request, null, null);
         listener.onUiState(LivenessUiState.builder(UiPhase.SUCCESS, MessageKeys.FEEDBACK_SUCCESS)
                 .promptIcon(PromptIcon.CHECK).severity(Severity.SUCCESS).progress(1.0).build());
-        finish(LivenessCaptureResult.builder(workflow, Decision.PASS)
-                .reasonCodes(Collections.singletonList(LivenessCaptureResult.REASON_LIVENESS_NOT_REQUIRED))
-                .messageKey(MessageKeys.FEEDBACK_SUCCESS)
+        finish(passResult(workflow, override)
                 .capture(capture.transactionId(), capture.isoRecord(), device.lastResponseJson(),
                         device.isProvisioned())
                 .build());
+    }
+
+    /**
+     * Starts the result of a photo taken without a liveness check.
+     *
+     * @param workflow the workflow
+     * @param override the supervisor override, or {@code null}
+     * @return a pass marked {@code LIVENESS_NOT_REQUIRED} without evidence, or marked {@code SUPERVISOR_OVERRIDE}
+     *         with the override's evidence
+     */
+    static LivenessCaptureResult.Builder passResult(Workflow workflow, SupervisorOverride override) {
+        LivenessCaptureResult.Builder b = LivenessCaptureResult.builder(workflow, Decision.PASS)
+                .messageKey(MessageKeys.FEEDBACK_SUCCESS);
+        if (override == null) {
+            return b.reasonCodes(Collections.singletonList(LivenessCaptureResult.REASON_LIVENESS_NOT_REQUIRED));
+        }
+        return b.reasonCodes(Collections.singletonList(LivenessCaptureResult.REASON_SUPERVISOR_OVERRIDE))
+                .evidence(override.evidence());
     }
 
     private void deviceError() {

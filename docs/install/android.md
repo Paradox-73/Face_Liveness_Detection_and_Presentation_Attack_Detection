@@ -48,14 +48,13 @@ bash scripts/android-build.sh --server-url ""       # keep the upstream sandbox 
 bash scripts/android-build.sh --skip-codegen        # reuse generated code from the last run
 bash scripts/android-build.sh --test-only           # only the unit tests
 bash scripts/android-build.sh --abis x86_64         # only the emulator's CPU type (smaller APK)
-bash scripts/android-build.sh --release --abis arm64-v8a   # release APK for arm64 tablets (size check)
+bash scripts/android-build.sh --release --abis arm64-v8a   # signed release APK for arm64 tablets (section 9)
 ```
 
 `--test` runs the unit tests of `clientmanager`, `livenessmanager` and `app`.
 `--abis` (or the environment variable `ARC_ABIS`, read by `android/app/build.gradle`) limits the CPU types packed
 into the APK; each one adds about 60 MB of native code (Flutter and ONNX Runtime). `--release` builds
-`app-release.apk`; without `android/key.properties` it is signed with the debug key and it uses the upstream
-server URL (section 3), so it is for size checks, not for the MockSync demo.
+`app-release.apk` signed with the release keystore and pointed at `--server-url` (section 9).
 
 The script:
 
@@ -132,11 +131,11 @@ What changed in `clients/android` for this (debug builds only):
   override library resources of the same name). It allows plain HTTP to
   `127.0.0.1`, `localhost` and `10.0.2.2` only.
 
-Release builds are unchanged: `BuildConfig.BASE_URL` stays `serverBaseURL`
-(checked with `ARC_DEBUG_SERVER_BASE_URL` set during a release build), and the
-release APK carries clientmanager's original network security config, which
-allows no plain HTTP. Upstream CI's `sed` replacement of the sandbox host still
-works because `serverBaseURL` is untouched.
+Release builds do not read `ARC_DEBUG_SERVER_BASE_URL`; they have their own
+setting, `arcReleaseServerBaseUrl` (section 9). Without it `BuildConfig.BASE_URL`
+stays `serverBaseURL` and the release APK carries clientmanager's original network
+security config, which allows no plain HTTP. Upstream CI's `sed` replacement of
+the sandbox host still works because `serverBaseURL` is untouched.
 
 Checked on the emulator: with a small request-logging HTTP server on the PC and
 `adb reverse`, a login attempt produced `GET /v1/syncdata/actuator/health`,
@@ -361,3 +360,64 @@ packet) and `frame-times.txt` (per-frame processing time of every liveness attem
 
 The Lost UIN steps tap fixed points on the finger and eye pictures of the exception screens, so the demo expects
 the 1280x800 tablet profile that `scripts/android-run-emulator.sh` creates.
+
+## 9. Release APK
+
+A release APK is signed with a release key that never enters the repository, and points at a server chosen at
+build time. For the demo the server is MockSync on the PC, reached from the tablet or emulator through
+`adb reverse`.
+
+### 9.1 Create the release key (once per build machine)
+
+```bash
+bash scripts/android-release-keystore.sh
+```
+
+- Creates `../secrets/android-release.jks` next to the repository (RSA 3072, PKCS#12, alias `arc-release`, 30
+  years) with a random 32-character password, and `../secrets/android-release.jks.properties` with the password.
+  Neither file is in git. An existing keystore is reused, never overwritten. `--keystore PATH` picks another
+  location; the script refuses a path inside the repository.
+- Writes `storeFile`, `storePassword`, `keyAlias` and `keyPassword` into `clients/android/android/local.properties`
+  (git-ignored; the script checks this before writing). `android/app/build.gradle` reads them there, or from
+  `key.properties`, or from the environment variables `ARC_RELEASE_STORE_FILE`, `ARC_RELEASE_STORE_PASSWORD`,
+  `ARC_RELEASE_KEY_ALIAS`, `ARC_RELEASE_KEY_PASSWORD` (the way to pass them as CI secrets).
+- `bash scripts/android-release-keystore.sh --show` prints the certificate's SHA-256 fingerprint.
+- Back up the keystore and its properties file: an app signed with a lost key cannot be updated in place.
+
+### 9.2 Build
+
+```bash
+bash scripts/android-build.sh --release --abis x86_64               # emulator, server http://127.0.0.1:8080
+bash scripts/android-build.sh --release --abis arm64-v8a            # arm64 tablets, same server
+bash scripts/android-build.sh --release --server-url https://mosip.example.org --abis arm64-v8a
+bash scripts/android-build.sh --release --app-id-suffix .release --abis x86_64   # next to the debug app
+bash scripts/android-build.sh --release --allow-debug-signing       # size checks only, debug key
+```
+
+- `--server-url` (default `http://127.0.0.1:8080`) becomes `BuildConfig.BASE_URL` of the app and of
+  `clientmanager` through `ARC_RELEASE_SERVER_BASE_URL` (Gradle property `arcReleaseServerBaseUrl`, or the same
+  name in `local.properties`). `--server-url ""` keeps the upstream `serverBaseURL`.
+- Plain HTTP is allowed only for `http://127.0.0.1` and `http://localhost` (the loopback address, which never
+  leaves the device): the build then adds `app/src/releaseLoopback/res/xml/network_security_config.xml`. Any other
+  release server must use HTTPS.
+- The script requires the release key (`ARC_REQUIRE_RELEASE_SIGNING=1`): without it Gradle stops with
+  "Release signing is required ..." instead of silently signing with the debug key, which upstream does.
+  `--allow-debug-signing` lifts the requirement.
+- The script prints the signing certificate of the built APK (`apksigner verify --print-certs`).
+- `--app-id-suffix .release` sets `applicationIdSuffix`, so a test device can keep the debug app and its data
+  (machine keys, onboarded users) next to the release app. Leave it out for a real release.
+- The release APK has no replay frame packs, ignores `config.<key>` extras and cannot be started from adb into
+  the capture screen: those are debug-only.
+
+### 9.3 Install and run against MockSync
+
+```bash
+adb reverse tcp:8080 tcp:8080
+adb install -r clients/android/build/app/outputs/flutter-apk/app-release.apk
+```
+
+A fresh install has a new machine key, so MockSync must register the machine again (section 5) before the first
+login.
+
+Checked on 2026-09-30: see `docs/design/android-liveness.md` section 13.6 (signed release APK built, installed
+with `--app-id-suffix .release`, engine loaded, MockSync reached over `adb reverse`).

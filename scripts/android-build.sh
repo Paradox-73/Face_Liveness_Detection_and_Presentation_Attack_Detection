@@ -13,7 +13,8 @@
 #      outputs of pigeon.sh are redirected to clients/android/build/ so the
 #      tracked ios/Runner/pigeon.{h,m} files stay unchanged.
 #   2. flutter build apk --debug (or --release), with
-#        - the debug-only server URL (Gradle property arcDebugServerBaseUrl),
+#        - the server URL (debug: ARC_DEBUG_SERVER_BASE_URL; release: ARC_RELEASE_SERVER_BASE_URL,
+#          both read by android/build.gradle),
 #        - the monorepo commit passed as --dart-define=ARC_GIT_COMMIT/ARC_GIT_BRANCH
 #          (shown in the app footer; upstream read it from a bundled .git folder).
 #   3. With --test: ./gradlew :clientmanager:testDebugUnitTest
@@ -32,8 +33,16 @@
 #   scripts/android-build.sh --device-test           # also run the liveness instrumented test
 #   scripts/android-build.sh --install-engine        # rebuild the liveness engine jars first
 #   scripts/android-build.sh --abis x86_64           # only these CPU types (comma list); smaller APK
-#   scripts/android-build.sh --release --abis arm64-v8a   # release APK for arm64 tablets (size check;
-#                                                    # debug-signed without key.properties, upstream server URL)
+#   scripts/android-build.sh --release --abis arm64-v8a   # release APK for arm64 tablets, server
+#                                                    # http://127.0.0.1:8080 (MockSync through adb reverse),
+#                                                    # signed with the release keystore (required)
+#   scripts/android-build.sh --release --server-url https://mosip.example.org   # release for a real server
+#   scripts/android-build.sh --release --allow-debug-signing   # size checks only: debug key allowed
+#   scripts/android-build.sh --release --app-id-suffix .release  # installable next to the debug app
+#
+# Release signing: scripts/android-release-keystore.sh creates the keystore outside the repository and writes
+# its path and passwords into android/local.properties (git-ignored); CI passes ARC_RELEASE_STORE_FILE,
+# ARC_RELEASE_STORE_PASSWORD, ARC_RELEASE_KEY_ALIAS and ARC_RELEASE_KEY_PASSWORD instead.
 #
 # Requirements (see docs/install/android.md):
 #   flutter 3.10.4 on PATH, JAVA_HOME = JDK 21, ANDROID_HOME = Android SDK with
@@ -63,6 +72,8 @@ DO_BUILD=1
 DO_TEST=0
 DO_DEVICE_TEST=0
 FORCE_ENGINE=0
+ALLOW_DEBUG_SIGNING=0
+APP_ID_SUFFIX=""
 
 log() { printf '[android-build] %s\n' "$*"; }
 die() { printf '[android-build] ERROR: %s\n' "$*" >&2; exit 1; }
@@ -77,6 +88,8 @@ while [ $# -gt 0 ]; do
     --install-engine) FORCE_ENGINE=1; shift ;;
     --release) BUILD_TYPE=release; shift ;;
     --abis) [ $# -ge 2 ] || die "--abis needs a value"; ABIS="$2"; shift 2 ;;
+    --allow-debug-signing) ALLOW_DEBUG_SIGNING=1; shift ;;
+    --app-id-suffix) [ $# -ge 2 ] || die "--app-id-suffix needs a value"; APP_ID_SUFFIX="$2"; shift 2 ;;
     -h|--help) sed -n "2,$(( $(grep -n '^set -euo pipefail' "${BASH_SOURCE[0]}" | cut -d: -f1) - 1 ))p" "${BASH_SOURCE[0]}"; exit 0 ;;
     *) die "unknown option: $1 (see --help)" ;;
   esac
@@ -196,11 +209,20 @@ build_apk() {
   commit="$(git -C "$REPO_ROOT" rev-parse --short=12 HEAD 2>/dev/null || true)"
   branch="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
   if [ -n "$SERVER_URL" ]; then
-    log "debug server URL: $SERVER_URL"
+    log "$BUILD_TYPE server URL: $SERVER_URL"
   else
-    log "debug server URL: upstream serverBaseURL"
+    log "$BUILD_TYPE server URL: upstream serverBaseURL"
   fi
   export ARC_DEBUG_SERVER_BASE_URL="$SERVER_URL"
+  if [ "$BUILD_TYPE" = "release" ]; then
+    export ARC_RELEASE_SERVER_BASE_URL="$SERVER_URL"
+    export ARC_RELEASE_APPLICATION_ID_SUFFIX="$APP_ID_SUFFIX"
+    if [ "$ALLOW_DEBUG_SIGNING" = "1" ]; then
+      export ARC_REQUIRE_RELEASE_SIGNING=0
+    else
+      export ARC_REQUIRE_RELEASE_SIGNING=1
+    fi
+  fi
   export ARC_ABIS="$ABIS"
   local extra=()
   if [ -n "$ABIS" ]; then
@@ -216,6 +238,19 @@ build_apk() {
   [ -f "$APK" ] || die "APK not found at $APK"
   log "APK: $APK"
   log "APK size: $(wc -c < "$APK" | tr -d ' ') bytes; build time: ${secs}s"
+  if [ "$BUILD_TYPE" = "release" ]; then
+    report_signature
+  fi
+}
+
+# Prints the certificate the release APK is signed with (apksigner from the newest build-tools).
+report_signature() {
+  local sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}" apksigner
+  apksigner="$(ls -d "$sdk"/build-tools/*/ 2>/dev/null | sort -V | tail -n 1)apksigner"
+  [ -f "$apksigner" ] || apksigner="$apksigner.bat"
+  if [ -f "$apksigner" ]; then
+    "$apksigner" verify --print-certs "$APK" 2>/dev/null | grep -E 'Signer #1 certificate (DN|SHA-256)'       | sed 's/^/[android-build] /' || log "apksigner could not read the signature"
+  fi
 }
 
 # Prints totals from the JUnit XML reports of one Gradle test task.

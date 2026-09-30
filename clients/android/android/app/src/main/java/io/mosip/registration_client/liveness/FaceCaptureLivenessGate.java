@@ -13,6 +13,9 @@ import io.mosip.liveness.core.Workflow;
 import io.mosip.liveness.core.ui.MessageKeys;
 import io.mosip.registration.livenessmanager.LivenessCaptureResult;
 import io.mosip.registration.livenessmanager.LivenessService;
+import io.mosip.registration.livenessmanager.SupervisorOverride;
+import io.mosip.registration.livenessmanager.auth.FaceAuthOutcome;
+import io.mosip.registration.livenessmanager.ui.MessageResolver;
 
 /**
  * Liveness rule for face captures that end up stored: the resident's face in a registration (workflow
@@ -29,9 +32,12 @@ import io.mosip.registration.livenessmanager.LivenessService;
  * workflow {@code exception_photo}, counted under its own key ({@link #exceptionPhotoField}): with the shipped
  * policy {@code OFF} the built-in camera takes a signed photo without a liveness check, as on the desktop client.
  *
- * <p>Plan section 4.16 allows {@code SUPERVISOR_OVERRIDE} for residents. The built-in camera stores only the
- * frame a passing session selected, so there is no face to store after a failure; ARC therefore treats
- * {@code SUPERVISOR_OVERRIDE} like {@code BLOCK} and shows the recovery message.
+ * <p>{@code SUPERVISOR_OVERRIDE} (resident workflows, plan section 4.16): when the last attempt failed for a
+ * reason that allows an override (not a suspected attack, frame integrity or binding failure), the gate keeps
+ * the failed transaction's packet evidence ({@link #overrideEvidence}). The capture screen offers the override;
+ * after the supervisor passed face authentication with liveness ({@code SupervisorOverrideFlow}), the resident's
+ * photo is stored with {@code LIVENESS_DECISION=OVERRIDE} ({@link #recordOverride}). Until then the field stays
+ * blocked, and pressing Scan again offers the override again instead of a new liveness check.
  */
 @Singleton
 public class FaceCaptureLivenessGate {
@@ -44,6 +50,7 @@ public class FaceCaptureLivenessGate {
     private final LivenessService liveness;
     private final Map<String, Integer> failedAttempts = new HashMap<>();
     private final Map<String, CaptureOutcome> lastOutcome = new HashMap<>();
+    private final Map<String, Map<String, String>> overrideEvidence = new HashMap<>();
 
     /**
      * Creates the gate.
@@ -143,6 +150,7 @@ public class FaceCaptureLivenessGate {
         CaptureOutcome outcome;
         if (result.isPass()) {
             failedAttempts.remove(key);
+            overrideEvidence.remove(key);
             outcome = new CaptureOutcome(CaptureOutcome.Status.PASSED, MessageKeys.FEEDBACK_SUCCESS,
                     Collections.emptyList(), result.attemptsUsed(), max);
         } else {
@@ -154,6 +162,11 @@ public class FaceCaptureLivenessGate {
             failedAttempts.put(key, failed);
             if (counts && (failed >= max || !result.isRetryAllowed())) {
                 failedAttempts.put(key, Math.max(failed, max));
+                if (result.isOverrideAllowed() && isOverridePolicy(fieldId)) {
+                    overrideEvidence.put(key, new HashMap<>(result.evidence()));
+                } else {
+                    overrideEvidence.remove(key);
+                }
                 outcome = blocked(fieldId, Math.max(failed, max), max);
             } else if (result.attemptsUsed() == 0 || reason == FailureReason.CANCELLED) {
                 outcome = new CaptureOutcome(CaptureOutcome.Status.CANCELLED, null, Collections.emptyList(),
@@ -164,6 +177,63 @@ public class FaceCaptureLivenessGate {
                         failed, max);
             }
         }
+        lastOutcome.put(fieldId, outcome);
+        return outcome;
+    }
+
+    /**
+     * Returns the packet evidence of a failed transaction a supervisor may still override.
+     *
+     * @param subject registration ID
+     * @param fieldId ARC field ID
+     * @return the evidence, or {@code null} when no override is possible for this field
+     */
+    public synchronized Map<String, String> overrideEvidence(String subject, String fieldId) {
+        Map<String, String> evidence = overrideEvidence.get(key(subject, fieldId));
+        return evidence == null || !isOverridePolicy(fieldId) ? null : new HashMap<>(evidence);
+    }
+
+    /**
+     * Records the resident photo taken under a supervisor override.
+     *
+     * @param subject registration ID
+     * @param fieldId ARC field ID
+     * @param photo   the capture screen's result in override mode
+     * @return the outcome: passed with the override message, or still blocked
+     */
+    public synchronized CaptureOutcome recordOverride(String subject, String fieldId, LivenessCaptureResult photo) {
+        String key = key(subject, fieldId);
+        int max = maxAttempts(fieldId);
+        CaptureOutcome outcome;
+        if (photo.isSupervisorOverride()) {
+            failedAttempts.remove(key);
+            overrideEvidence.remove(key);
+            outcome = new CaptureOutcome(CaptureOutcome.Status.PASSED, MessageResolver.OVERRIDE_USED,
+                    Collections.emptyList(), max, max);
+        } else {
+            outcome = blocked(fieldId, failedAttempts.getOrDefault(key, max), max);
+        }
+        lastOutcome.put(fieldId, outcome);
+        return outcome;
+    }
+
+    /**
+     * Records that the supervisor did not pass face authentication, so no override was granted. The field stays
+     * blocked; the override can be offered again.
+     *
+     * @param subject    registration ID
+     * @param fieldId    ARC field ID
+     * @param supervisor the supervisor's face authentication outcome
+     * @return the blocked outcome, with the authentication's message when it has one
+     */
+    public synchronized CaptureOutcome recordOverrideRefused(String subject, String fieldId,
+                                                             FaceAuthOutcome supervisor) {
+        int max = maxAttempts(fieldId);
+        int failed = failedAttempts.getOrDefault(key(subject, fieldId), max);
+        String message = supervisor == null || supervisor.messageKey() == null ? MessageKeys.ERROR_NOT_SUPERVISOR
+                : supervisor.messageKey();
+        CaptureOutcome outcome = new CaptureOutcome(CaptureOutcome.Status.BLOCKED, message,
+                Collections.emptyList(), failed, max);
         lastOutcome.put(fieldId, outcome);
         return outcome;
     }
@@ -203,6 +273,10 @@ public class FaceCaptureLivenessGate {
 
     private int maxAttempts(String fieldId) {
         return Math.max(1, liveness.policy(workflowFor(fieldId)).maxRetries());
+    }
+
+    private boolean isOverridePolicy(String fieldId) {
+        return SupervisorOverride.isAllowedBy(liveness.policy(workflowFor(fieldId)));
     }
 
     private static CaptureOutcome blocked(String fieldId, int failed, int max) {

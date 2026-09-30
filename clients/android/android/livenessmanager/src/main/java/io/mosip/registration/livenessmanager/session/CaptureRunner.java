@@ -19,6 +19,15 @@ public interface CaptureRunner extends AutoCloseable {
     /** Cancels the running attempt, if any. Safe from any thread. */
     void cancel();
 
+    /**
+     * Returns the processing time of the last attempt's frames, for the diagnostic view.
+     *
+     * @return for example {@code frames=42 p50=31.2ms p95=48.0ms max=61.5ms}, or an empty string
+     */
+    default String lastFrameTimes() {
+        return "";
+    }
+
     /** Cancels the running attempt, releases the camera and stops the worker. Idempotent. */
     @Override
     void close();

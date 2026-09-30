@@ -21,12 +21,14 @@ import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
@@ -58,11 +60,13 @@ import io.mosip.registration.livenessmanager.LivenessCaptureRequest;
 import io.mosip.registration.livenessmanager.LivenessCaptureResult;
 import io.mosip.registration.livenessmanager.LivenessRuntime;
 import io.mosip.registration.livenessmanager.R;
+import io.mosip.registration.livenessmanager.SupervisorOverride;
 import io.mosip.registration.livenessmanager.config.OverlayConfigSource;
 import io.mosip.registration.livenessmanager.device.BuiltInCameraL0Device;
 import io.mosip.registration.livenessmanager.device.CameraXFrameSource;
 import io.mosip.registration.livenessmanager.device.ReplayFrameSource;
 import io.mosip.registration.livenessmanager.device.ReplayPromptFollower;
+import io.mosip.registration.livenessmanager.metrics.MetricsReport;
 import io.mosip.registration.livenessmanager.session.CaptureRunner;
 import io.mosip.registration.livenessmanager.session.LivenessRunner;
 import io.mosip.registration.livenessmanager.session.PhotoCaptureRunner;
@@ -79,6 +83,17 @@ import io.mosip.registration.livenessmanager.session.PhotoCaptureRunner;
  * <p>Accessibility: every state has text, an icon and a colour (never colour alone); the prompt is a polite live
  * region and each new prompt is announced for TalkBack; text sizes are in {@code sp}, so the system font size
  * applies; buttons are at least 48 dp high.
+ *
+ * <p>Supervisor override ({@code on_max_failure=SUPERVISOR_OVERRIDE}, resident workflows): after the last attempt
+ * failed for a reason that allows it, the screen offers "Supervisor override". The operator confirms and enters the
+ * supervisor's user ID; the screen returns the failure with {@link LivenessCaptureResult#overrideRequestedBy()}
+ * set. The caller verifies the supervisor's face (liveness and match) and then opens the screen again with
+ * {@link LivenessCaptureRequest#override()}: it takes the resident's photo without a liveness check, marks it
+ * {@code LIVENESS_DECISION=OVERRIDE} and writes audit {@code REG-EVT-LV16}.
+ *
+ * <p>After every attempt the anonymised metrics are written to {@code files/liveness/metrics.log}
+ * ({@code metrics.enable}); in diagnostic mode ({@code diagnostic.enable=Y}) the screen also shows them with the
+ * execution provider and the frame times of the last attempt.
  */
 public final class LivenessCaptureActivity extends AppCompatActivity {
 
@@ -98,6 +113,7 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
     private LivenessCaptureResult lastResult;
     private boolean finishing;
     private String lastPrompt;
+    private LivenessPolicy policy;
     /** Debug replay that answers challenge prompts; replaced for every attempt's stream. */
     private volatile ReplayPromptFollower follower;
 
@@ -113,6 +129,8 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
     private MaterialButton retry;
     private MaterialButton cancel;
     private MaterialButton settings;
+    private MaterialButton override;
+    private TextView diagnostics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,15 +153,24 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
         messages = new MessageResolver(ui.getResources(), config, request.language());
         showHeader();
 
-        LivenessPolicy policy = config == runtime.config() ? runtime.resolve(request.workflow()).policy()
+        policy = config == runtime.config() ? runtime.resolve(request.workflow()).policy()
                 : new PolicyResolver(config).resolve(request.workflow()).policy();
+        if (request.isOverrideOffer() || request.override() != null) {
+            startOverride();
+            return;
+        }
         if (!policy.isEnabled() && !request.isPhotoWhenOff()) {
             Log.w(TAG, "Liveness is off for " + request.workflow().id() + "; capture screen closed");
             finishWith(Activity.RESULT_CANCELED, LivenessCaptureResult.builder(request.workflow(), Decision.CANCELLED)
                     .failureReason(FailureReason.CANCELLED).build());
             return;
         }
-        runner = policy.isEnabled() ? createRunner(policy) : createPhotoRunner();
+        runner = policy.isEnabled() ? createRunner(policy) : createPhotoRunner(null);
+        updateDiagnostics();
+        startRunner();
+    }
+
+    private void startRunner() {
         if (needsCameraPermission()) {
             requestPermissions(new String[] {Manifest.permission.CAMERA}, PERMISSION_REQUEST);
         } else {
@@ -204,11 +231,14 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
         retry = findViewById(R.id.liveness_retry);
         cancel = findViewById(R.id.liveness_cancel);
         settings = findViewById(R.id.liveness_settings);
+        override = findViewById(R.id.liveness_override);
+        diagnostics = findViewById(R.id.liveness_diagnostics);
         View panel = findViewById(R.id.liveness_panel);
         panel.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> guide.setBottomInset(b - t));
         retry.setOnClickListener(v -> onRetry());
         cancel.setOnClickListener(v -> cancelCapture());
         settings.setOnClickListener(v -> openAppSettings());
+        override.setOnClickListener(v -> askForOverride());
     }
 
     private void showHeader() {
@@ -249,9 +279,13 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
         });
     }
 
-    /** The workflow's liveness is off, but the caller needs a signed photo (the exception photo). */
-    private PhotoCaptureRunner createPhotoRunner() {
-        Log.i(TAG, "Liveness is off for " + request.workflow().id() + "; taking a photo without a liveness check");
+    /**
+     * A signed photo without a liveness check: the workflow's liveness is off and the caller needs a photo (the
+     * exception photo), or a supervisor granted an override of the resident's failed capture.
+     */
+    private PhotoCaptureRunner createPhotoRunner(SupervisorOverride grant) {
+        Log.i(TAG, (grant == null ? "Liveness is off for " + request.workflow().id() : "Supervisor override")
+                + "; taking a photo without a liveness check");
         return new PhotoCaptureRunner(request.workflow(), createDevice(), new LivenessRunner.Listener() {
             @Override
             public void onUiState(LivenessUiState state) {
@@ -262,7 +296,36 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
             public void onAttemptEnded(LivenessCaptureResult result) {
                 main.post(() -> attemptEnded(result));
             }
-        });
+        }, grant);
+    }
+
+    /**
+     * Override screens: the offer after the attempts were used up on an earlier screen, or the resident's photo
+     * after the supervisor verified. Both need a resident workflow whose policy allows the override.
+     */
+    private void startOverride() {
+        if (!policy.isEnabled() || !SupervisorOverride.isAllowedBy(policy)) {
+            Log.w(TAG, "Supervisor override not allowed for " + request.workflow().id());
+            finishWith(Activity.RESULT_CANCELED, LivenessCaptureResult.builder(request.workflow(), Decision.ERROR)
+                    .failureReason(FailureReason.CANCELLED).messageKey(MessageKeys.RETRY_MAX_RESIDENT)
+                    .onMaxFailure(policy.onMaxFailure()).build());
+            return;
+        }
+        if (request.override() != null) {
+            runner = createPhotoRunner(request.override());
+            updateDiagnostics();
+            startRunner();
+            return;
+        }
+        int max = Math.max(1, policy.maxRetries());
+        render(LivenessUiState.builder(UiPhase.MAX_ATTEMPTS, MessageKeys.RETRY_MAX_RESIDENT)
+                .args(String.valueOf(max)).promptIcon(PromptIcon.LOCKED)
+                .severity(Severity.ERROR).attempt(max, max).build());
+        lastResult = LivenessCaptureResult.builder(request.workflow(), Decision.FAIL_LIVENESS)
+                .failureReason(FailureReason.CANCELLED).messageKey(MessageKeys.RETRY_MAX_RESIDENT)
+                .attempts(max, max).overrideAllowed(true).onMaxFailure(policy.onMaxFailure()).build();
+        override.setVisibility(View.VISIBLE);
+        updateDiagnostics();
     }
 
     /** The built-in camera as an SBI L0 face device, streaming from CameraX or (debug builds) a replay pack. */
@@ -414,8 +477,13 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
 
     private void attemptEnded(LivenessCaptureResult result) {
         lastResult = result;
+        runtime.publishMetrics(policy.isMetricsEnabled());
+        updateDiagnostics();
         if (finishing) {
             return;
+        }
+        if (result.isSupervisorOverride() && request.override() != null) {
+            runtime.audit().emit(request.override().auditEvent(request.workflow(), runtime.clock()));
         }
         if (result.isPass()) {
             retry.setVisibility(View.GONE);
@@ -424,9 +492,72 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
             return;
         }
         retry.setVisibility(result.isRetryAllowed() ? View.VISIBLE : View.GONE);
+        boolean offerOverride = !result.isRetryAllowed() && result.isOverrideAllowed()
+                && request.override() == null && SupervisorOverride.isAllowedBy(policy);
+        override.setVisibility(offerOverride ? View.VISIBLE : View.GONE);
         if (result.isRetryAllowed()) {
             retry.requestFocus();
+        } else if (offerOverride) {
+            override.requestFocus();
         }
+    }
+
+    /**
+     * Asks the operator to confirm the override and to enter the supervisor's user ID (the signed-in user is
+     * suggested). The supervisor's face is verified by the caller before any photo is taken.
+     */
+    private void askForOverride() {
+        LivenessCaptureResult failed = lastResult;
+        if (failed == null || !failed.isOverrideAllowed() || finishing) {
+            return;
+        }
+        EditText supervisor = new EditText(ui);
+        supervisor.setSingleLine(true);
+        supervisor.setHint(ui.getString(R.string.liveness_ui_supervisor_id));
+        supervisor.setContentDescription(ui.getString(R.string.liveness_ui_supervisor_id));
+        supervisor.setText(runtime.currentUserId());
+        float density = getResources().getDisplayMetrics().density;
+        supervisor.setMinHeight((int) (48 * density));
+        android.widget.FrameLayout field = new android.widget.FrameLayout(ui);
+        int pad = (int) (24 * density);
+        field.setPadding(pad, 0, pad, 0);
+        field.addView(supervisor);
+        AlertDialog dialog = new AlertDialog.Builder(ui)
+                .setTitle(messages.text(MessageKeys.TITLE_SUPERVISOR, null))
+                .setMessage(messages.text(MessageKeys.OVERRIDE_CONFIRM, null))
+                .setView(field)
+                .setPositiveButton(ui.getString(R.string.liveness_ui_override), null)
+                .setNegativeButton(ui.getString(R.string.liveness_ui_cancel), null)
+                .create();
+        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String id = supervisor.getText().toString().trim();
+            if (id.isEmpty()) {
+                supervisor.setError(ui.getString(R.string.liveness_ui_supervisor_id_missing));
+                return;
+            }
+            dialog.dismiss();
+            Log.i(TAG, "Supervisor override requested for " + request.workflow().id());
+            finishWith(Activity.RESULT_CANCELED, failed.withOverrideRequest(id));
+        }));
+        dialog.show();
+    }
+
+    /** Diagnostic mode: execution provider, the last attempt's frame times and the metrics of this app run. */
+    private void updateDiagnostics() {
+        if (policy == null || !policy.isDiagnosticEnabled()) {
+            diagnostics.setVisibility(View.GONE);
+            return;
+        }
+        List<String> lines = new ArrayList<>();
+        lines.add(ui.getString(R.string.liveness_ui_diagnostics) + ": " + request.workflow().id() + " | "
+                + policy.mode() + " | " + runtime.engines().acceleratorStatus());
+        String frames = runner == null ? "" : runner.lastFrameTimes();
+        if (!frames.isEmpty()) {
+            lines.add("last attempt " + frames);
+        }
+        lines.addAll(MetricsReport.summary(runtime.metrics().snapshot()));
+        diagnostics.setText(String.join("\n", lines));
+        diagnostics.setVisibility(View.VISIBLE);
     }
 
     private void showPermissionError() {
@@ -458,6 +589,7 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
 
     private void onRetry() {
         retry.setVisibility(View.GONE);
+        override.setVisibility(View.GONE);
         settings.setVisibility(View.GONE);
         if (needsCameraPermission()) {
             requestPermissions(new String[] {Manifest.permission.CAMERA}, PERMISSION_REQUEST);

@@ -29,6 +29,21 @@ if (keystorePropertiesFile.exists()) {
     localProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
+// Release signing: storeFile, storePassword, keyAlias and keyPassword from local.properties or key.properties
+// (both git-ignored), else from the environment variables ARC_RELEASE_STORE_FILE, ARC_RELEASE_STORE_PASSWORD,
+// ARC_RELEASE_KEY_ALIAS and ARC_RELEASE_KEY_PASSWORD (CI secrets). The keystore itself stays outside the
+// repository (scripts/android-release-keystore.sh). With ARC_REQUIRE_RELEASE_SIGNING=1 a release build without a
+// keystore fails instead of falling back to the debug key.
+def releaseSigning = { String name, String env ->
+    def value = localProperties[name] ?: System.getenv(env)
+    return value ? value.toString().trim() : null
+}
+def releaseStoreFile = releaseSigning('storeFile', 'ARC_RELEASE_STORE_FILE')
+def requireReleaseSigning = (System.getenv('ARC_REQUIRE_RELEASE_SIGNING') ?: '') == '1'
+// Optional applicationId suffix for release builds (ARC_RELEASE_APPLICATION_ID_SUFFIX, for example ".release"), so
+// a test device can keep the debug app and its data next to the release app. Empty for real releases.
+def releaseApplicationIdSuffix = (System.getenv('ARC_RELEASE_APPLICATION_ID_SUFFIX') ?: '').trim()
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
@@ -85,11 +100,17 @@ android {
 
     signingConfigs {
         release {
-            keyAlias = localProperties['keyAlias']
-            keyPassword = localProperties['keyPassword']
-            storeFile = localProperties['storeFile'] ? file(localProperties['storeFile']) : null
-            storePassword = localProperties['storePassword']
+            keyAlias = releaseSigning('keyAlias', 'ARC_RELEASE_KEY_ALIAS')
+            keyPassword = releaseSigning('keyPassword', 'ARC_RELEASE_KEY_PASSWORD')
+            storeFile = releaseStoreFile ? file(releaseStoreFile) : null
+            storePassword = releaseSigning('storePassword', 'ARC_RELEASE_STORE_PASSWORD')
         }
+    }
+
+    // A release APK that talks plain HTTP to a server on the device itself (adb reverse, demo) gets a network
+    // security config allowing cleartext to 127.0.0.1 and localhost only.
+    if (rootProject.ext.releaseServerIsLoopbackHttp) {
+        sourceSets.release.res.srcDirs += 'src/releaseLoopback/res'
     }
 
     buildTypes {
@@ -103,15 +124,19 @@ android {
             }
         }
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Signed with the release keystore when one is configured (see releaseSigning above); otherwise with
+            // the debug keys, so `flutter run --release` works, unless ARC_REQUIRE_RELEASE_SIGNING=1.
+            buildConfigField("String", "BASE_URL", rootProject.ext.releaseServerBaseURL)
+            if (releaseApplicationIdSuffix) {
+                applicationIdSuffix releaseApplicationIdSuffix
+            }
             lintOptions {
                 checkReleaseBuilds false
                 abortOnError false
             }
             minifyEnabled false
             shrinkResources false
-            signingConfig localProperties['storeFile'] ? signingConfigs.release : signingConfigs.debug
+            signingConfig releaseStoreFile ? signingConfigs.release : signingConfigs.debug
             ndk {
                 abiFilters(*(arcAbis ?: ['arm64-v8a', 'armeabi-v7a', 'x86_64', 'x86']))
                 // architectures: 'armeabi-v7a', 'arm64-v8a', 'armeabi', 'x86', 'x86_64'
@@ -154,6 +179,20 @@ tasks.register("jacocoTestReport", JacocoReport) {
 }
 flutter {
     source '../..'
+}
+
+gradle.taskGraph.whenReady { graph ->
+    boolean release = graph.allTasks.any { it.project == project && it.name == 'packageRelease' }
+    if (release && requireReleaseSigning && !releaseStoreFile) {
+        throw new GradleException('Release signing is required (ARC_REQUIRE_RELEASE_SIGNING=1) but no keystore is ' +
+                'configured: set storeFile, storePassword, keyAlias and keyPassword in android/local.properties ' +
+                '(scripts/android-release-keystore.sh) or the ARC_RELEASE_* environment variables.')
+    }
+    if (release) {
+        logger.lifecycle("Release APK: server ${rootProject.ext.releaseServerBaseURL}, " +
+                "signed with ${releaseStoreFile ? 'the release keystore' : 'the DEBUG key'}" +
+                (releaseApplicationIdSuffix ? ", applicationId suffix ${releaseApplicationIdSuffix}" : ''))
+    }
 }
 
 // Release APKs store the native libraries compressed (Flutter, ONNX Runtime, SQLCipher: about a third of the

@@ -40,6 +40,7 @@
     <string name="liveness_title_supervisor">Vérification du superviseur</string>
     <string name="liveness_offline_badge">Hors ligne – la vérification s\'effectue sur cet appareil</string>
     <string name="liveness_config_updated">Paramètres de vérification du visage mis à jour.</string>
+    <string name="liveness_override_used">Visage enregistré avec une dérogation du superviseur. Il est signalé pour contrôle dans le paquet.</string>
 
     <string name="liveness_ui_title">Vérification du visage</string>
     <string name="liveness_ui_retry">Réessayer</string>
@@ -49,4 +50,8 @@
     <string name="liveness_ui_attempts">Tentative {0} sur {1}</string>
     <string name="liveness_ui_preview">Aperçu de la caméra. Gardez votre visage dans l\'ovale.</string>
     <string name="liveness_ui_replay_badge">Relecture (version de débogage)</string>
+    <string name="liveness_ui_override">Dérogation du superviseur</string>
+    <string name="liveness_ui_supervisor_id">Identifiant du superviseur</string>
+    <string name="liveness_ui_supervisor_id_missing">Saisissez l\'identifiant du superviseur.</string>
+    <string name="liveness_ui_diagnostics">Diagnostic</string>
 </resources>

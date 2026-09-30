@@ -39,6 +39,10 @@ Package `io.mosip.registration.livenessmanager` (module folder `clients/android/
 | `config.OverlayConfigSource` | Debug-only overrides passed to the screen from adb. |
 | `audit.ArcAuditSink` | Writes `REG-EVT-LV01..17` through ARC's `AuditManagerService.auditWithArguments` on one background thread. |
 | `audit.LogcatSinks` | Diagnostic lines and standalone audits under the Logcat tag `Liveness`. |
+| `SupervisorOverride` | A granted override of a resident capture: supervisor, failed evidence, `OVERRIDE` evidence, audit `REG-EVT-LV16` (section 13.1). |
+| `metrics.MetricsReport` / `metrics.MetricsLog` | Anonymised metrics line and summary; the rotating `files/liveness/metrics.log` (section 13.2). |
+| `audit.DiagnosticModeTracker` | `REG-EVT-LV17` when diagnostic mode changes (section 13.3). |
+| `engine.Accelerator` / `engine.AcceleratorCustomizer` | Execution provider from the configuration, with CPU fallback (section 13.5). |
 
 Changes outside the module (surgical, upstream style kept):
 
@@ -119,6 +123,10 @@ ranges and reports corrections (audit `REG-EVT-LV15`).
 Android-only keys: `mosip.registration.liveness.android.device` (`BUILTIN`, default, or `SBI`),
 `mosip.registration.liveness.android.block_emulator` (default `N`) and
 `mosip.registration.android.offline_approval.enable`.
+
+Also read on Android: `mosip.registration.liveness.engine.execution_provider` (`CPU`, `XNNPACK`, `NNAPI`; section
+13.5), `metrics.enable` (metrics log, section 13.2) and `diagnostic.enable` (diagnostic panel and
+`REG-EVT-LV17`, section 13.3).
 
 Debug builds accept `config.<key>` extras on the screen's intent (see `scripts/android-liveness-demo.sh`);
 release builds ignore them.
@@ -298,9 +306,7 @@ tests run the panel in Arabic and check the right-to-left layout.
 
 ### 11.5 Deviations
 
-- `SUPERVISOR_OVERRIDE` for residents behaves as `BLOCK`: the built-in camera stores only the frame a passing
-  session selected, so after a failure there is no face to store with an override. The resident sees the recovery
-  message.
+- `SUPERVISOR_OVERRIDE` for residents: implemented in section 13.1 (earlier versions treated it as `BLOCK`).
 - Face authentication matches against the onboarding face kept on the device instead of calling the server, so it
   works offline.
 
@@ -330,9 +336,9 @@ operation were run end to end later, with `scripts/demo-android.sh`; see section
 `docs/test-report/android-e2e.md`. The emulator crashes seen here were the host's software GPU renderer
 (section 12.4), not memory.
 
-Engine limit seen here: with the shipped registration policy (`PASSIVE_THEN_ACTIVE`, threshold 80) the
-printed-photo pack `a-s3-print-still` passes passively, as `docs/eval/calibration-notes.md` records. The
-proposed `ALWAYS_ACTIVE` registration policy rejects it.
+Engine limit seen here: with the registration policy shipped at the time (`PASSIVE_THEN_ACTIVE`, threshold 80)
+the printed-photo pack `a-s3-print-still` passed passively, as `docs/eval/calibration-notes.md` records. The
+`ALWAYS_ACTIVE` registration policy, the default since 2026-09-30, rejects it.
 
 Screenshots without a real face: `docs/ux/screenshots/android/`.
 
@@ -384,3 +390,141 @@ recovery message and writes `REG-EVT-LV11`, and a further Scan opens no screen.
   crashed the emulator with an access violation in generated code every few minutes on ARC's biometric
   screens (Windows Application log, event 1000). `-gpu host` did not crash; `scripts/android-run-emulator.sh`
   now defaults to `auto`.
+
+## 13. Supervisor override, metrics, diagnostics, execution provider, release build
+
+This section closes the Android rows 8.9, G4, G7, G8 and B8 of `docs/traceability.md` and adds a release build.
+It replaces the first bullet of section 11.5.
+
+### 13.1 Supervisor override for residents (`on_max_failure=SUPERVISOR_OVERRIDE`)
+
+Same rule as the desktop client: after the resident's last attempt failed, a supervisor may accept the face; the
+packet then says `LIVENESS_DECISION=OVERRIDE` and audit `REG-EVT-LV16` names the supervisor. The engine's
+`LivenessTransaction` decides whether an override is possible (`LivenessCaptureResult.isOverrideAllowed()`): only
+for resident workflows, never after `PAD`, `INTEGRITY` or `BINDING` failures. Android adds one requirement the
+desktop client does not have: the supervisor must pass face authentication with liveness first, because the tablet
+has no signed-in supervisor session to rely on.
+
+| Step | Where | What happens |
+|---|---|---|
+| 1 | `ui.LivenessCaptureActivity` | After the last attempt, when the result allows an override and the policy is `SUPERVISOR_OVERRIDE`, the screen shows "Supervisor override" next to Cancel. A dialog shows `liveness.override.confirm` and asks for the supervisor's user ID (the signed-in user is suggested). The screen closes with the failure and `overrideRequestedBy()` set. |
+| 2 | `FaceCaptureLivenessGate.record` | Keeps the failed transaction's packet evidence (`overrideEvidence`) while the field is blocked. |
+| 3 | `SupervisorOverrideFlow` (app) | Supervisor face authentication, workflow `exception_auth`: liveness, `REGISTRATION_SUPERVISOR` role, 1:1 match with the supervisor's onboarding face (`FaceAuthFlow`). A refusal (not a supervisor, no match, liveness failed, `exception_auth` not enforced) takes no photo; the field stays blocked with the refusal's message. |
+| 4 | capture screen with `LivenessCaptureRequest.override(SupervisorOverride)` | `session.PhotoCaptureRunner` takes the resident's photo with the built-in device, signed like any capture, without a liveness check. The result is a pass with reason `SUPERVISOR_OVERRIDE` and the evidence of step 2 with `LIVENESS_DECISION=OVERRIDE`. The screen writes `REG-EVT-LV16` (`SupervisorOverride.auditEvent`, supervisor ID, session ID of the failed transaction). |
+| 5 | `BiometricsDetailsApi.storeLivenessCapture` | The photo goes through ARC's SBI checks like every capture and is stored with its evidence in the BIR `others`; `packet_meta_info.json` gets `livenessDecision=OVERRIDE`. The gate resets the count and Flutter shows `liveness.override.used` ("Face stored with a supervisor override. It is flagged for review in the packet.") under Scan. |
+
+Pressing Scan again while the field is blocked and an override is still possible opens the capture screen in
+"override offer" mode (`LivenessCaptureRequest.overrideOffer(true)`): it shows the maximum-attempts message and
+the override button, and runs no session. The capture screen re-checks the policy for both override modes and
+refuses them for authentication workflows or a policy other than `SUPERVISOR_OVERRIDE`.
+
+Deviation from desktop: the desktop client accepts the signed-in supervisor without a second face check and
+writes `REG-EVT-LV16` when the capture is stored; Android writes it when the override photo is signed (the
+screen that took it), so a photo that ARC's SBI checks then reject still has its `LV16` row.
+
+### 13.2 Anonymised metrics (G7, G8)
+
+`LivenessRuntime` owns one `LivenessMetrics` (the engine's collector) and passes it to the engine
+(`EngineLoader.onnx(..., metrics, ...)`), so every session of the process is counted: resident captures and
+face authentications.
+
+- After every attempt the capture screen calls `LivenessRuntime.publishMetrics(policy.isMetricsEnabled())`
+  (`metrics.enable`, default `Y`). One line (`metrics.MetricsReport.line`) goes to Logcat (tag
+  `LivenessMetrics`) and to `files/liveness/metrics.log` in the app's private storage (`metrics.MetricsLog`, one
+  background thread, rotated to `metrics.log.1` at 256 KB).
+- The line has the same names as the desktop client's `logs/metrics.log`: `sessions`, `retries`, `passes`,
+  `passive_passes`, `active_triggers`, `challenges_passed`, `frames_analysed`, non-zero `failures.<REASON>`,
+  `time.total.avg_ms` / `max_ms`, `time.passive.avg_ms`, `time.challenge.avg_ms` (challenge completion time),
+  `time.frame.avg_ms` / `max_ms` (processing time), `rate.retry`, `rate.failure`.
+- No user ID, registration ID, device serial, image or per-capture score is in the line.
+
+Example from the emulator (`adb logcat -s LivenessMetrics`, 2026-09-30):
+
+```
+2026-09-30T06:43:32.971166Z liveness sessions=2 retries=0 passes=1 passive_passes=0 active_triggers=1 challenges_passed=2 frames_analysed=128 failures.ENGINE=1 time.total.avg_ms=7019 time.total.max_ms=10223 time.passive.avg_ms=0 time.challenge.avg_ms=1734 time.frame.avg_ms=80 time.frame.max_ms=1630 rate.retry=0.000 rate.failure=0.500
+```
+
+### 13.3 Diagnostic mode (G5 on Android) and `REG-EVT-LV17`
+
+- With `diagnostic.enable=Y` the capture screen shows a panel under the title: workflow, policy mode, execution
+  provider, the last attempt's frame times (`frames= p50= p95= max=`) and the three summary lines of the metrics
+  (`MetricsReport.summary`). The engine's diagnostic lines go to Logcat (tag `Liveness`), as before.
+- `audit.DiagnosticModeTracker` writes `REG-EVT-LV17` when the value a policy resolution sees differs from the
+  last one seen on this tablet (kept in the module's shared preferences). On Android the value arrives by sync or
+  as the operator's local setting, so there is no switch to hook; the event names the signed-in user
+  (`LivenessRuntime.setUserIdSupplier`, set by `LivenessModule` from ARC's `SessionManager`).
+
+### 13.4 Configurable guidance (G4)
+
+`ui.MessageResolver` applies `mosip.registration.liveness.guidance.<messageKey>.<lang>` through the engine's
+`LivenessUiStateMapper.resolveText` for the capture screen, and `LivenessMessages` uses the same resolver for the
+Flutter banners, so a synced text replaces the bundled one everywhere. Checked by `MessageResolverTest`
+(`fillsArgumentsAndUsesSyncedGuidanceOverride`); not re-checked on the emulator in this round.
+
+### 13.5 Execution provider (B8)
+
+| Item | Value |
+|---|---|
+| Key | `mosip.registration.liveness.engine.execution_provider`: `CPU` (default), `XNNPACK`, `NNAPI`; the key name the engine uses for the same setting on desktop. Synced only (not a local override). Read when the engine loads, so a change applies at the next app start. |
+| Code | `engine.Accelerator` (parsing), `engine.AcceleratorCustomizer` (adds the provider through the engine's `OnnxRuntimeOptions.SessionCustomizer` hook), `engine.EngineLoader` (fallback and status). |
+| XNNPACK | `SessionOptions.addXnnpack` with `intra_op_num_threads` = the engine's thread count; the session's own intra-op pool is set to 1 thread, as ONNX Runtime recommends. |
+| NNAPI | `SessionOptions.addNnapi()` with default flags. |
+| Fallback | A provider missing from the ONNX Runtime build is skipped (`UNAVAILABLE`); a provider that rejects the options is skipped for that model (`REJECTED`); either way that model runs on the CPU. If the engine still fails to load (anything but a model integrity failure), `EngineLoader` loads it again on the CPU. A provider problem never switches liveness off. |
+| Status | Logcat `Liveness engine ready: ... execution <status>` and the diagnostic panel: `CPU`, `XNNPACK`, `XNNPACK (partly CPU)`, `CPU (NNAPI unavailable)`, `CPU (NNAPI rejected)`, `CPU (XNNPACK failed to load)`. |
+
+Measured: nothing yet. On the emulator every load reported `execution CPU` (the shipped value). XNNPACK and NNAPI
+were not run on a device; the selection and every fallback path are covered by `AcceleratorCustomizerTest`. A
+speed comparison needs a physical arm64 tablet (B7/B8 in `docs/traceability.md`).
+
+Model warm-up: `EngineLoader` runs the face detector and the PAD models once on a blank 640x480 frame after
+loading (100-500 ms on the emulator). Without it, the first frames of the first session after an app start took
+640-1630 ms on the loaded emulator, three in a row exceeded `engine.inference_slow_ms` (500), and the session ended
+with `INFERENCE_TIMEOUT` (observed twice on 2026-09-30). The Face Mesh model is not warmed (it needs a detected
+face), so a very slow device can still hit this on its first session.
+
+### 13.6 Release build
+
+| Item | How |
+|---|---|
+| Server URL | `arcReleaseServerBaseUrl` (Gradle property, environment variable `ARC_RELEASE_SERVER_BASE_URL`, or `local.properties`) sets `BuildConfig.BASE_URL` of `app` and `clientmanager` for release builds; empty keeps the upstream `serverBaseURL`. `scripts/android-build.sh --release` passes `--server-url` (default `http://127.0.0.1:8080`, MockSync through `adb reverse`). |
+| Plain HTTP | Only when the release URL is `http://127.0.0.1` or `http://localhost` (any port): `app/src/releaseLoopback/res/xml/network_security_config.xml` is added to the release resources and allows cleartext to those two hosts only. Any other release server must be HTTPS. |
+| Signing | `signingConfigs.release` reads `storeFile`, `storePassword`, `keyAlias`, `keyPassword` from `android/local.properties` or `key.properties` (both git-ignored), else from `ARC_RELEASE_STORE_FILE`, `ARC_RELEASE_STORE_PASSWORD`, `ARC_RELEASE_KEY_ALIAS`, `ARC_RELEASE_KEY_PASSWORD`. `scripts/android-release-keystore.sh` creates an RSA 3072 PKCS#12 keystore outside the repository (default `../secrets/android-release.jks`) with a random password and writes the four properties. `scripts/android-build.sh --release` sets `ARC_REQUIRE_RELEASE_SIGNING=1`, so a release without a keystore fails instead of silently using the debug key (`--allow-debug-signing` for size checks). |
+| Side-by-side install | `--app-id-suffix .release` (`ARC_RELEASE_APPLICATION_ID_SUFFIX`) installs the release app next to the debug app on a test device; real releases leave it empty. |
+| Debug-only features | Replay frame packs, `config.<key>` extras and the adb launch of the capture screen are debug-only (`BuildConfig.DEBUG`); the release APK carries no replay frames. |
+
+Run on 2026-09-30 (`scripts/android-build.sh --skip-codegen --release --abis x86_64 --app-id-suffix .release`):
+build 153 s, `app-release.apk` 123,180,952 bytes, signer `CN=Android Registration Client release, OU=Badmosip,
+O=MOSIP Decode 2026`, certificate SHA-256 `810ff5c0...2e009d`. Installed next to the debug app on the emulator,
+it loaded the engine ("Liveness engine ready ... execution CPU"), reached the login screen and called MockSync
+over plain HTTP through `adb reverse` (MockSync log: `GET /v1/syncdata/actuator/health -> 200`). A full sign-in
+was not done: a new installation has a new machine key that MockSync must register first (install guide section
+5). The `ARC_REQUIRE_RELEASE_SIGNING` refusal was not exercised (the keystore was configured).
+
+### 13.7 Tests
+
+| Test | Checks |
+|---|---|
+| `SupervisorOverrideTest` | who may override (resident + `SUPERVISOR_OVERRIDE` only), evidence with `OVERRIDE`, `REG-EVT-LV16` with supervisor and session, request and result extras round trip, no override after a suspected attack |
+| `LivenessCaptureActivityTest` (5 new) | override offer refused under `BLOCK`; override photo refused under `BLOCK`; override button, supervisor ID required, result carries the request; diagnostic panel shown only with `diagnostic.enable=Y` |
+| `PhotoCaptureRunnerTest` | a photo with liveness off has no evidence; an override photo is flagged and carries the evidence |
+| `MetricsReportTest` | metrics line and summary, no zero failure counters, file rotation, write failure contained |
+| `DiagnosticModeTrackerTest` | shipped `N` is not a change, on/off audited once each with the signed-in user, first value `Y` audited |
+| `AcceleratorCustomizerTest` | key values, provider added when available, CPU fallback when missing, rejected or the runtime cannot list providers, status text |
+| `FaceCaptureLivenessGateTest` (3 new) | override evidence kept only when policy and failure allow it; override photo unblocks with the override message; refused supervisor keeps the field blocked |
+| `SupervisorOverrideFlowTest` | verified supervisor leads to the override photo request; non-supervisor, failed liveness, face mismatch and `exception_auth` not enforced take no photo |
+
+Demo: `scripts/demo-android.sh` has a new section `override` (checks `A-V1`..`A-V18`, and `A-E8` in the approval
+section for the uploaded packet). It also sets a replay profile first (MockSync's shipped policy now runs
+challenges for residents and operator sign-in with 30 passive frames, longer than the recorded 4-6 s clips) and
+puts every changed key back by value, because ARC keeps a synchronised value when the server stops sending the key.
+
+### 13.8 Run on the emulator (2026-09-30)
+
+| Step | Result |
+|---|---|
+| Unit tests (`scripts/android-build.sh --test-only`) | clientmanager 1186, livenessmanager 109, app 35: all passed |
+| Capture screen, override policy (debug extras, replay `s1-main`, masked, `max_retries=1`) | attempt ended `TIMEOUT` (no attack), `REG-EVT-LV11` with `onMaxFailure=SUPERVISOR_OVERRIDE`, "Supervisor override" shown, diagnostic panel with `CPU`, frame times and metrics (`docs/ux/screenshots/android/capture-override-offered-diagnostics.png`) |
+| Override dialog, supervisor ID entered, confirmed | `Capture screen result CANCELED: ... override requested` (`capture-override-supervisor-dialog.png`) |
+| Screen in override-photo mode (`liveness.override_supervisor`) | `Photo capture ended: PASS, reasons=[SUPERVISOR_OVERRIDE]`, `REG-EVT-LV16 {"supervisorId":"supervisor1"}`, `Capture screen result OK` |
+| Metrics file | `files/liveness/metrics.log` written; the demo's check found no user or registration ID in it (A-V14, A-V15 passed) |
+| Full `scripts/demo-android.sh` | Not completed. Run 1 (before the replay profile) passed 40 of 71 checks; the failures came from MockSync's changed shipped policy (above) and from the loaded host: the emulator's app and launcher hit ANRs (main thread waiting for the render thread, 37% kernel time, major page faults), so taps and text input were lost. The ARC-side override path (Scan, gate, supervisor face authentication, storage, packet) therefore ran only in unit tests (`SupervisorOverrideFlowTest`, `FaceCaptureLivenessGateTest`), not end to end. |

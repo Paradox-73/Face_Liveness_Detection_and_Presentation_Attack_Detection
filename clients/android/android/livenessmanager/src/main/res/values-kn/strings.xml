@@ -40,6 +40,7 @@
     <string name="liveness_title_supervisor">ಮೇಲ್ವಿಚಾರಕರ ಪರಿಶೀಲನೆ</string>
     <string name="liveness_offline_badge">ಆಫ್‌ಲೈನ್ – ಪರಿಶೀಲನೆ ಈ ಸಾಧನದಲ್ಲೇ ನಡೆಯುತ್ತದೆ</string>
     <string name="liveness_config_updated">ಮುಖ ಪರಿಶೀಲನೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ನವೀಕರಿಸಲಾಗಿದೆ.</string>
+    <string name="liveness_override_used">ಮೇಲ್ವಿಚಾರಕರ ಅತಿಕ್ರಮಣದೊಂದಿಗೆ ಮುಖವನ್ನು ಉಳಿಸಲಾಗಿದೆ. ಇದನ್ನು ಪ್ಯಾಕೆಟ್‌ನಲ್ಲಿ ಪರಿಶೀಲನೆಗಾಗಿ ಗುರುತಿಸಲಾಗಿದೆ.</string>
 
     <string name="liveness_ui_title">ಮುಖ ಪರಿಶೀಲನೆ</string>
     <string name="liveness_ui_retry">ಮರುಪ್ರಯತ್ನ</string>
@@ -49,4 +50,8 @@
     <string name="liveness_ui_attempts">{1} ರಲ್ಲಿ {0} ನೇ ಪ್ರಯತ್ನ</string>
     <string name="liveness_ui_preview">ಕ್ಯಾಮೆರಾ ಪೂರ್ವವೀಕ್ಷಣೆ. ನಿಮ್ಮ ಮುಖವನ್ನು ಅಂಡಾಕಾರದೊಳಗೆ ಇರಿಸಿ.</string>
     <string name="liveness_ui_replay_badge">ಮರುಪ್ರದರ್ಶನ (ಡೀಬಗ್ ಆವೃತ್ತಿ)</string>
+    <string name="liveness_ui_override">ಮೇಲ್ವಿಚಾರಕರ ಅತಿಕ್ರಮಣ</string>
+    <string name="liveness_ui_supervisor_id">ಮೇಲ್ವಿಚಾರಕರ ಬಳಕೆದಾರ ಐಡಿ</string>
+    <string name="liveness_ui_supervisor_id_missing">ಮೇಲ್ವಿಚಾರಕರ ಬಳಕೆದಾರ ಐಡಿ ನಮೂದಿಸಿ.</string>
+    <string name="liveness_ui_diagnostics">ದೋಷ ನಿರ್ಣಯ</string>
 </resources>

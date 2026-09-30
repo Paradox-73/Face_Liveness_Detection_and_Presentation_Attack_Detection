@@ -121,6 +121,7 @@ public final class LivenessRunner implements CaptureRunner {
 
     private volatile Attempt current;
     private volatile LivenessCaptureResult lastResult;
+    private volatile String lastFrameTimes = "";
     private volatile boolean closed;
 
     /**
@@ -227,6 +228,11 @@ public final class LivenessRunner implements CaptureRunner {
      */
     public Optional<LivenessCaptureResult> lastResult() {
         return Optional.ofNullable(lastResult);
+    }
+
+    @Override
+    public String lastFrameTimes() {
+        return lastFrameTimes;
     }
 
     /**
@@ -404,8 +410,9 @@ public final class LivenessRunner implements CaptureRunner {
         }
         Log.i(TAG, "Liveness attempt ended: " + outcome);
         if (a.timer != null && a.timer.frames() > 0) {
+            lastFrameTimes = a.timer.summary();
             Log.i(TAG, "Liveness frame time " + policy.workflow().id() + " session " + transaction.sessions()
-                    + ": " + a.timer.summary());
+                    + ": " + lastFrameTimes);
         }
         callListener(() -> listener.onAttemptEnded(outcome));
     }

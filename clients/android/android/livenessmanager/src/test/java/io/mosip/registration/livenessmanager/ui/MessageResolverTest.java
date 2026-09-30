@@ -38,7 +38,11 @@ public class MessageResolverTest {
         for (String key : MessageKeys.all()) {
             assertNotNull("no string resource for " + key, MessageResolver.resourceId(key));
         }
-        assertEquals(MessageKeys.all().size(), MessageResolver.mappedKeys().size());
+        for (String key : MessageResolver.ANDROID_ONLY_KEYS) {
+            assertNotNull("no string resource for " + key, MessageResolver.resourceId(key));
+        }
+        assertEquals(MessageKeys.all().size() + MessageResolver.ANDROID_ONLY_KEYS.size(),
+                MessageResolver.mappedKeys().size());
     }
 
     @Test

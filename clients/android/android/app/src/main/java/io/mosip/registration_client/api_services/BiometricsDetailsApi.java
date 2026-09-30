@@ -66,6 +66,9 @@ import io.mosip.registration_client.MainActivity;
 import io.mosip.registration_client.liveness.CaptureOutcome;
 import io.mosip.registration_client.liveness.FaceCaptureLivenessGate;
 import io.mosip.registration_client.liveness.LivenessCaptureLauncher;
+import io.mosip.registration_client.liveness.SupervisorOverrideFlow;
+import io.mosip.registration.livenessmanager.LivenessCaptureRequest;
+import io.mosip.registration.livenessmanager.auth.FaceAuthOutcome;
 import io.mosip.registration_client.model.BiometricsPigeon;
 
 @Singleton
@@ -118,6 +121,7 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
     // Face liveness: FACE captures of residents and onboarding operators go through the liveness capture screen
     private FaceCaptureLivenessGate livenessGate;
     private LivenessCaptureLauncher livenessLauncher;
+    private SupervisorOverrideFlow livenessOverride;
 
 
 
@@ -149,6 +153,15 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
     public void setLivenessGate(FaceCaptureLivenessGate gate, LivenessCaptureLauncher launcher) {
         this.livenessGate = gate;
         this.livenessLauncher = launcher;
+    }
+
+    /**
+     * Enables the supervisor override of a resident's failed face capture ({@code on_max_failure=SUPERVISOR_OVERRIDE}).
+     *
+     * @param override the override flow (supervisor face authentication, then the resident's photo)
+     */
+    public void setSupervisorOverrideFlow(SupervisorOverrideFlow override) {
+        this.livenessOverride = override;
     }
 
     @Override
@@ -187,12 +200,15 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
         biometricResult = result;
         String subject = livenessSubject();
         CaptureOutcome blocked = livenessGate.admit(subject, gateField);
-        if (blocked != null) {
-            completeCapture(blocked.status().name());
-            return true;
-        }
         String captureFieldId = fieldId;
         Modality captureModality = currentModality;
+        if (blocked != null) {
+            // Attempts used up: a supervisor may still accept the face when the policy allows an override.
+            if (exceptionPhoto || !offerSupervisorOverride(subject, captureFieldId, gateField, captureModality)) {
+                completeCapture(blocked.status().name());
+            }
+            return true;
+        }
         boolean started = livenessLauncher.launch(FaceCaptureLivenessGate.workflowFor(gateField), subject,
                 exceptionPhoto, livenessGate.usedAttempts(subject, gateField),
                 captureResult -> onLivenessCapture(subject, captureFieldId, gateField,
@@ -218,16 +234,80 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
     }
 
     /**
+     * Opens the capture screen only to offer the supervisor override again (the resident's attempts were used up
+     * on an earlier screen).
+     *
+     * @return {@code true} when the screen opened (its result completes the Flutter call)
+     */
+    private boolean offerSupervisorOverride(String subject, String captureFieldId, String gateField,
+                                            Modality modality) {
+        if (livenessOverride == null || livenessGate.overrideEvidence(subject, gateField) == null) {
+            return false;
+        }
+        return livenessLauncher.launch(LivenessCaptureRequest.builder(
+                        FaceCaptureLivenessGate.workflowFor(gateField), subject).overrideOffer(true),
+                captureResult -> onLivenessCapture(subject, captureFieldId, gateField, modality, captureResult));
+    }
+
+    /**
      * Handles the liveness capture screen's result: only a pass is stored, through the same SBI response checks as
      * an external device (signature, DEVICE trust, timestamp, transaction ID), with the liveness evidence attached.
+     * A request for a supervisor override starts {@link SupervisorOverrideFlow}.
      */
     private void onLivenessCapture(String subject, String captureFieldId, String gateField, Modality modality,
                                    LivenessCaptureResult captureResult) {
         CaptureOutcome outcome = livenessGate.record(subject, gateField, captureResult);
+        String supervisor = captureResult.overrideRequestedBy();
+        if (supervisor != null && livenessOverride != null) {
+            runSupervisorOverride(subject, captureFieldId, gateField, modality, supervisor);
+            return;
+        }
+        if (!captureResult.isPass() && outcome.status() == CaptureOutcome.Status.CANCELLED) {
+            // Closing the override offer leaves the field blocked.
+            CaptureOutcome blocked = livenessGate.admit(subject, gateField);
+            outcome = blocked != null ? blocked : outcome;
+        }
         if (!captureResult.isPass() || captureResult.rCaptureResponse() == null) {
             completeCapture(outcome.status().name());
             return;
         }
+        storeLivenessCapture(captureFieldId, gateField, modality, captureResult);
+    }
+
+    /**
+     * Supervisor face authentication, then the resident's photo flagged as an override. A refused supervisor
+     * leaves the field blocked with the refusal's message.
+     */
+    private void runSupervisorOverride(String subject, String captureFieldId, String gateField, Modality modality,
+                                       String supervisorId) {
+        Map<String, String> evidence = livenessGate.overrideEvidence(subject, gateField);
+        if (evidence == null) {
+            completeCapture(CaptureOutcome.Status.BLOCKED.name());
+            return;
+        }
+        livenessOverride.run(FaceCaptureLivenessGate.workflowFor(gateField), subject, supervisorId, evidence,
+                new SupervisorOverrideFlow.Callback() {
+                    @Override
+                    public void onPhoto(LivenessCaptureResult photo) {
+                        CaptureOutcome outcome = livenessGate.recordOverride(subject, gateField, photo);
+                        if (!photo.isSupervisorOverride() || photo.rCaptureResponse() == null) {
+                            completeCapture(outcome.status().name());
+                            return;
+                        }
+                        storeLivenessCapture(captureFieldId, gateField, modality, photo);
+                    }
+
+                    @Override
+                    public void onRefused(FaceAuthOutcome supervisorOutcome) {
+                        completeCapture(livenessGate.recordOverrideRefused(subject, gateField, supervisorOutcome)
+                                .status().name());
+                    }
+                });
+    }
+
+    /** Stores a passing capture (or an override photo) through ARC's SBI response checks. */
+    private void storeLivenessCapture(String captureFieldId, String gateField, Modality modality,
+                                      LivenessCaptureResult captureResult) {
         this.fieldId = captureFieldId;
         this.currentModality = modality;
         try {
@@ -243,7 +323,8 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
         }
         InputStream response = new ByteArrayInputStream(
                 captureResult.rCaptureResponse().getBytes(StandardCharsets.UTF_8));
-        // A photo taken without a liveness check (exception photo, policy OFF) carries no liveness evidence.
+        // A photo taken without a liveness check (exception photo, policy OFF) carries no liveness evidence; an
+        // override photo carries the failed transaction's evidence with LIVENESS_DECISION=OVERRIDE.
         Map<String, String> evidence = captureResult.isLivenessChecked() ? captureResult.evidence() : null;
         if (!parseRCaptureResponse(response, evidence)) {
             livenessGate.recordRejected(gateField);
