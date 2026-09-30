@@ -2,14 +2,20 @@ package io.mosip.liveness.onnx.runtime;
 
 import io.mosip.liveness.core.EngineErrorCode;
 import io.mosip.liveness.core.EngineException;
+import io.mosip.liveness.core.config.ConfigSource;
+import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.onnx.TestSupport;
 import io.mosip.liveness.onnx.model.ModelIds;
+import io.mosip.liveness.onnx.runtime.OnnxRuntimeOptions.ExecutionProvider;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * ONNX Runtime loads on the JVM running the build. Run with the Zulu 11.0.8 JDK (the runtime MOSIP ships with the
@@ -41,6 +47,37 @@ class OrtModelTest {
         EngineException e = assertThrows(EngineException.class,
                 () -> OrtModel.create("junk", new byte[] {1, 2, 3}, OnnxRuntimeOptions.defaults()));
         assertEquals(EngineErrorCode.MODEL_LOAD, e.getErrorCode());
+    }
+
+    @Test
+    void executionProviderComesFromTheConfiguration() {
+        String key = LivenessConfigKeys.ENGINE_EXECUTION_PROVIDER;
+        assertEquals(ExecutionProvider.CPU, OnnxRuntimeOptions.fromConfig(ConfigSource.empty()).build().executionProvider());
+        assertEquals(ExecutionProvider.XNNPACK, OnnxRuntimeOptions.fromConfig(
+                ConfigSource.of(Collections.singletonMap(key, " xnnpack "))).build().executionProvider());
+        assertEquals(ExecutionProvider.CPU, OnnxRuntimeOptions.fromConfig(
+                ConfigSource.of(Collections.singletonMap(key, "GPU"))).build().executionProvider(),
+                "an unknown value must not stop the engine loading");
+        assertThrows(IllegalArgumentException.class, () -> ExecutionProvider.parse("GPU"));
+        assertEquals(ExecutionProvider.CPU, ExecutionProvider.parse(null));
+        assertTrue(OnnxRuntimeOptions.availableExecutionProviders().contains(ExecutionProvider.CPU));
+    }
+
+    /** Every provider can be asked for: it is used if the runtime has it, otherwise the model runs on CPU. */
+    @Test
+    void everyProviderLoadsAModelOrFallsBackToCpu() throws Exception {
+        Set<ExecutionProvider> available = OnnxRuntimeOptions.availableExecutionProviders();
+        System.out.println("[runtime] execution providers available: " + available);
+        byte[] bytes = TestSupport.registry().load(ModelIds.MINIFASNET_V2);
+        for (ExecutionProvider p : ExecutionProvider.values()) {
+            OnnxRuntimeOptions options = OnnxRuntimeOptions.builder().intraOpThreads(1).executionProvider(p).build();
+            assertEquals(available.contains(p) ? p : ExecutionProvider.CPU, options.effectiveExecutionProvider());
+            assertTrue(options.toString().contains("provider=" + p));
+            try (OrtModel model = OrtModel.create(ModelIds.MINIFASNET_V2, bytes, options)) {
+                Map<String, float[]> out = model.run(new float[3 * 80 * 80], new long[] {1, 3, 80, 80});
+                assertEquals(3, out.get(model.outputNames().get(0)).length, p.name());
+            }
+        }
     }
 
     @Test

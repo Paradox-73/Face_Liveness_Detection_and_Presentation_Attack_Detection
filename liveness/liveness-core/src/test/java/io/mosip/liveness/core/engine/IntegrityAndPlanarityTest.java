@@ -30,7 +30,7 @@ class IntegrityAndPlanarityTest {
     private long nanos = 5_000 * MS;
 
     private FrameIntegrityChecker checker() {
-        return new FrameIntegrityChecker(LivenessPolicy.defaults(Workflow.REGISTRATION), EngineParameters.defaults());
+        return new FrameIntegrityChecker(TestPolicies.passiveFirst(Workflow.REGISTRATION), EngineParameters.defaults());
     }
 
     private FaceFrame gray(byte[] data, long stepMs, long seqStep) {

@@ -3,12 +3,15 @@
 #
 #   bash tools/eval/run-suites.sh [OUT_DIR] [SUITE...]
 #
-# Suites (default: all four):
-#   shipped    shipped configuration (registration: passive first, challenges only below the threshold)
-#   strict     challenges forced for registration (policy.registration=ALWAYS_ACTIVE)
-#   proposed   the configuration changes proposed in docs/eval/calibration-notes.md (P1-P3)
-#   latency    bona fide scenarios with one ONNX Runtime thread, for per-frame timing
+# Suites (default: shipped legacy legacy-strict latency):
+#   shipped        shipped configuration: registration, operator onboarding and login always run challenges,
+#                  30 passive frames; blur threshold 40 from the signed model bundle
+#   legacy         the configuration shipped before 2026-09-30 (passive first everywhere, 8 passive frames,
+#                  blur threshold 10), on the current engine
+#   legacy-strict  legacy with challenges forced for registration (the former "strict" suite)
+#   latency        bona fide scenarios with one ONNX Runtime thread, for per-frame timing
 #
+# LIVENESS_RUNNER_JAR selects another runner jar (for example a copy built from an older engine, to compare).
 # Needs: a JDK 11+ on PATH (java), Python 3 with PyYAML (and matplotlib for the DET plot), the frame packs
 # (tools/eval/fetch-frame-packs.py, then tools/eval/make-attack-packs.py) and the runner jar
 # (mvn -f tools/eval/scenario-runner/pom.xml package). OUT_DIR defaults to ../run/eval/<UTC time> next to
@@ -20,8 +23,8 @@ PACKS="${LIVENESS_FRAME_PACKS:-$REPO/../run/frame-packs}"
 OUT="${1:-$REPO/../run/eval/$(date -u +%Y%m%dT%H%M%SZ)}"
 shift || true
 SUITES=("$@")
-[ ${#SUITES[@]} -gt 0 ] || SUITES=(shipped strict proposed latency)
-JAR="$REPO/tools/eval/scenario-runner/target/scenario-runner.jar"
+[ ${#SUITES[@]} -gt 0 ] || SUITES=(shipped legacy legacy-strict latency)
+JAR="${LIVENESS_RUNNER_JAR:-$REPO/tools/eval/scenario-runner/target/scenario-runner.jar}"
 PYTHON="${PYTHON:-python}"
 
 # Java on Windows needs Windows paths; elsewhere the path is used as is.
@@ -41,13 +44,16 @@ run_suite() {
     "$PYTHON" "$REPO/tools/eval/analyze.py" "$OUT/$name/attempts.jsonl" --out "$OUT/$name/report.md"
 }
 
+# The configuration shipped before the calibration was adopted (docs/eval/calibration-notes.md, section 6).
+LEGACY=(--config policy.registration=PASSIVE_THEN_ACTIVE --config policy.login_auth=PASSIVE_THEN_ACTIVE
+        --config policy.onboard_auth=PASSIVE_THEN_ACTIVE --config passive.min_frames=8
+        --engine-param quality.min_sharpness=10)
+
 for suite in "${SUITES[@]}"; do
     case "$suite" in
         shipped)  run_suite shipped ;;
-        strict)   run_suite strict --config policy.registration=ALWAYS_ACTIVE ;;
-        proposed) run_suite proposed --config policy.registration=ALWAYS_ACTIVE \
-                      --config policy.login_auth=ALWAYS_ACTIVE --config policy.onboard_auth=ALWAYS_ACTIVE \
-                      --config passive.min_frames=30 --engine-param quality.min_sharpness=40 ;;
+        legacy)   run_suite legacy "${LEGACY[@]}" ;;
+        legacy-strict) run_suite legacy-strict "${LEGACY[@]}" --config policy.registration=ALWAYS_ACTIVE ;;
         latency)  run_suite latency --threads 1 --filter '^bf-s[123]-(registration|active)$' ;;
         *) echo "unknown suite: $suite" >&2; exit 2 ;;
     esac

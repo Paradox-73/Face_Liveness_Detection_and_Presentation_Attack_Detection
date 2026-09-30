@@ -43,6 +43,15 @@ public final class LivenessConfigKeys {
     /** Default of {@link #ENGINE}. */
     public static final String DEFAULT_ENGINE = "mosip-onnx-default";
 
+    /**
+     * Inference back end of the default ONNX engine: {@code CPU}, {@code XNNPACK} or {@code NNAPI} (Android only).
+     * A back end that the installed ONNX Runtime does not include falls back to {@code CPU}. Read when the engine
+     * loads, so a change needs a client restart.
+     */
+    public static final String ENGINE_EXECUTION_PROVIDER = PREFIX + "engine.execution_provider";
+    /** Default of {@link #ENGINE_EXECUTION_PROVIDER}: plain CPU, the fastest back end measured on desktop. */
+    public static final String DEFAULT_ENGINE_EXECUTION_PROVIDER = "CPU";
+
     // ---- Passive ----
 
     /** Passive score (0-100) at or above which a face passes without a challenge. */
@@ -63,8 +72,11 @@ public final class LivenessConfigKeys {
 
     /** Number of good frames needed for the passive decision. */
     public static final String PASSIVE_MIN_FRAMES = PREFIX + "passive.min_frames";
-    /** Default of {@link #PASSIVE_MIN_FRAMES}. */
-    public static final int DEFAULT_PASSIVE_MIN_FRAMES = 8;
+    /**
+     * Default of {@link #PASSIVE_MIN_FRAMES}: 30 frames (2 s at 15 fps), long enough for the loop detector to see
+     * a replayed clip repeat before the passive decision (calibration notes, proposal P3).
+     */
+    public static final int DEFAULT_PASSIVE_MIN_FRAMES = 30;
 
     /** Maximum time for acquisition plus the passive phase, in milliseconds. */
     public static final String PASSIVE_TIMEOUT_MS = PREFIX + "passive.timeout_ms";
@@ -232,7 +244,7 @@ public final class LivenessConfigKeys {
     public static final String WORKFLOW_ON_MAX_FAILURE_SUFFIX = "on_max_failure";
 
     private static final List<String> GLOBAL_KEYS = Collections.unmodifiableList(Arrays.asList(
-            ENABLE, ENGINE, PASSIVE_THRESHOLD, PAD_REJECT_THRESHOLD, PASSIVE_MIN_FRAMES, PASSIVE_TIMEOUT_MS,
+            ENABLE, ENGINE, ENGINE_EXECUTION_PROVIDER, PASSIVE_THRESHOLD, PAD_REJECT_THRESHOLD, PASSIVE_MIN_FRAMES, PASSIVE_TIMEOUT_MS,
             ACTIVE_ENABLE, ACTIVE_MIN_CHALLENGES, ACTIVE_CHALLENGE_TYPES, ACTIVE_CHALLENGE_TIMEOUT_MS,
             ACTIVE_MIN_ONSET_MS, ACTIVE_HOLD_MS, MAX_RETRIES, ON_MAX_FAILURE, STREAM_TIMEOUT_MS,
             FRAME_SAMPLE_INTERVAL_MS, DEVICE_RECONNECT_ATTEMPTS, QUALITY_MIN_IED_PX, QUALITY_MAX_YAW_DEG,
@@ -284,11 +296,26 @@ public final class LivenessConfigKeys {
     /**
      * Returns the default policy mode of a workflow.
      *
+     * <p>Resident registration and the two workflows that admit an operator into the client (onboarding and
+     * login) always run the challenges: the scenario suite showed synthetic prints and screen replays that the
+     * passive model scores 82-99, above both passive thresholds (calibration notes, proposal P1). The supervisor
+     * workflows keep the passive-first policy with the authentication threshold of 95.
+     *
      * @param workflow the workflow
-     * @return {@code OFF} for {@code exception_photo}; {@code PASSIVE_THEN_ACTIVE} for all others
+     * @return {@code OFF} for {@code exception_photo}; {@code ALWAYS_ACTIVE} for {@code registration},
+     *         {@code onboard_auth} and {@code login_auth}; {@code PASSIVE_THEN_ACTIVE} for all others
      */
     public static PolicyMode defaultPolicyMode(Workflow workflow) {
-        return workflow == Workflow.EXCEPTION_PHOTO ? PolicyMode.OFF : PolicyMode.PASSIVE_THEN_ACTIVE;
+        switch (workflow) {
+            case EXCEPTION_PHOTO:
+                return PolicyMode.OFF;
+            case REGISTRATION:
+            case ONBOARD_AUTH:
+            case LOGIN_AUTH:
+                return PolicyMode.ALWAYS_ACTIVE;
+            default:
+                return PolicyMode.PASSIVE_THEN_ACTIVE;
+        }
     }
 
     /**
@@ -335,6 +362,7 @@ public final class LivenessConfigKeys {
     private static void putMasterAndPassive(Map<String, String> m) {
         m.put(ENABLE, DEFAULT_ENABLE);
         m.put(ENGINE, DEFAULT_ENGINE);
+        m.put(ENGINE_EXECUTION_PROVIDER, DEFAULT_ENGINE_EXECUTION_PROVIDER);
         m.put(PASSIVE_THRESHOLD, Integer.toString(DEFAULT_PASSIVE_THRESHOLD));
         m.put(PAD_REJECT_THRESHOLD, Integer.toString(DEFAULT_PAD_REJECT_THRESHOLD));
         m.put(PASSIVE_MIN_FRAMES, Integer.toString(DEFAULT_PASSIVE_MIN_FRAMES));

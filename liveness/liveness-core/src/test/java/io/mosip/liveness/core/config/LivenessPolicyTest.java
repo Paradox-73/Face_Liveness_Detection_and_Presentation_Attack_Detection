@@ -18,10 +18,10 @@ class LivenessPolicyTest {
     @Test
     void residentDefaults() {
         LivenessPolicy p = LivenessPolicy.defaults(Workflow.REGISTRATION);
-        assertEquals(PolicyMode.PASSIVE_THEN_ACTIVE, p.mode());
+        assertEquals(PolicyMode.ALWAYS_ACTIVE, p.mode());
         assertEquals(80, p.passiveThreshold());
         assertEquals(20, p.padRejectThreshold());
-        assertEquals(8, p.passiveMinFrames());
+        assertEquals(30, p.passiveMinFrames());
         assertEquals(2, p.minChallenges());
         assertEquals(3, p.maxRetries());
         assertEquals(OnMaxFailure.BLOCK, p.onMaxFailure());

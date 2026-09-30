@@ -16,8 +16,9 @@ import java.util.List;
  *   <li>timeout: no success within {@code challenge_timeout_ms} fails with {@code TIMEOUT}, or with
  *       {@code NOT_HELD} if the action reached its trigger but was never held long enough;</li>
  *   <li>exclusivity: any other detectable action at or above its trigger on {@code contrary_min_frames} frames in
- *       a row fails with {@code WRONG_ACTION} (spontaneous blinks are ignored, and gaze is ignored during head
- *       movements, because eyes lead the head when it turns);</li>
+ *       a row fails with {@code WRONG_ACTION} (spontaneous blinks are ignored, gaze is ignored during head
+ *       movements, because eyes lead the head when it turns, and the smile is unmeasured while the head is turned
+ *       more than {@code active.smile_max_yaw_deg}, see {@link ActionLevels});</li>
  *   <li>onset: the uninterrupted run above the onset level that leads to the trigger must start at least
  *       {@code min_onset_ms} after the prompt, otherwise {@code ONSET_TOO_FAST};</li>
  *   <li>hold: the action must stay at or above its trigger for {@code hold_ms} and at least two frames; a blink

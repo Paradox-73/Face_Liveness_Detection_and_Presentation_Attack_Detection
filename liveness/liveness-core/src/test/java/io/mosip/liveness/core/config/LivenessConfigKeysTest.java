@@ -23,9 +23,10 @@ class LivenessConfigKeysTest {
         Map<String, String> d = LivenessConfigKeys.defaultValues();
         assertEquals("Y", d.get("mosip.registration.liveness.enable"));
         assertEquals("mosip-onnx-default", d.get("mosip.registration.liveness.engine"));
+        assertEquals("CPU", d.get("mosip.registration.liveness.engine.execution_provider"));
         assertEquals("80", d.get("mosip.registration.liveness.passive.threshold"));
         assertEquals("20", d.get("mosip.registration.liveness.pad.reject_threshold"));
-        assertEquals("8", d.get("mosip.registration.liveness.passive.min_frames"));
+        assertEquals("30", d.get("mosip.registration.liveness.passive.min_frames"));
         assertEquals("4000", d.get("mosip.registration.liveness.passive.timeout_ms"));
         assertEquals("Y", d.get("mosip.registration.liveness.active.enable"));
         assertEquals("2", d.get("mosip.registration.liveness.active.min_challenges"));
@@ -58,12 +59,26 @@ class LivenessConfigKeysTest {
     void workflowDefaultsMatchTheDesignTable() {
         Map<String, String> d = LivenessConfigKeys.defaultValues();
         for (Workflow w : Workflow.values()) {
-            String expected = w == Workflow.EXCEPTION_PHOTO ? "OFF" : "PASSIVE_THEN_ACTIVE";
+            String expected = expectedPolicy(w);
             assertEquals(expected, d.get("mosip.registration.liveness.policy." + w.id()));
             String threshold = d.get("mosip.registration.liveness." + w.id() + ".passive.threshold");
             assertEquals(w.isAuth() ? "95" : null, threshold);
         }
         assertEquals(LivenessConfigKeys.globalKeys().size() + Workflow.values().length + 5, d.size());
+    }
+
+    /** Proposal P1 of the calibration notes: resident capture and operator sign-in always run challenges. */
+    private static String expectedPolicy(Workflow w) {
+        switch (w) {
+            case EXCEPTION_PHOTO:
+                return "OFF";
+            case REGISTRATION:
+            case ONBOARD_AUTH:
+            case LOGIN_AUTH:
+                return "ALWAYS_ACTIVE";
+            default:
+                return "PASSIVE_THEN_ACTIVE";
+        }
     }
 
     @Test

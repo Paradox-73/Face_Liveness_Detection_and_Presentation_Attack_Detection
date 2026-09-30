@@ -26,7 +26,11 @@ public enum EngineParameter {
     MIN_BRIGHTNESS("quality.min_brightness", 50, 0, 255, false),
     /** Brightest accepted mean grey level of the face. */
     MAX_BRIGHTNESS("quality.max_brightness", 225, 0, 255, false),
-    /** Lowest accepted sharpness (variance of the Laplacian of the grey face crop); to calibrate per analyser. */
+    /**
+     * Lowest accepted sharpness (variance of the Laplacian of the grey face crop). The scale depends on the
+     * analyser, so the value belongs to the model bundle: the ONNX bundle sets 40 in its signed
+     * {@code engineParams} (blurred test pack 11-13, genuine packs 63 and above).
+     */
     MIN_SHARPNESS("quality.min_sharpness", 10, 0, 1_000_000, false),
     /** Share of the face box that may lie outside the image before the face counts as out of the area. */
     OUT_OF_AREA_TOLERANCE("quality.out_of_area_tolerance", 0.1, 0, 1, false),
@@ -38,6 +42,12 @@ public enum EngineParameter {
      * the median of design section 4.6; lower values give a trimmed mean.
      */
     PASSIVE_TRIM_FRACTION("passive.trim_fraction", 0.5, 0, 0.5, false),
+    /**
+     * Good frames that are enough for the passive decision when {@code passive.timeout_ms} runs out before
+     * {@code passive.min_frames} were collected (slow devices). Fewer frames than this end the session with
+     * {@code PASSIVE_TIMEOUT}; the old default of {@code passive.min_frames} was 8.
+     */
+    PASSIVE_TIMEOUT_MIN_FRAMES("passive.timeout_min_frames", 8, 1, 300, true),
     /** Embeddings averaged into the session reference face (same-person and binding checks). */
     REFERENCE_FRAMES("identity.reference_frames", 3, 1, 10, true),
 
@@ -81,12 +91,24 @@ public enum EngineParameter {
     SMILE_RATIO_INCREASE("active.smile_ratio_increase", 0.12, 0.01, 1, false),
     /** Smile probability that counts as a smile when the analyser gives one instead of a mouth ratio. */
     SMILE_SCORE_THRESHOLD("active.smile_score_threshold", 0.5, 0.05, 1, false),
+    /**
+     * Largest yaw change from the neutral face at which the smile is measured. Beyond it the mouth width ratio
+     * is not a smile measure (the inter-eye distance shrinks faster than the mouth width when the head turns:
+     * +25% at 43 degrees without a smile), so the smile counts as unmeasured.
+     */
+    SMILE_MAX_YAW_DEG("active.smile_max_yaw_deg", 15, 1, 90, false),
     /** Horizontal gaze offset that counts as looking left or right. */
     GAZE_THRESHOLD("active.gaze_threshold", 0.35, 0.05, 1, false),
     /** Frames in a row a non-requested action must show before it fails the challenge. */
     CONTRARY_MIN_FRAMES("active.contrary_min_frames", 2, 1, 10, true),
     /** During challenges, PAD runs on every n-th analysed frame. */
     ACTIVE_PAD_STRIDE("active.pad_stride", 2, 1, 10, true),
+    /**
+     * Largest absolute yaw of a frame scored by PAD during the challenges. The PAD models were trained on
+     * near-frontal faces and score a genuine face at 40-65 degrees of yaw as 0.15-0.3, so such frames are left
+     * out of the active PAD score.
+     */
+    ACTIVE_PAD_MAX_YAW_DEG("active.pad_max_yaw_deg", 30, 5, 90, false),
     /** Lowest analysed frame rate at which a head turn is required in the draw (design: 5 fps). */
     HEAD_TURN_MIN_FPS("active.head_turn_min_fps", 5, 0, 60, false),
 

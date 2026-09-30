@@ -1,8 +1,9 @@
 # Calibration notes: the automated suite on the shipped engine
 
 Results of `tools/eval/run-suites.sh` on the engine as shipped, what they show about each detection layer, and the
-parameter and code changes they support. **No engine default was changed by this work**; every proposal below is
-evidence plus a suggested value for the engine owners to apply.
+parameter and code changes they support. Sections 1-6 are the original study (runs of 2026-09-29 and 2026-09-30,
+no default changed). **Section 0 records what was adopted on 2026-09-30 and the before and after runs**; where
+sections 1-6 say "shipped", they mean the configuration shipped before that change (now the `legacy` suite).
 
 Read this first:
 
@@ -17,6 +18,99 @@ Read this first:
 - Raw data: `results/<run>/<suite>/attempts.jsonl` (one JSON line per attempt, no images), `report.md` (the
   metrics), `summary.md` (one row per transaction) and `run.json` (models, parameters, platform). The frame
   measurements quoted below come from the `inspect` command of the runner (`inspect --all`, one CSV row per frame).
+
+## 0. Adopted changes and before/after results (2026-09-30)
+
+### 0.1 What changed
+
+| Id | Change | Where |
+|---|---|---|
+| P1 | `policy.registration`, `policy.onboard_auth`, `policy.login_auth` default to `ALWAYS_ACTIVE`; the three supervisor workflows stay `PASSIVE_THEN_ACTIVE` at threshold 95 | `LivenessConfigKeys.defaultPolicyMode`, `tools/mock-sync/data/mock-sync-defaults.properties` |
+| P2 | `quality.min_sharpness` 40 (was 10), set in the signed `engineParams` of model bundle 1.0.1, because the sharpness scale belongs to the analyser; the compiled default stays 10 | `models/manifest.json`, `models/manifest.jws` |
+| P3 | `passive.min_frames` default 30 (was 8) | `LivenessConfigKeys.DEFAULT_PASSIVE_MIN_FRAMES`, MockSync defaults |
+| E1 | The smile is unmeasured while the head is turned more than `active.smile_max_yaw_deg` (new engine parameter, 15) from the neutral face, so a head turn can no longer be taken as a smile | `ActionLevels.smile` |
+| E3 | Frames with \|yaw\| above `active.pad_max_yaw_deg` (new, 30) are not scored by PAD during the challenges | `DefaultLivenessSession.scoreActivePad` |
+| new | When `passive.timeout_ms` (4 s) ends before 30 good frames, a session that has at least `passive.timeout_min_frames` (new, 8) decides on those frames instead of failing with `PASSIVE_TIMEOUT`. Needed because the Android emulator analysed passive frames in 57-251 ms (`docs/test-report/android-e2e.md` section 5), too slow for 30 frames in 4 s | `DefaultLivenessSession.onPassiveTimeout` |
+| B8 | `mosip.registration.liveness.engine.execution_provider` = `CPU` (default), `XNNPACK` or `NNAPI`; see 0.4 | `OnnxRuntimeOptions`, `OnnxLivenessEngineProvider` |
+
+Not adopted: E2 (a blink under way at the prompt still fails with `ONSET_TOO_FAST`; ignoring it would let a replay
+that blinks continuously pass on its next blink, and the 30-frame passive stage already removed the S1 case in these
+suites) and E4 (mesh only from the challenges on; a speed change, not measured here).
+
+### 0.2 Before and after
+
+"Before" is the engine and configuration of sections 1-6. It was re-run on 2026-09-30 before any change and gave
+the same outcome, decision, reason codes, passive score, active PAD score and binding similarity for every attempt as
+the committed `results/20260930/` runs, so those files are the "before" data. "After" is
+`results/20260930-engine-fixes/`. All 39 scenarios in every row.
+
+| Run | Engine | Configuration | APCER_max per attempt | APCER pooled per attempt | APCER pooled per transaction | BPCER per attempt | BPCER per transaction |
+|---|---|---|---|---|---|---|---|
+| before `shipped` | before | old defaults | 100% (8/8) SYN-A3, SYN-A8 | 17.6% (32/182) | 39.0% (32/82) | 58.2% (39/67) | 30.0% (12/40) |
+| before `strict` | before | old + registration always active | 25% (4/16) SYN-A7 | 3.5% (8/230) | 9.8% (8/82) | 68.0% (51/75) | 40.0% (16/40) |
+| before `proposed` | before | P1-P3 | 25% (4/16) SYN-A7 | 1.7% (4/238) | 4.9% (4/82) | 66.7% (48/72) | 40.0% (16/40) |
+| after `legacy` | after | old defaults | 100% (8/8) SYN-A3, SYN-A8 | 17.6% (32/182) | 39.0% (32/82) | 29.4% (15/51) | 10.0% (4/40) |
+| after `legacy-strict` | after | old + registration always active | 25% (4/16) SYN-A7 | 3.5% (8/230) | 9.8% (8/82) | 29.4% (15/51) | 10.0% (4/40) |
+| **after `shipped`** | after | **new defaults (P1-P3)** | **25% (4/16) SYN-A7** | **1.7% (4/238)** | **4.9% (4/82)** | **29.4% (15/51)** | **10.0% (4/40)** |
+
+- **Attack rejection is unchanged by the engine fixes.** `legacy` against before `shipped`, and `legacy-strict`
+  against before `strict` (same configurations): every attack and quality scenario has the same accepted count and
+  the same reason codes. The fixes change only
+  bona fide results.
+- **New shipped defaults against old shipped defaults:** APCER_max 100% to 25%, pooled APCER per attempt 17.6% to
+  1.7%, per transaction 39.0% to 4.9%; the prints moved in 2-D (SYN-A3), the looped clips (SYN-A8, now `LOOP` 12/12
+  per pack), the still prints including the one at operator login (SYN-A2) and the S3 screen replay (SYN-A6) are all
+  rejected. BPCER per attempt 58.2% to 29.4%, per transaction 30.0% to 10.0%.
+- Bona fide challenge completion (all bona fide attempts of the run):
+
+| Challenge | before `strict` | before `proposed` | after `shipped` |
+|---|---|---|---|
+| TURN_LEFT | 3/36 (33 `WRONG_ACTION`) | 3/33 (30 `WRONG_ACTION`) | **15/15** |
+| TURN_RIGHT | 15/15 | 6/9 (3 `WRONG_ACTION`) | **15/15** |
+| BLINK | 20/23 (3 `ONSET_TOO_FAST`) | 24/24 | 24/24 |
+| SMILE | 20/20 | 24/24 | 24/24 |
+
+- What still fails, after `shipped`:
+  - SYN-A7, the S3 adaptive screen replay: accepted 4/16 attempts, as in every earlier suite (4.9). It is the only
+    accepted attack.
+  - The synthetic dim pack `bf-s3-dim`: 12/12 attempts rejected by passive PAD (score 3), as before (4.5). It is 12
+    of the 15 rejected bona fide attempts and all 4 rejected bona fide transactions.
+  - S2: 3 of 15 attempts end in `CAPTURE_PAD_SCORE` (binding layer): the challenge passed, but the capture image is
+    the last streamed frame, which in these clips is still turned by 40-65 degrees, where MiniFASNet scores low
+    (4.8). Each of these attempts is followed by an accepted retry, so no S2 transaction is rejected. A live person
+    faces the camera again at "Hold still"; the clips do not.
+  - C1 bona fide (normal light, S1-S3): 36/39 attempts and 36/36 transactions accepted.
+- Blur (`other-blurred`, 4.4): before, 3 counted attempts ended in `NEUTRAL_TIMEOUT` after the person had been
+  prompted; after, the frames never pass the quality gate, every session ends as a no-response `BLURRY` +
+  `PASSIVE_TIMEOUT` (final message `liveness.error.poor_quality`; while positioning, the engine maps `BLURRY` to the
+  guidance `liveness.guide.face_visible`), and no attempt is consumed.
+- Cost for genuine users (stream time of accepted bona fide attempts, median): 6.6 s before (`shipped`, mixing
+  passive-only and challenge attempts) to 9.7 s after (every attempt runs 2 challenges); the passive stage takes
+  2.0 s instead of 0.53 s. The replayed clips include a 400 ms reaction delay and full-length recorded actions.
+
+### 0.3 Per-frame cost
+
+The engine fixes do not change the work per frame. The before `proposed` suite and the after `shipped` suite have
+the same configuration and ran at the same time on the same machine (2026-09-30 11:52-12:40, the two runs in
+parallel with other builds): per analysed frame p50 34.8 ms / p95 77.2 ms before and 34.1 ms / 78.4 ms after.
+The after suite analyses about twice as many frames as the old `shipped` suite (30,964 against 15,927), because every
+registration and sign-in now runs 30 passive frames and 2 challenges.
+
+### 0.4 ONNX Runtime execution providers (B8)
+
+- `OnnxRuntimeOptions.ExecutionProvider` offers `CPU`, `XNNPACK` and `NNAPI`; the configuration key
+  `mosip.registration.liveness.engine.execution_provider` selects one when the engine is created through
+  `OnnxLivenessEngineProvider` or `OnnxRuntimeOptions.fromConfig`. A provider that the installed runtime does not
+  include falls back to CPU, and `effectiveExecutionProvider()` reports the one in use; an unknown value also means
+  CPU, so a typing error cannot stop the engine loading.
+- Desktop measurement: the ONNX Runtime 1.20.0 Java package for Windows x64 reports
+  `OrtEnvironment.getAvailableProviders()` = `[CPU]` (`OrtModelTest`, printed as `[runtime] execution providers
+  available: [CPU]`). XNNPACK is not in that build, so on desktop a request for it runs on CPU and cannot be faster;
+  **the default stays `CPU`**.
+- Android: `onnxruntime-android` includes XNNPACK and NNAPI. The Android module reads the same key through its own
+  session customizer (`livenessmanager/engine/AcceleratorCustomizer`), which must not also set
+  `OnnxRuntimeOptions.Builder.executionProvider`, or the provider would be added twice. No timing on a device or
+  the emulator is part of this work, so the shipped value stays `CPU` there too.
 
 ## 1. Item under test
 
@@ -106,6 +200,8 @@ Two facts explain most of the table:
 
 ### 4.1 Passive-only acceptance lets synthetic prints and replays through (F1)
 
+- **Status 2026-09-30: fixed by P1 (adopted), see 0.2.**
+
 - Shipped: 7 attack scenarios (28 attempts) pass with method `PASSIVE` and never see a challenge. The passive
   stage ends after 8 frames (533 ms of stream), which is also too short for the loop detector (4.3).
 - Strict (`ALWAYS_ACTIVE` for registration): the same registration attacks are all rejected. APCER pooled over
@@ -122,6 +218,9 @@ Two facts explain most of the table:
   of S1 or S3.
 
 ### 4.2 Genuine head turns to the left fail as WRONG_ACTION (F2)
+
+- **Status 2026-09-30: fixed by E1 (smile unmeasured beyond 15 degrees of yaw); TURN_LEFT 15/15 and TURN_RIGHT
+  15/15 in the after `shipped` suite, attack results unchanged, see 0.2.**
 
 - S2 TURN_LEFT completes 3 of 36 times (strict suite) while TURN_RIGHT completes 15 of 15 and both packs reach
   more than 60 degrees of yaw with the correct sign (inspect: `s2-turn-left` yaw 4 to 65 degrees, `s2-turn-right`
@@ -143,6 +242,8 @@ Two facts explain most of the table:
 
 ### 4.3 Loop detection cannot run inside an 8-frame passive stage (F3)
 
+- **Status 2026-09-30: P3 adopted; both looped packs rejected with `LOOP` 12/12 in the after `shipped` suite.**
+
 - `FrameIntegrityChecker` reports `LOOP` when the last `loop_match_frames` (6) hashes repeat an earlier run at a
   lag of at least 6 frames. That needs at least 12 analysed frames plus the loop length, so a 20-frame loop is
   detectable only after 26 or more frames. The passive stage passes after 8 frames (`passive.min_frames`), so
@@ -156,6 +257,8 @@ Two facts explain most of the table:
   0.53 s, inside the plan's 2.5 s target (T-PERF-02), and the frozen-frame check is unchanged (5 frames).
 
 ### 4.4 Blurred frames reach the challenges instead of the quality gate (F4)
+
+- **Status 2026-09-30: P2 adopted through the signed model bundle 1.0.1; blurred sessions end as `BLURRY` no-responses.**
 
 - The blurred pack (`q-s3-blur`, Gaussian blur 6 px) has sharpness 11.5-12.3 by the analyser's measure. The gate
   `quality.min_sharpness` is 10, so the frames pass, the face is found, the passive score is 46 (between reject
@@ -193,6 +296,8 @@ Two facts explain most of the table:
 
 ### 4.7 A blink already in progress at the prompt fails the attempt (F7)
 
+- **Status 2026-09-30: E2 not adopted (see 0.1); no `ONSET_TOO_FAST` bona fide attempt in the after `shipped` suite.**
+
 - The S1 clip is a person blinking repeatedly. In seed 2 of the S1 scenarios a spontaneous blink starts at the
   moment the BLINK prompt is shown, the observer measures an onset under 200 ms (`active.min_onset_ms`) and fails
   the attempt with `ONSET_TOO_FAST`; the retry passes. This is 3 of the 4 non-S2 bona fide attempt rejections in
@@ -202,6 +307,9 @@ Two facts explain most of the table:
   and a replay cannot know the prompt in advance in any case.
 
 ### 4.8 MiniFASNet scores drop at large yaw (F8)
+
+- **Status 2026-09-30: E3 adopted for the active PAD score; the capture-time check (`CAPTURE_PAD_SCORE`, 3 of 15
+  S2 attempts) is still affected, see 0.2.**
 
 - In `s2-turn-left` the per-frame live probability falls from 0.96 frontal to 0.15-0.3 beyond 40 degrees of
   yaw; `s2-turn-right` behaves the same. The active PAD aggregates frames during the challenges, so genuine S2
@@ -226,6 +334,8 @@ Two facts explain most of the table:
 - Keep P1 and record the S3-style case (warm light, no turn available) in the protocol as the P7 species to watch.
 
 ### 4.10 Authentication threshold 95 is not a substitute for challenges (F10)
+
+- **Status 2026-09-30: P1 adopted for `login_auth` and `onboard_auth`; the supervisor workflows keep passive first.**
 
 Three scenarios added after the first run replay the print and screen packs on the `login_auth` workflow
 (passive threshold 95; first alone in `results/20260930/login-probe`, then inside the `shipped` and `strict`
@@ -292,6 +402,8 @@ Wall-clock time of `onFrame` plus `tick` per analysed frame, JPEG decode include
 
 ## 6. Proposed changes
 
+Status 2026-09-30: P1, P2, P3, E1 and E3 are adopted (section 0.1); E2 and E4 are not.
+
 Configuration (MockSync `data/mock-sync-defaults.properties` and the clients' shipped defaults; all three are
 `mosip.registration.liveness.*` keys that the resolver already accepts, and P1 is a `policy.*` key that only the
 server may set):
@@ -302,7 +414,7 @@ server may set):
 | P2 | engine param `quality.min_sharpness` | 10 | 40 | 4.4: blur 11-12 vs bona fide 63 and above; blurred capture becomes guidance, not failed attempts | none seen in the suite |
 | P3 | `passive.min_frames` | 8 | 30 | 4.3: S3 loop caught in the passive stage | passive decision 2.0 s instead of 0.53 s |
 
-The `proposed` suite in `run-suites.sh` runs exactly P1-P3 (P1 on `registration`, `login_auth` and `onboard_auth`; no scenario uses `onboard_auth` yet).
+The former `proposed` suite ran exactly P1-P3 (P1 on `registration`, `login_auth` and `onboard_auth`; no scenario uses `onboard_auth` yet); since the adoption this is the `shipped` suite of `run-suites.sh`.
 
 Engine code (liveness-core; not parameters, so not part of the proposed suite):
 
@@ -323,7 +435,9 @@ Not proposed, with the reason: `planarity.min_residual` (4.6, no data on either 
 python tools/eval/fetch-frame-packs.py --verify-only        # 10 bona fide packs match their manifests
 python tools/eval/make-attack-packs.py --verify-only        # 25 synthetic packs match
 mvn -f tools/eval/scenario-runner/pom.xml package           # runner jar + 29 tests
-bash tools/eval/run-suites.sh ../run/eval/mine              # shipped, strict, proposed, latency
+bash tools/eval/run-suites.sh ../run/eval/mine              # shipped, legacy, legacy-strict, latency
+# "before" suites on an older engine: build that engine's runner, copy target/scenario-runner.jar and target/lib
+# elsewhere, then LIVENESS_RUNNER_JAR=<copy>/scenario-runner.jar bash tools/eval/run-suites.sh <out> legacy
 java -jar tools/eval/scenario-runner/target/scenario-runner.jar inspect --packs ../run/frame-packs --all --out packs.csv
 ```
 

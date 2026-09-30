@@ -5,6 +5,7 @@ import io.mosip.liveness.core.api.EngineContext;
 import io.mosip.liveness.core.api.LivenessEngine;
 import io.mosip.liveness.core.api.LivenessEngineProvider;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.onnx.runtime.OnnxRuntimeOptions;
 
 /**
  * {@link LivenessEngineProvider} for the default ONNX engine ({@value OnnxLivenessEngines#ENGINE_ID}), registered
@@ -20,7 +21,8 @@ import io.mosip.liveness.core.config.LivenessConfigKeys;
  * }</pre>
  *
  * <p>{@link #create(EngineContext)} reads the bundle from {@link EngineContext#models()}, requires at least
- * {@code mosip.registration.liveness.model.min_version}, trusts the built-in development key, and returns an
+ * {@code mosip.registration.liveness.model.min_version}, uses the ONNX Runtime back end named by
+ * {@code mosip.registration.liveness.engine.execution_provider} (default CPU), trusts the built-in development key, and returns an
  * {@link OnnxLivenessEngine}. It loads synchronously, so the engine is ready when it returns. A bundle that fails
  * verification throws an {@link EngineException} whose code has
  * {@link io.mosip.liveness.core.EngineErrorCode#isModelIntegrityFailure()} set; the client audits
@@ -43,6 +45,7 @@ public final class OnnxLivenessEngineProvider implements LivenessEngineProvider 
         String minimumVersion = context.config().get(LivenessConfigKeys.MODEL_MIN_VERSION)
                 .orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION);
         return OnnxLivenessEngines.builder(context.models()).minimumVersion(minimumVersion)
+                .runtimeOptions(OnnxRuntimeOptions.fromConfig(context.config()).build())
                 .imageDecoder(context.imageDecoder()).build();
     }
 

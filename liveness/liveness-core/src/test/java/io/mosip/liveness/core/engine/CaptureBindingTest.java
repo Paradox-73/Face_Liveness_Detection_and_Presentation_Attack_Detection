@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** T-CORE-BND-01..03: stream-to-capture binding (design section 4.10). */
 class CaptureBindingTest {
 
-    private static final LivenessPolicy REG = LivenessPolicy.defaults(Workflow.REGISTRATION);
+    private static final LivenessPolicy REG = TestPolicies.passiveFirst(Workflow.REGISTRATION);
 
     private static SessionHarness ready(LivenessPolicy policy, boolean padCapable) {
         SessionHarness h = new SessionHarness(policy);
@@ -118,7 +118,7 @@ class CaptureBindingTest {
 
     @Test
     void authWindowStartsWhenTheCaptureStarts() {
-        SessionHarness h = ready(LivenessPolicy.defaults(Workflow.PACKET_AUTH).toBuilder().passiveThreshold(80).build(),
+        SessionHarness h = ready(TestPolicies.passiveFirst(Workflow.PACKET_AUTH).toBuilder().passiveThreshold(80).build(),
                 false);
         LivenessPassToken t = h.session.passToken().get();
         h.clock.advanceMs(1_400);

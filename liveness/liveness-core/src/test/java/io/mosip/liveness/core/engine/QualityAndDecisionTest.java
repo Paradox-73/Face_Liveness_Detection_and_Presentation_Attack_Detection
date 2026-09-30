@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** T-CORE-Q-01..03 (quality gate), T-CORE-DEC-01..10 (decision table) and the passive score aggregate. */
 class QualityAndDecisionTest {
 
-    private static final LivenessPolicy REG = LivenessPolicy.defaults(Workflow.REGISTRATION);
+    private static final LivenessPolicy REG = TestPolicies.passiveFirst(Workflow.REGISTRATION);
     private final QualityGate gate = new QualityGate(REG, EngineParameters.defaults());
 
     private static FaceObservation one(TestFaces f) {
@@ -113,7 +113,7 @@ class QualityAndDecisionTest {
     /** T-CORE-DEC-08 / 09: authentication workflows default to threshold 95. */
     @Test
     void authThresholdDefaults() {
-        LivenessPolicy auth = LivenessPolicy.defaults(Workflow.EOD_AUTH);
+        LivenessPolicy auth = TestPolicies.passiveFirst(Workflow.EOD_AUTH);
         assertEquals(DecisionPolicy.Outcome.CHALLENGE, DecisionPolicy.decide(auth, 94, false, true).outcome);
         assertEquals(DecisionPolicy.Outcome.CAPTURE_READY, DecisionPolicy.decide(auth, 95, false, true).outcome);
     }

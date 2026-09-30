@@ -1,7 +1,7 @@
 # Scenario for tools/eval/scenario-runner (format: docs/eval/README.md). Technology regression test,
 # not an ISO/IEC 30107-3 evaluation result.
 id: bf-s1-login
-title: Genuine S1 at operator login (passive threshold 95)
+title: Genuine S1 at operator login (shipped login policy; passive first at threshold 95 in the legacy suites)
 kind: bona_fide
 subject: S1
 condition: C1

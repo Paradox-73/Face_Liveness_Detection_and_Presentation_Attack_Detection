@@ -16,6 +16,7 @@ final class ActionLevels {
     private final double smileIncrease;
     private final double smileScore;
     private final double gazeThreshold;
+    private final double smileMaxYawDeg;
 
     ActionLevels(EngineParameters p) {
         this.turnDeg = p.get(EngineParameter.TURN_YAW_DEG);
@@ -24,6 +25,7 @@ final class ActionLevels {
         this.smileIncrease = p.get(EngineParameter.SMILE_RATIO_INCREASE);
         this.smileScore = p.get(EngineParameter.SMILE_SCORE_THRESHOLD);
         this.gazeThreshold = p.get(EngineParameter.GAZE_THRESHOLD);
+        this.smileMaxYawDeg = p.get(EngineParameter.SMILE_MAX_YAW_DEG);
     }
 
     /**
@@ -64,7 +66,15 @@ final class ActionLevels {
         return (neutralEar - ear) / (neutralEar * blinkDrop);
     }
 
+    /**
+     * Smile level from the mouth width ratio, or from the analyser's smile score. With the head turned more than
+     * {@code active.smile_max_yaw_deg} from the neutral face the ratio grows without a smile, so the smile is
+     * unmeasured there and cannot fail a head turn as a wrong action.
+     */
     private double smile(FaceSignals s, NeutralBaseline baseline) {
+        if (Math.abs(delta(s.yaw, baseline.yaw())) > smileMaxYawDeg) {
+            return Double.NaN;
+        }
         if (!Double.isNaN(s.mouthRatio) && baseline.mouth() > 0) {
             return (s.mouthRatio / baseline.mouth() - 1) / smileIncrease;
         }

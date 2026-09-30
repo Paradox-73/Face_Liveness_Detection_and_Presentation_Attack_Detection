@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** T-CORE-SM-01..20: transitions driven by the fake clock, device events, cancel and engine errors. */
 class SessionEdgeCaseTest {
 
-    private static final LivenessPolicy REG = LivenessPolicy.defaults(Workflow.REGISTRATION);
+    private static final LivenessPolicy REG = TestPolicies.passiveFirst(Workflow.REGISTRATION);
 
     private static SessionHarness started() {
         return new SessionHarness(REG).start();
@@ -255,7 +255,7 @@ class SessionEdgeCaseTest {
 
     @Test
     void policyOffSkipsLivenessButStillBinds() {
-        SessionHarness h = new SessionHarness(LivenessPolicy.defaults(Workflow.EXCEPTION_PHOTO)).start();
+        SessionHarness h = new SessionHarness(TestPolicies.passiveFirst(Workflow.EXCEPTION_PHOTO)).start();
         assertEquals(SessionState.CAPTURE_READY, h.state());
         assertFalse(h.session.captureFrame().isPresent());
         assertTrue(h.captureAndBind().isPassed());

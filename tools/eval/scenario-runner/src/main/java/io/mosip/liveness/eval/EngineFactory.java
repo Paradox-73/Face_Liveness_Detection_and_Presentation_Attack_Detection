@@ -56,15 +56,18 @@ final class EngineFactory implements AutoCloseable {
      * @param modelsDir folder with {@code manifest.json}, {@code manifest.jws} and the model files, or
      *                  {@code null} for the bundle on the class path (the {@code liveness-onnx} models jar)
      * @param threads   ONNX Runtime intra-op threads per inference
+     * @param provider  ONNX Runtime execution provider (falls back to CPU when the runtime lacks it)
      * @return the factory
      * @throws EngineException if the bundle fails its signature or hash checks, or a model cannot be loaded
      */
-    static EngineFactory load(File modelsDir, int threads) throws EngineException {
+    static EngineFactory load(File modelsDir, int threads, OnnxRuntimeOptions.ExecutionProvider provider)
+            throws EngineException {
         ModelSource source = modelsDir == null ? ModelSources.classpath(EngineFactory.class.getClassLoader())
                 : ModelSources.directory(modelsDir);
         ModelRegistry registry = ModelRegistry.builder(source)
                 .minimumVersion(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION).open();
-        OnnxRuntimeOptions options = OnnxRuntimeOptions.builder().intraOpThreads(threads).build();
+        OnnxRuntimeOptions options = OnnxRuntimeOptions.builder().intraOpThreads(threads)
+                .executionProvider(provider).build();
         return new EngineFactory(OnnxModelSet.load(registry, options), registry.bundleVersion(),
                 registry.manifest().engineParams());
     }

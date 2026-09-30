@@ -82,7 +82,8 @@ class OnnxLivenessEnginesTest {
             assertEquals(registry.bundleVersion(), engine.bundleVersion());
             assertEquals(ids(registry.models()), ids(engine.info().models()));
             assertEquals(EnumSet.allOf(ChallengeType.class), engine.info().supportedChallenges());
-            assertEquals(EngineParameters.defaults(), engine.parameters(), "the repository bundle has no engineParams");
+            assertEquals(EngineParameters.builder().set(EngineParameter.MIN_SHARPNESS, 40).build(), engine.parameters(),
+                    "the repository bundle sets only the blur threshold of its analyser");
             assertSame(engine.parameters(), engine.engine().parameters());
             assertSame(engine.metrics(), engine.engine().metrics());
             assertTrue(engine.toString().contains("mosip-onnx-default@1.0.0"));

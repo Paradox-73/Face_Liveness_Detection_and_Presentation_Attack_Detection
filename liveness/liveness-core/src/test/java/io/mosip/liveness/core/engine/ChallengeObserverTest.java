@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ChallengeObserverTest {
 
     private static final long MS = 1_000_000L;
-    private static final LivenessPolicy POLICY = LivenessPolicy.defaults(Workflow.REGISTRATION);
+    private static final LivenessPolicy POLICY = TestPolicies.passiveFirst(Workflow.REGISTRATION);
     private static final List<ChallengeType> DETECTABLE = Arrays.asList(ChallengeType.BLINK, ChallengeType.SMILE,
             ChallengeType.TURN_LEFT, ChallengeType.TURN_RIGHT, ChallengeType.LOOK_UP, ChallengeType.LOOK_DOWN);
 
@@ -36,6 +36,10 @@ class ChallengeObserverTest {
     }
 
     private ChallengeObserver observe(ChallengeType target, List<ChallengeType> detectable) {
+        return observe(target, detectable, EngineParameters.defaults());
+    }
+
+    private ChallengeObserver observe(ChallengeType target, List<ChallengeType> detectable, EngineParameters params) {
         NeutralBaseline b = new NeutralBaseline();
         for (int i = 0; i < 6; i++) {
             b.add(FaceSignals.of(TestFaces.neutral().build()));
@@ -47,7 +51,7 @@ class ChallengeObserverTest {
             }
         }
         now = 10_000 * MS;
-        return new ChallengeObserver(target, b, contrary, now, POLICY, EngineParameters.defaults());
+        return new ChallengeObserver(target, b, contrary, now, POLICY, params);
     }
 
     private ChallengeObserver.Status feed(ChallengeObserver o, int frames, TestFaces face) {
@@ -146,6 +150,53 @@ class ChallengeObserverTest {
         feed(o, 6, TestFaces.neutral());
         assertEquals(ChallengeObserver.Status.FAILED, feed(o, 4, TestFaces.acting(ChallengeType.SMILE)));
         assertEquals(ChallengeOutcome.WRONG_ACTION, o.outcome());
+    }
+
+    /**
+     * A genuine head turn without a smile: the mouth width ratio (mouth width over inter-eye distance) rises with
+     * the yaw because the eyes come closer in the image faster than the mouth corners, +27% at 45 degrees as in
+     * the S2 turn packs of the scenario suite. Both directions must pass.
+     */
+    @ParameterizedTest
+    @EnumSource(value = ChallengeType.class, names = {"TURN_LEFT", "TURN_RIGHT"})
+    void headTurnWhoseMouthRatioGrowsWithYawIsNotASmile(ChallengeType turn) {
+        ChallengeObserver o = observe(turn);
+        assertEquals(ChallengeObserver.Status.PASSED, turnWithWideningMouth(o, turn));
+    }
+
+    /** Without the yaw limit on the smile measure the same turn fails as a smile: the defect this limit fixes. */
+    @Test
+    void withoutTheYawLimitTheTurnIsMistakenForASmile() {
+        EngineParameters noLimit = EngineParameters.builder().set(EngineParameter.SMILE_MAX_YAW_DEG, 90).build();
+        ChallengeObserver o = observe(ChallengeType.TURN_LEFT, DETECTABLE, noLimit);
+        turnWithWideningMouth(o, ChallengeType.TURN_LEFT);
+        assertEquals(ChallengeOutcome.WRONG_ACTION, o.outcome());
+    }
+
+    @Test
+    void smileWithASlightHeadTurnStillCounts() {
+        ChallengeObserver o = observe(ChallengeType.SMILE);
+        feed(o, 6, TestFaces.neutral());
+        assertEquals(ChallengeObserver.Status.PASSED, feed(o, 10, TestFaces.acting(ChallengeType.SMILE).yaw(8)));
+    }
+
+    @Test
+    void frontalSmileBeforeATurnStillFailsIt() {
+        ChallengeObserver o = observe(ChallengeType.TURN_RIGHT);
+        feed(o, 6, TestFaces.neutral());
+        feed(o, 3, TestFaces.acting(ChallengeType.SMILE).yaw(-10));
+        assertEquals(ChallengeOutcome.WRONG_ACTION, o.outcome(), "the smile is measured up to 15 degrees of yaw");
+    }
+
+    private ChallengeObserver.Status turnWithWideningMouth(ChallengeObserver o, ChallengeType turn) {
+        feed(o, 6, TestFaces.neutral());
+        double sign = turn == ChallengeType.TURN_LEFT ? 1 : -1;
+        ChallengeObserver.Status s = o.status();
+        for (int step = 1; step <= 20 && s == ChallengeObserver.Status.PENDING; step++) {
+            double yaw = Math.min(45, step * 5);
+            s = feed(o, 1, TestFaces.neutral().yaw(sign * yaw).mouth(1 + 0.006 * yaw));
+        }
+        return s;
     }
 
     @Test

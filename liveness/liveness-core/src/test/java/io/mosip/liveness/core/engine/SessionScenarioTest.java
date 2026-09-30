@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SessionScenarioTest {
 
     private static LivenessPolicy registration() {
-        return LivenessPolicy.defaults(Workflow.REGISTRATION);
+        return TestPolicies.passiveFirst(Workflow.REGISTRATION);
     }
 
     @Test
@@ -229,12 +229,12 @@ class SessionScenarioTest {
 
     @Test
     void authWorkflowBelowItsThresholdEscalatesAndAtThresholdPasses() {
-        SessionHarness below = new SessionHarness(LivenessPolicy.defaults(Workflow.PACKET_AUTH)).start();
+        SessionHarness below = new SessionHarness(TestPolicies.passiveFirst(Workflow.PACKET_AUTH)).start();
         below.pad.next = 0.94;
         below.runPassive(TestFaces.neutral());
         assertEquals(SessionState.CHALLENGE_WAIT, below.state());
 
-        SessionHarness at = new SessionHarness(LivenessPolicy.defaults(Workflow.PACKET_AUTH)).start();
+        SessionHarness at = new SessionHarness(TestPolicies.passiveFirst(Workflow.PACKET_AUTH)).start();
         at.pad.next = 0.95;
         at.runPassive(TestFaces.neutral());
         assertEquals(SessionState.CAPTURE_READY, at.state());
@@ -262,6 +262,27 @@ class SessionScenarioTest {
         assertEquals(SessionState.CAPTURE_READY, h.state());
         assertTrue(h.captureAndBind().isPassed());
         assertEquals(LivenessMethod.ACTIVE, h.result().method());
+    }
+
+    /**
+     * Shipped defaults (calibration notes P1 and P3): registration and operator sign-in collect 30 passive frames and
+     * then always run the challenges, however high the passive score; supervisor workflows stay passive first.
+     */
+    @Test
+    void shippedDefaultsRunChallengesForRegistrationAndSignIn() {
+        for (Workflow w : new Workflow[] {Workflow.REGISTRATION, Workflow.LOGIN_AUTH, Workflow.ONBOARD_AUTH}) {
+            SessionHarness h = new SessionHarness(LivenessPolicy.defaults(w)).start();
+            h.pad.next = 0.99;
+            h.runPassive(TestFaces.neutral());
+            assertEquals(SessionState.CHALLENGE_WAIT, h.state(), w.id());
+            assertEquals(30, h.pad.calls, w.id() + ": passive frames before the decision");
+            h.runActive(false);
+            assertEquals(SessionState.CAPTURE_READY, h.state(), w.id());
+        }
+        SessionHarness supervisor = new SessionHarness(LivenessPolicy.defaults(Workflow.PACKET_AUTH)).start();
+        supervisor.pad.next = 0.99;
+        supervisor.runPassive(TestFaces.neutral());
+        assertEquals(SessionState.CAPTURE_READY, supervisor.state());
     }
 
     @Test

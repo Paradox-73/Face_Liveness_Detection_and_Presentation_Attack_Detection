@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** T-CORE-UI-01..10: session states and results to message keys. */
 class UiStateMapperTest {
 
-    private static final LivenessPolicy REG = LivenessPolicy.defaults(Workflow.REGISTRATION);
+    private static final LivenessPolicy REG = TestPolicies.passiveFirst(Workflow.REGISTRATION);
     private static final java.util.List<ReasonCode> NONE = Collections.<ReasonCode>emptyList();
 
     private static LivenessResult failed(Workflow w, int attempt, FailureReason reason, ReasonCode... codes) {
@@ -124,7 +124,7 @@ class UiStateMapperTest {
 
     @Test
     void maxAttemptsAuth() {
-        LivenessUiStateMapper m = new LivenessUiStateMapper(LivenessPolicy.defaults(Workflow.LOGIN_AUTH), 3);
+        LivenessUiStateMapper m = new LivenessUiStateMapper(TestPolicies.passiveFirst(Workflow.LOGIN_AUTH), 3);
         LivenessUiState s = m.forResult(failed(Workflow.LOGIN_AUTH, 3, FailureReason.TIMEOUT), NONE);
         assertEquals(MessageKeys.RETRY_MAX_AUTH, s.messageKey());
         assertTrue(s.args().isEmpty());

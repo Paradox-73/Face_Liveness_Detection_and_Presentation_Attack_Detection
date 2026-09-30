@@ -87,7 +87,7 @@ class ReportingTest {
     /** T-CORE-AUD-01: a whole session's audits carry no image bytes, subject reference or raw score. */
     @Test
     void sessionAuditsHoldNoBiometricsOrIdentifiers() {
-        SessionHarness h = SessionScenarioTest.escalated(LivenessPolicy.defaults(Workflow.REGISTRATION));
+        SessionHarness h = SessionScenarioTest.escalated(TestPolicies.passiveFirst(Workflow.REGISTRATION));
         h.runActive(false);
         h.captureAndBind();
         assertEquals(SessionState.PASSED, h.state());
@@ -104,7 +104,7 @@ class ReportingTest {
     /** T-CORE-AUD-02: diagnostic lines hold technical signals only. */
     @Test
     void diagnosticLinesHoldNoIdentifiers() {
-        SessionHarness h = new SessionHarness(LivenessPolicy.defaults(Workflow.REGISTRATION).toBuilder()
+        SessionHarness h = new SessionHarness(TestPolicies.passiveFirst(Workflow.REGISTRATION).toBuilder()
                 .diagnosticEnabled(true).build());
         h.start();
         h.runPassive(TestFaces.neutral());
@@ -119,7 +119,7 @@ class ReportingTest {
         assertEquals(SessionState.PASSED, h.diagnostics.get(h.diagnostics.size() - 1).state());
         assertTrue(h.diagnostics.get(h.diagnostics.size() - 1).padScore().isPresent());
 
-        SessionHarness off = new SessionHarness(LivenessPolicy.defaults(Workflow.REGISTRATION)).start();
+        SessionHarness off = new SessionHarness(TestPolicies.passiveFirst(Workflow.REGISTRATION)).start();
         off.runPassive(TestFaces.neutral());
         assertTrue(off.diagnostics.isEmpty(), "diagnostics are off by default");
     }
@@ -195,7 +195,7 @@ class ReportingTest {
     /** T-CORE-TX-01: only counted failures use an attempt. */
     @Test
     void retryCounting() {
-        LivenessTransaction tx = new LivenessTransaction(LivenessPolicy.defaults(Workflow.REGISTRATION));
+        LivenessTransaction tx = new LivenessTransaction(TestPolicies.passiveFirst(Workflow.REGISTRATION));
         assertEquals(1, tx.nextAttempt());
         tx.record(result(FailureReason.DEVICE, 1));
         tx.record(result(FailureReason.QUALITY, 1));
@@ -215,7 +215,7 @@ class ReportingTest {
     /** T-CORE-TX-02: {@code <workflow>.on_max_failure}. */
     @Test
     void behaviourAfterTheLastAttempt() {
-        LivenessPolicy resident = LivenessPolicy.defaults(Workflow.REGISTRATION).toBuilder()
+        LivenessPolicy resident = TestPolicies.passiveFirst(Workflow.REGISTRATION).toBuilder()
                 .onMaxFailure(OnMaxFailure.SUPERVISOR_OVERRIDE).maxRetries(2).build();
         LivenessTransaction attack = new LivenessTransaction(resident);
         attack.record(result(FailureReason.ACTIVE, 1));
@@ -224,7 +224,7 @@ class ReportingTest {
         assertFalse(attack.isLockRequired());
         assertEquals(OnMaxFailure.SUPERVISOR_OVERRIDE, attack.onMaxFailure());
 
-        LivenessPolicy auth = LivenessPolicy.defaults(Workflow.LOGIN_AUTH).toBuilder()
+        LivenessPolicy auth = TestPolicies.passiveFirst(Workflow.LOGIN_AUTH).toBuilder()
                 .onMaxFailure(OnMaxFailure.BLOCK_AND_LOCK).maxRetries(1).build();
         LivenessTransaction login = new LivenessTransaction(auth);
         LivenessResult authFail = LivenessResult.builder("s", Workflow.LOGIN_AUTH, SessionHarness.engineInfo(),

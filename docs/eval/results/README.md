@@ -6,7 +6,10 @@ All of it is technology regression data on synthetic attacks and three openly li
 
 | Folder | What ran | Configuration |
 |---|---|---|
-| `20260930/shipped` | all 39 scenarios | shipped defaults |
+| `20260930-engine-fixes/shipped` | all 39 scenarios, engine after the 2026-09-30 fixes (smile unmeasured beyond 15 degrees of yaw, profile frames left out of the active PAD score, passive decision at the timeout on slow devices), model bundle 1.0.1 | the calibrated shipped defaults: `ALWAYS_ACTIVE` for `registration`, `login_auth` and `onboard_auth`, `passive.min_frames=30`, `quality.min_sharpness=40` from the signed bundle |
+| `20260930-engine-fixes/legacy` | all 39 scenarios, same engine | the configuration shipped before 2026-09-30 (passive first everywhere, `passive.min_frames=8`, `quality.min_sharpness=10`): isolates the engine fixes |
+| `20260930-engine-fixes/legacy-strict` | all 39 scenarios, same engine | `legacy` with `policy.registration=ALWAYS_ACTIVE` (the old `strict` suite) |
+| `20260930/shipped` | all 39 scenarios, engine before the fixes ("before" of the calibration notes; re-run on 2026-09-30 with the same decisions for every attempt) | defaults shipped before 2026-09-30 |
 | `20260930/strict` | all 39 scenarios | `policy.registration=ALWAYS_ACTIVE` |
 | `20260930/proposed` | all 39 scenarios | the proposal P1-P3 of the calibration notes: `ALWAYS_ACTIVE` for `registration`, `login_auth` and `onboard_auth`, `passive.min_frames=30`, `quality.min_sharpness=40` |
 | `20260929/shipped`, `20260929/strict` | the first 36 scenarios; only `summary.md` and `run.json` kept | as the 2026-09-30 suites; kept for the per-frame latency on a less loaded machine (decisions identical to 2026-09-30) |

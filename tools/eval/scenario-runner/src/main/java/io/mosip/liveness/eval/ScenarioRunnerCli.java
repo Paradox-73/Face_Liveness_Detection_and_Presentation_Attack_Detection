@@ -2,6 +2,7 @@ package io.mosip.liveness.eval;
 
 import io.mosip.liveness.core.EngineException;
 import io.mosip.liveness.core.api.ModelInfo;
+import io.mosip.liveness.onnx.runtime.OnnxRuntimeOptions;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,7 +32,8 @@ import java.util.regex.Pattern;
  *
  * <pre>
  * java -jar scenario-runner.jar run --packs DIR --out DIR [--scenarios PATH]... [--filter REGEX]
- *      [--models DIR] [--threads N] [--config KEY=VALUE]... [--engine-param KEY=VALUE]... [--run-id ID] [--no-fail]
+ *      [--models DIR] [--threads N] [--provider CPU|XNNPACK|NNAPI] [--config KEY=VALUE]...
+ *      [--engine-param KEY=VALUE]... [--run-id ID] [--no-fail]
  * java -jar scenario-runner.jar inspect --packs DIR (--pack ID... | --all) [--out FILE.csv] [--models DIR]
  * </pre>
  *
@@ -89,11 +91,11 @@ public final class ScenarioRunnerCli {
         String runId = o.runId != null ? o.runId
                 : DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(ZoneOffset.UTC).format(Instant.now());
         long t0 = System.nanoTime();
-        try (EngineFactory factory = EngineFactory.load(o.models, o.threads)) {
-            out.printf("Loaded model bundle %s in %.0f ms (%d models, ONNX Runtime intra-op threads %d).%n",
+        try (EngineFactory factory = EngineFactory.load(o.models, o.threads, o.provider)) {
+            out.printf("Loaded model bundle %s in %.0f ms (%d models, ONNX Runtime intra-op threads %d, provider %s).%n",
                     factory.bundleVersion(), (System.nanoTime() - t0) / 1e6, factory.models().models().size(),
-                    o.threads);
-            Map<String, Object> platform = platform(o.threads);
+                    o.threads, o.runtimeOptions().effectiveExecutionProvider());
+            Map<String, Object> platform = platform(o);
             AttemptRecord.RunInfo info = new AttemptRecord.RunInfo(runId, factory.bundleVersion(),
                     factory.modelSetSha256(), platform);
             ScenarioRunner runner = new ScenarioRunner(
@@ -134,7 +136,7 @@ public final class ScenarioRunnerCli {
         if (ids.isEmpty()) {
             throw new IllegalArgumentException("inspect needs --pack ID or --all");
         }
-        try (EngineFactory factory = EngineFactory.load(o.models, o.threads);
+        try (EngineFactory factory = EngineFactory.load(o.models, o.threads, o.provider);
              PrintWriter csv = o.out == null ? new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8))
                      : new PrintWriter(Files.newBufferedWriter(Paths.get(o.out), StandardCharsets.UTF_8))) {
             PackInspector inspector = new PackInspector(factory.decoder(), factory.models().faceAnalyzer(),
@@ -175,7 +177,7 @@ public final class ScenarioRunnerCli {
         return out;
     }
 
-    private static Map<String, Object> platform(int threads) {
+    private static Map<String, Object> platform(Options o) {
         Properties versions = new Properties();
         try (InputStream in = ScenarioRunnerCli.class.getResourceAsStream("runner.properties")) {
             if (in != null) {
@@ -190,7 +192,8 @@ public final class ScenarioRunnerCli {
         m.put("java", System.getProperty("java.vendor") + " " + System.getProperty("java.version"));
         m.put("cpus", Runtime.getRuntime().availableProcessors());
         m.put("onnxruntime", versions.getProperty("onnxruntime.version", "unknown"));
-        m.put("ort_intra_op_threads", threads);
+        m.put("ort_intra_op_threads", o.threads);
+        m.put("ort_execution_provider", o.runtimeOptions().effectiveExecutionProvider().name());
         m.put("liveness", versions.getProperty("liveness.version", "unknown"));
         m.put("runner", versions.getProperty("runner.version", "unknown"));
         return m;
@@ -239,6 +242,7 @@ public final class ScenarioRunnerCli {
         String out;
         File models;
         int threads = 2;
+        OnnxRuntimeOptions.ExecutionProvider provider = OnnxRuntimeOptions.ExecutionProvider.CPU;
         Pattern filter;
         String runId;
         boolean noFail;
@@ -274,6 +278,9 @@ public final class ScenarioRunnerCli {
                     case "--threads":
                         o.threads = Integer.parseInt(value(args, ++i, a));
                         break;
+                    case "--provider":
+                        o.provider = OnnxRuntimeOptions.ExecutionProvider.parse(value(args, ++i, a));
+                        break;
                     case "--filter":
                         o.filter = Pattern.compile(value(args, ++i, a));
                         break;
@@ -303,6 +310,10 @@ public final class ScenarioRunnerCli {
                 throw new IllegalArgumentException("run needs --out DIR");
             }
             return o;
+        }
+
+        OnnxRuntimeOptions runtimeOptions() {
+            return OnnxRuntimeOptions.builder().intraOpThreads(threads).executionProvider(provider).build();
         }
 
         Path packsRoot() {

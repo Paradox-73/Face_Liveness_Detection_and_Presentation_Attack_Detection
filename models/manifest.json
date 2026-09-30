@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "bundle": "mosip-liveness-models",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "models": [
     {
       "id": "yunet",
@@ -53,5 +53,6 @@
       "source": "https://github.com/opencv/opencv_zoo/blob/47534e27c9851bb1128ccc0102f1145e27f23f98/models/face_recognition_sface/face_recognition_sface_2021dec.onnx, weights stored as float16 by models/tools/fp16_weights.py",
       "params": {}
     }
-  ]
+  ],
+  "engineParams": {"quality.min_sharpness": "40"}
 }

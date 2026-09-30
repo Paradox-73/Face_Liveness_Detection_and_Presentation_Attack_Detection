@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** Active-phase details: neutral wait, final checks, cancellation and slow streams. */
 class ActivePhaseTest {
 
-    private static final LivenessPolicy REG = LivenessPolicy.defaults(Workflow.REGISTRATION);
+    private static final LivenessPolicy REG = TestPolicies.passiveFirst(Workflow.REGISTRATION);
 
     @Test
     void noNeutralFaceBeforeThePromptTimesOut() {
@@ -114,6 +114,28 @@ class ActivePhaseTest {
         assertEquals(1, r.reasonCodes().size());
         assertTrue(r.reasonCodes().contains(ReasonCode.PASSIVE_TIMEOUT));
         assertEquals(MessageKeys.ERROR_POOR_QUALITY, h.listener.lastUi().messageKey());
+    }
+
+    /** A slow device that cannot deliver 30 passive frames in time decides on the frames it has, if enough. */
+    @Test
+    void slowDeviceGetsThePassiveDecisionOnTheFramesItHasAtTheTimeout() {
+        SessionHarness h = new SessionHarness(REG.toBuilder().passiveMinFrames(30).build());
+        h.frameIntervalMs = 250;
+        h.start();
+        h.frames(40, TestFaces.neutral());
+        assertEquals(SessionState.CAPTURE_READY, h.state(), h.listener.auditIds().toString());
+        assertNotNull(h.listener.lastAudit(AuditEventId.LIVENESS_PASSIVE_PASSED), "decided passively after 4 s");
+    }
+
+    /** Frames turned beyond active.pad_max_yaw_deg (30) are not scored by PAD during the challenges. */
+    @Test
+    void profileFramesAreNotScoredByTheActivePad() {
+        SessionHarness h = SessionScenarioTest.escalated(REG);
+        int before = h.pad.calls;
+        h.frames(10, TestFaces.neutral().yaw(45));
+        assertEquals(before, h.pad.calls, "no PAD run on a face in profile");
+        h.frames(10, TestFaces.neutral().yaw(25));
+        assertEquals(before + 5, h.pad.calls, "every second frame within 30 degrees");
     }
 
     @Test

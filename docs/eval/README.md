@@ -45,9 +45,9 @@ java -jar tools/eval/scenario-runner/target/scenario-runner.jar run \
 python tools/eval/analyze.py ../run/eval/mine/attempts.jsonl --out ../run/eval/mine/report.md
 ```
 
-The runner exits with 0 when every transaction met its scenario's expectation, 1 when at least one did not (0 with `--no-fail`), and 2 on a usage or setup error. Other options: `--models DIR` (a model bundle folder instead of the one in the `liveness-onnx` models jar), `--threads N` (ONNX Runtime threads per inference, default 2), `--run-id NAME` (written into every record) and `--filter REGEX` on scenario ids.
+The runner exits with 0 when every transaction met its scenario's expectation, 1 when at least one did not (0 with `--no-fail`), and 2 on a usage or setup error. Other options: `--models DIR` (a model bundle folder instead of the one in the `liveness-onnx` models jar), `--threads N` (ONNX Runtime threads per inference, default 2), `--provider CPU|XNNPACK|NNAPI` (ONNX Runtime execution provider; one the runtime does not include falls back to CPU, and `run.json` records the provider in effect), `--run-id NAME` (written into every record) and `--filter REGEX` on scenario ids.
 
-`run-suites.sh` runs four suites into `../run/eval/<time>/<suite>/`: `shipped` (the configuration as shipped), `strict` (challenges forced for registration), `proposed` (the changes proposed in [calibration-notes.md](calibration-notes.md)) and `latency` (bona fide scenarios on one thread). The reports quoted in the calibration notes are copied to [results/](results/).
+`run-suites.sh` runs four suites into `../run/eval/<time>/<suite>/`: `shipped` (the configuration as shipped, which since 2026-09-30 is the calibrated one of [calibration-notes.md](calibration-notes.md)), `legacy` (the configuration shipped before that date, on the current engine), `legacy-strict` (`legacy` with challenges forced for registration; the former `strict` suite) and `latency` (bona fide scenarios on one thread). `LIVENESS_RUNNER_JAR=<jar>` runs the suites with another runner build, for example one kept from before an engine change. The reports quoted in the calibration notes are copied to [results/](results/).
 
 `inspect` measures every frame of a pack (face box, pose, eye and mouth measures, PAD score) into a CSV without running a session; it was used to label the action segments:
 

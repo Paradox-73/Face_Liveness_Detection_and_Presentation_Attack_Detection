@@ -88,7 +88,7 @@ class ModelSignerTest {
     void repositoryBundleVerifiesFromTheCommandLine() {
         String models = System.getProperty("liveness.models.dir", "../../models");
         assertEquals(0, run("verify", "--bundle", models), err.toString());
-        assertTrue(out.toString().contains("OK mosip-liveness-models 1.0.0"));
+        assertTrue(out.toString().contains("OK mosip-liveness-models 1.0.1"));
         assertTrue(out.toString().contains("minifasnet-v2@2.7_80x80"));
     }
 }

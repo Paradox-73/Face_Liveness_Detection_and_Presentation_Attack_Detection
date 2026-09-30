@@ -541,7 +541,7 @@ final class DefaultLivenessSession implements LivenessSession {
                 return;
             }
             lastFace = face;
-            if (scoreActivePad(a.image, face, nanos)) {
+            if (scoreActivePad(a.image, face, s, nanos)) {
                 return;
             }
             if (a.problem == null) {
@@ -579,11 +579,16 @@ final class DefaultLivenessSession implements LivenessSession {
 
     /**
      * Runs PAD on every n-th active frame and fails the session when the recent median drops below the reject
-     * threshold.
+     * threshold. Frames turned further than {@code active.pad_max_yaw_deg} are not scored, because the PAD models
+     * score a genuine face in profile as an attack.
      *
      * @return {@code true} if the session failed
      */
-    private boolean scoreActivePad(ImageBuffer image, DetectedFace face, long nanos) throws EngineException {
+    private boolean scoreActivePad(ImageBuffer image, DetectedFace face, FaceSignals s, long nanos)
+            throws EngineException {
+        if (!Double.isNaN(s.yaw) && Math.abs(s.yaw) > params.get(EngineParameter.ACTIVE_PAD_MAX_YAW_DEG)) {
+            return false;
+        }
         if (activeFrames++ % params.getInt(EngineParameter.ACTIVE_PAD_STRIDE) != 0) {
             return false;
         }
@@ -719,7 +724,7 @@ final class DefaultLivenessSession implements LivenessSession {
                 if (isStalled(now)) {
                     failDevice(DeviceErrorCode.STALLED);
                 } else if (now - acquireStartNanos > policy.passiveTimeoutMs() * 1_000_000L) {
-                    failPassiveTimeout();
+                    onPassiveTimeout();
                 }
                 break;
             case CHALLENGE_WAIT:
@@ -752,6 +757,20 @@ final class DefaultLivenessSession implements LivenessSession {
 
     private boolean isStalled(long now) {
         return now - lastArrivalNanos > params.getLong(EngineParameter.NO_FRAME_TIMEOUT_MS) * 1_000_000L;
+    }
+
+    /**
+     * At the end of {@code passive.timeout_ms}: a slow device that collected at least
+     * {@code passive.timeout_min_frames} good frames, but not {@code passive.min_frames}, gets its passive decision
+     * on those frames; otherwise the session fails with {@code PASSIVE_TIMEOUT}.
+     */
+    private void onPassiveTimeout() {
+        if (state == SessionState.PASSIVE
+                && passiveScores.count() >= params.getInt(EngineParameter.PASSIVE_TIMEOUT_MIN_FRAMES)) {
+            decidePassive();
+        } else {
+            failPassiveTimeout();
+        }
     }
 
     private void failPassiveTimeout() {
