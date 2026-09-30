@@ -33,3 +33,6 @@ eval/media/
 # Secrets
 *.p12.local
 .env
+
+# Release artefacts (scripts/release.sh)
+dist/

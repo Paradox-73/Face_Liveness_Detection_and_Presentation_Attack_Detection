@@ -1,0 +1,11 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+  <!-- Upstream MOSIP poms still list retired Sonatype and Spring repositories; route them to Maven Central.
+       Used by scripts/release.sh and .github/workflows/release.yml. -->
+  <mirrors>
+    <mirror>
+      <id>central-for-retired-repos</id>
+      <mirrorOf>ossrh,sonatype-snapshots,snapshots-repo,oss-sonatype,spring-milestones,spring-snapshots,repository.spring.milestone,spring-releases,spring-milestone,spring-snapshot</mirrorOf>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </mirror>
+  </mirrors>
+</settings>
