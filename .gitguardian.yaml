@@ -1,0 +1,26 @@
+# GitGuardian / ggshield configuration.
+# Everything below is synthetic test material for local development and demos, never a production secret:
+# - MOSIP's own public mock-device keys and passwords (upstream mosip-mock-services, already public),
+# - MOSIP's public sample configuration copied into the mock server,
+# - the demo operator logins of the local mock server (listed in docs/test-data.md),
+# - keys generated only for tests.
+version: 2
+secret:
+  ignored-paths:
+    - "devices/mock-mds/Biometric Devices/**"
+    - "devices/mock-mds/files/keys/**"
+    - "devices/mock-mds/application.properties"
+    - "devices/mock-mds/scripts/**"
+    - "clients/desktop/keystore.p12"
+    - "clients/desktop/registration/**/src/test/**"
+    - "clients/android/android/**/src/test/**"
+    - "clients/android/android/**/src/androidTest/**"
+    - "tools/mock-sync/data/upstream/**"
+    - "tools/mock-sync/data/client-seed/**"
+    - "tools/mock-sync/src/test/**"
+    - "tools/mock-sync/e2e/**"
+    - "tools/mock-sync/README.md"
+    - "scripts/android-mocksync-setup.sh"
+    - "scripts/demo-android.sh"
+    - "liveness/**/src/test/**"
+    - "docs/test-data.md"

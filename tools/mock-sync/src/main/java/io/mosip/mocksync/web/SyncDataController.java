@@ -151,7 +151,7 @@ public class SyncDataController {
 		String userId = payload == null ? null : String.valueOf(payload.get("userId"));
 		Optional<User> user = users.find(userId);
 		if (user.isEmpty() || !user.get().isActive()
-				|| !user.get().getPassword().equals(String.valueOf(payload.get("password")))) {
+				|| !user.get().passwordMatches(String.valueOf(payload.get("password")))) {
 			LOGGER.info("Login rejected for user {} on {}", userId, machine.get().getName());
 			return responses.error(id, "KER-ATH-401", "Invalid user ID or password");
 		}

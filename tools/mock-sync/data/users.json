@@ -1,20 +1,26 @@
 [
   {
     "userId": "officer1",
-    "password": "Mosip@Officer1",
+    "passwordHash": "sha256:ff9f8c353de8dd2914c6ed1d1097ea39:c29f04f5aeabb0dc0fe3bf58ebd5238fdcdd3fd47817106a6bbdfc421e8c821f",
     "name": "Test Officer One",
-    "roles": ["REGISTRATION_OFFICER"]
+    "roles": [
+      "REGISTRATION_OFFICER"
+    ]
   },
   {
     "userId": "officer2",
-    "password": "Mosip@Officer2",
+    "passwordHash": "sha256:dae65bf1dbc032ef0ad2086c49998c79:fa9a4dbb77b623e451e804cc5d449ed7d5a87c5973f64e37bd46202cf933e8c9",
     "name": "Test Officer Two",
-    "roles": ["REGISTRATION_OFFICER"]
+    "roles": [
+      "REGISTRATION_OFFICER"
+    ]
   },
   {
     "userId": "supervisor1",
-    "password": "Mosip@Supervisor1",
+    "passwordHash": "sha256:5a664b2c635aa483160b539c0b0d4d75:142f744c798b1b2ed04a3697f979b808c114854dcdab69e5d03b96d4c9493e87",
     "name": "Test Supervisor One",
-    "roles": ["REGISTRATION_SUPERVISOR"]
+    "roles": [
+      "REGISTRATION_SUPERVISOR"
+    ]
   }
 ]

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 /**
- * Operator accounts from {@code data/users.json}. The passwords are synthetic test values documented in the README.
+ * Operator accounts from {@code data/users.json}. Passwords are stored only as salted SHA-256 hashes; the demo logins are listed in docs/test-data.md.
  */
 @Component
 public class UserStore {
@@ -51,7 +51,7 @@ public class UserStore {
 	 */
 	public static class User {
 		private String userId;
-		private String password;
+		private String passwordHash;
 		private String name;
 		private List<String> roles = new ArrayList<>();
 		private boolean active = true;
@@ -75,21 +75,49 @@ public class UserStore {
 		}
 
 		/**
-		 * Returns the password.
+		 * Returns the stored password hash, {@code sha256:<hex salt>:<hex SHA-256(salt + password)>}.
 		 *
-		 * @return password
+		 * @return password hash
 		 */
-		public String getPassword() {
-			return password;
+		public String getPasswordHash() {
+			return passwordHash;
 		}
 
 		/**
-		 * Sets the password.
+		 * Sets the stored password hash.
 		 *
-		 * @param password password
+		 * @param passwordHash hash in {@code sha256:<salt>:<digest>} form
 		 */
-		public void setPassword(String password) {
-			this.password = password;
+		public void setPasswordHash(String passwordHash) {
+			this.passwordHash = passwordHash;
+		}
+
+		/**
+		 * Checks a login password against the stored salted hash in constant time.
+		 *
+		 * @param candidate password sent by the client
+		 * @return true when it matches
+		 */
+		public boolean passwordMatches(String candidate) {
+			if (passwordHash == null || candidate == null) {
+				return false;
+			}
+			String[] parts = passwordHash.split(":");
+			if (parts.length != 3 || !"sha256".equals(parts[0])) {
+				return false;
+			}
+			try {
+				byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+						.digest((parts[1] + candidate).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+				StringBuilder hex = new StringBuilder();
+				for (byte b : digest) {
+					hex.append(String.format("%02x", b));
+				}
+				return java.security.MessageDigest.isEqual(hex.toString().getBytes(java.nio.charset.StandardCharsets.US_ASCII),
+						parts[2].getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+			} catch (java.security.NoSuchAlgorithmException e) {
+				throw new IllegalStateException(e);
+			}
 		}
 
 		/**
