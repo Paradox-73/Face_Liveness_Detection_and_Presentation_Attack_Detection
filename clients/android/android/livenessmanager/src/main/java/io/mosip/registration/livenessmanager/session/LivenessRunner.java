@@ -73,10 +73,11 @@ import io.mosip.registration.livenessmanager.engine.EngineLoader;
  * the ISO record and binds it to the session ({@code LivenessSession.bind}). Only a bound capture is a pass.
  *
  * <p><b>Retries</b> follow {@link LivenessTransaction}: failures that count use an attempt; device, engine,
- * quality and cancellation failures do not. After the last attempt the session writes audit {@code REG-EVT-LV11}
+ * quality and cancellation failures do not. Attempts already used for the same subject on an earlier screen
+ * ({@code priorAttempts}) count too, so "Attempt n of m" and the last attempt are the same across screens. After the last attempt the session writes audit {@code REG-EVT-LV11}
  * (once) and the result reports {@code on_max_failure}.
  */
-public final class LivenessRunner implements AutoCloseable {
+public final class LivenessRunner implements CaptureRunner {
 
     /** Longest interval between two {@code tick()} calls. */
     public static final long TICK_MS = 100L;
@@ -115,6 +116,7 @@ public final class LivenessRunner implements AutoCloseable {
     private final Listener listener;
     private final String blockedMessageKey;
     private final LivenessTransaction transaction;
+    private final int priorAttempts;
     private final ScheduledThreadPoolExecutor worker;
 
     private volatile Attempt current;
@@ -139,6 +141,28 @@ public final class LivenessRunner implements AutoCloseable {
     public LivenessRunner(LivenessPolicy policy, String subjectRef, EngineLoader engines, FaceCaptureDevice device,
                           ImageDecoder decoder, AuditSink audit, DiagnosticSink diagnostics, Clock clock,
                           String blockedMessageKey, Listener listener) {
+        this(policy, subjectRef, engines, device, decoder, audit, diagnostics, clock, blockedMessageKey, 0, listener);
+    }
+
+    /**
+     * Creates a runner that continues a transaction started on an earlier screen; nothing happens until
+     * {@link #start()}.
+     *
+     * @param policy            resolved policy of the workflow
+     * @param subjectRef        registration ID or user ID
+     * @param engines           engine loader
+     * @param device            face device
+     * @param decoder           image decoder (for the image inside the signed capture)
+     * @param audit             audit sink
+     * @param diagnostics       diagnostic sink (no-op unless diagnostics are enabled)
+     * @param clock             session clock
+     * @param blockedMessageKey message key when liveness must not run on this device, or {@code null}
+     * @param priorAttempts     attempts the subject already used for this capture, 0 to {@code max_retries - 1}
+     * @param listener          receiver of states and outcomes
+     */
+    public LivenessRunner(LivenessPolicy policy, String subjectRef, EngineLoader engines, FaceCaptureDevice device,
+                          ImageDecoder decoder, AuditSink audit, DiagnosticSink diagnostics, Clock clock,
+                          String blockedMessageKey, int priorAttempts, Listener listener) {
         this.policy = Objects.requireNonNull(policy, "policy");
         this.subjectRef = subjectRef == null ? "" : subjectRef;
         this.engines = Objects.requireNonNull(engines, "engines");
@@ -149,7 +173,10 @@ public final class LivenessRunner implements AutoCloseable {
         this.clock = Objects.requireNonNull(clock, "clock");
         this.blockedMessageKey = blockedMessageKey;
         this.listener = Objects.requireNonNull(listener, "listener");
-        this.transaction = new LivenessTransaction(policy);
+        this.priorAttempts = Math.max(0, Math.min(priorAttempts, policy.maxRetries() - 1));
+        // The transaction counts the attempts left; attempt numbers shown and audited include the earlier ones.
+        this.transaction = new LivenessTransaction(this.priorAttempts == 0 ? policy
+                : policy.toBuilder().maxRetries(policy.maxRetries() - this.priorAttempts).build());
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1, r -> {
             Thread t = new Thread(r, "liveness-worker");
             t.setDaemon(true);
@@ -160,6 +187,7 @@ public final class LivenessRunner implements AutoCloseable {
     }
 
     /** Opens the first session. */
+    @Override
     public void start() {
         submit(this::openSession);
     }
@@ -169,6 +197,7 @@ public final class LivenessRunner implements AutoCloseable {
      *
      * @return {@code false} if no retry is available (closed, running, passed or no attempts left)
      */
+    @Override
     public boolean retry() {
         LivenessCaptureResult last = lastResult;
         if (closed || current != null || last == null || !last.isRetryAllowed()) {
@@ -179,6 +208,7 @@ public final class LivenessRunner implements AutoCloseable {
     }
 
     /** Cancels the running session, if any; the attempt ends with {@code CANCELLED}. Safe from any thread. */
+    @Override
     public void cancel() {
         Attempt a = current;
         if (a != null && a.session != null) {
@@ -239,7 +269,7 @@ public final class LivenessRunner implements AutoCloseable {
         if (closed || current != null) {
             return;
         }
-        int attempt = transaction.nextAttempt();
+        int attempt = priorAttempts + transaction.nextAttempt();
         LivenessUiStateMapper mapper = new LivenessUiStateMapper(policy, attempt);
         if (blockedMessageKey != null) {
             noSession(FailureReason.DEVICE, errorState(UiPhase.DEVICE_ERROR, blockedMessageKey, PromptIcon.LOCKED,
@@ -284,6 +314,7 @@ public final class LivenessRunner implements AutoCloseable {
             a.source = device.openStream(StreamRequest.builder().streamTimeoutMs(policy.streamTimeoutMs())
                     .reconnectAttempts(policy.deviceReconnectAttempts()).build());
             a.handOff = FrameHandOff.latestOnly();
+            a.timer = new FrameTimer(a.session, System::nanoTime);
             a.source.start(a.handOff);
         } catch (DeviceException e) {
             a.session.onError(e.getError());
@@ -302,7 +333,7 @@ public final class LivenessRunner implements AutoCloseable {
             return;
         }
         try {
-            a.handOff.deliverNext(a.session, TICK_MS);
+            a.handOff.deliverNext(a.timer, TICK_MS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             a.session.cancel();
@@ -372,6 +403,10 @@ public final class LivenessRunner implements AutoCloseable {
             current = null;
         }
         Log.i(TAG, "Liveness attempt ended: " + outcome);
+        if (a.timer != null && a.timer.frames() > 0) {
+            Log.i(TAG, "Liveness frame time " + policy.workflow().id() + " session " + transaction.sessions()
+                    + ": " + a.timer.summary());
+        }
         callListener(() -> listener.onAttemptEnded(outcome));
     }
 
@@ -381,7 +416,7 @@ public final class LivenessRunner implements AutoCloseable {
                 : (result.isPass() ? Decision.ERROR : result.decision()));
         LivenessCaptureResult.Builder b = LivenessCaptureResult.builder(policy.workflow(), decision)
                 .sessionId(a.session.sessionId())
-                .attempts(transaction.attemptsUsed(), policy.maxRetries())
+                .attempts(attemptsUsed(), policy.maxRetries())
                 .retryAllowed(!pass && !closed && transaction.canRetry())
                 .overrideAllowed(!pass && transaction.isOverrideAllowed())
                 .lockRequired(!pass && transaction.isLockRequired())
@@ -414,7 +449,7 @@ public final class LivenessRunner implements AutoCloseable {
         }
         LivenessCaptureResult outcome = LivenessCaptureResult.builder(policy.workflow(), reason.decision())
                 .failureReason(reason).messageKey(state.messageKey())
-                .attempts(transaction.attemptsUsed(), policy.maxRetries())
+                .attempts(attemptsUsed(), policy.maxRetries())
                 .retryAllowed(retry && !closed && transaction.canRetry())
                 .onMaxFailure(transaction.onMaxFailure()).build();
         lastResult = outcome;
@@ -425,11 +460,16 @@ public final class LivenessRunner implements AutoCloseable {
     private LivenessUiState errorState(UiPhase phase, String key, PromptIcon icon, boolean retry) {
         LivenessUiState.Builder b = LivenessUiState.builder(phase, key).promptIcon(icon).severity(Severity.ERROR)
                 .retryAvailable(retry)
-                .attempt(Math.min(transaction.attemptsUsed() + 1, policy.maxRetries()), policy.maxRetries());
+                .attempt(Math.min(attemptsUsed() + 1, policy.maxRetries()), policy.maxRetries());
         if (retry) {
             b.guidance(MessageKeys.RETRY_AVAILABLE);
         }
         return b.build();
+    }
+
+    /** Attempts used by the subject, including those of earlier screens. */
+    private int attemptsUsed() {
+        return priorAttempts + transaction.attemptsUsed();
     }
 
     private static void closeSource(Attempt a) {
@@ -462,6 +502,7 @@ public final class LivenessRunner implements AutoCloseable {
         LivenessSession session;
         FaceFrameSource source;
         FrameHandOff handOff;
+        FrameTimer timer;
         SignedFaceCapture capture;
         String tokenNonce;
         String lastMessageKey;

@@ -1,0 +1,119 @@
+[demo-android 09:09:29] output: run/demo/android-20260930-0909
+[demo-android 09:09:33] === section login
+[demo-android 09:09:49] screenshot 01-login-screen.png
+PASS A-L1 [login] officer password sign-in reaches the home screen
+[demo-android 09:10:21] screenshot 02-home-officer.png
+[demo-android 09:10:36] replay: s3-main
+PASS A-L2 [login] "Sign in with face" offered to an onboarded operator
+[demo-android 09:10:53] screenshot 03-password-step-with-face.png
+PASS A-L3 [login] face sign-in (login_auth): liveness PASS
+PASS A-L4 [login] face sign-in: 1:1 match with the onboarding face
+PASS A-L5 [login] face sign-in reaches the home screen
+[demo-android 09:11:11] screenshot 04-home-after-face-sign-in.png
+[demo-android 09:11:26] replay: follow s1
+PASS A-L6 [login] live person who is not enrolled: liveness PASS
+PASS A-L7 [login] live person who is not enrolled: no match
+[demo-android 09:12:04] screenshot 05-face-sign-in-no-match.png
+PASS A-L8 [login] no match: sign-in stays on the password step with the mismatch message
+[demo-android 09:12:07] replay: a-s3-screen-replay
+[demo-android 09:12:21] screenshot 06-face-sign-in-replay-refused.png
+PASS A-L9 [login] screen replay at sign-in refused
+PASS A-L10 [login] refusal shown with a generic message that names no attack type
+[demo-android 09:12:36] === section resident
+PASS A-R0 [resident] Lost UIN registration reaches the biometrics grid with exceptions marked
+[demo-android 09:15:30] replay: follow cam
+PASS A-R1 [resident] camera unavailable: device error shown
+[demo-android 09:15:41] screenshot 07-resident-camera-unavailable.png
+PASS A-R2 [resident] camera unavailable uses no attempt
+[demo-android 09:15:50] screenshot 08-resident-attempt1-refused.png
+PASS A-R3 [resident] screen replay refused on attempt 1 with a generic message
+PASS A-R4 [resident] attempt 1 of 3 used, Retry offered
+[demo-android 09:16:02] screenshot 09-resident-challenge.png
+PASS A-R5 [resident] low-confidence resident: challenge prompt shown
+PASS A-R6 [resident] challenge answered: capture PASS on attempt 2
+PASS A-R7 [resident] session escalated to challenges (REG-EVT-LV03) and passed (REG-EVT-LV10)
+[demo-android 09:16:17] screenshot 10-resident-face-accepted.png
+[demo-android 09:16:23] replay: s3-main
+PASS A-R8 [resident] exception photo taken with the built-in camera, preview and authentication step reached
+PASS A-R9 [resident] exception photo taken without a liveness check (policy OFF)
+[demo-android 09:17:04] replay: s3-main
+[demo-android 09:17:17] screenshot 11-packet-auth-face-verified.png
+PASS A-R10 [resident] operator packet authentication by face (packet_auth): liveness and match, acknowledgement
+[demo-android 09:17:28] screenshot 12-resident-acknowledgement.png
+[demo-android 09:17:40] === section attacks
+[demo-android 09:20:41] replay: a-s2-print-still
+[demo-android 09:20:57] screenshot 13-attack-1-a-s2-print-still.png
+PASS A-A1 [attacks] attack a-s2-print-still refused (attempt 1 of 3)
+PASS A-A1g [attacks] generic message after attempt 1
+[demo-android 09:21:12] replay: a-s2-identical
+[demo-android 09:21:19] screenshot 14-attack-2-a-s2-identical.png
+PASS A-A2 [attacks] attack a-s2-identical refused (attempt 2 of 3)
+PASS A-A2g [attacks] generic message after attempt 2
+[demo-android 09:21:35] replay: a-s2-screen-replay
+[demo-android 09:21:42] screenshot 15-attack-3-a-s2-screen-replay.png
+PASS A-A3 [attacks] attack a-s2-screen-replay refused (attempt 3 of 3)
+PASS A-A3g [attacks] generic message after attempt 3
+PASS A-A4 [attacks] third failure: recovery guidance, no Retry
+PASS A-A5 [attacks] maximum attempts audited once (REG-EVT-LV11)
+[demo-android 09:22:02] screenshot 16-attack-blocked-banner.png
+PASS A-A6 [attacks] ARC shows the blocked message under Scan
+PASS A-A7 [attacks] a further Scan opens no capture screen
+[demo-android 09:22:52] === section approval
+[demo-android 09:23:08] replay: s3-main
+PASS A-E1 [approval] supervisor face sign-in
+PASS A-E2 [approval] pending applications reviewed and approved
+[demo-android 09:24:37] screenshot 17-eod-pending-approved.png
+[demo-android 09:24:52] replay: a-s3-screen-replay
+[demo-android 09:25:06] screenshot 18-eod-replay-refused.png
+PASS A-E3-attack [approval] supervisor approval: replay refused
+PASS A-E3-generic [approval] supervisor approval: generic refusal message
+[demo-android 09:25:21] replay: follow s3
+PASS A-E4 [approval] supervisor face authentication (eod_auth): liveness and match
+[demo-android 09:25:36] screenshot 19-eod-approved.png
+PASS A-E5 [approval] no application left pending
+[demo-android 09:26:25] screenshot 20-upload-done.png
+PASS A-E6 [approval] packets uploaded to MockSync (2 new)
+PASS A-E7-033312 [approval] packet 10001100021003120260930033312: LIVENESS_* in the face BIR, LV audits, meta info
+PASS A-E7-034336 [approval] packet 10001100021003120260930034336: LIVENESS_* in the face BIR, LV audits, meta info
+[demo-android 09:26:26] === section config
+PASS A-C1 [config] MockSync: policy.registration=ALWAYS_ACTIVE
+PASS A-C2 [config] manual synchronisation completes
+[demo-android 09:27:28] screenshot 21-config-sync-done.png
+[demo-android 09:29:49] replay: follow s3
+[demo-android 09:29:59] screenshot 22-config-challenge.png
+PASS A-C3 [config] after the sync a live resident with a high passive score gets challenges
+PASS A-C4 [config] capture passes with method ACTIVE
+PASS A-C5 [config] configuration change audited (REG-EVT-LV15)
+[demo-android 09:30:18] replay: s3-main
+[demo-android 09:30:55] replay: s3-main
+[demo-android 09:31:08] screenshot 23-packet-auth-face-verified.png
+PASS A-C6 [config] packet authenticated by face and created
+PASS A-C7 [config] MockSync: policy.registration reverted
+PASS A-C8 [config] synchronised back to the shipped policy
+[demo-android 09:31:54] === section offline
+[demo-android 09:32:00] offline: adb reverse removed (MockSync unreachable), airplane mode on
+PASS A-O1 [offline] offline password sign-in
+[demo-android 09:34:53] replay: follow s3n
+[demo-android 09:34:59] screenshot 24-offline-capture-badge.png
+PASS A-O2 [offline] offline: capture screen shows the Offline badge
+PASS A-O3 [offline] offline: resident face passes on the device
+[demo-android 09:35:21] replay: s3-main
+[demo-android 09:36:03] replay: s3-main
+[demo-android 09:36:15] screenshot 25-packet-auth-face-verified.png
+PASS A-O4 [offline] offline: packet authentication by face
+[demo-android 09:36:40] replay: s3-main
+PASS A-O5 [offline] offline: supervisor face sign-in
+[demo-android 09:38:24] replay: a-s2-screen-replay
+[demo-android 09:38:31] screenshot 26-eod-replay-refused.png
+PASS A-O6-attack [offline] supervisor approval: replay refused
+PASS A-O6-generic [offline] supervisor approval: generic refusal message
+[demo-android 09:38:47] replay: follow s3
+PASS A-O7 [offline] offline: supervisor approval by face (offline_approval.enable=Y)
+[demo-android 09:39:00] screenshot 27-offline-approved.png
+[demo-android 09:39:16] online again: airplane mode off, adb reverse restored
+PASS A-O8 [offline] after the network is back the offline packet is uploaded (2 new)
+[demo-android 09:39:59] screenshot 28-offline-upload-done.png
+[demo-android 09:39:59] === section latency
+PASS A-P1 [latency] per-frame times recorded
+attempts=15 frames=671 median p50=119.2 ms median p95=351.3 ms worst frame=1150.7 ms
+[demo-android 09:40:00] checks: 58 passed, 0 failed (results: run/demo/android-20260930-0909/results.txt)

@@ -16,7 +16,10 @@ import io.mosip.registration.livenessmanager.LivenessCaptureRequest;
  *
  * <p>The file {@code <external files>/liveness-replay/}{@value #SOURCE_FILE} holds one line: the pack name and,
  * optionally, the frame rate, for example {@code s3-main 15}. The pack itself is a folder next to it (pushed by
- * {@code scripts/android-liveness-demo.sh --push}) or an APK asset pack. Delete the file to use the camera again.
+ * {@code scripts/android-liveness-demo.sh --push}) or an APK asset pack. The form {@code follow s3n 15} plays
+ * {@code s3n-main} and answers challenge prompts with {@code s3n-blink}, {@code s3n-smile} and so on, like a
+ * person in front of the camera. A trailing {@code masked} keeps the preview dark, so screenshots show no face.
+ * Delete the file to use the camera again.
  */
 final class DebugReplay {
 
@@ -46,8 +49,10 @@ final class DebugReplay {
             String line = new String(Files.readAllBytes(source.toPath()), StandardCharsets.UTF_8).trim();
             Selection selection = parse(line);
             if (selection != null) {
-                Log.i(TAG, "Debug build: replaying frame pack " + selection.pack + " instead of the camera");
-                request.replay(selection.pack, selection.fps);
+                Log.i(TAG, "Debug build: replaying frame pack " + selection.pack
+                        + (selection.follow ? " (following prompts)" : "") + " instead of the camera");
+                request.replay(selection.pack, selection.fps).replayFollow(selection.follow)
+                        .replayMasked(selection.masked);
             }
         } catch (IOException e) {
             Log.w(TAG, "Replay selection unreadable; using the camera", e);
@@ -55,35 +60,50 @@ final class DebugReplay {
     }
 
     /**
-     * Parses the selection line.
+     * Parses the selection line: {@code [follow] PACK [FPS] [masked]}.
      *
-     * @param line for example {@code s3-main 15}
+     * @param line for example {@code s3-main 15} or {@code follow s3n 15 masked}
      * @return the selection, or {@code null} for a blank line
      */
     static Selection parse(String line) {
-        String[] parts = line == null ? new String[0] : line.trim().split("\\s+");
-        if (parts.length == 0 || parts[0].isEmpty()) {
+        String[] parts = line == null ? new String[0] : line.trim().split("\s+");
+        boolean follow = parts.length > 1 && "follow".equals(parts[0]);
+        int first = follow ? 1 : 0;
+        if (parts.length <= first || parts[first].isEmpty()) {
             return null;
         }
         int fps = DEFAULT_FPS;
-        if (parts.length > 1) {
-            try {
-                fps = Integer.parseInt(parts[1]);
-            } catch (NumberFormatException ignored) {
-                fps = DEFAULT_FPS;
+        boolean masked = false;
+        for (int i = first + 1; i < parts.length; i++) {
+            if ("masked".equals(parts[i])) {
+                masked = true;
+            } else if (i == first + 1) {
+                fps = parseFps(parts[i]);
             }
         }
-        return new Selection(parts[0], fps);
+        return new Selection(parts[first], fps, follow, masked);
     }
 
-    /** A selected pack and its frame rate. */
+    private static int parseFps(String text) {
+        try {
+            return Integer.parseInt(text);
+        } catch (NumberFormatException ignored) {
+            return DEFAULT_FPS;
+        }
+    }
+
+    /** A selected pack (or pack prefix), its frame rate, whether it answers prompts and whether it is hidden. */
     static final class Selection {
         final String pack;
         final int fps;
+        final boolean follow;
+        final boolean masked;
 
-        Selection(String pack, int fps) {
+        Selection(String pack, int fps, boolean follow, boolean masked) {
             this.pack = pack;
             this.fps = fps;
+            this.follow = follow;
+            this.masked = masked;
         }
     }
 }

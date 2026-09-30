@@ -325,13 +325,62 @@ tests run the panel in Arabic and check the right-to-left layout.
 | Supervisor face sign-in | `s3-main` | `login_auth` `PASS`, `FaceMatch[MATCHED, score=94, threshold=40]`, home screen |
 | Operator face sign-in, attack | `mockmds-still` | maximum attempts; "Use another sign-in method or contact your supervisor" |
 
-Not run on the emulator: operator `packet_auth` and supervisor `eod_auth` approval. Both need a finished packet,
-and the emulator process ended every 2 to 6 minutes on this machine (no crash report; host memory was tight).
-Both paths use the same `FaceAuthFlow` as the sign-in that was run, and their rules are covered by the unit and
-widget tests above.
+Operator `packet_auth`, supervisor `eod_auth` approval, packet upload, configuration by sync and offline
+operation were run end to end later, with `scripts/demo-android.sh`; see section 12 and
+`docs/test-report/android-e2e.md`. The emulator crashes seen here were the host's software GPU renderer
+(section 12.4), not memory.
 
 Engine limit seen here: with the shipped registration policy (`PASSIVE_THEN_ACTIVE`, threshold 80) the
 printed-photo pack `a-s3-print-still` passes passively, as `docs/eval/calibration-notes.md` records. The
 proposed `ALWAYS_ACTIVE` registration policy rejects it.
 
 Screenshots without a real face: `docs/ux/screenshots/android/`.
+
+## 12. Changes from the end-to-end run
+
+The scripted end-to-end run (`scripts/demo-android.sh`, report in `docs/test-report/android-e2e.md`) found the
+problems below; each is fixed in the code named.
+
+### 12.1 A registration could not be finished on a tablet
+
+| Problem | Where | Fix |
+|---|---|---|
+| With any finger or iris marked as an exception, ARC asks for an exception photo through a vendor SBI face app. A tablet whose face device is the built-in camera had none, so the registration could not continue. | `BiometricsDetailsApi.startLivenessCapture` | When `mosip.registration.liveness.android.device` is `BUILTIN` (default), the exception photo also opens the capture screen, with workflow `exception_photo` and `LivenessCaptureRequest.photoWhenOff`. With the shipped policy `exception_photo=OFF` the screen runs `session.PhotoCaptureRunner`: it streams 1.5 s, signs the newest frame with the built-in device (same ISO record and SBI response as a liveness capture) and returns a pass marked `LIVENESS_NOT_REQUIRED`, without liveness evidence (as on desktop). A policy other than `OFF` runs the full liveness check. Attempts are counted under their own key (`FaceCaptureLivenessGate.exceptionPhotoField`). |
+| The Biometric Details step never enabled CONTINUE after a face capture from the built-in device: it reports quality 90, ARC's face threshold is 90, and the registration screen treated `quality <= threshold` as not good enough (operator onboarding accepts `quality >= threshold`). | `lib/ui/process_ui/widgets_mobile/biometric_capture_scan_block_portrait.dart` (`validateCaptureException`) | Upstream off-by-one: `<=` changed to `<`, the same rule as onboarding. |
+
+### 12.2 Attempts across capture screens
+
+Closing the capture screen and pressing Scan again started the screen at "Attempt 1 of 3" again, while the gate
+already counted the earlier failures; the last screen could therefore allow more attempts than
+`max_retries`. The gate now passes the attempts already used (`usedAttempts`) as
+`LivenessCaptureRequest.priorAttempts`; `LivenessRunner` numbers the sessions from there and gives its
+transaction only the remaining attempts, so the screen shows "Attempt 2 of 3", the third failure shows the
+recovery message and writes `REG-EVT-LV11`, and a further Scan opens no screen.
+
+### 12.3 Packet evidence as on desktop
+
+- `packet_meta_info.json`: the `biometrics` entry of a face that passed liveness has `livenessDecision` and
+  `livenessMethod` (`RegistrationServiceImpl.addLivenessMetaInfo`).
+- Operator face: a successful `packet_auth` face authentication keeps the signed capture
+  (`FaceAuthOutcome.capture()`); `OperatorFaceEvidence` runs ARC's SBI checks on it and stores it with its
+  `LIVENESS_*` evidence as the registration's officer biometrics, which the packet carries as
+  `officer_bio_cbeff` (meta `officerBiometricFileName`, `officerPassword=false`), like the desktop client.
+
+### 12.4 Test support (debug builds only)
+
+- Prompt-following replay: `flow-source.txt` = `follow <prefix> [fps] [masked]` plays `<prefix>-main` and, 500 ms
+  after the screen asks for a blink, smile or head turn, switches to `<prefix>-blink` / `-smile` / `-turn-left` /
+  `-turn-right` (`device.ReplayPromptFollower`, `ReplayFrameSource.switchTo`). After a movement the neutral clip
+  continues where it was left (`switchBack`): restarting it from its first frame repeats frames, which the engine's
+  loop check correctly reports as a replayed video. The replay folder is read when an attempt starts, so a test can
+  change what the "camera" shows between attempts.
+- `masked` keeps the preview dark, so screenshots of the capture screen show no face.
+- Logcat lines for tests and measurements (no image data): `Screen state <phase> <message key>` on each new
+  prompt, `Audit stored <event> <description>` for each stored audit, and `Liveness frame time <workflow>
+  session <n>: frames=… p50=… p95=… max=…` at the end of each attempt (`session.FrameTimer` measures the
+  session's own processing of each frame, not the wait for the camera).
+- The capture screen shows the Offline badge also during a replay.
+- Emulator: the host software renderers (`-gpu swiftshader_indirect`, and `lavapipe` as the `guest` fallback)
+  crashed the emulator with an access violation in generated code every few minutes on ARC's biometric
+  screens (Windows Application log, event 1000). `-gpu host` did not crash; `scripts/android-run-emulator.sh`
+  now defaults to `auto`.

@@ -83,6 +83,8 @@ public final class ArcAuditSink implements AuditSink {
         try {
             auditManagerService.auditWithArguments(toAuditEvent(event.eventId()), Components.LIVENESS.getId(),
                     Components.LIVENESS.getName(), event.descriptionJson());
+            // The description carries workflow, session, buckets and reason codes only (no image, no raw score).
+            Log.i(TAG, "Audit stored " + event.eventId().id() + " " + event.descriptionJson());
         } catch (RuntimeException e) {
             Log.e(TAG, "Liveness audit " + event.eventId().id() + " could not be stored: "
                     + e.getClass().getSimpleName());

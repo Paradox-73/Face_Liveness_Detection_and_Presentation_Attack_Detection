@@ -37,6 +37,23 @@ public class FaceCaptureLivenessGateTest {
     }
 
     @Test
+    public void exceptionPhotoIsKeptApartFromTheFaceCapture() {
+        String photo = FaceCaptureLivenessGate.exceptionPhotoField(FIELD);
+        assertEquals(Workflow.EXCEPTION_PHOTO, FaceCaptureLivenessGate.workflowFor(photo));
+        assertFalse(gate.isRequired(photo));
+        assertTrue(gate.takesExceptionPhotos());
+        gate.record(RID, FIELD, failure(FailureReason.PAD, 3, false));
+        assertEquals(CaptureOutcome.Status.BLOCKED, gate.lastOutcome(FIELD).status());
+        assertNull(gate.admit(RID, photo));
+        LivenessCaptureResult photoOnly = LivenessCaptureResult.builder(Workflow.EXCEPTION_PHOTO, Decision.PASS)
+                .reasonCodes(java.util.Collections.singletonList(
+                        LivenessCaptureResult.REASON_LIVENESS_NOT_REQUIRED)).build();
+        assertFalse(photoOnly.isLivenessChecked());
+        assertEquals(CaptureOutcome.Status.PASSED, gate.record(RID, photo, photoOnly).status());
+        assertEquals(CaptureOutcome.Status.BLOCKED, gate.lastOutcome(FIELD).status());
+    }
+
+    @Test
     public void passIsReportedAndStartsNothingBlocked() {
         assertNull(gate.admit(RID, FIELD));
         CaptureOutcome outcome = gate.record(RID, FIELD, pass());
@@ -58,7 +75,9 @@ public class FaceCaptureLivenessGateTest {
     @Test
     public void closingTheScreenDoesNotResetTheAttemptLimit() {
         gate.record(RID, FIELD, failure(FailureReason.BELOW_THRESHOLD, 2, true));
-        CaptureOutcome third = gate.record(RID, FIELD, failure(FailureReason.ACTIVE, 1, true));
+        assertEquals("the next screen continues the count", 2, gate.usedAttempts(RID, FIELD));
+        // The next screen was started with 2 prior attempts, so it reports 3 used.
+        CaptureOutcome third = gate.record(RID, FIELD, failure(FailureReason.ACTIVE, 3, false));
 
         assertEquals(CaptureOutcome.Status.BLOCKED, third.status());
         assertEquals(MessageKeys.RETRY_MAX_RESIDENT, third.messageKey());

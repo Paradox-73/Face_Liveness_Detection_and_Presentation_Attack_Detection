@@ -97,6 +97,7 @@ public class FaceAuthenticatorTest {
         assertEquals(1, outcome.attemptsUsed());
         assertEquals(3, outcome.maxAttempts());
         assertTrue(Arrays.equals(PROBE, probesSeen.get(0)));
+        assertTrue("the signed capture is kept for the packet", outcome.capture().isPresent());
     }
 
     @Test
@@ -104,6 +105,7 @@ public class FaceAuthenticatorTest {
         nextMatch = FaceMatch.compared(12, 40);
         FaceAuthOutcome outcome = authenticator.complete("officer1", Workflow.LOGIN_AUTH, pass());
         assertEquals(FaceAuthStatus.FACE_MISMATCH, outcome.status());
+        assertFalse("no capture is kept after a mismatch", outcome.capture().isPresent());
         assertEquals(1, directory.failures);
 
         authenticator.complete("officer1", Workflow.PACKET_AUTH, pass());

@@ -567,6 +567,23 @@ public class RegistrationServiceImplTest {
     }
 
     @Test
+    public void testAddLivenessMetaInfo() {
+        BiometricsDto face = new BiometricsDto();
+        java.util.Map<String, String> evidence = new java.util.HashMap<>();
+        evidence.put("LIVENESS_DECISION", "PASS");
+        evidence.put("LIVENESS_METHOD", "PASSIVE_ACTIVE");
+        face.setLivenessEvidence(evidence);
+        java.util.Map<String, Object> meta = new java.util.HashMap<>();
+        RegistrationServiceImpl.addLivenessMetaInfo(meta, face);
+        assertEquals("PASS", meta.get("livenessDecision"));
+        assertEquals("PASSIVE_ACTIVE", meta.get("livenessMethod"));
+
+        java.util.Map<String, Object> other = new java.util.HashMap<>();
+        RegistrationServiceImpl.addLivenessMetaInfo(other, new BiometricsDto());
+        assertTrue(other.isEmpty());
+    }
+
+    @Test
     // Test for buildBIR with EXCEPTION_PHOTO modality
     public void testBuildBIR_ExceptionPhoto() {
         BiometricsDto biometricsDto = new BiometricsDto();

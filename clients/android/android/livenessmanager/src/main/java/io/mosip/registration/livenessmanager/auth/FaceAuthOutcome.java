@@ -1,12 +1,15 @@
 package io.mosip.registration.livenessmanager.auth;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import io.mosip.liveness.core.Workflow;
+import io.mosip.registration.livenessmanager.LivenessCaptureResult;
 
 /**
  * Result of one face authentication: the status, the engine message key to show (when the engine has a message
- * for the case) and the attempts. Carries no score, image or template.
+ * for the case) and the attempts. Carries no score or template; a successful authentication keeps the signed
+ * capture, so the caller can put the operator's face with its liveness evidence into the packet.
  */
 public final class FaceAuthOutcome {
 
@@ -15,6 +18,7 @@ public final class FaceAuthOutcome {
     private final String messageKey;
     private final int attemptsUsed;
     private final int maxAttempts;
+    private final LivenessCaptureResult capture;
 
     /**
      * Creates an outcome.
@@ -28,6 +32,12 @@ public final class FaceAuthOutcome {
      */
     public FaceAuthOutcome(Workflow workflow, FaceAuthStatus status, String messageKey, int attemptsUsed,
                            int maxAttempts) {
+        this(workflow, status, messageKey, attemptsUsed, maxAttempts, null);
+    }
+
+    private FaceAuthOutcome(Workflow workflow, FaceAuthStatus status, String messageKey, int attemptsUsed,
+                            int maxAttempts, LivenessCaptureResult capture) {
+        this.capture = capture;
         this.workflow = Objects.requireNonNull(workflow, "workflow");
         this.status = Objects.requireNonNull(status, "status");
         this.messageKey = messageKey;
@@ -45,6 +55,25 @@ public final class FaceAuthOutcome {
      */
     public static FaceAuthOutcome early(Workflow workflow, FaceAuthStatus status, String messageKey) {
         return new FaceAuthOutcome(workflow, status, messageKey, 0, 0);
+    }
+
+    /**
+     * Returns a copy that keeps the signed capture of a successful authentication.
+     *
+     * @param result the capture screen's passing result
+     * @return the copy
+     */
+    public FaceAuthOutcome withCapture(LivenessCaptureResult result) {
+        return new FaceAuthOutcome(workflow, status, messageKey, attemptsUsed, maxAttempts, result);
+    }
+
+    /**
+     * Returns the signed capture of a successful authentication.
+     *
+     * @return the capture (ISO face, SBI response, liveness evidence); empty for any other outcome
+     */
+    public Optional<LivenessCaptureResult> capture() {
+        return isSuccess() ? Optional.ofNullable(capture) : Optional.empty();
     }
 
     /**

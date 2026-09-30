@@ -1,0 +1,17 @@
+09-30 09:50:22.164 I/Liveness( 8563): Liveness frame time login_auth session 1: frames=8 p50=224.6ms p95=904.3ms max=904.3ms
+09-30 09:51:23.787 I/Liveness( 8986): Liveness frame time login_auth session 1: frames=186 p50=40.3ms p95=123.4ms max=1133.9ms
+09-30 09:51:47.235 I/Liveness( 8986): Liveness frame time login_auth session 1: frames=92 p50=52.1ms p95=155.7ms max=441.9ms
+09-30 09:55:23.440 I/Liveness( 9603): Liveness frame time registration session 2: frames=8 p50=51.7ms p95=422.0ms max=422.0ms
+09-30 09:55:41.677 I/Liveness( 9603): Liveness frame time registration session 3: frames=99 p50=48.2ms p95=105.5ms max=174.2ms
+09-30 09:56:42.133 I/Liveness( 9603): Liveness frame time packet_auth session 1: frames=8 p50=217.0ms p95=283.9ms max=283.9ms
+09-30 10:00:24.322 I/Liveness(11881): Liveness frame time registration session 1: frames=8 p50=279.5ms p95=1009.7ms max=1009.7ms
+09-30 10:06:43.011 I/Liveness(14461): Liveness frame time login_auth session 1: frames=8 p50=180.4ms p95=685.3ms max=685.3ms
+09-30 10:07:55.983 I/Liveness(14461): Liveness frame time eod_auth session 1: frames=98 p50=43.3ms p95=211.3ms max=611.4ms
+09-30 10:08:18.338 I/Liveness(14461): Liveness frame time eod_auth session 1: frames=8 p50=146.6ms p95=318.6ms max=318.6ms
+09-30 10:12:53.644 I/Liveness(15797): Liveness frame time registration session 1: frames=78 p50=44.2ms p95=322.2ms max=1157.0ms
+09-30 10:13:53.228 I/Liveness(15797): Liveness frame time packet_auth session 1: frames=8 p50=179.9ms p95=685.4ms max=685.4ms
+09-30 10:18:11.251 I/Liveness(18231): Liveness frame time registration session 1: frames=98 p50=44.2ms p95=184.1ms max=1176.1ms
+09-30 10:19:12.164 I/Liveness(18231): Liveness frame time packet_auth session 1: frames=8 p50=268.7ms p95=439.8ms max=439.8ms
+09-30 10:20:10.187 I/Liveness(20194): Liveness frame time login_auth session 1: frames=8 p50=179.7ms p95=834.6ms max=834.6ms
+09-30 10:21:39.498 I/Liveness(20194): Liveness frame time eod_auth session 1: frames=8 p50=216.3ms p95=732.2ms max=732.2ms
+09-30 10:22:04.364 I/Liveness(20194): Liveness frame time eod_auth session 1: frames=8 p50=149.9ms p95=351.7ms max=351.7ms

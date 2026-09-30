@@ -35,6 +35,24 @@ public final class LivenessCaptureRequest {
     public static final String EXTRA_REPLAY = "liveness.replay";
     /** Extra: replay frames per second (debug builds only). */
     public static final String EXTRA_REPLAY_FPS = "liveness.replay_fps";
+    /**
+     * Extra: {@code true} makes the replay answer challenge prompts: the pack name is then a prefix, and the
+     * packs {@code <prefix>-main}, {@code -blink}, {@code -smile}, {@code -turn-left}, {@code -turn-right} are
+     * played as the prompts ask (debug builds only).
+     */
+    public static final String EXTRA_REPLAY_FOLLOW = "liveness.replay_follow";
+    /**
+     * Extra: {@code true} hides the replayed frames on the screen (the preview stays dark, like the masked
+     * snapshots of the desktop end-to-end run), so screenshots show no face (debug builds only).
+     */
+    public static final String EXTRA_REPLAY_MASKED = "liveness.replay_masked";
+    /**
+     * Extra: {@code true} asks for a signed photo without a liveness check when the workflow's liveness policy is
+     * {@code OFF}, instead of closing the screen at once (the exception photo taken with the built-in camera).
+     */
+    public static final String EXTRA_PHOTO_WHEN_OFF = "liveness.photo_when_off";
+    /** Extra: attempts the subject already used for this capture on earlier screens (resident capture). */
+    public static final String EXTRA_PRIOR_ATTEMPTS = "liveness.prior_attempts";
     /** Extra: prefix of configuration values that replace synced ones (debug builds only). */
     public static final String EXTRA_CONFIG_PREFIX = "config.";
 
@@ -52,6 +70,10 @@ public final class LivenessCaptureRequest {
     private final Source source;
     private final String replayPack;
     private final int replayFps;
+    private final boolean replayFollow;
+    private final boolean replayMasked;
+    private final boolean photoWhenOff;
+    private final int priorAttempts;
     private final Map<String, String> configOverrides;
 
     private LivenessCaptureRequest(Builder b) {
@@ -61,6 +83,10 @@ public final class LivenessCaptureRequest {
         this.source = b.source;
         this.replayPack = b.replayPack;
         this.replayFps = b.replayFps;
+        this.replayFollow = b.replayFollow;
+        this.replayMasked = b.replayMasked;
+        this.photoWhenOff = b.photoWhenOff;
+        this.priorAttempts = b.priorAttempts;
         this.configOverrides = Collections.unmodifiableMap(new LinkedHashMap<>(b.configOverrides));
     }
 
@@ -88,9 +114,13 @@ public final class LivenessCaptureRequest {
         }
         Workflow workflow = Workflow.fromId(extras.getString(EXTRA_WORKFLOW, "")).orElse(Workflow.REGISTRATION);
         Builder b = builder(workflow, extras.getString(EXTRA_SUBJECT, ""))
-                .language(extras.getString(EXTRA_LANGUAGE, "eng"));
+                .language(extras.getString(EXTRA_LANGUAGE, "eng"))
+                .photoWhenOff(parseBoolean(extras.get(EXTRA_PHOTO_WHEN_OFF)))
+                .priorAttempts(parseInt(extras.get(EXTRA_PRIOR_ATTEMPTS), 0));
         if ("replay".equalsIgnoreCase(extras.getString(EXTRA_SOURCE, ""))) {
             b.replay(extras.getString(EXTRA_REPLAY, ""), parseInt(extras.get(EXTRA_REPLAY_FPS), 15));
+            b.replayFollow(parseBoolean(extras.get(EXTRA_REPLAY_FOLLOW)));
+            b.replayMasked(parseBoolean(extras.get(EXTRA_REPLAY_MASKED)));
         }
         for (String key : extras.keySet()) {
             if (key.startsWith(EXTRA_CONFIG_PREFIX)) {
@@ -113,10 +143,14 @@ public final class LivenessCaptureRequest {
         intent.putExtra(EXTRA_WORKFLOW, workflow.id());
         intent.putExtra(EXTRA_SUBJECT, subjectRef);
         intent.putExtra(EXTRA_LANGUAGE, language);
+        intent.putExtra(EXTRA_PHOTO_WHEN_OFF, photoWhenOff);
+        intent.putExtra(EXTRA_PRIOR_ATTEMPTS, priorAttempts);
         if (source == Source.REPLAY) {
             intent.putExtra(EXTRA_SOURCE, "replay");
             intent.putExtra(EXTRA_REPLAY, replayPack);
             intent.putExtra(EXTRA_REPLAY_FPS, replayFps);
+            intent.putExtra(EXTRA_REPLAY_FOLLOW, replayFollow);
+            intent.putExtra(EXTRA_REPLAY_MASKED, replayMasked);
         }
         for (Map.Entry<String, String> e : configOverrides.entrySet()) {
             intent.putExtra(EXTRA_CONFIG_PREFIX + e.getKey(), e.getValue());
@@ -179,6 +213,42 @@ public final class LivenessCaptureRequest {
     }
 
     /**
+     * Tells whether the replay answers challenge prompts ({@link #EXTRA_REPLAY_FOLLOW}).
+     *
+     * @return {@code true} when {@link #replayPack()} is a prefix of prompt-following packs
+     */
+    public boolean isReplayFollow() {
+        return replayFollow;
+    }
+
+    /**
+     * Tells whether replayed frames are hidden on the screen ({@link #EXTRA_REPLAY_MASKED}).
+     *
+     * @return {@code true} when the preview stays dark
+     */
+    public boolean isReplayMasked() {
+        return replayMasked;
+    }
+
+    /**
+     * Tells whether the screen takes a signed photo without liveness when the policy is {@code OFF}.
+     *
+     * @return {@code true} for the exception photo
+     */
+    public boolean isPhotoWhenOff() {
+        return photoWhenOff;
+    }
+
+    /**
+     * Returns the attempts the subject already used for this capture on earlier screens.
+     *
+     * @return 0 or more
+     */
+    public int priorAttempts() {
+        return priorAttempts;
+    }
+
+    /**
      * Returns configuration values that replace synced ones. Only debug builds apply them.
      *
      * @return key-value pairs
@@ -199,7 +269,12 @@ public final class LivenessCaptureRequest {
     @Override
     public String toString() {
         return "LivenessCaptureRequest[" + workflow.id() + ", lang=" + language + ", source=" + source
-                + (source == Source.REPLAY ? ":" + replayPack : "") + "]";
+                + (source == Source.REPLAY ? ":" + replayPack + (replayFollow ? " (follows prompts)" : "") : "")
+                + "]";
+    }
+
+    private static boolean parseBoolean(Object value) {
+        return value instanceof Boolean ? (Boolean) value : Boolean.parseBoolean(String.valueOf(value).trim());
     }
 
     private static int parseInt(Object value, int fallback) {
@@ -222,6 +297,10 @@ public final class LivenessCaptureRequest {
         private Source source = Source.CAMERA;
         private String replayPack = "";
         private int replayFps = 15;
+        private boolean replayFollow;
+        private boolean replayMasked;
+        private boolean photoWhenOff;
+        private int priorAttempts;
         private final Map<String, String> configOverrides = new LinkedHashMap<>();
 
         private Builder(Workflow workflow, String subjectRef) {
@@ -254,6 +333,53 @@ public final class LivenessCaptureRequest {
             this.source = Source.REPLAY;
             this.replayPack = pack == null ? "" : pack.trim();
             this.replayFps = Math.max(1, Math.min(60, fps));
+            return this;
+        }
+
+        /**
+         * Makes the replay answer challenge prompts; {@link #replay(String, int)} then names the pack prefix
+         * (debug builds only).
+         *
+         * @param follow {@code true} to follow prompts
+         * @return this builder
+         */
+        public Builder replayFollow(boolean follow) {
+            this.replayFollow = follow;
+            return this;
+        }
+
+        /**
+         * Hides the replayed frames on the screen, for screenshots without a face (debug builds only).
+         *
+         * @param masked {@code true} to keep the preview dark
+         * @return this builder
+         */
+        public Builder replayMasked(boolean masked) {
+            this.replayMasked = masked;
+            return this;
+        }
+
+        /**
+         * Asks for a signed photo without a liveness check when the workflow's liveness policy is {@code OFF}
+         * (the exception photo); by default the screen closes with {@code CANCELLED} in that case.
+         *
+         * @param photo {@code true} to take the photo
+         * @return this builder
+         */
+        public Builder photoWhenOff(boolean photo) {
+            this.photoWhenOff = photo;
+            return this;
+        }
+
+        /**
+         * Sets the attempts the subject already used for this capture on earlier screens, so the screen continues
+         * the count ("Attempt 2 of 3") instead of starting again.
+         *
+         * @param attempts 0 or more
+         * @return this builder
+         */
+        public Builder priorAttempts(int attempts) {
+            this.priorAttempts = Math.max(0, attempts);
             return this;
         }
 

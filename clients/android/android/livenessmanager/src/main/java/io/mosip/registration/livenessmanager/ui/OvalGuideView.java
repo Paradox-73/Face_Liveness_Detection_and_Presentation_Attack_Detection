@@ -17,6 +17,8 @@ import io.mosip.liveness.core.ui.Severity;
  */
 public final class OvalGuideView extends View {
 
+    private static final int PROGRESS_COLOR = 0xFF4FC3F7;
+
     /** Largest oval width as a share of the view width. */
     static final float OVAL_WIDTH = 0.70f;
     /** Oval height as a multiple of its width (a face is about 1.3 times taller than wide). */
@@ -49,7 +51,7 @@ public final class OvalGuideView extends View {
         progressPaint.setStyle(Paint.Style.STROKE);
         progressPaint.setStrokeWidth(8 * density);
         progressPaint.setStrokeCap(Paint.Cap.ROUND);
-        progressPaint.setColor(0xFF4FC3F7);
+        progressPaint.setColor(PROGRESS_COLOR);
         setSeverity(Severity.INFO);
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
     }
@@ -76,6 +78,8 @@ public final class OvalGuideView extends View {
                 break;
         }
         outline.setColor(color);
+        // A finished progress arc covers the outline; on success it turns green with it.
+        progressPaint.setColor(severity == Severity.SUCCESS ? color : PROGRESS_COLOR);
         invalidate();
     }
 

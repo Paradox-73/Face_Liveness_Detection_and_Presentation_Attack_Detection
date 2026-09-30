@@ -15,6 +15,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import io.mosip.liveness.core.Clock;
@@ -31,14 +32,21 @@ import io.mosip.liveness.core.image.PixelFormat;
  * Plays a folder of JPEG or PNG frames as a camera stream, for automated tests and emulator demos in place of a
  * person in front of the camera. Frames are sent in file-name order at a fixed rate on one background thread;
  * with {@code loop} the sequence repeats until the source is closed, otherwise the stream ends with
- * {@link EndReason#END_OF_STREAM}.
+ * {@link EndReason#END_OF_STREAM}. {@link #switchTo(List)} replaces the sequence while the stream runs, the way a
+ * person in front of the camera starts a movement when prompted, and {@link #switchBack()} returns to the first
+ * sequence where it was left (see {@link ReplayPromptFollower}). Resuming matters: a recorded clip that restarts
+ * from its first frame repeats itself, which the engine's loop check rightly reports as a replayed video.
  *
  * <p>Only debug builds offer it on the capture screen (developer setting); release builds always use the camera.
  */
 public final class ReplayFrameSource implements FaceFrameSource {
 
-    private final List<byte[]> frames;
-    private final PixelFormat format;
+    /** A switch requested by another thread; a {@code null} list means "back to the first sequence". */
+    private final AtomicReference<Switch> pending = new AtomicReference<>();
+    private final List<byte[]> initial;
+    private int initialIndex;
+    private List<byte[]> frames;
+    private PixelFormat format;
     private final int fps;
     private final boolean loop;
     private final Clock clock;
@@ -67,7 +75,8 @@ public final class ReplayFrameSource implements FaceFrameSource {
         if (fps < 1 || fps > 60) {
             throw new IllegalArgumentException("fps must be 1-60: " + fps);
         }
-        this.frames = Collections.unmodifiableList(new ArrayList<>(frames));
+        this.initial = Collections.unmodifiableList(new ArrayList<>(frames));
+        this.frames = initial;
         this.format = isPng(frames.get(0)) ? PixelFormat.PNG : PixelFormat.JPEG;
         this.fps = fps;
         this.loop = loop;
@@ -127,6 +136,26 @@ public final class ReplayFrameSource implements FaceFrameSource {
         return requireFrames(out, folder.getName());
     }
 
+    /**
+     * Replaces the sequence being played. The new frames start with the next frame the stream sends; with
+     * {@code loop} they repeat until the next switch. Safe from any thread.
+     *
+     * @param replacement encoded frames (JPEG or PNG); not copied, not modified
+     */
+    public void switchTo(List<byte[]> replacement) {
+        if (replacement == null || replacement.isEmpty()) {
+            throw new IllegalArgumentException("replay needs at least one frame");
+        }
+        pending.set(new Switch(Collections.unmodifiableList(new ArrayList<>(replacement))));
+    }
+
+    /**
+     * Returns to the sequence the source started with, at the frame where it was left. Safe from any thread.
+     */
+    public void switchBack() {
+        pending.set(new Switch(null));
+    }
+
     @Override
     public void start(FrameSink sink) {
         Objects.requireNonNull(sink, "sink");
@@ -159,6 +188,15 @@ public final class ReplayFrameSource implements FaceFrameSource {
         long next = System.nanoTime();
         int index = 0;
         while (!closed.get()) {
+            Switch change = pending.getAndSet(null);
+            if (change != null) {
+                if (frames == initial) {
+                    initialIndex = index;
+                }
+                frames = change.frames == null ? initial : change.frames;
+                index = change.frames == null ? initialIndex : 0;
+                format = isPng(frames.get(0)) ? PixelFormat.PNG : PixelFormat.JPEG;
+            }
             if (index == frames.size()) {
                 if (!loop) {
                     sink.onEnd(EndReason.END_OF_STREAM);
@@ -183,6 +221,15 @@ public final class ReplayFrameSource implements FaceFrameSource {
                     return;
                 }
             }
+        }
+    }
+
+    /** A requested change of sequence. */
+    private static final class Switch {
+        final List<byte[]> frames;
+
+        Switch(List<byte[]> frames) {
+            this.frames = frames;
         }
     }
 

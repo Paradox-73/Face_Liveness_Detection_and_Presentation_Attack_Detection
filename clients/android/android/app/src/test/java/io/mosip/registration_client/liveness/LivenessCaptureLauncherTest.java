@@ -105,6 +105,23 @@ public class LivenessCaptureLauncherTest {
         assertEquals(15, DebugReplay.parse("pack fast").fps);
         assertNull(DebugReplay.parse("  "));
         assertNull(DebugReplay.parse(null));
+        assertFalse(s.follow);
+    }
+
+    @Test
+    public void promptFollowingReplayLineIsParsed() {
+        DebugReplay.Selection s = DebugReplay.parse("follow s3n 12");
+        assertEquals("s3n", s.pack);
+        assertEquals(12, s.fps);
+        assertTrue(s.follow);
+        assertEquals(15, DebugReplay.parse("follow s3n").fps);
+        assertEquals("follow", DebugReplay.parse("follow  ").pack);
+        assertFalse(s.masked);
+        DebugReplay.Selection masked = DebugReplay.parse("follow s3n 10 masked");
+        assertTrue(masked.masked);
+        assertEquals(10, masked.fps);
+        assertTrue(DebugReplay.parse("s3-main masked").masked);
+        assertEquals(15, DebugReplay.parse("s3-main masked").fps);
     }
 
     /** An activity whose capture screen cannot be found. */

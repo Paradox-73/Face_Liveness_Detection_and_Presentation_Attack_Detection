@@ -85,7 +85,7 @@ public class LivenessApiTest {
                 (probe, gallery) -> FaceMatch.compared(75, 40));
         gate = new FaceCaptureLivenessGate(liveness.service());
         api = new LivenessApi(liveness.service(), gate, new FaceAuthFlow(authenticator, launcher), launcher,
-                new KeyEchoMessages(), new RecordingAudit());
+                new KeyEchoMessages(), new RecordingAudit(), null);
         api.setCallbackActivity(activity);
     }
 

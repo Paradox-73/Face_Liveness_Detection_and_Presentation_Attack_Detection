@@ -41,6 +41,10 @@ afterEvaluate {
     }
 }
 
+// ARC_ABIS (comma list, for example "arm64-v8a") limits the CPU types packed into the APK. ONNX Runtime and
+// Flutter add about 60 MB of native code per CPU type, so a build for one tablet type is much smaller.
+def arcAbis = (System.getenv('ARC_ABIS') ?: '').split(',').collect { it.trim() }.findAll { it }
+
 android {
     namespace 'io.mosip.registration_client'
     lintOptions {
@@ -95,7 +99,7 @@ android {
             // ONNX Runtime ships about 30 MB of native code per CPU type; debug builds keep a
             // 64-bit device (arm64-v8a) and the x86_64 emulator only.
             ndk {
-                abiFilters 'arm64-v8a', 'x86_64'
+                abiFilters(*(arcAbis ?: ['arm64-v8a', 'x86_64']))
             }
         }
         release {
@@ -109,7 +113,7 @@ android {
             shrinkResources false
             signingConfig localProperties['storeFile'] ? signingConfigs.release : signingConfigs.debug
             ndk {
-                abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64', 'x86'
+                abiFilters(*(arcAbis ?: ['arm64-v8a', 'armeabi-v7a', 'x86_64', 'x86']))
                 // architectures: 'armeabi-v7a', 'arm64-v8a', 'armeabi', 'x86', 'x86_64'
             }
         }
@@ -150,6 +154,15 @@ tasks.register("jacocoTestReport", JacocoReport) {
 }
 flutter {
     source '../..'
+}
+
+// Release APKs store the native libraries compressed (Flutter, ONNX Runtime, SQLCipher: about a third of the
+// download for one CPU type); Android extracts them at install time. Debug APKs keep them uncompressed for
+// faster installs while developing.
+androidComponents {
+    onVariants(selector().withBuildType('release')) { variant ->
+        variant.packaging.jniLibs.useLegacyPackaging.set(true)
+    }
 }
 
 dependencies {

@@ -117,7 +117,8 @@ public final class FaceAuthenticator {
         int used = result.attemptsUsed();
         int max = result.maxAttempts();
         if (result.isPass()) {
-            return match(userId, workflow, result.faceIso(), used, max);
+            FaceAuthOutcome matched = match(userId, workflow, result.faceIso(), used, max);
+            return matched.isSuccess() ? matched.withCapture(result) : matched;
         }
         if (result.isLockRequired()) {
             directory.lock(userId);

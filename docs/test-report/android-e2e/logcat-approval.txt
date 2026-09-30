@@ -1,0 +1,17 @@
+09-30 09:25:23.676 D/Liveness(29127): Enrolled faces: 1 of 3 face rows
+09-30 09:25:23.679 I/Liveness(29127): Debug build: replaying frame pack s3 (following prompts) instead of the camera
+09-30 09:25:23.857 I/Liveness(29127): Screen state STARTING liveness.guide.look_camera
+09-30 09:25:23.870 I/Liveness(29127): Audit stored REG-EVT-LV01 {"workflow":"eod_auth","sessionId":"cae089bf7dd19144f2397a3424ad1852","attempt":"1","deviceSerial":"BUILTIN-0B1E4822-5D3E","certification":"L0","engine":"mosip-onnx-default@1.0.0"}
+09-30 09:25:24.015 I/Liveness(29127): Replay s3-main following prompts [BLINK, SMILE] at 15 fps
+09-30 09:25:25.191 I/Liveness(29127): Screen state CHECKING liveness.status.checking
+09-30 09:25:25.779 I/Liveness(29127): Audit stored REG-EVT-LV02 {"workflow":"eod_auth","sessionId":"cae089bf7dd19144f2397a3424ad1852","scoreBucket":"90-100","frames":"8","ms":"1903"}
+09-30 09:25:25.779 I/Liveness(29127): Screen state HOLD_STILL liveness.feedback.hold_still
+09-30 09:25:26.518 I/Liveness(29127): Screen state VERIFYING liveness.status.checking
+09-30 09:25:26.741 I/Liveness(29127): Audit stored REG-EVT-LV10 {"workflow":"eod_auth","sessionId":"cae089bf7dd19144f2397a3424ad1852","method":"PASSIVE","totalMs":"2899"}
+09-30 09:25:26.745 I/Liveness(29127): Screen state SUCCESS liveness.feedback.success
+09-30 09:25:26.815 I/Liveness(29127): Liveness attempt ended: LivenessCaptureResult[eod_auth, PASS, reasons=[], attempts=0/3, capture=true]
+09-30 09:25:26.816 I/Liveness(29127): Liveness frame time eod_auth session 1: frames=8 p50=164.6ms p95=363.2ms max=363.2ms
+09-30 09:25:27.839 I/Liveness(29127): Capture screen result OK: LivenessCaptureResult[eod_auth, PASS, reasons=[], attempts=0/3, capture=true]
+09-30 09:25:27.876 I/Liveness(29127): Capture screen returned LivenessCaptureResult[eod_auth, PASS, reasons=[], attempts=0/3, capture=true]
+09-30 09:25:27.877 D/Liveness(29127): Enrolled faces: 1 of 3 face rows
+09-30 09:25:28.247 I/Liveness(29127): Face authentication eod_auth: FaceMatch[MATCHED, score=94, threshold=40]

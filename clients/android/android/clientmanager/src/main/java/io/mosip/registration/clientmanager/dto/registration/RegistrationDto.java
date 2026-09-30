@@ -90,6 +90,8 @@ public class RegistrationDto extends Observable {
     private String applicationId;
     private String additionalInfoRequestId;
     private String captureTransactionId;
+    /** Face of the operator who authenticated this packet with face liveness; written as officer biometrics. */
+    private List<BiometricsDto> officerBiometrics = new ArrayList<>();
 
     public RegistrationDto(@NonNull String rid, @NonNull String flowType, @NonNull String process,
                            @NonNull Double schemaVersion, @NonNull List<String> languages,
@@ -427,6 +429,7 @@ public class RegistrationDto extends Observable {
     }
 
     public void cleanup() {
+        this.officerBiometrics.clear();
         this.demographics.clear();
         this.documents.clear();
         this.biometrics.clear();

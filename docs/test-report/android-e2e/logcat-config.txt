@@ -1,0 +1,46 @@
+09-30 09:29:51.113 I/Liveness(30538): Audit stored REG-EVT-LV15 {"workflow":"registration","sessionId":"","changed":"mosip.registration.liveness.policy.registration"}
+09-30 09:29:51.145 I/Liveness(30538): Debug build: replaying frame pack s3 (following prompts) instead of the camera
+09-30 09:29:51.742 I/Liveness(30538): Screen state STARTING liveness.guide.look_camera
+09-30 09:29:51.789 I/Liveness(30538): Audit stored REG-EVT-LV01 {"workflow":"registration","sessionId":"d464ae46282f032695c55dd157e4f6bc","attempt":"1","deviceSerial":"BUILTIN-0B1E4822-5D3E","certification":"L0","engine":"mosip-onnx-default@1.0.0"}
+09-30 09:29:51.986 I/Liveness(30538): Replay s3-main following prompts [BLINK, SMILE] at 15 fps
+09-30 09:29:55.481 I/Liveness(30538): Audit stored REG-EVT-LV03 {"workflow":"registration","sessionId":"d464ae46282f032695c55dd157e4f6bc","scoreBucket":"90-100","reason":"POLICY"}
+09-30 09:29:55.567 I/Liveness(30538): Screen state CHECKING liveness.status.checking
+09-30 09:29:55.664 I/Liveness(30538): Screen state CHALLENGE liveness.guide.look_camera
+09-30 09:29:56.473 I/Liveness(30538): Screen state CHALLENGE liveness.feedback.continue
+09-30 09:29:56.783 I/Liveness(30538): Audit stored REG-EVT-LV04 {"workflow":"registration","sessionId":"d464ae46282f032695c55dd157e4f6bc","type":"SMILE","index":"0","nonceSha256Prefix":"34e2b31d"}
+09-30 09:29:57.162 I/Liveness(30538): Screen state CHALLENGE liveness.challenge.smile
+09-30 09:29:58.040 I/Liveness(30538): Screen state ACTION_DETECTED liveness.feedback.detected
+09-30 09:29:58.046 I/Liveness(30538): Audit stored REG-EVT-LV05 {"workflow":"registration","sessionId":"d464ae46282f032695c55dd157e4f6bc","type":"SMILE","onsetMs":"1134","holdMs":"332"}
+09-30 09:29:58.665 I/Liveness(30538): Screen state CHALLENGE liveness.guide.look_camera
+09-30 09:29:58.768 I/Liveness(30538): Screen state CHALLENGE liveness.feedback.continue
+09-30 09:30:00.139 I/Liveness(30538): Audit stored REG-EVT-LV04 {"workflow":"registration","sessionId":"d464ae46282f032695c55dd157e4f6bc","type":"SMILE","index":"1","nonceSha256Prefix":"508e0895"}
+09-30 09:30:00.139 I/Liveness(30538): Screen state CHALLENGE liveness.challenge.smile
+09-30 09:30:01.019 I/Liveness(30538): Audit stored REG-EVT-LV05 {"workflow":"registration","sessionId":"d464ae46282f032695c55dd157e4f6bc","type":"SMILE","onsetMs":"596","holdMs":"332"}
+09-30 09:30:01.020 I/Liveness(30538): Screen state ACTION_DETECTED liveness.feedback.detected
+09-30 09:30:01.694 I/Liveness(30538): Screen state HOLD_STILL liveness.feedback.hold_still
+09-30 09:30:01.953 I/Liveness(30538): Screen state VERIFYING liveness.status.checking
+09-30 09:30:02.008 I/Liveness(30538): Audit stored REG-EVT-LV10 {"workflow":"registration","sessionId":"d464ae46282f032695c55dd157e4f6bc","method":"ACTIVE","totalMs":"10215"}
+09-30 09:30:02.011 I/Liveness(30538): Screen state SUCCESS liveness.feedback.success
+09-30 09:30:02.027 I/Liveness(30538): Liveness attempt ended: LivenessCaptureResult[registration, PASS, reasons=[], attempts=0/3, capture=true]
+09-30 09:30:02.028 I/Liveness(30538): Liveness frame time registration session 1: frames=81 p50=45.1ms p95=374.3ms max=1016.9ms
+09-30 09:30:02.938 I/Liveness(30538): Capture screen result OK: LivenessCaptureResult[registration, PASS, reasons=[], attempts=0/3, capture=true]
+09-30 09:30:03.081 I/Liveness(30538): Capture screen returned LivenessCaptureResult[registration, PASS, reasons=[], attempts=0/3, capture=true]
+09-30 09:30:57.685 D/Liveness(30538): Enrolled faces: 1 of 3 face rows
+09-30 09:30:57.689 I/Liveness(30538): Debug build: replaying frame pack s3-main instead of the camera
+09-30 09:30:57.883 I/Liveness(30538): Audit stored REG-EVT-LV01 {"workflow":"packet_auth","sessionId":"3014617d39cba1dc1201d8a506489d83","attempt":"1","deviceSerial":"BUILTIN-0B1E4822-5D3E","certification":"L0","engine":"mosip-onnx-default@1.0.0"}
+09-30 09:30:57.894 I/Liveness(30538): Screen state STARTING liveness.guide.look_camera
+09-30 09:30:57.897 I/Liveness(30538): Replay s3-main: 59 frames at 15 fps
+09-30 09:30:59.611 I/Liveness(30538): Screen state CHECKING liveness.status.checking
+09-30 09:31:00.141 I/Liveness(30538): Audit stored REG-EVT-LV02 {"workflow":"packet_auth","sessionId":"3014617d39cba1dc1201d8a506489d83","scoreBucket":"90-100","frames":"8","ms":"2259"}
+09-30 09:31:00.150 I/Liveness(30538): Screen state HOLD_STILL liveness.feedback.hold_still
+09-30 09:31:00.630 I/Liveness(30538): Screen state VERIFYING liveness.status.checking
+09-30 09:31:00.750 I/Liveness(30538): Audit stored REG-EVT-LV10 {"workflow":"packet_auth","sessionId":"3014617d39cba1dc1201d8a506489d83","method":"PASSIVE","totalMs":"2869"}
+09-30 09:31:00.753 I/Liveness(30538): Screen state SUCCESS liveness.feedback.success
+09-30 09:31:00.773 I/Liveness(30538): Liveness attempt ended: LivenessCaptureResult[packet_auth, PASS, reasons=[], attempts=0/3, capture=true]
+09-30 09:31:00.775 I/Liveness(30538): Liveness frame time packet_auth session 1: frames=8 p50=189.4ms p95=551.3ms max=551.3ms
+09-30 09:31:02.104 I/Liveness(30538): Capture screen result OK: LivenessCaptureResult[packet_auth, PASS, reasons=[], attempts=0/3, capture=true]
+09-30 09:31:02.165 I/Liveness(30538): Capture screen returned LivenessCaptureResult[packet_auth, PASS, reasons=[], attempts=0/3, capture=true]
+09-30 09:31:02.170 D/Liveness(30538): Enrolled faces: 1 of 3 face rows
+09-30 09:31:02.478 I/Liveness(30538): Face authentication packet_auth: FaceMatch[MATCHED, score=98, threshold=40]
+09-30 09:31:02.991 I/Liveness(30538): Operator face kept for the packet: 1 record(s)
+09-30 09:31:10.416 D/RegistrationServiceImpl(30538): Adding biometric to packet manager for field : individualBiometrics

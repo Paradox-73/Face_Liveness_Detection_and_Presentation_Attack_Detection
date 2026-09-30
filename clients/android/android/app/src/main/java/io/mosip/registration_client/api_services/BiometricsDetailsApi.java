@@ -165,28 +165,38 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
     }
 
     /**
-     * Opens the liveness capture screen instead of the SBI intents when this FACE capture requires liveness.
+     * Opens the liveness capture screen instead of the SBI intents when this FACE capture requires liveness, and
+     * for the exception photo when the built-in camera is the tablet's face device (a signed photo, with liveness
+     * only if the {@code exception_photo} policy asks for it).
      *
      * @return {@code true} when the liveness path took over (it completes the Flutter call)
      */
     private boolean startLivenessCapture(BiometricsPigeon.Result<String> result) {
-        if (livenessGate == null || currentModality != Modality.FACE) {
+        if (livenessGate == null) {
             return false;
         }
-        if (!livenessGate.isRequired(fieldId)) {
-            livenessGate.clearOutcome(fieldId);
+        boolean exceptionPhoto = currentModality == Modality.EXCEPTION_PHOTO && livenessGate.takesExceptionPhotos();
+        if (currentModality != Modality.FACE && !exceptionPhoto) {
+            return false;
+        }
+        String gateField = exceptionPhoto ? FaceCaptureLivenessGate.exceptionPhotoField(fieldId) : fieldId;
+        if (!exceptionPhoto && !livenessGate.isRequired(gateField)) {
+            livenessGate.clearOutcome(gateField);
             return false;
         }
         biometricResult = result;
         String subject = livenessSubject();
-        CaptureOutcome blocked = livenessGate.admit(subject, fieldId);
+        CaptureOutcome blocked = livenessGate.admit(subject, gateField);
         if (blocked != null) {
             completeCapture(blocked.status().name());
             return true;
         }
         String captureFieldId = fieldId;
-        boolean started = livenessLauncher.launch(FaceCaptureLivenessGate.workflowFor(captureFieldId), subject,
-                captureResult -> onLivenessCapture(subject, captureFieldId, captureResult));
+        Modality captureModality = currentModality;
+        boolean started = livenessLauncher.launch(FaceCaptureLivenessGate.workflowFor(gateField), subject,
+                exceptionPhoto, livenessGate.usedAttempts(subject, gateField),
+                captureResult -> onLivenessCapture(subject, captureFieldId, gateField,
+                        captureModality, captureResult));
         if (!started) {
             completeCapture("BUSY");
         }
@@ -211,14 +221,15 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
      * Handles the liveness capture screen's result: only a pass is stored, through the same SBI response checks as
      * an external device (signature, DEVICE trust, timestamp, transaction ID), with the liveness evidence attached.
      */
-    private void onLivenessCapture(String subject, String captureFieldId, LivenessCaptureResult captureResult) {
-        CaptureOutcome outcome = livenessGate.record(subject, captureFieldId, captureResult);
+    private void onLivenessCapture(String subject, String captureFieldId, String gateField, Modality modality,
+                                   LivenessCaptureResult captureResult) {
+        CaptureOutcome outcome = livenessGate.record(subject, gateField, captureResult);
         if (!captureResult.isPass() || captureResult.rCaptureResponse() == null) {
             completeCapture(outcome.status().name());
             return;
         }
         this.fieldId = captureFieldId;
-        this.currentModality = Modality.FACE;
+        this.currentModality = modality;
         try {
             if (captureFieldId.equals(OPERATOR_BIOMETRICS)) {
                 userOnboardService.setCaptureTransactionId(captureResult.transactionId());
@@ -232,8 +243,10 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
         }
         InputStream response = new ByteArrayInputStream(
                 captureResult.rCaptureResponse().getBytes(StandardCharsets.UTF_8));
-        if (!parseRCaptureResponse(response, captureResult.evidence())) {
-            livenessGate.recordRejected(captureFieldId);
+        // A photo taken without a liveness check (exception photo, policy OFF) carries no liveness evidence.
+        Map<String, String> evidence = captureResult.isLivenessChecked() ? captureResult.evidence() : null;
+        if (!parseRCaptureResponse(response, evidence)) {
+            livenessGate.recordRejected(gateField);
             completeCapture(CaptureOutcome.Status.FAILED.name());
         }
     }

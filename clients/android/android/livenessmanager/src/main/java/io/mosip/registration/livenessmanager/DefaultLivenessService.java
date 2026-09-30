@@ -6,6 +6,7 @@ import android.content.Intent;
 import java.util.Objects;
 
 import io.mosip.liveness.core.Workflow;
+import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.config.LivenessPolicy;
 import io.mosip.registration.livenessmanager.ui.LivenessCaptureActivity;
 
@@ -53,5 +54,11 @@ public final class DefaultLivenessService implements LivenessService {
     @Override
     public boolean isBuiltInDeviceProvisioned() {
         return runtime.deviceSigner().isProvisioned();
+    }
+
+    @Override
+    public boolean isBuiltInCameraFaceDevice() {
+        return LivenessConfigKeys.DEFAULT_ANDROID_DEVICE.equalsIgnoreCase(runtime.config()
+                .get(LivenessConfigKeys.ANDROID_DEVICE).orElse(LivenessConfigKeys.DEFAULT_ANDROID_DEVICE).trim());
     }
 }

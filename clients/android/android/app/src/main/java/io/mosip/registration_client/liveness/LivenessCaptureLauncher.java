@@ -94,12 +94,28 @@ public class LivenessCaptureLauncher {
      * @return {@code false} when no activity is attached or another capture is open (nothing started)
      */
     public synchronized boolean launch(Workflow workflow, String subjectRef, Callback callback) {
+        return launch(workflow, subjectRef, false, 0, callback);
+    }
+
+    /**
+     * Opens the capture screen.
+     *
+     * @param workflow     the workflow
+     * @param subjectRef   registration ID or user ID
+     * @param photoWhenOff take a signed photo without liveness when the workflow's policy is {@code OFF} (the
+     *                     exception photo) instead of closing at once
+     * @param priorAttempts attempts the subject already used for this capture on earlier screens
+     * @param callback     receives the result
+     * @return {@code false} when no activity is attached or another capture is open (nothing started)
+     */
+    public synchronized boolean launch(Workflow workflow, String subjectRef, boolean photoWhenOff,
+                                       int priorAttempts, Callback callback) {
         if (activity == null || pending != null) {
             Log.w(TAG, "Capture screen not opened: " + (activity == null ? "no activity" : "another capture is open"));
             return false;
         }
         LivenessCaptureRequest.Builder request = LivenessCaptureRequest.builder(workflow, subjectRef)
-                .language(language);
+                .language(language).photoWhenOff(photoWhenOff).priorAttempts(priorAttempts);
         if (BuildConfig.DEBUG) {
             DebugReplay.apply(activity, request);
         }

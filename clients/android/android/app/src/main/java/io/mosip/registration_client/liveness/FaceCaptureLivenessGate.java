@@ -25,6 +25,10 @@ import io.mosip.registration.livenessmanager.LivenessService;
  * reports that no retry is left), face capture stays blocked for that registration; a new registration starts a
  * new count. A pass resets the count. Only a pass stores a face (PS04 task 5).
  *
+ * <p>The exception photo (taken when fingers or irises are marked as exceptions) uses the same screen with the
+ * workflow {@code exception_photo}, counted under its own key ({@link #exceptionPhotoField}): with the shipped
+ * policy {@code OFF} the built-in camera takes a signed photo without a liveness check, as on the desktop client.
+ *
  * <p>Plan section 4.16 allows {@code SUPERVISOR_OVERRIDE} for residents. The built-in camera stores only the
  * frame a passing session selected, so there is no face to store after a failure; ARC therefore treats
  * {@code SUPERVISOR_OVERRIDE} like {@code BLOCK} and shows the recovery message.
@@ -34,6 +38,8 @@ public class FaceCaptureLivenessGate {
 
     /** Field ID of operator onboarding biometrics in ARC. */
     public static final String OPERATOR_FIELD = "operatorBiometrics";
+    /** Suffix of the gate's key for a field's exception photo. */
+    static final String EXCEPTION_PHOTO_SUFFIX = "#exceptionPhoto";
 
     private final LivenessService liveness;
     private final Map<String, Integer> failedAttempts = new HashMap<>();
@@ -56,7 +62,31 @@ public class FaceCaptureLivenessGate {
      * @return {@code onboard_auth} for operator onboarding, else {@code registration}
      */
     public static Workflow workflowFor(String fieldId) {
+        if (fieldId != null && fieldId.endsWith(EXCEPTION_PHOTO_SUFFIX)) {
+            return Workflow.EXCEPTION_PHOTO;
+        }
         return OPERATOR_FIELD.equals(fieldId) ? Workflow.ONBOARD_AUTH : Workflow.REGISTRATION;
+    }
+
+    /**
+     * Returns the gate's key for the exception photo of a field, so its attempts and outcome are kept apart from
+     * the field's face capture.
+     *
+     * @param fieldId ARC field ID
+     * @return the key, whose workflow is {@code exception_photo}
+     */
+    public static String exceptionPhotoField(String fieldId) {
+        return fieldId + EXCEPTION_PHOTO_SUFFIX;
+    }
+
+    /**
+     * Tells whether the built-in camera takes the exception photo (it is the tablet's face device). Otherwise
+     * ARC asks the vendor SBI face app, as upstream.
+     *
+     * @return {@code true} for the built-in camera
+     */
+    public boolean takesExceptionPhotos() {
+        return liveness.isBuiltInCameraFaceDevice();
     }
 
     /**
@@ -88,6 +118,18 @@ public class FaceCaptureLivenessGate {
     }
 
     /**
+     * Returns the attempts the subject already used for this field on earlier capture screens, so the next screen
+     * continues the count.
+     *
+     * @param subject registration ID or operator user ID
+     * @param fieldId ARC field ID
+     * @return failed attempts that count, 0 or more
+     */
+    public synchronized int usedAttempts(String subject, String fieldId) {
+        return failedAttempts.getOrDefault(key(subject, fieldId), 0);
+    }
+
+    /**
      * Records the capture screen's result and returns the outcome to show.
      *
      * @param subject registration ID or operator user ID
@@ -106,7 +148,9 @@ public class FaceCaptureLivenessGate {
         } else {
             FailureReason reason = result.failureReason();
             boolean counts = reason != null && reason.countsAsAttempt();
-            int failed = failedAttempts.getOrDefault(key, 0) + (counts ? result.attemptsUsed() : 0);
+            // The screen reports the attempts of the whole count, including those it was told about.
+            int failed = counts ? Math.max(failedAttempts.getOrDefault(key, 0), result.attemptsUsed())
+                    : failedAttempts.getOrDefault(key, 0);
             failedAttempts.put(key, failed);
             if (counts && (failed >= max || !result.isRetryAllowed())) {
                 failedAttempts.put(key, Math.max(failed, max));

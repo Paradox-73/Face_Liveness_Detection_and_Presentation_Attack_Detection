@@ -50,12 +50,17 @@ public class LivenessServiceTest {
         LivenessService off = service(values);
         assertFalse(off.isEnforced(Workflow.REGISTRATION));
         assertFalse(off.isEnforced(Workflow.EOD_AUTH));
+        assertTrue("the built-in camera is the default face device", off.isBuiltInCameraFaceDevice());
+
+        values.put(LivenessConfigKeys.ANDROID_DEVICE, "SBI");
+        assertFalse(service(values).isBuiltInCameraFaceDevice());
     }
 
     @Test
     public void captureIntentTargetsTheScreenAndCarriesTheRequest() {
         LivenessCaptureRequest request = LivenessCaptureRequest.builder(Workflow.EOD_AUTH, "supervisor1")
-                .language("ara").replay("mockmds-still", 12).configOverride("k", "v").build();
+                .language("ara").replay("mockmds-still", 12).replayFollow(true).replayMasked(true)
+                .photoWhenOff(true).priorAttempts(2).configOverride("k", "v").build();
         Intent intent = service(new HashMap<>()).newCaptureIntent(context, request);
         assertEquals(LivenessCaptureActivity.class.getName(), intent.getComponent().getClassName());
 
@@ -66,6 +71,10 @@ public class LivenessServiceTest {
         assertEquals(LivenessCaptureRequest.Source.REPLAY, back.source());
         assertEquals("mockmds-still", back.replayPack());
         assertEquals(12, back.replayFps());
+        assertTrue(back.isReplayFollow());
+        assertTrue(back.isReplayMasked());
+        assertTrue(back.isPhotoWhenOff());
+        assertEquals(2, back.priorAttempts());
         assertEquals("v", back.configOverrides().get("k"));
         assertTrue(back.isSupervisorFlow());
     }

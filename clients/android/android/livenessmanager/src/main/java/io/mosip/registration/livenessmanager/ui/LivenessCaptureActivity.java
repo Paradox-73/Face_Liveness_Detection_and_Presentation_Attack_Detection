@@ -35,7 +35,9 @@ import com.google.android.material.button.MaterialButton;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 
 import io.mosip.liveness.core.Decision;
@@ -60,7 +62,10 @@ import io.mosip.registration.livenessmanager.config.OverlayConfigSource;
 import io.mosip.registration.livenessmanager.device.BuiltInCameraL0Device;
 import io.mosip.registration.livenessmanager.device.CameraXFrameSource;
 import io.mosip.registration.livenessmanager.device.ReplayFrameSource;
+import io.mosip.registration.livenessmanager.device.ReplayPromptFollower;
+import io.mosip.registration.livenessmanager.session.CaptureRunner;
 import io.mosip.registration.livenessmanager.session.LivenessRunner;
+import io.mosip.registration.livenessmanager.session.PhotoCaptureRunner;
 
 /**
  * The native face capture screen: full-screen camera preview, oval face guide, prompt with icon, challenge step,
@@ -89,10 +94,12 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
     private LivenessRuntime runtime;
     private ConfigSource config;
     private MessageResolver messages;
-    private LivenessRunner runner;
+    private CaptureRunner runner;
     private LivenessCaptureResult lastResult;
     private boolean finishing;
     private String lastPrompt;
+    /** Debug replay that answers challenge prompts; replaced for every attempt's stream. */
+    private volatile ReplayPromptFollower follower;
 
     private PreviewView preview;
     private ImageView replayView;
@@ -130,13 +137,13 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
 
         LivenessPolicy policy = config == runtime.config() ? runtime.resolve(request.workflow()).policy()
                 : new PolicyResolver(config).resolve(request.workflow()).policy();
-        if (!policy.isEnabled()) {
+        if (!policy.isEnabled() && !request.isPhotoWhenOff()) {
             Log.w(TAG, "Liveness is off for " + request.workflow().id() + "; capture screen closed");
             finishWith(Activity.RESULT_CANCELED, LivenessCaptureResult.builder(request.workflow(), Decision.CANCELLED)
                     .failureReason(FailureReason.CANCELLED).build());
             return;
         }
-        runner = createRunner(policy);
+        runner = policy.isEnabled() ? createRunner(policy) : createPhotoRunner();
         if (needsCameraPermission()) {
             requestPermissions(new String[] {Manifest.permission.CAMERA}, PERMISSION_REQUEST);
         } else {
@@ -210,33 +217,26 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
             title.setText(messages.text(MessageKeys.TITLE_SUPERVISOR, null));
         }
         TextView badge = findViewById(R.id.liveness_badge);
+        List<String> labels = new ArrayList<>();
         if (request.source() == LivenessCaptureRequest.Source.REPLAY) {
-            badge.setText(ui.getString(R.string.liveness_ui_replay_badge));
-            badge.setVisibility(View.VISIBLE);
-        } else if (!isOnline()) {
-            badge.setText(messages.text(MessageKeys.OFFLINE_BADGE, null));
+            labels.add(ui.getString(R.string.liveness_ui_replay_badge));
+        }
+        if (!isOnline()) {
+            labels.add(messages.text(MessageKeys.OFFLINE_BADGE, null));
+        }
+        if (!labels.isEmpty()) {
+            badge.setText(String.join("  \u00b7  ", labels));
             badge.setVisibility(View.VISIBLE);
         }
     }
 
     private LivenessRunner createRunner(LivenessPolicy policy) {
-        String serial = runtime.deviceSerial();
-        boolean replay = request.source() == LivenessCaptureRequest.Source.REPLAY;
-        if (replay) {
-            preview.setVisibility(View.GONE);
-            replayView.setVisibility(View.VISIBLE);
-        }
-        androidx.camera.core.Preview.SurfaceProvider surface = preview.getSurfaceProvider();
-        BuiltInCameraL0Device.StreamFactory streams = streamRequest -> replay ? openReplay(serial)
-                : new CameraXFrameSource(this, this, surface, runtime.clock(), serial);
-        BuiltInCameraL0Device device = new BuiltInCameraL0Device(serial,
-                request.workflow().isAuth() ? DevicePurpose.AUTH : DevicePurpose.REGISTRATION, streams,
-                () -> replay || hasCameraPermission(), runtime.decoder(), runtime.deviceSigner(), runtime.clock(),
-                BuildConfig.DEBUG ? "Developer" : "Production");
+        BuiltInCameraL0Device device = createDevice();
         DiagnosticSink diagnostics = policy.isDiagnosticEnabled() ? runtime.diagnostics() : DiagnosticSink.noop();
         String blocked = runtime.isBlockedEmulator() ? MessageKeys.ERROR_EMULATOR : null;
         return new LivenessRunner(policy, request.subjectRef(), runtime.engines(), device, runtime.decoder(),
-                runtime.audit(), diagnostics, runtime.clock(), blocked, new LivenessRunner.Listener() {
+                runtime.audit(), diagnostics, runtime.clock(), blocked, request.priorAttempts(),
+                new LivenessRunner.Listener() {
             @Override
             public void onUiState(LivenessUiState state) {
                 main.post(() -> render(state));
@@ -249,14 +249,80 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
         });
     }
 
+    /** The workflow's liveness is off, but the caller needs a signed photo (the exception photo). */
+    private PhotoCaptureRunner createPhotoRunner() {
+        Log.i(TAG, "Liveness is off for " + request.workflow().id() + "; taking a photo without a liveness check");
+        return new PhotoCaptureRunner(request.workflow(), createDevice(), new LivenessRunner.Listener() {
+            @Override
+            public void onUiState(LivenessUiState state) {
+                main.post(() -> render(state));
+            }
+
+            @Override
+            public void onAttemptEnded(LivenessCaptureResult result) {
+                main.post(() -> attemptEnded(result));
+            }
+        });
+    }
+
+    /** The built-in camera as an SBI L0 face device, streaming from CameraX or (debug builds) a replay pack. */
+    private BuiltInCameraL0Device createDevice() {
+        String serial = runtime.deviceSerial();
+        boolean replay = request.source() == LivenessCaptureRequest.Source.REPLAY;
+        if (replay) {
+            preview.setVisibility(View.GONE);
+            replayView.setVisibility(View.VISIBLE);
+        }
+        androidx.camera.core.Preview.SurfaceProvider surface = preview.getSurfaceProvider();
+        BuiltInCameraL0Device.StreamFactory streams = streamRequest -> replay ? openReplay(serial)
+                : new CameraXFrameSource(this, this, surface, runtime.clock(), serial);
+        return new BuiltInCameraL0Device(serial,
+                request.workflow().isAuth() ? DevicePurpose.AUTH : DevicePurpose.REGISTRATION, streams,
+                () -> replay || hasCameraPermission(), runtime.decoder(), runtime.deviceSigner(), runtime.clock(),
+                BuildConfig.DEBUG ? "Developer" : "Production");
+    }
+
     private FaceFrameSource openReplay(String serial) throws io.mosip.liveness.core.device.DeviceException {
         String pack = request.replayPack().isEmpty() ? "mockmds-still" : request.replayPack();
-        File external = getExternalFilesDir(REPLAY_ASSETS);
-        File folder = external == null ? null : new File(external, pack);
-        List<byte[]> frames = folder != null && folder.isDirectory() ? ReplayFrameSource.readDirectory(folder)
-                : ReplayFrameSource.readAssets(getAssets(), REPLAY_ASSETS + "/" + pack);
+        if (request.isReplayFollow()) {
+            return openFollowingReplay(serial, pack);
+        }
+        List<byte[]> frames = readPack(pack);
         Log.i(TAG, "Replay " + pack + ": " + frames.size() + " frames at " + request.replayFps() + " fps");
         return new ReplayFrameSource(frames, request.replayFps(), true, runtime.clock(), serial, this::showReplayFrame);
+    }
+
+    /** Replays {@code <prefix>-main} and switches to the movement packs when the screen prompts for them. */
+    private FaceFrameSource openFollowingReplay(String serial, String prefix)
+            throws io.mosip.liveness.core.device.DeviceException {
+        List<byte[]> neutral = readPack(prefix + "-main");
+        Map<PromptIcon, List<byte[]>> movements = new EnumMap<>(PromptIcon.class);
+        String[][] names = {{"BLINK", "blink"}, {"SMILE", "smile"}, {"TURN_LEFT", "turn-left"},
+                {"TURN_RIGHT", "turn-right"}};
+        for (String[] n : names) {
+            File folder = replayFolder(prefix + "-" + n[1]);
+            if (folder != null && folder.isDirectory()) {
+                movements.put(PromptIcon.valueOf(n[0]), ReplayFrameSource.readDirectory(folder));
+            }
+        }
+        ReplayFrameSource source = new ReplayFrameSource(neutral, request.replayFps(), true, runtime.clock(), serial,
+                this::showReplayFrame);
+        follower = new ReplayPromptFollower(source, neutral, movements, main::postDelayed,
+                ReplayPromptFollower.DEFAULT_REACTION_MS);
+        Log.i(TAG, "Replay " + prefix + "-main following prompts " + movements.keySet() + " at "
+                + request.replayFps() + " fps");
+        return source;
+    }
+
+    private List<byte[]> readPack(String pack) throws io.mosip.liveness.core.device.DeviceException {
+        File folder = replayFolder(pack);
+        return folder != null && folder.isDirectory() ? ReplayFrameSource.readDirectory(folder)
+                : ReplayFrameSource.readAssets(getAssets(), REPLAY_ASSETS + "/" + pack);
+    }
+
+    private File replayFolder(String pack) {
+        File external = getExternalFilesDir(REPLAY_ASSETS);
+        return external == null ? null : new File(external, pack);
     }
 
     /**
@@ -279,11 +345,17 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
         if (finishing) {
             return;
         }
+        ReplayPromptFollower f = follower;
+        if (f != null) {
+            f.onPrompt(state.promptIcon());
+        }
         String text = messages.text(state.messageKey(), state.args());
         prompt.setText(text);
         if (!text.equals(lastPrompt)) {
             lastPrompt = text;
             prompt.announceForAccessibility(text);
+            // State changes in Logcat let tests and demos follow the screen (message key only, no image data).
+            Log.i(TAG, "Screen state " + state.phase() + " " + state.messageKey());
         }
         List<String> lines = new ArrayList<>();
         for (String key : state.guidanceKeys()) {
@@ -369,6 +441,9 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
     }
 
     private void showReplayFrame(byte[] jpeg) {
+        if (request.isReplayMasked()) {
+            return;
+        }
         Bitmap bitmap = BitmapFactory.decodeByteArray(jpeg, 0, jpeg.length);
         if (bitmap != null) {
             main.post(() -> {

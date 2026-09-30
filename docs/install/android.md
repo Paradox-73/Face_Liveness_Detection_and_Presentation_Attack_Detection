@@ -47,7 +47,15 @@ bash scripts/android-build.sh --server-url http://10.0.2.2:8080   # another debu
 bash scripts/android-build.sh --server-url ""       # keep the upstream sandbox URL
 bash scripts/android-build.sh --skip-codegen        # reuse generated code from the last run
 bash scripts/android-build.sh --test-only           # only the unit tests
+bash scripts/android-build.sh --abis x86_64         # only the emulator's CPU type (smaller APK)
+bash scripts/android-build.sh --release --abis arm64-v8a   # release APK for arm64 tablets (size check)
 ```
+
+`--test` runs the unit tests of `clientmanager`, `livenessmanager` and `app`.
+`--abis` (or the environment variable `ARC_ABIS`, read by `android/app/build.gradle`) limits the CPU types packed
+into the APK; each one adds about 60 MB of native code (Flutter and ONNX Runtime). `--release` builds
+`app-release.apk`; without `android/key.properties` it is signed with the debug key and it uses the upstream
+server URL (section 3), so it is for size checks, not for the MockSync demo.
 
 The script:
 
@@ -86,6 +94,8 @@ cd android && ./gradlew :clientmanager:testDebugUnitTest
 | Rebuild without source changes (`--skip-codegen`) | 40 s |
 | Debug APK size | 279,215,183 bytes (266 MiB) when packaged from scratch. Incremental rebuilds can leave free space inside the APK (seen: 304,381,949 bytes with the same 278 MB of content). |
 | Release APK (`flutter build apk --release`, debug-signed because no `key.properties`) | 149,398,259 bytes, Gradle 248 s |
+| Debug APK with the liveness module (2026-09-30; arm64-v8a and x86_64) | 326,405,878 bytes |
+| Release APK with the liveness module, arm64-v8a only (`--release --abis arm64-v8a`, 2026-09-30) | 152,997,540 bytes with uncompressed native libraries; 120,856,656 bytes after release builds store them compressed (`androidComponents` block in `android/app/build.gradle`). Content: dex 58.6 MB (not shrunk; upstream keeps `minifyEnabled false`), native libraries 53.1 MB before compression, liveness models 23.6 MB, ICU data 10.5 MB. The x86_64 release build (123,142,904 bytes) started on the emulator and loaded the engine ("Liveness engine ready ... in 1069 ms"). |
 | `:clientmanager:testDebugUnitTest` | 1184 tests in 63 classes: 1184 passed, 0 failed, 0 errors, 0 skipped (Gradle task 2 min 23 s) |
 | `flutter test` (Dart tests in `test/`, not run by upstream CI) | 27 passed; `test/widget_test.dart` does not compile (line 166: required parameter `onTapForgotPassword` of `PasswordComponent` missing). Upstream problem, left unchanged. |
 
@@ -156,7 +166,7 @@ The script creates the AVD (emulator profile) `arc_api34` on first use:
   `$ANDROID_HOME/emulator/emulator -webcam-list`), back camera = emulated scene;
 - 2 GB RAM, hardware keyboard on.
 
-It then cold-boots it (`-no-snapshot`, `-gpu swiftshader_indirect`), waits for
+It then cold-boots it (`-no-snapshot`, `-gpu auto`: the PC's GPU when its driver allows, see section 7), waits for
 `sys.boot_completed`, runs `adb reverse tcp:8080 tcp:8080`, installs the APK with
 `adb install -r -g` (reinstall keeping data, grant runtime permissions), starts
 `MainActivity` and saves a screenshot to `clients/android/build/emulator/`.
@@ -284,9 +294,20 @@ If login fails:
 | `pubspec.lock` | refreshed by `flutter pub get` | The upstream lock file still listed `document_scanner` (removed from `pubspec.yaml`) and lacked `geolocator`, `restart_app` and `uuid` (added to `pubspec.yaml`). No existing package version changed. |
 | `.gitignore` | ignore `/test/*.mocks.dart` and `/android/clientmanager/null/` | `build_runner` (run by `pigeon.sh`) generates `test/login_test.mocks.dart`; the clientmanager unit tests write `android/clientmanager/null/null/id.zip`. |
 | `android/build.gradle`, `android/app/build.gradle`, `android/clientmanager/build.gradle`, `android/app/src/debug/res/xml/network_security_config.xml` | debug-only server URL and plain-HTTP rule | Section 3. |
+| `android/app/build.gradle` | `ARC_ABIS` selects the CPU types of both build types | Section 2 (APK size). |
+| `lib/ui/process_ui/widgets_mobile/biometric_capture_scan_block_portrait.dart` | `validateCaptureException`: a capture whose quality equals the threshold counts as good (`<` instead of `<=`) | Upstream off-by-one: operator onboarding already accepted `quality >= threshold`, registration did not, so the Biometric Details step never enabled CONTINUE for a face of quality 90 with threshold 90 (`docs/design/android-liveness.md` 12.1). |
+| `android/app/.../api_services/BiometricsDetailsApi.java`, `android/clientmanager/.../RegistrationServiceImpl.java`, `.../RegistrationDto.java` | exception photo with the built-in camera; liveness fields in the packet meta info; operator face of a face-authenticated packet as officer biometrics | `docs/design/android-liveness.md` section 12. |
 
 ## 7. Troubleshooting
 
+- **The emulator disappears every few minutes** (adb: `device 'emulator-5554' not found`). On the team laptop
+  the software renderers crashed the emulator process (Windows Application log, event 1000:
+  `qemu-system-x86_64-headless.exe`, exception `0xc0000005` in an unknown module, that is, in the renderer's
+  generated code), most often on ARC's biometric screens. `-gpu swiftshader_indirect` and `-gpu guest` (which
+  falls back to `lavapipe` on this system image) both crashed; `-gpu host` (NVIDIA RTX 3050 laptop GPU, headless)
+  ran the whole demo without a crash. `scripts/android-run-emulator.sh` now uses `-gpu auto`; set
+  `ARC_EMULATOR_GPU` to force a mode. A Gradle daemon left running after a build also holds about 2 GB of commit
+  memory; `./gradlew --stop` (in `clients/android/android`) frees it.
 - **"Building with plugins requires symlink support. Please enable Developer
   Mode"** during `flutter pub get` on Windows. Flutter creates plugin symlinks
   for the Windows and Linux targets, which needs Developer Mode (admin rights).
@@ -311,3 +332,32 @@ If login fails:
   with `org.gradle.jvmargs=-Xmx1536M`; it did not happen here. Raise the value in
   `~/.gradle/gradle.properties` (for example `-Xmx3g`) rather than in the
   tracked file.
+
+## 8. End-to-end liveness demo on the emulator
+
+`scripts/demo-android.sh` drives the real app through every PS04 face flow against MockSync, with the evaluation
+frame packs as the camera, and checks the results (report: `docs/test-report/android-e2e.md`).
+
+```bash
+ARC_WEBCAM=emulated bash scripts/android-run-emulator.sh --headless   # no webcam attached
+bash scripts/android-build.sh && adb install -r -g clients/android/build/app/outputs/flutter-apk/app-debug.apk
+bash scripts/demo-android.sh                       # about 35 minutes; output in ../run/demo/android-<time>/
+bash scripts/demo-android.sh --sections "login resident"   # some sections only
+```
+
+Needs: MockSync on port 8080 with the tablet registered and `officer1` / `supervisor1` onboarded with pack `s3`
+(section 5 and `docs/design/android-liveness.md` 11.7); the frame packs in `$MOSIP_RUN_ROOT/frame-packs`
+(`tools/eval/fetch-frame-packs.py`; the `s3n-*` packs from `tools/mock-sync/e2e/NoisyPack.java`). The script pushes
+the packs it uses to the app's external files folder (`liveness-replay/`), selects them per step through
+`liveness-replay/flow-source.txt` (debug builds only; `follow <prefix>` answers the challenge prompts, `masked`
+keeps the preview dark) and removes the selection at the end, so the app uses the camera again.
+
+The offline section removes `adb reverse tcp:8080` (MockSync unreachable for the tablet, exactly as if it were
+stopped) and switches on airplane mode; it restores both before the final upload.
+
+Output folder: `results.txt` (one PASS/FAIL line per check), `demo.log`, `logcat-<section>.txt`, numbered
+screenshots, `packets/<registration id>.liveness.json` (MockSync's decrypted liveness evidence of each uploaded
+packet) and `frame-times.txt` (per-frame processing time of every liveness attempt).
+
+The Lost UIN steps tap fixed points on the finger and eye pictures of the exception screens, so the demo expects
+the 1280x800 tablet profile that `scripts/android-run-emulator.sh` creates.

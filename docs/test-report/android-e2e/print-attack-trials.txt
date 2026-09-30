@@ -1,0 +1,21 @@
+# Printed-photo packs replayed on the Android capture screen (adb am start, debug replay, preview masked), emulator, 2026-09-30 10:25-10:32 IST.
+# First 12 results: shipped registration policy (PASSIVE_THEN_ACTIVE, passive threshold 80). Last 6 results: debug override policy.registration=ALWAYS_ACTIVE.
+# Each line: pack, trial, the attempt's result, and the passive score bucket of the audit row (REG-EVT-LV02 only when the passive check passed).
+a-s2-print-still trial 1: [registration, TIMEOUT/TIMEOUT, reasons=[CHALLENGE_TIMEOUT], attempts=1/3, capture=false] "scoreBucket":"70-79" 
+a-s2-print-still trial 2: [registration, TIMEOUT/TIMEOUT, reasons=[CHALLENGE_TIMEOUT], attempts=1/3, capture=false] "scoreBucket":"70-79" 
+a-s2-print-still trial 3: [registration, TIMEOUT/TIMEOUT, reasons=[CHALLENGE_TIMEOUT], attempts=1/3, capture=false] "scoreBucket":"70-79" 
+a-s2-print-still trial 4: [registration, TIMEOUT/TIMEOUT, reasons=[CHALLENGE_TIMEOUT], attempts=1/3, capture=false] "scoreBucket":"70-79" 
+a-s2-print-still trial 5: [registration, PASS, reasons=[], attempts=0/3, capture=true] REG-EVT-LV02 {"workflow":"registration","sessionId":"771ebde6aecc4c15b4c8e474a95c8e05","scoreBucket":"80-89","frames":"8","ms":"1231"} 
+a-s2-print-still trial 6: [registration, TIMEOUT/TIMEOUT, reasons=[CHALLENGE_TIMEOUT], attempts=1/3, capture=false] "scoreBucket":"70-79" 
+a-s3-print-still trial 1: [registration, PASS, reasons=[], attempts=0/3, capture=true] REG-EVT-LV02 {"workflow":"registration","sessionId":"b7435693d459b0224671377d021e0ee7","scoreBucket":"90-100","frames":"8","ms":"1905"} 
+a-s3-print-still trial 2: [registration, PASS, reasons=[], attempts=0/3, capture=true] REG-EVT-LV02 {"workflow":"registration","sessionId":"d1f24f18765a4afad84f8327815b3901","scoreBucket":"90-100","frames":"8","ms":"1817"} 
+a-s3-print-still trial 3: [registration, PASS, reasons=[], attempts=0/3, capture=true] REG-EVT-LV02 {"workflow":"registration","sessionId":"7eede128f42d6b483d76ecc3a3b6d38c","scoreBucket":"90-100","frames":"8","ms":"2166"} 
+a-s3-print-still trial 4: [registration, PASS, reasons=[], attempts=0/3, capture=true] REG-EVT-LV02 {"workflow":"registration","sessionId":"71a0c3065516b1859e39d4e6816b5e4f","scoreBucket":"90-100","frames":"8","ms":"2042"} 
+a-s3-print-still trial 5: [registration, PASS, reasons=[], attempts=0/3, capture=true] REG-EVT-LV02 {"workflow":"registration","sessionId":"e11197c7617c1a9895f2c69ab94bb3d1","scoreBucket":"90-100","frames":"8","ms":"2535"} 
+a-s3-print-still trial 6: [registration, PASS, reasons=[], attempts=0/3, capture=true] REG-EVT-LV02 {"workflow":"registration","sessionId":"3ed1ab053b8068874b716ae192cc4c7f","scoreBucket":"90-100","frames":"8","ms":"1931"} 
+ALWAYS_ACTIVE a-s3-print-still trial 1: [registration, TIMEOUT/TIMEOUT, reasons=[CHALLENGE_TIMEOUT], attempts=1/3, capture=false]
+ALWAYS_ACTIVE a-s3-print-still trial 2: [registration, TIMEOUT/TIMEOUT, reasons=[CHALLENGE_TIMEOUT], attempts=1/3, capture=false]
+ALWAYS_ACTIVE a-s3-print-still trial 3: [registration, TIMEOUT/TIMEOUT, reasons=[CHALLENGE_TIMEOUT], attempts=1/3, capture=false]
+ALWAYS_ACTIVE a-s2-print-still trial 1: [registration, TIMEOUT/TIMEOUT, reasons=[CHALLENGE_TIMEOUT], attempts=1/3, capture=false]
+ALWAYS_ACTIVE a-s2-print-still trial 2: [registration, TIMEOUT/TIMEOUT, reasons=[CHALLENGE_TIMEOUT], attempts=1/3, capture=false]
+ALWAYS_ACTIVE a-s2-print-still trial 3: [registration, TIMEOUT/TIMEOUT, reasons=[CHALLENGE_TIMEOUT], attempts=1/3, capture=false]

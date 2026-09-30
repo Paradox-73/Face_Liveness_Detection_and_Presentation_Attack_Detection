@@ -12,12 +12,13 @@
 #      classes, driven by the upstream clients/android/pigeon.sh. The iOS
 #      outputs of pigeon.sh are redirected to clients/android/build/ so the
 #      tracked ios/Runner/pigeon.{h,m} files stay unchanged.
-#   2. flutter build apk --debug, with
+#   2. flutter build apk --debug (or --release), with
 #        - the debug-only server URL (Gradle property arcDebugServerBaseUrl),
 #        - the monorepo commit passed as --dart-define=ARC_GIT_COMMIT/ARC_GIT_BRANCH
 #          (shown in the app footer; upstream read it from a bundled .git folder).
 #   3. With --test: ./gradlew :clientmanager:testDebugUnitTest
-#      :livenessmanager:testDebugUnitTest and a pass/fail summary per module.
+#      :livenessmanager:testDebugUnitTest :app:testDebugUnitTest and a pass/fail
+#      summary per module.
 #   4. With --device-test: ./gradlew :livenessmanager:connectedDebugAndroidTest
 #      on the attached emulator or device (the real engine on replay frames).
 #
@@ -30,6 +31,9 @@
 #   scripts/android-build.sh --test-only             # only run the unit tests
 #   scripts/android-build.sh --device-test           # also run the liveness instrumented test
 #   scripts/android-build.sh --install-engine        # rebuild the liveness engine jars first
+#   scripts/android-build.sh --abis x86_64           # only these CPU types (comma list); smaller APK
+#   scripts/android-build.sh --release --abis arm64-v8a   # release APK for arm64 tablets (size check;
+#                                                    # debug-signed without key.properties, upstream server URL)
 #
 # Requirements (see docs/install/android.md):
 #   flutter 3.10.4 on PATH, JAVA_HOME = JDK 21, ANDROID_HOME = Android SDK with
@@ -38,6 +42,7 @@
 #
 # Environment:
 #   ARC_SERVER_URL            default for --server-url (http://127.0.0.1:8080)
+#   ARC_ABIS                  default for --abis (read by android/app/build.gradle)
 #   ARC_KEEP_FLUTTER_DESKTOP  set to 1 to leave Flutter's desktop targets enabled
 #                             (see the note in disable_desktop_targets)
 #   PUB_CACHE                 Dart package cache; on Windows it must be on the same
@@ -49,7 +54,8 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ARC_DIR="$REPO_ROOT/clients/android"
 BUILD_DIR="$ARC_DIR/build"
-APK="$BUILD_DIR/app/outputs/flutter-apk/app-debug.apk"
+BUILD_TYPE=debug
+ABIS="${ARC_ABIS:-}"
 
 SERVER_URL="${ARC_SERVER_URL-http://127.0.0.1:8080}"
 DO_CODEGEN=1
@@ -69,10 +75,26 @@ while [ $# -gt 0 ]; do
     --test-only) DO_CODEGEN=0; DO_BUILD=0; DO_TEST=1; shift ;;
     --device-test) DO_DEVICE_TEST=1; shift ;;
     --install-engine) FORCE_ENGINE=1; shift ;;
-    -h|--help) sed -n '2,46p' "${BASH_SOURCE[0]}"; exit 0 ;;
+    --release) BUILD_TYPE=release; shift ;;
+    --abis) [ $# -ge 2 ] || die "--abis needs a value"; ABIS="$2"; shift 2 ;;
+    -h|--help) sed -n "2,$(( $(grep -n '^set -euo pipefail' "${BASH_SOURCE[0]}" | cut -d: -f1) - 1 ))p" "${BASH_SOURCE[0]}"; exit 0 ;;
     *) die "unknown option: $1 (see --help)" ;;
   esac
 done
+APK="$BUILD_DIR/app/outputs/flutter-apk/app-$BUILD_TYPE.apk"
+
+# Flutter's --target-platform values for the Android CPU types in $ABIS (x86 has no Flutter release engine).
+flutter_platforms() {
+  local abi out=""
+  for abi in ${ABIS//,/ }; do
+    case "$abi" in
+      arm64-v8a) out="$out,android-arm64" ;;
+      armeabi-v7a) out="$out,android-arm" ;;
+      x86_64) out="$out,android-x64" ;;
+    esac
+  done
+  printf '%s' "${out#,}"
+}
 
 check_tools() {
   command -v flutter >/dev/null 2>&1 || die "flutter is not on PATH (Flutter 3.10.4 is required)"
@@ -179,9 +201,15 @@ build_apk() {
     log "debug server URL: upstream serverBaseURL"
   fi
   export ARC_DEBUG_SERVER_BASE_URL="$SERVER_URL"
+  export ARC_ABIS="$ABIS"
+  local extra=()
+  if [ -n "$ABIS" ]; then
+    log "CPU types: $ABIS"
+    [ -z "$(flutter_platforms)" ] || extra+=(--target-platform "$(flutter_platforms)")
+  fi
 
   start="$(date +%s)"
-  (cd "$ARC_DIR" && flutter build apk --debug \
+  (cd "$ARC_DIR" && flutter build apk "--$BUILD_TYPE" "${extra[@]}" \
       --dart-define="ARC_GIT_COMMIT=$commit" \
       --dart-define="ARC_GIT_BRANCH=$branch")
   secs=$(( $(date +%s) - start ))
@@ -207,12 +235,12 @@ run_tests() {
   local gradlew="./gradlew"
   case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) gradlew="./gradlew.bat" ;; esac
   [ -f "$ARC_DIR/android/${gradlew#./}" ] || die "Gradle wrapper missing; run a build first (flutter creates it)"
-  log "native unit tests: :clientmanager:testDebugUnitTest :livenessmanager:testDebugUnitTest"
+  log "native unit tests: :clientmanager:testDebugUnitTest :livenessmanager:testDebugUnitTest :app:testDebugUnitTest"
   export ARC_DEBUG_SERVER_BASE_URL="$SERVER_URL"
   local status=0 module
   (cd "$ARC_DIR/android" && "$gradlew" :clientmanager:testDebugUnitTest \
-      :livenessmanager:testDebugUnitTest --continue) || status=$?
-  for module in clientmanager livenessmanager; do
+      :livenessmanager:testDebugUnitTest :app:testDebugUnitTest --continue) || status=$?
+  for module in clientmanager livenessmanager app; do
     log "$module:"
     summarise_tests "$BUILD_DIR/$module/test-results/testDebugUnitTest"
     log "HTML report: $BUILD_DIR/$module/reports/tests/testDebugUnitTest/index.html"

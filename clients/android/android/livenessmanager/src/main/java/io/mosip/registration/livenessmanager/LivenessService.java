@@ -74,4 +74,15 @@ public interface LivenessService {
      * @return {@code true} if provisioned
      */
     boolean isBuiltInDeviceProvisioned();
+
+    /**
+     * Tells whether this tablet's face device is its own camera ({@code mosip.registration.liveness.android.device}
+     * {@code BUILTIN}, the default) rather than a vendor SBI face app. The built-in camera then also takes the
+     * exception photo.
+     *
+     * @return {@code true} for the built-in camera
+     */
+    default boolean isBuiltInCameraFaceDevice() {
+        return true;
+    }
 }

@@ -1,0 +1,40 @@
+09-30 09:20:43.256 I/Liveness(27089): Debug build: replaying frame pack a-s2-print-still instead of the camera
+09-30 09:20:43.988 I/Liveness(27089): Screen state STARTING liveness.guide.look_camera
+09-30 09:20:44.098 I/Liveness(27089): Audit stored REG-EVT-LV01 {"workflow":"registration","sessionId":"036e47874dfe2f4ad322dad9af10522f","attempt":"1","deviceSerial":"BUILTIN-0B1E4822-5D3E","certification":"L0","engine":"mosip-onnx-default@1.0.0"}
+09-30 09:20:44.279 I/Liveness(27089): Replay a-s2-print-still: 60 frames at 15 fps
+09-30 09:20:47.689 I/Liveness(27089): Screen state CHECKING liveness.status.checking
+09-30 09:20:47.963 I/Liveness(27089): Audit stored REG-EVT-LV03 {"workflow":"registration","sessionId":"036e47874dfe2f4ad322dad9af10522f","scoreBucket":"70-79","reason":"BELOW_THRESHOLD"}
+09-30 09:20:48.017 I/Liveness(27089): Screen state CHALLENGE liveness.guide.look_camera
+09-30 09:20:48.309 I/Liveness(27089): Screen state CHALLENGE liveness.feedback.continue
+09-30 09:20:48.813 I/Liveness(27089): Audit stored REG-EVT-LV04 {"workflow":"registration","sessionId":"036e47874dfe2f4ad322dad9af10522f","type":"SMILE","index":"0","nonceSha256Prefix":"8e0548f2"}
+09-30 09:20:48.814 I/Liveness(27089): Screen state CHALLENGE liveness.challenge.smile
+09-30 09:20:53.685 I/Liveness(27089): Audit stored REG-EVT-LV06 {"workflow":"registration","sessionId":"036e47874dfe2f4ad322dad9af10522f","type":"SMILE","reason":"CHALLENGE_TIMEOUT"}
+09-30 09:20:53.686 I/Liveness(27089): Audit stored REG-EVT-LV07 {"workflow":"registration","sessionId":"036e47874dfe2f4ad322dad9af10522f","phase":"CHALLENGE_OBSERVE"}
+09-30 09:20:53.690 I/Liveness(27089): Screen state FAILED liveness.fail.liveness
+09-30 09:20:53.791 I/Liveness(27089): Liveness attempt ended: LivenessCaptureResult[registration, TIMEOUT/TIMEOUT, reasons=[CHALLENGE_TIMEOUT], attempts=1/3, capture=false]
+09-30 09:20:53.792 I/Liveness(27089): Liveness frame time registration session 1: frames=88 p50=42.9ms p95=329.0ms max=1150.7ms
+09-30 09:21:07.278 I/Liveness(27089): Capture screen result CANCELED: LivenessCaptureResult[registration, TIMEOUT/TIMEOUT, reasons=[CHALLENGE_TIMEOUT], attempts=1/3, capture=false]
+09-30 09:21:07.501 I/Liveness(27089): Capture screen returned LivenessCaptureResult[registration, TIMEOUT/TIMEOUT, reasons=[CHALLENGE_TIMEOUT], attempts=1/3, capture=false]
+09-30 09:21:14.137 I/Liveness(27089): Debug build: replaying frame pack a-s2-identical instead of the camera
+09-30 09:21:14.299 I/Liveness(27089): Audit stored REG-EVT-LV01 {"workflow":"registration","sessionId":"6ffc80e63114214ccd1f26e66bfcc9ed","attempt":"2","deviceSerial":"BUILTIN-0B1E4822-5D3E","certification":"L0","engine":"mosip-onnx-default@1.0.0"}
+09-30 09:21:14.311 I/Liveness(27089): Screen state STARTING liveness.guide.look_camera
+09-30 09:21:14.416 I/Liveness(27089): Replay a-s2-identical: 60 frames at 15 fps
+09-30 09:21:16.223 I/Liveness(27089): Screen state CHECKING liveness.status.checking
+09-30 09:21:16.234 I/Liveness(27089): Liveness attempt ended: LivenessCaptureResult[registration, FAIL_PAD/INTEGRITY, reasons=[FROZEN], attempts=2/3, capture=false]
+09-30 09:21:16.236 I/Liveness(27089): Liveness frame time registration session 1: frames=6 p50=250.8ms p95=709.0ms max=709.0ms
+09-30 09:21:16.237 I/Liveness(27089): Audit stored REG-EVT-LV08 {"workflow":"registration","sessionId":"6ffc80e63114214ccd1f26e66bfcc9ed","reason":"FROZEN"}
+09-30 09:21:16.247 I/Liveness(27089): Screen state FAILED liveness.fail.pad
+09-30 09:21:30.341 I/Liveness(27089): Capture screen result CANCELED: LivenessCaptureResult[registration, FAIL_PAD/INTEGRITY, reasons=[FROZEN], attempts=2/3, capture=false]
+09-30 09:21:30.689 I/Liveness(27089): Capture screen returned LivenessCaptureResult[registration, FAIL_PAD/INTEGRITY, reasons=[FROZEN], attempts=2/3, capture=false]
+09-30 09:21:36.827 I/Liveness(27089): Debug build: replaying frame pack a-s2-screen-replay instead of the camera
+09-30 09:21:36.979 I/Liveness(27089): Audit stored REG-EVT-LV01 {"workflow":"registration","sessionId":"a89e7b85a73cd7742c93245a23df8b92","attempt":"3","deviceSerial":"BUILTIN-0B1E4822-5D3E","certification":"L0","engine":"mosip-onnx-default@1.0.0"}
+09-30 09:21:36.992 I/Liveness(27089): Screen state STARTING liveness.guide.look_camera
+09-30 09:21:37.065 I/Liveness(27089): Replay a-s2-screen-replay: 120 frames at 15 fps
+09-30 09:21:38.265 I/Liveness(27089): Screen state CHECKING liveness.status.checking
+09-30 09:21:38.613 I/Liveness(27089): Liveness attempt ended: LivenessCaptureResult[registration, FAIL_PAD/PAD, reasons=[PAD_SCORE], attempts=3/3, capture=false]
+09-30 09:21:38.632 I/Liveness(27089): Audit stored REG-EVT-LV08 {"workflow":"registration","sessionId":"a89e7b85a73cd7742c93245a23df8b92","reason":"PAD_SCORE"}
+09-30 09:21:38.634 I/Liveness(27089): Audit stored REG-EVT-LV11 {"workflow":"registration","sessionId":"a89e7b85a73cd7742c93245a23df8b92","attempts":"3","onMaxFailure":"SUPERVISOR_OVERRIDE"}
+09-30 09:21:38.635 I/Liveness(27089): Liveness frame time registration session 1: frames=8 p50=184.2ms p95=295.3ms max=295.3ms
+09-30 09:21:38.644 I/Liveness(27089): Screen state MAX_ATTEMPTS liveness.retry.max_resident
+09-30 09:21:53.140 I/Liveness(27089): Capture screen result CANCELED: LivenessCaptureResult[registration, FAIL_PAD/PAD, reasons=[PAD_SCORE], attempts=3/3, capture=false]
+09-30 09:21:53.489 I/Liveness(27089): Capture screen returned LivenessCaptureResult[registration, FAIL_PAD/PAD, reasons=[PAD_SCORE], attempts=3/3, capture=false]

@@ -103,6 +103,8 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     private static final String TAG = RegistrationServiceImpl.class.getSimpleName();
     private static final String SOURCE = "REGISTRATION_CLIENT";
+    /** Packet field of the operator's face (the desktop client's objectstore.packet.officer_biometrics_file_name). */
+    static final String OFFICER_BIOMETRICS_FIELD = "officer_bio_cbeff";
     private static final int DEFAULT_MIN_SPACE_REQUIRED_MB = 50;
 
     private Context context;
@@ -295,6 +297,7 @@ public class RegistrationServiceImpl implements RegistrationService {
 
         // Process biometrics and add metadata to packet
             setBiometrics(this.registrationDto);
+            setOfficerBiometrics(this.registrationDto);
 
         CenterMachineDto centerMachineDto = this.masterDataService.getRegistrationCenterMachineDetails();
 
@@ -502,11 +505,12 @@ public class RegistrationServiceImpl implements RegistrationService {
         //Operators metaInfo
         metaData = new LinkedHashMap<>();
         metaData.put(PacketManagerConstant.META_OFFICER_ID, makerId);
-        metaData.put(PacketManagerConstant.META_OFFICER_BIOMETRIC_FILE, null);
+        boolean officerFace = !this.registrationDto.getOfficerBiometrics().isEmpty();
+        metaData.put(PacketManagerConstant.META_OFFICER_BIOMETRIC_FILE, officerFace ? OFFICER_BIOMETRICS_FIELD : null);
         metaData.put(PacketManagerConstant.META_SUPERVISOR_ID, makerId);
         metaData.put(PacketManagerConstant.META_SUPERVISOR_BIOMETRIC_FILE, null);
         metaData.put(PacketManagerConstant.META_SUPERVISOR_PWD, "true");
-        metaData.put(PacketManagerConstant.META_OFFICER_PWD, "true");
+        metaData.put(PacketManagerConstant.META_OFFICER_PWD, officerFace ? BOOLEAN_FALSE : "true");
         metaData.put(PacketManagerConstant.META_SUPERVISOR_PIN, BOOLEAN_FALSE);
         metaData.put(PacketManagerConstant.META_OFFICER_PIN, BOOLEAN_FALSE);
         metaData.put(PacketManagerConstant.META_SUPERVISOR_OTP, BOOLEAN_FALSE);
@@ -770,6 +774,44 @@ public class RegistrationServiceImpl implements RegistrationService {
         return 0;
     }
 
+    /**
+     * Adds the face liveness decision and method to a capture's meta info ({@code livenessDecision},
+     * {@code livenessMethod}, as the desktop client writes them), only for a capture that passed liveness.
+     *
+     * @param metaInfo       the capture's entry in the "biometrics" meta info
+     * @param biometricsDto  the capture
+     */
+    static void addLivenessMetaInfo(Map<String, Object> metaInfo, BiometricsDto biometricsDto) {
+        Map<String, String> evidence = biometricsDto == null ? null : biometricsDto.getLivenessEvidence();
+        if (evidence == null) {
+            return;
+        }
+        if (evidence.get("LIVENESS_DECISION") != null) {
+            metaInfo.put("livenessDecision", evidence.get("LIVENESS_DECISION"));
+        }
+        if (evidence.get("LIVENESS_METHOD") != null) {
+            metaInfo.put("livenessMethod", evidence.get("LIVENESS_METHOD"));
+        }
+    }
+
+    /**
+     * Writes the face with which the operator authenticated the packet (face liveness, {@code packet_auth}) as the
+     * packet's officer biometrics, with its LIVENESS_* evidence, as the desktop client does.
+     *
+     * @param registrationDto the registration
+     */
+    private void setOfficerBiometrics(RegistrationDto registrationDto) {
+        if (registrationDto.getOfficerBiometrics().isEmpty()) {
+            return;
+        }
+        List<BIR> birs = new ArrayList<>();
+        registrationDto.getOfficerBiometrics().forEach(dto -> birs.add(buildBIR(dto)));
+        BiometricRecord record = new BiometricRecord();
+        record.setOthers(new HashMap<>());
+        record.setSegments(birs);
+        packetWriterService.setBiometric(registrationDto.getRId(), OFFICER_BIOMETRICS_FIELD, record);
+    }
+
     private void setBiometrics(RegistrationDto registrationDto) throws RegBaseCheckedException {
         Map<String, List<BIR>> capturedBiometrics = new HashMap<>();
         Map<String, Map<String, Object>> capturedMetaInfo = new LinkedHashMap<>();
@@ -790,6 +832,7 @@ public class RegistrationServiceImpl implements RegistrationService {
             metaInfo.put("numOfRetries", registrationDto.getBiometrics().get(key).getNumOfRetries());
             metaInfo.put("isForceCaptured", registrationDto.getBiometrics().get(key).isForceCaptured());
             metaInfo.put("index", bir.getBdbInfo().getIndex());
+            addLivenessMetaInfo(metaInfo, registrationDto.getBiometrics().get(key));
             capturedMetaInfo.get(fieldId).put(bioAttribute, metaInfo);
         }
 

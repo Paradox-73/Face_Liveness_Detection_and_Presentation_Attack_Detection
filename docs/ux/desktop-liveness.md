@@ -75,7 +75,7 @@ failed on its own with the available packs. Their texts, icons and step counter 
 ```sh
 java -Djavax.net.ssl.trustStore=<repo>/tools/mock-sync/work/keys/client-truststore.p12 \
      -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=PKCS12 \
-     -cp "lib/*" <repo>/docs/ux/capture/LivenessScreensDriver.java officer1 Mosip@Officer1 <outDir> <framePackRoot> \
+     -cp "lib/*" <repo>/docs/ux/capture/LivenessScreensDriver.java officer1 ******** <outDir> <framePackRoot> \
      static-pad no-face device-unavailable eod-arabic login-french-offline
 ```
 

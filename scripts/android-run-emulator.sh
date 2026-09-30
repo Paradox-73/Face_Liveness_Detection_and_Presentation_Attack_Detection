@@ -29,9 +29,13 @@
 #   ARC_AVD_DEVICE       avdmanager device profile (default "10.1in WXGA (Tablet)")
 #   ARC_AVD_RAM_MB       emulator RAM in MB (default 2048)
 #   ARC_EMULATOR_PORT    console port; the adb serial is emulator-<port> (default 5554)
-#   ARC_EMULATOR_GPU     -gpu mode (default swiftshader_indirect, works without a GPU driver)
+#   ARC_EMULATOR_GPU     -gpu mode (default auto: the PC's GPU when its driver supports it, else the
+#                        software renderer). swiftshader_indirect works without a GPU driver, but on the
+#                        team laptop it crashed the emulator every few minutes on ARC's biometric screens
+#                        (access violation in the renderer's generated code); host did not crash.
 #   ARC_WEBCAM           host camera for the front camera (default webcam0;
-#                        list them with: $ANDROID_HOME/emulator/emulator -webcam-list)
+#                        list them with: $ANDROID_HOME/emulator/emulator -webcam-list).
+#                        Use "emulated" for automated runs and demos, which replay frame packs.
 #   ARC_REVERSE_PORT     port forwarded with adb reverse (default 8080; empty = none)
 #   ARC_BOOT_TIMEOUT     seconds to wait for boot (default 600)
 set -euo pipefail
@@ -47,7 +51,7 @@ AVD_NAME="${ARC_AVD_NAME:-arc_api34}"
 AVD_DEVICE="${ARC_AVD_DEVICE:-10.1in WXGA (Tablet)}"
 RAM_MB="${ARC_AVD_RAM_MB:-2048}"
 PORT="${ARC_EMULATOR_PORT:-5554}"
-GPU="${ARC_EMULATOR_GPU:-swiftshader_indirect}"
+GPU="${ARC_EMULATOR_GPU:-auto}"
 WEBCAM="${ARC_WEBCAM:-webcam0}"
 REVERSE_PORT="${ARC_REVERSE_PORT-8080}"
 BOOT_TIMEOUT="${ARC_BOOT_TIMEOUT:-600}"
@@ -69,7 +73,7 @@ while [ $# -gt 0 ]; do
     --no-install) INSTALL=0; shift ;;
     --screenshot) [ $# -ge 2 ] || die "--screenshot needs a path"; SCREENSHOT="$2"; shift 2 ;;
     --stop) STOP=1; shift ;;
-    -h|--help) sed -n '2,39p' "${BASH_SOURCE[0]}"; exit 0 ;;
+    -h|--help) sed -n '2,40p' "${BASH_SOURCE[0]}"; exit 0 ;;
     *) die "unknown option: $1 (see --help)" ;;
   esac
 done

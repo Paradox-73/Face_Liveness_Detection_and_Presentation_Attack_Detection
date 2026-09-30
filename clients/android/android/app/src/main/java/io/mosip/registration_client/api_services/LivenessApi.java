@@ -21,6 +21,7 @@ import io.mosip.registration_client.liveness.FaceAuthFlow;
 import io.mosip.registration_client.liveness.FaceCaptureLivenessGate;
 import io.mosip.registration_client.liveness.LivenessCaptureLauncher;
 import io.mosip.registration_client.liveness.LivenessMessages;
+import io.mosip.registration_client.liveness.OperatorFaceEvidence;
 import io.mosip.registration_client.model.LivenessPigeon;
 
 /**
@@ -42,6 +43,7 @@ public class LivenessApi implements LivenessPigeon.LivenessApi {
     private final LivenessCaptureLauncher launcher;
     private final LivenessMessages messages;
     private final AuditManagerService audit;
+    private final OperatorFaceEvidence operatorFaces;
     private Activity activity;
 
     /**
@@ -51,18 +53,21 @@ public class LivenessApi implements LivenessPigeon.LivenessApi {
      * @param gate     face capture rule (last outcome per field)
      * @param faceAuth face authentication flow
      * @param launcher capture screen launcher (display language)
-     * @param messages engine message texts
-     * @param audit    ARC's audit trail
+     * @param messages      engine message texts
+     * @param audit         ARC's audit trail
+     * @param operatorFaces keeps the operator's face of a packet authentication for the packet
      */
     @Inject
     public LivenessApi(LivenessService liveness, FaceCaptureLivenessGate gate, FaceAuthFlow faceAuth,
-                       LivenessCaptureLauncher launcher, LivenessMessages messages, AuditManagerService audit) {
+                       LivenessCaptureLauncher launcher, LivenessMessages messages, AuditManagerService audit,
+                       OperatorFaceEvidence operatorFaces) {
         this.liveness = liveness;
         this.gate = gate;
         this.faceAuth = faceAuth;
         this.launcher = launcher;
         this.messages = messages;
         this.audit = audit;
+        this.operatorFaces = operatorFaces;
     }
 
     /**
@@ -114,7 +119,12 @@ public class LivenessApi implements LivenessPigeon.LivenessApi {
             return;
         }
         auditStart(w);
-        faceAuth.authenticate(userId, w, outcome -> result.success(toPigeon(outcome)));
+        faceAuth.authenticate(userId, w, outcome -> {
+            if (w == Workflow.PACKET_AUTH && operatorFaces != null) {
+                outcome.capture().ifPresent(operatorFaces::keep);
+            }
+            result.success(toPigeon(outcome));
+        });
     }
 
     /** Same user events as the desktop client's face authentication. */

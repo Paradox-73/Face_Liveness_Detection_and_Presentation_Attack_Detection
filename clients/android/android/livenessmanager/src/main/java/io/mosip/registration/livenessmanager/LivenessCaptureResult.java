@@ -28,6 +28,12 @@ import io.mosip.liveness.core.config.OnMaxFailure;
  */
 public final class LivenessCaptureResult {
 
+    /**
+     * Reason code of a signed photo taken without a liveness check, because the workflow's liveness policy is
+     * {@code OFF} (the exception photo by default). Such a result is a pass without packet evidence.
+     */
+    public static final String REASON_LIVENESS_NOT_REQUIRED = "LIVENESS_NOT_REQUIRED";
+
     static final String EXTRA_DECISION = "liveness.result.decision";
     static final String EXTRA_FAILURE = "liveness.result.failure";
     static final String EXTRA_REASONS = "liveness.result.reasons";
@@ -193,6 +199,15 @@ public final class LivenessCaptureResult {
      */
     public boolean isPass() {
         return decision == Decision.PASS;
+    }
+
+    /**
+     * Tells whether a liveness check ran for this result.
+     *
+     * @return {@code false} for a photo taken without liveness ({@link #REASON_LIVENESS_NOT_REQUIRED})
+     */
+    public boolean isLivenessChecked() {
+        return !reasonCodes.contains(REASON_LIVENESS_NOT_REQUIRED);
     }
 
     /**
