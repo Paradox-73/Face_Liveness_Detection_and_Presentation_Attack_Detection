@@ -36,6 +36,7 @@ import io.mosip.registration.controller.RestartController;
 import io.mosip.registration.controller.SettingsController;
 import io.mosip.registration.controller.auth.LoginController;
 import io.mosip.registration.controller.device.Streamer;
+import io.mosip.registration.controller.liveness.LivenessModelImportDialog;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
@@ -45,6 +46,7 @@ import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.scheduler.SchedulerUtil;
+import io.mosip.registration.service.bio.liveness.LivenessModelImporter;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.config.JobConfigurationService;
@@ -154,6 +156,9 @@ public class HeaderController extends BaseController {
 	private HBox settingsIconHBox;
 
 	@Autowired
+	private LivenessModelImporter livenessModelImporter;
+
+	@Autowired
 	private JobConfigurationService jobConfigurationService;
 
 	@Autowired
@@ -239,6 +244,7 @@ public class HeaderController extends BaseController {
 			homeSelectionMenu.setDisable(false);
 		}
 		resetPword.setVisible(ApplicationContext.map().containsKey(RegistrationConstants.RESET_PWORD_URL));
+		LivenessModelImportDialog.addMenuItem(homeSelectionMenu, livenessModelImporter);
 
 		try {
 			settingsByRole.clear();

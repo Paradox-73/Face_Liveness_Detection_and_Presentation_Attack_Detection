@@ -31,6 +31,7 @@ import io.mosip.liveness.core.api.LivenessSession;
 import io.mosip.liveness.core.api.SessionRequest;
 import io.mosip.liveness.core.audit.AuditEventId;
 import io.mosip.liveness.core.audit.AuditSink;
+import io.mosip.liveness.core.audit.DiagnosticRecord;
 import io.mosip.liveness.core.audit.DiagnosticSink;
 import io.mosip.liveness.core.audit.LivenessAuditEvent;
 import io.mosip.liveness.core.config.LivenessPolicy;
@@ -106,7 +107,7 @@ public final class LivenessRun implements AutoCloseable {
 	private final DeviceSupplier devices;
 	private final LivenessTokenStore tokens;
 	private final AuditSink audit;
-	private final DiagnosticSink diagnostics;
+	private final DiagnosticTap diagnostics;
 	private final Clock clock;
 	private final ScheduledExecutorService worker;
 	private final LivenessTransaction transaction;
@@ -128,7 +129,7 @@ public final class LivenessRun implements AutoCloseable {
 		this.devices = Objects.requireNonNull(devices, "devices");
 		this.tokens = Objects.requireNonNull(tokens, "tokens");
 		this.audit = Objects.requireNonNull(audit, "audit");
-		this.diagnostics = Objects.requireNonNull(diagnostics, "diagnostics");
+		this.diagnostics = new DiagnosticTap(Objects.requireNonNull(diagnostics, "diagnostics"));
 		this.clock = Objects.requireNonNull(clock, "clock");
 		this.transaction = new LivenessTransaction(policy);
 		ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1, r -> {
@@ -161,6 +162,15 @@ public final class LivenessRun implements AutoCloseable {
 	 */
 	public LivenessPolicy policy() {
 		return policy;
+	}
+
+	/**
+	 * Returns the latest diagnostic record of this run's sessions, for the diagnostic line of the liveness window.
+	 *
+	 * @return the record; empty when diagnostic mode is off or no session reported yet
+	 */
+	public Optional<DiagnosticRecord> lastDiagnostic() {
+		return diagnostics.last();
 	}
 
 	/**

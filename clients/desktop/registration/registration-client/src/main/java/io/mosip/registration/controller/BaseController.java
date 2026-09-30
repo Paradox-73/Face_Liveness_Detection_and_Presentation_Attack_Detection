@@ -81,6 +81,7 @@ import io.mosip.registration.scheduler.SchedulerUtil;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.bio.BioService;
+import io.mosip.registration.service.bio.liveness.LivenessAccountLock;
 import io.mosip.registration.service.bio.liveness.LivenessOrchestrator;
 import io.mosip.registration.service.bio.liveness.LivenessOutcome;
 import io.mosip.registration.service.config.GlobalParamService;
@@ -162,6 +163,9 @@ public class BaseController {
 
 	@Autowired
 	protected LivenessOrchestrator livenessOrchestrator;
+
+	@Autowired
+	private LivenessAccountLock livenessAccountLock;
 
 	@Autowired
 	protected FXComponents fXComponents;
@@ -1823,8 +1827,7 @@ public class BaseController {
 			@Override
 			public void closedWithoutPass(Optional<LivenessOutcome> lastOutcome) {
 				if (lastOutcome.isPresent() && lastOutcome.get().isLockRequired()) {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
-							.getMessageLanguageSpecific(RegistrationUIConstants.LIVENESS_MAX_ATTEMPTS_AUTH));
+					applyLivenessLock(workflow, userId);
 				}
 			}
 		});
@@ -1844,6 +1847,26 @@ public class BaseController {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Applies {@code on_max_failure=BLOCK_AND_LOCK} after a face authentication used up its liveness attempts: the
+	 * failure counts as a failed login of that user (invalid-login count and lock time), and the alert says whether
+	 * the account is now locked.
+	 */
+	private void applyLivenessLock(Workflow workflow, String userId) {
+		LivenessAccountLock.Result result = livenessAccountLock.apply(workflow, userId);
+		if (result == LivenessAccountLock.Result.LOCKED) {
+			generateAlert(RegistrationConstants.ERROR, String.format("%s %s %s %s %s",
+					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USER_ACCOUNT_LOCK_MESSAGE_NUMBER),
+					getValueFromApplicationContext(RegistrationConstants.INVALID_LOGIN_COUNT),
+					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USER_ACCOUNT_LOCK_MESSAGE),
+					getValueFromApplicationContext(RegistrationConstants.INVALID_LOGIN_TIME),
+					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USER_ACCOUNT_LOCK_MESSAGE_MINUTES)));
+			return;
+		}
+		generateAlert(RegistrationConstants.ERROR,
+				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.LIVENESS_MAX_ATTEMPTS_AUTH));
 	}
 
 	private static Optional<String> loggedInSupervisorId() {

@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -12,9 +13,11 @@ import org.springframework.stereotype.Component;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.liveness.core.Clock;
 import io.mosip.liveness.core.Workflow;
+import io.mosip.liveness.core.api.EngineInfo;
 import io.mosip.liveness.core.api.LivenessPassToken;
 import io.mosip.liveness.core.audit.AuditSink;
 import io.mosip.liveness.core.audit.DiagnosticSink;
+import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessPolicy;
 import io.mosip.liveness.core.device.DeviceErrorCode;
 import io.mosip.liveness.core.device.DeviceException;
@@ -25,6 +28,7 @@ import io.mosip.liveness.core.engine.LivenessTransaction;
 import io.mosip.liveness.core.policy.PolicyResolution;
 import io.mosip.liveness.core.ui.LivenessUiState;
 import io.mosip.registration.config.AppConfig;
+import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.dto.LivenessContext;
@@ -72,6 +76,8 @@ public class LivenessOrchestrator {
 	private final Clock clock;
 
 	private final ExhaustedTransactions exhausted = new ExhaustedTransactions();
+	private final DiagnosticModeAudit diagnosticMode;
+	private Supplier<String> userId = LivenessOrchestrator::sessionUserId;
 	private LivenessRun current;
 
 	/**
@@ -99,6 +105,7 @@ public class LivenessOrchestrator {
 		this.diagnostics = Objects.requireNonNull(diagnostics, "diagnostics");
 		this.deviceFactory = deviceFactory;
 		this.clock = Objects.requireNonNull(clock, "clock");
+		this.diagnosticMode = new DiagnosticModeAudit(this.audit, this.clock);
 	}
 
 	/**
@@ -132,8 +139,36 @@ public class LivenessOrchestrator {
 	}
 
 	/**
+	 * Returns the description of the loaded engine (engine tag and model versions), for the diagnostic line.
+	 *
+	 * @return the description; empty before the engine is ready
+	 */
+	public Optional<EngineInfo> engineInfo() {
+		return engines.info();
+	}
+
+	/**
+	 * Returns the liveness configuration, for texts replaced by {@code guidance.<messageKey>.<lang>}.
+	 *
+	 * @return the configuration source (synced values, read at each call)
+	 */
+	public ConfigSource config() {
+		return config;
+	}
+
+	/**
+	 * Replaces the source of the logged-in user ID written in {@code REG-EVT-LV17} (tests).
+	 *
+	 * @param userId supplier of the user ID
+	 */
+	void setUserIdSupplier(Supplier<String> userId) {
+		this.userId = Objects.requireNonNull(userId, "userId");
+	}
+
+	/**
 	 * Starts a liveness transaction: resolves the policy, writes {@code REG-EVT-LV15} when configuration values
-	 * changed or were corrected, and opens the first session on the liveness worker thread.
+	 * changed or were corrected and {@code REG-EVT-LV17} when diagnostic mode was switched, and opens the first
+	 * session on the liveness worker thread.
 	 *
 	 * @param request  workflow, subject and device
 	 * @param listener receives UI states, preview frames, capture ready and session ends; called on liveness
@@ -165,6 +200,7 @@ public class LivenessOrchestrator {
 					RegistrationExceptionConstants.LIVENESS_MAX_ATTEMPTS.getErrorMessage());
 		}
 		auditConfigChanges(request.workflow(), resolution);
+		diagnosticMode.observe(policy.isDiagnosticEnabled(), userId.get(), request.workflow());
 		LivenessRun run = new LivenessRun(request, policy, trackExhaustion(request, listener), engines::engine,
 				() -> device(request), tokens, audit, policy.isDiagnosticEnabled() ? diagnostics : NO_DIAGNOSTICS, clock);
 		current = run;
@@ -263,6 +299,14 @@ public class LivenessOrchestrator {
 					DeviceErrorCode.NOT_FOUND, "no device registry");
 		}
 		return SbiFaceCaptureDevice.resolve(deviceFactory, request.modality(), clock);
+	}
+
+	private static String sessionUserId() {
+		try {
+			return SessionContext.isSessionContextAvailable() ? SessionContext.userId() : "";
+		} catch (RuntimeException e) {
+			return "";
+		}
 	}
 
 	private void auditConfigChanges(Workflow workflow, PolicyResolution resolution) {

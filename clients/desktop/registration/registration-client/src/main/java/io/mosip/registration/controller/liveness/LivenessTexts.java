@@ -8,13 +8,18 @@ import java.util.MissingResourceException;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
+import io.mosip.liveness.core.config.ConfigSource;
+import io.mosip.liveness.core.engine.LivenessUiStateMapper;
+
 /**
  * Resolves the face liveness message keys ({@code liveness.*}, the catalogue shared with the Android client) and the
  * desktop screen labels ({@code liveness.ui.*}) to display text.
  *
  * <p>Texts come from the client's {@code labels_<lang>.properties} bundle. A key missing from that bundle falls back
- * to the English bundle, then to the key itself, so a missing translation never breaks a screen. Placeholders
- * {@code {0}}, {@code {1}} are filled with {@link MessageFormat}.
+ * to the English bundle, then to the key itself, so a missing translation never breaks a screen. A resolver made
+ * with {@link #withOverrides(ConfigSource, String)} first looks for a configured replacement text
+ * {@code mosip.registration.liveness.guidance.<messageKey>.<lang>} (synced like every other key, so the same text
+ * applies offline). Placeholders {@code {0}}, {@code {1}} are filled with {@link MessageFormat}.
  */
 public final class LivenessTexts {
 
@@ -38,9 +43,12 @@ public final class LivenessTexts {
 	public static final String UI_BUSY = "liveness.ui.busy";
 
 	private static final String MISSING_BUNDLE_BASE = "labels";
+	private static final String DEFAULT_LANGUAGE = "eng";
 
 	private final ResourceBundle primary;
 	private final ResourceBundle fallback;
+	private final ConfigSource overrides;
+	private final String language;
 
 	/**
 	 * Creates a resolver.
@@ -49,8 +57,30 @@ public final class LivenessTexts {
 	 * @param fallback the English labels bundle; may be {@code null}
 	 */
 	public LivenessTexts(ResourceBundle primary, ResourceBundle fallback) {
+		this(primary, fallback, null, DEFAULT_LANGUAGE);
+	}
+
+	private LivenessTexts(ResourceBundle primary, ResourceBundle fallback, ConfigSource overrides, String language) {
 		this.primary = primary;
 		this.fallback = fallback;
+		this.overrides = overrides;
+		this.language = language;
+	}
+
+	/**
+	 * Returns a resolver that prefers the configured replacement texts
+	 * {@code mosip.registration.liveness.guidance.<messageKey>.<lang>} (G4) over the bundle texts, with the same rule
+	 * as the Android client ({@link LivenessUiStateMapper#resolveText}). A blank replacement is ignored.
+	 *
+	 * @param config   configuration with the synced replacement texts; read at each lookup
+	 * @param langCode client language code of the display ({@code eng}, {@code fra}, {@code ara}), used as
+	 *                 {@code <lang>}; {@code null} means {@code eng}
+	 * @return a new resolver over the same bundles
+	 */
+	public LivenessTexts withOverrides(ConfigSource config, String langCode) {
+		String lang = langCode == null || langCode.trim().isEmpty() ? DEFAULT_LANGUAGE
+				: langCode.trim().toLowerCase(Locale.ROOT);
+		return new LivenessTexts(primary, fallback, config, lang);
 	}
 
 	/**
@@ -75,6 +105,9 @@ public final class LivenessTexts {
 		String pattern = lookup(primary, key);
 		if (pattern == null) {
 			pattern = lookup(fallback, key);
+		}
+		if (overrides != null) {
+			pattern = LivenessUiStateMapper.resolveText(overrides, key, language, pattern);
 		}
 		if (pattern == null) {
 			return key;

@@ -13,6 +13,7 @@ import java.util.Optional;
 import org.junit.Test;
 
 import io.mosip.liveness.core.Workflow;
+import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.config.LivenessPolicy;
 import io.mosip.liveness.core.config.PolicyMode;
 
@@ -38,7 +39,7 @@ public class LivenessConfigTest {
 				assertEquals(PolicyMode.OFF, p.mode());
 				assertFalse(config.isEnforced(w));
 			} else {
-				assertEquals(w.id(), PolicyMode.PASSIVE_THEN_ACTIVE, p.mode());
+				assertEquals(w.id(), LivenessConfigKeys.defaultPolicyMode(w), p.mode());
 				assertTrue(config.isEnforced(w));
 			}
 		}

@@ -14,7 +14,7 @@ All new classes are in `io.mosip.registration.service.bio.liveness` unless state
 
 | Class | Role |
 |---|---|
-| `LivenessOrchestrator` | Entry point for the screens. `isEnforced(workflow)`, `start(request, listener)`, `pendingContext(workflow, subject)`, `contextFor(workflow, subject)`, `engineStatus()`. One run at a time. |
+| `LivenessOrchestrator` | Entry point for the screens. `isEnforced(workflow)`, `start(request, listener)`, `pendingContext(workflow, subject)`, `contextFor(workflow, subject)`, `engineStatus()`, `engineInfo()`, `config()` (for the replacement texts). One run at a time. |
 | `LivenessRun` | One liveness transaction for one person: the first session and its retries. Owns the `liveness-worker` thread. `retry()`, `cancel()`, `grantOverride(supervisorId)`, `close()`. |
 | `LivenessRunListener` | Callbacks to the screen: `onUiState`, `onPreviewFrame`, `onCaptureReady`, `onSessionEnded`. Called on liveness threads. |
 | `LivenessRequest`, `LivenessOutcome` | What to verify (workflow, subject reference, optional device) and how a session ended (pass or failure reason, attempts, retry / override / lock rules). |
@@ -28,6 +28,10 @@ All new classes are in `io.mosip.registration.service.bio.liveness` unless state
 | `DesktopImageDecoder` | `javax.imageio` decoder: JPEG, PNG (and JPEG 2000 through the plug-in the client ships) to BGR888. |
 | `DesktopAuditSink` | Writes `REG-EVT-LV01..17` through `AuditManagerService` on one background thread. |
 | `DesktopDiagnosticSink` | Writes `LIVENESS-DIAG` lines to `logs/registration.log` when diagnostics are on. |
+| `DiagnosticTap` | Sits in front of the diagnostic sink of each run and keeps the latest record, so the liveness window can show it (`LivenessRun.lastDiagnostic()`). |
+| `DiagnosticModeAudit` | Writes `REG-EVT-LV17` when `diagnostic.enable` is found in a new position at the start of a run (section 6). |
+| `LivenessModelImporter`, `LivenessModelStore` | Secure offline model update (bonus B6): verify a signed bundle from a folder or `.zip`, store it, switch the engine (section 6.1). |
+| `LivenessAccountLock` | `on_max_failure=BLOCK_AND_LOCK` for the authentications inside a session: counts a used-up transaction as a failed login (section 2.3). |
 | `LivenessMeterBinder` | Publishes the anonymised liveness counters and timers through the client's Micrometer registry (`logs/metrics.log`). |
 | `io.mosip.registration.mdm.dto.LivenessContext` | Workflow, subject and pass token carried on `MDMRequestDto.livenessContext`. |
 | `io.mosip.registration.mdm.service.impl.MdmStreamResponse` | Stream body whose `close()` drops the connection instead of reading an endless MJPEG body. |
@@ -78,8 +82,20 @@ the context through the static login code.
   - `SUPERVISOR_OVERRIDE` (resident workflows only, never after a suspected attack):
     `run.grantOverride(supervisorId)` returns a single-use context (valid 60 s). The capture is stored with
     `LIVENESS_DECISION=OVERRIDE` and `REG-EVT-LV16`.
-  - `BLOCK_AND_LOCK` (authentication workflows): `LivenessOutcome.isLockRequired()`; the screen applies the
-    existing invalid-login rule.
+  - `BLOCK_AND_LOCK` (authentication workflows): `LivenessOutcome.isLockRequired()`; the used-up transaction
+    counts as one failed login under the client's rule `mosip.registration.invalid_login_count` /
+    `invalid_login_time`. The login screen calls its own `validateInvalidLogin`; the authentications inside a
+    session (`packet_auth`, `exception_auth`, `eod_auth`) call `LivenessAccountLock.apply(workflow, userId)` from
+    `BaseController.authenticateFaceWithLiveness`, which goes through the same `LoginService.validateInvalidLogin`.
+    When the count is reached the alert says the account is locked for the lock time, and the next login of that
+    user is refused until it has passed. Residents have no account: `BLOCK_AND_LOCK` behaves as `BLOCK` for them
+    (the core resolver does not allow it for resident workflows).
+  - `BLOCK` (default): no override, no lock; the window shows the recovery message and Close.
+- The three behaviours are tested end to end on the services in `LivenessOnMaxFailureTest` (orchestrator, run,
+  token store and the real capture gate): `BLOCK` offers neither override nor lock; `SUPERVISOR_OVERRIDE` is only
+  offered after the last resident attempt, never in authentication workflows, and the capture is stored with
+  `LIVENESS_DECISION=OVERRIDE` plus `REG-EVT-LV16`; `BLOCK_AND_LOCK` asks for the lock after the last attempt
+  only.
 - A used-up transaction is remembered per workflow and person (`ExhaustedTransactions`, in memory): a new run for
   the same registration ID or user ID is refused with `REG-LIV-014` for `exhaustedBlockMinutes` (residents: until
   the registration is abandoned; operators: the client's invalid-login lock time). Without this, closing the
@@ -159,10 +175,13 @@ floors and ranges, and reports each correction; the orchestrator audits correcti
 | Key (prefix `mosip.registration.liveness.`) | Default | Read by |
 |---|---|---|
 | `enable` | `Y` | gate, orchestrator, engine preload |
-| `policy.<workflow>` | `PASSIVE_THEN_ACTIVE`; `exception_photo`: `OFF` | gate, orchestrator |
+| `policy.<workflow>` | core `LivenessConfigKeys.defaultPolicyMode(workflow)`: `ALWAYS_ACTIVE` for `registration`, `onboard_auth`, `login_auth`; `PASSIVE_THEN_ACTIVE` for the other authentication workflows; `exception_photo`: `OFF` | gate, orchestrator |
 | `engine` | `mosip-onnx-default` | engine registry |
-| `model.min_version` | `1.0.0` | engine registry |
-| `passive.threshold`, `pad.reject_threshold`, `passive.min_frames`, `passive.timeout_ms` | 80 / 20 / 8 / 4000 | session |
+| `engine.execution_provider` | `CPU` | not read on desktop: `LivenessEngineRegistry` builds the engine with `OnnxLivenessEngines.builder` and the default runtime options, and the Windows x64 ONNX Runtime 1.20.0 package offers only the CPU provider ([calibration notes](../eval/calibration-notes.md) 0.4) |
+| `model.min_version` | `1.0.0` | engine registry, model import |
+| `model.store_dir` (desktop only) | `liveness-models` in the client's working folder | engine registry, model import |
+| `guidance.<messageKey>.<lang>` | unset (bundle text) | liveness window (`LivenessTexts.withOverrides`) |
+| `passive.threshold`, `pad.reject_threshold`, `passive.min_frames`, `passive.timeout_ms` | 80 / 20 / 30 / 4000 | session |
 | `active.*` (`enable`, `min_challenges`, `challenge_types`, `challenge_timeout_ms`, `min_onset_ms`, `hold_ms`) | see plan section 4.16 | session |
 | `max_retries`, `on_max_failure`, `<workflow>.on_max_failure`, `<workflow>.{passive.threshold, min_challenges, max_retries}` | 3, `BLOCK` | run |
 | `stream.timeout_ms` | 60000 | stream request (replaces `capture_time_out` for liveness streams) |
@@ -189,12 +208,53 @@ Temporary switch-off for testing other features: serve `mosip.registration.liven
   `SessionContext.map()` for null before it looks for a registration; before this fix every liveness audit of a
   face login failed with a NullPointerException and was lost (found in the end-to-end run).
 - **Diagnostics:** when `diagnostic.enable=Y`, one `LIVENESS-DIAG` line per session state change in
-  `logs/registration.log` (INFO level, so no logging change is needed).
+  `logs/registration.log` (INFO level, so no logging change is needed). The core `DiagnosticRecord` has fields
+  for state, PAD score, flags, planarity, binding similarity, frame rate and model versions only, so no image,
+  template or identifier can reach the log. `DiagnosticTap` keeps the latest record per run for the diagnostic
+  lines of the liveness window. Off by default (MockSync default `N`).
+- **Diagnostic mode audit (`REG-EVT-LV17`):** `diagnostic.enable` is a synced key, so a switch is noticed at the
+  next run start (like `LV15`). `DiagnosticModeAudit` writes `LV17` with the logged-in user ID and the new
+  position (`Y`/`N`) when the position differs from the one seen at the previous run; the first run after client
+  start writes `LV17` only when diagnostics are on.
 - **Metrics:** `liveness.sessions`, `liveness.retries`, `liveness.passes`, `liveness.passive_passes`,
   `liveness.active_triggers`, `liveness.challenges_passed`, `liveness.frames_analysed`,
   `liveness.failures.<REASON>` (function counters); `liveness.time.{total,passive,challenge,frame}.avg_ms`,
   `liveness.rate.{retry,failure}` (gauges). No user IDs, RIDs or device serials in names or tags. The client's
   registry adds its usual `machine` common tag to every meter.
+
+### 6.1 Secure offline model update (bonus B6)
+
+A supervisor can replace the liveness models without a client upgrade, for example from a USB stick:
+header menu, "Import liveness models" (shown only to `REGISTRATION_SUPERVISOR` and `REGISTRATION_ADMIN`), then a
+folder or `.zip` file that holds `manifest.json`, `manifest.jws` and the model files (the layout of `models/` in
+the repository, produced by `ModelSigner update` and `ModelSigner sign`).
+
+`LivenessModelImporter.importBundle(location, userId, roles)` checks, and stops at the first failure:
+
+| Step | Check | Result when it fails | Audit |
+|---|---|---|---|
+| 1 | user holds a supervisor or administrator role (checked again in the service) | `NOT_ALLOWED` | - |
+| 2 | no liveness session is running; the configured engine is `mosip-onnx-default` | `BUSY`, `NOT_SUPPORTED` | - |
+| 3 | `.zip`: entry names are relative, no `..`, at most 64 entries and 512 MB | `NOT_FOUND` | - |
+| 4 | RS256 JWS signature of `manifest.json` against the built-in trust anchors | `INVALID` | `LV14` |
+| 5 | version at least `model.min_version` and **newer** than the running bundle and the store's version floor (anti-rollback) | `TOO_OLD` | `LV14` |
+| 6 | size and SHA-256 of every listed model file | `INVALID` | `LV14` |
+| 7 | only the listed files are copied into `<model.store_dir>/<bundle>-<version>-<millis>/`, and the copy is verified again (it is what the engine loads) | `INVALID` | `LV14` |
+| 8 | `active.properties` is replaced atomically; a new engine is built from the copy and passes the start-up self-test; only then is it swapped in and the old one closed (`LivenessEngineRegistry.switchModels`) | `LOAD_FAILED`: pointer restored, copy deleted, old engine keeps running | `LV13` |
+| - | success | `IMPORTED` | `LV15` with `model.bundle=<name>:<old>-><new>` |
+
+The client's audit service adds the logged-in user to every row. The result window shows the running bundle,
+the result text in the display language and the models (identifier, version, start of the SHA-256).
+
+**At every engine load** the registry prefers the active imported bundle to the one on the class path, and raises
+the minimum version to the store's floor (the highest version ever activated), so a validly signed older bundle
+is refused even if the pointer file is edited. A stored bundle that fails its checks makes the engine fail closed
+(`LV14`); the client does not fall back to the older bundle of the installation. To go back to the installed
+models, an administrator deletes the `liveness-models` folder while the client is stopped.
+
+**Trust:** the store is not trusted: signature, hashes and version are checked again at every load. The trust
+anchor is the key built into `liveness-onnx` (`ModelTrustAnchors`); a production deployment replaces it (plan
+section 4.19).
 
 ## 7. Packet evidence
 
@@ -271,7 +331,7 @@ closed.
 
 ## 11. Tests
 
-JUnit 4 in `registration-services/src/test/java/io/mosip/registration/service/bio/liveness/` (72 tests):
+JUnit 4 in `registration-services/src/test/java/io/mosip/registration/service/bio/liveness/` (106 tests):
 
 | Test | Covers |
 |---|---|
@@ -284,6 +344,9 @@ JUnit 4 in `registration-services/src/test/java/io/mosip/registration/service/bi
 | `DesktopAuditSinkTest` | every core event maps to the same client ID, component, JSON description without raw score, failure isolation, background writer |
 | `LivenessPacketEvidenceTest` | BIR `others`, CBEFF XML round trip, `meta_info` fields |
 | `DesktopImageDecoderTest` | JPEG, PNG pixel order, rotation, raw frames, bad input |
+| `LivenessModelImporterTest` | bundles signed with a key generated by the test: newer bundle stored and switched (`LV15`, floor raised, only listed files copied), same and older version refused, below `model.min_version`, changed model file, unknown signing key, missing signature, `.zip` import, `..` zip entry, empty folder, engine start failure restores the previous bundle (`LV13`), officer refused, vendor engine, pointer outside the store ignored |
+| `LivenessOnMaxFailureTest` | `BLOCK`; `SUPERVISOR_OVERRIDE` through the real capture gate (`LIVENESS_DECISION=OVERRIDE`, `LV16`, `LV11` with the behaviour); no override in authentication workflows; `BLOCK_AND_LOCK` after the last attempt only and not for residents; `LV17` once per switch; `DiagnosticTap` |
+| `LivenessAccountLockTest` | used-up authentication counted with the configured count and time, lock reported, residents and unknown users untouched, bad config falls back to the client defaults |
 
 Run: `mvn -o test -Dtest='io.mosip.registration.service.bio.liveness.*Test'` in `registration-services`.
 
@@ -292,3 +355,11 @@ Run: `mvn -o test -Dtest='io.mosip.registration.service.bio.liveness.*Test'` in 
 The services were run on the real client against MockSync and MockMDS with `scripts/demo-desktop.sh` (flows in
 `tools/mock-sync/e2e/flows/`). Flow-by-flow results, evidence files and the problems found are in
 `docs/test-report/desktop-e2e.md`.
+
+Diagnostic mode, replacement texts and the model import have their own flow,
+`tools/mock-sync/e2e/flows/65-diagnostic-and-models.flow` (after `00-start` and `10-login`, with `MODEL_BUNDLES`
+set to a folder holding a `tampered`, a `v1.1.0` and a `v1.0.0-old` bundle signed with the development key). On
+2026-09-30 it passed 15 of 15 checks: the replaced "Checking" text and the diagnostic lines on screen, `LV17` in
+the audit table, the tampered bundle refused, 1.1.0 imported and running (`LV15`), 1.0.0 refused by the rollback
+check (`LV14` rows), and a face login on the imported models. Screenshots:
+`docs/ux/screenshots/desktop/e2e-13-diagnostic-mode.png` to `e2e-16-model-import-rollback-refused.png`.

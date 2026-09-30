@@ -15,7 +15,8 @@
 # Options:
 #   --flow FILE        flow file to run (default tools/mock-sync/e2e/flows/demo-desktop.flow)
 #   --out DIR          output folder (default $MOSIP_RUN_ROOT/demo/desktop-<time>)
-#   --restore-golden   replace the client state with the golden snapshot before the run
+#   --restore-golden   replace the client state with the golden snapshot (and drop imported liveness models)
+#                      before the run
 #   --save-golden      save the client state as the golden snapshot and exit (client must be stopped)
 #
 # Needs: a client built with scripts/desktop-build.sh --mocksync, its machine registered in MockSync, officer1 and
@@ -103,6 +104,8 @@ done
 if [ "$RESTORE" = 1 ]; then
 	[ -d "$GOLDEN/db" ] || die "no golden snapshot in $GOLDEN"
 	copy_state "$GOLDEN" "$CLIENT_DIR"
+	# Model bundles imported by an earlier run (flow 65) would stay active; go back to the installed models.
+	rm -rf "$CLIENT_DIR/liveness-models"
 	log "client state restored from $GOLDEN"
 fi
 

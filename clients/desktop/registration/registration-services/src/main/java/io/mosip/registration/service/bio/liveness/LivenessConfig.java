@@ -1,5 +1,7 @@
 package io.mosip.registration.service.bio.liveness;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +40,13 @@ public class LivenessConfig implements ConfigSource {
 	static final String INVALID_LOGIN_TIME_KEY = "mosip.registration.invalid_login_time";
 	static final long DEFAULT_AUTH_BLOCK_MINUTES = 2;
 	static final long RESIDENT_BLOCK_MINUTES = 12 * 60;
+	/** The client's number of failed logins before the account locks (mosip-config key). */
+	static final String INVALID_LOGIN_COUNT_KEY = "mosip.registration.invalid_login_count";
+	static final int DEFAULT_INVALID_LOGIN_COUNT = 3;
+	/** Folder that holds model bundles imported with {@link LivenessModelImporter} (desktop-only key). */
+	public static final String MODEL_STORE_KEY = LivenessConfigKeys.PREFIX + "model.store_dir";
+	/** Default model store folder, relative to the client's working folder. */
+	public static final String DEFAULT_MODEL_STORE = "liveness-models";
 
 	private final Supplier<Map<String, Object>> values;
 	private Map<String, String> lastSnapshot;
@@ -153,6 +162,38 @@ public class LivenessConfig implements ConfigSource {
 	 */
 	public String modelMinVersion() {
 		return get(LivenessConfigKeys.MODEL_MIN_VERSION).orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION);
+	}
+
+	/**
+	 * Returns the folder of imported model bundles.
+	 *
+	 * @return {@value #MODEL_STORE_KEY}, default {@value #DEFAULT_MODEL_STORE} in the working folder
+	 */
+	public Path modelStoreDirectory() {
+		return Paths.get(get(MODEL_STORE_KEY).orElse(DEFAULT_MODEL_STORE));
+	}
+
+	/**
+	 * Returns how many failed logins lock an operator account.
+	 *
+	 * @return {@value #INVALID_LOGIN_COUNT_KEY}, default {@value #DEFAULT_INVALID_LOGIN_COUNT}, at least 1
+	 */
+	public int invalidLoginCount() {
+		try {
+			return Math.max(1, Integer.parseInt(get(INVALID_LOGIN_COUNT_KEY)
+					.orElse(String.valueOf(DEFAULT_INVALID_LOGIN_COUNT))));
+		} catch (NumberFormatException e) {
+			return DEFAULT_INVALID_LOGIN_COUNT;
+		}
+	}
+
+	/**
+	 * Returns how long an operator account stays locked after too many failed logins.
+	 *
+	 * @return {@value #INVALID_LOGIN_TIME_KEY} in minutes, default {@value #DEFAULT_AUTH_BLOCK_MINUTES}, at least 1
+	 */
+	public int invalidLoginMinutes() {
+		return (int) exhaustedBlockMinutes(Workflow.LOGIN_AUTH);
 	}
 
 	/**

@@ -102,7 +102,7 @@ public final class LivenessDialog {
 		this.orchestrator = Objects.requireNonNull(orchestrator, "orchestrator");
 		this.options = Objects.requireNonNull(options, "options");
 		this.callbacks = Objects.requireNonNull(callbacks, "callbacks");
-		this.texts = textsFor(options.languageCode);
+		this.texts = textsFor(options.languageCode).withOverrides(orchestrator.config(), options.languageCode);
 		this.panel = new LivenessPanel();
 		this.listener = new FxLivenessListener(new PanelTarget());
 	}
@@ -316,21 +316,24 @@ public final class LivenessDialog {
 			panel.setDiagnostic(null);
 			return;
 		}
-		StringBuilder text = new StringBuilder();
-		text.append("workflow=").append(options.workflow.id()).append("  policy=").append(policy.mode())
-				.append("  engine=").append(orchestrator.engineStatus());
-		if (lastState != null) {
-			text.append("  phase=").append(lastState.phase());
-		}
-		if (lastOutcome != null) {
-			text.append("  attempts=").append(lastOutcome.attemptsUsed()).append('/').append(lastOutcome.maxAttempts())
-					.append("  result=").append(lastOutcome.failureReason().map(Enum::name).orElse("PASS"));
-			lastOutcome.errorCode().ifPresent(code -> text.append("  code=").append(code));
-		}
-		panel.setDiagnostic(text.toString());
+		DiagnosticText.Input in = new DiagnosticText.Input();
+		in.workflow = options.workflow.id();
+		in.policy = policy;
+		in.engineStatus = String.valueOf(orchestrator.engineStatus());
+		in.engine = orchestrator.engineInfo();
+		in.phase = lastState == null ? null : lastState.phase();
+		in.outcome = lastOutcome;
+		in.record = run.lastDiagnostic();
+		panel.setDiagnostic(DiagnosticText.format(in));
 	}
 
-	private static LivenessTexts textsFor(String languageCode) {
+	/**
+	 * Returns the text resolver of a display language: the client's own labels bundle, English as fallback.
+	 *
+	 * @param languageCode client language code, or {@code null}
+	 * @return the resolver
+	 */
+	static LivenessTexts textsFor(String languageCode) {
 		ResourceBundle primary = languageCode == null ? null
 				: ApplicationContext.getBundle(languageCode, RegistrationConstants.LABELS);
 		ResourceBundle english;

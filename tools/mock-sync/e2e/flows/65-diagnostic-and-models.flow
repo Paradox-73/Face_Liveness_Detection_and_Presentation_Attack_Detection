@@ -1,0 +1,75 @@
+# Diagnostic mode (G5), server-set guidance text (G4) and the secure offline model import (B6).
+# 1. MockSync turns diagnostic.enable on and replaces the English "Checking face liveness" text
+#    (guidance.liveness.status.checking.eng); after "Synchronize Data" the liveness window shows the diagnostic
+#    lines (policy, engine, PAD score, frame rate, model versions) and the replaced text, and REG-EVT-LV17 is
+#    audited. The resident (face pack s3) answers the challenges the policy asks for. Both keys are removed and
+#    synchronised back at the end, because MockSync is shared.
+# 2. The supervisor opens "Import liveness models" from the header menu and imports three bundles from
+#    ${MODEL_BUNDLES}: "tampered" (manifest changed after signing: refused, LV14), "v1.1.0" (signed with the
+#    development key: verified, stored, engine switched, LV15) and "v1.0.0-old" (validly signed but older: refused
+#    by the rollback check). A face login afterwards runs on the imported models.
+# Needs ${MODEL_BUNDLES}: a folder with those three bundles (see docs/design/desktop-liveness-services.md, model
+# import). The import leaves the bundle active in the client's liveness-models/ folder; delete that folder to go
+# back to the models of the installation.
+label diagnostic mode: diagnostic.enable=Y and a replaced checking text, synchronise
+http PUT ${MOCKSYNC}/admin/config {"mosip.registration.liveness.diagnostic.enable":"Y","mosip.registration.liveness.guidance.liveness.status.checking.eng":"Checking face liveness. Keep looking at the camera."}
+click #homeImgView
+sleep 1500
+click #syncDataPane
+sleep 20000
+expect-sql 1 SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.diagnostic.enable' AND VAL = 'Y'
+label diagnostic mode: resident face capture shows the diagnostic lines
+set RESIDENT_NAME Dina Diagnostic
+include lib/registration-start.flow
+source s3-main
+follow s3
+click #individualBiometricsScanBtn
+expect Checking face liveness\. Keep looking at the camera\. 30
+expect DIAGNOSTIC\s+workflow=registration 30
+expect state=(ACQUIRING|PASSIVE|CAPTURE_READY|CAPTURING|BINDING) 30
+snap diagnostic-mode-checking
+expect Please (blink|smile) 60
+snap diagnostic-mode-challenge
+sleep 10000
+follow off
+snap diagnostic-mode-result
+expect-sql 1 SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV17'
+click #homeImgView
+sleep 1500
+if-node #confirm click #confirm
+label diagnostic mode: keys removed, synchronised back
+http DELETE ${MOCKSYNC}/admin/config/mosip.registration.liveness.diagnostic.enable
+http DELETE ${MOCKSYNC}/admin/config/mosip.registration.liveness.guidance.liveness.status.checking.eng
+click #homeImgView
+sleep 1500
+click #syncDataPane
+sleep 20000
+expect-sql 1 SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.diagnostic.enable' AND VAL = 'N'
+label model import: supervisor imports signed bundles from ${MODEL_BUNDLES}
+set USER ${SUPERVISOR}
+set PASSWORD ${SUPERVISOR_PASSWORD}
+set OPERATOR ${SUPERVISOR_FACE}
+include lib/face-login.flow
+menu Import liveness models
+wait-node #livenessModelPath 30
+snap models-before
+fill #livenessModelPath ${MODEL_BUNDLES}/tampered
+click #livenessModelImport
+expect could not be verified 60
+snap models-refused-tampered
+fill #livenessModelPath ${MODEL_BUNDLES}/v1.1.0
+click #livenessModelImport
+expect verified and now in use 120
+snap models-imported
+fill #livenessModelPath ${MODEL_BUNDLES}/v1.0.0-old
+click #livenessModelImport
+expect is not newer than version 1.1.0 60
+snap models-refused-rollback
+click #livenessModelClose
+expect-sql 1 SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV15' AND LOG_DESC LIKE '%model.bundle%'
+expect-sql 2 SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV14'
+label model import: face login on the imported models
+set USER ${OFFICER}
+set PASSWORD ${OFFICER_PASSWORD}
+set OPERATOR ${OFFICER_FACE}
+include lib/face-login.flow

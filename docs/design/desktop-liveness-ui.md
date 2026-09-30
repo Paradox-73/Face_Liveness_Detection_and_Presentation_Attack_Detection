@@ -14,7 +14,9 @@ All new classes are in `io.mosip.registration.controller.liveness`.
 |---|---|
 | `LivenessPanel` + `fxml/LivenessPanel.fxml` + `liveness-panel.css` | The reusable panel (`fx:root` VBox): live preview (mirrored like a selfie) with an oval face guide, prompt banner (icon, 26 px text, guidance lines, busy indicator), progress bar, "Step i of k", "Attempt i of n", offline badge, diagnostic line, Retry / Cancel / Supervisor override buttons. It only draws. |
 | `LivenessViewModel` | Pure mapping from the engine's `LivenessUiState` to what the panel shows (texts resolved, which controls are visible, style class). No JavaFX, unit-tested. |
-| `LivenessTexts` | Resolves the shared `liveness.*` keys and the desktop `liveness.ui.*` labels from `labels_<lang>.properties`, with English and then the key as fallbacks; fills `{0}` placeholders; keeps French apostrophes. |
+| `LivenessTexts` | Resolves the shared `liveness.*` keys and the desktop `liveness.ui.*` labels from `labels_<lang>.properties`, with English and then the key as fallbacks; fills `{0}` placeholders; keeps French apostrophes. `withOverrides(config, lang)` first takes a synced replacement text `mosip.registration.liveness.guidance.<messageKey>.<lang>` (G4), with the core rule `LivenessUiStateMapper.resolveText` that the Android client uses too. |
+| `DiagnosticText` | The diagnostic lines of the panel when `diagnostic.enable=Y` (G5). Pure formatting, unit-tested. |
+| `LivenessModelImportDialog` | Supervisor window for the offline model import (B6), opened from the header menu item "Import liveness models". |
 | `LivenessIcons` | SVG path outlines for every `PromptIcon` (blink, smile, head turns, gaze, check, warning, error, camera off, lock). No image files. |
 | `FxLivenessListener` | `LivenessRunListener` that moves callbacks from the `liveness-worker` / `sbi-stream-reader` threads to the FX thread (`Platform.runLater`), in order. Preview frames are coalesced: a frame is decoded only when the previous one was drawn, so the screen never queues frames. |
 | `LivenessDialog` | One verification on screen: a modal window with the panel, driven by one `LivenessRun`. Callbacks `captureReady(context)`, `passed()`, `closedWithoutPass(lastOutcome)`. |
@@ -39,7 +41,10 @@ All new classes are in `io.mosip.registration.controller.liveness`.
    another attempt (`LivenessRun.retry()`). After the last attempt Cancel becomes Close; for resident workflows
    with `on_max_failure=SUPERVISOR_OVERRIDE` (never after a suspected attack) a Supervisor override button
    appears. Closing calls `closedWithoutPass(lastOutcome)`; authentication screens apply the lock rule when
-   `lastOutcome.isLockRequired()`.
+   `lastOutcome.isLockRequired()` (`on_max_failure=BLOCK_AND_LOCK`): the login screen through its
+   `validateInvalidLogin`, the other authentication screens through `BaseController.applyLivenessLock`, which
+   counts one failed login with `LivenessAccountLock` and shows either the maximum-attempts message or, when the
+   count is reached, the client's own "account temporarily locked" message.
 
 The window always closes its run (`LivenessRun.close()`), which stops the stream and the worker. Auto-logout is
 turned off while the window is open and back on when it closes.
@@ -54,7 +59,8 @@ turned off while the window is open and back on when it closes.
 | D16 | Operator packet authentication and reviewer, `AuthenticationController.validateFace` | `packet_auth`, `exception_auth` (reviewer) | `authenticateFaceWithLiveness` then the existing `executeFaceValidationTask`. The Stream button starts the liveness window instead of a plain stream. Reviewer window title: "Supervisor verification". |
 | D17 | End-of-day approval, `EODAuthenticationController.validateFace` | `eod_auth` | Same as D16; title "Supervisor verification". |
 | D13 | `BaseController.captureAndValidateFace` | from `faceAuthWorkflow(isPacketAuth, isReviewer)` | Sets `livenessContext` on the request. |
-| D21 | `labels_{en,fr,ar}`, `messages_{en,fr,ar}`, `RegistrationUIConstants` | | 49 label keys and 2 alert messages in each language. |
+| D21 | `labels_{en,fr,ar}`, `messages_{en,fr,ar}`, `RegistrationUIConstants` | | 68 label keys (49 for the panel, 19 for the model import window) and 2 alert messages in each language. |
+| B6 | Header menu, `HeaderController.initialize` | - | One line: `LivenessModelImportDialog.addMenuItem(homeSelectionMenu, livenessModelImporter)`. |
 
 **One service-layer fix found during the screen tests:** `MosipDeviceSpecification_095_ProviderImpl.getRCaptureRequest`
 sent `"previousHash": null`; MockMDS 1.3.1 (and SBI 0.9.5, which lists the field as mandatory) refuses that request
@@ -89,21 +95,46 @@ stream when liveness is enforced (it would keep the device busy).
   (Escape); the prompt label carries its text as accessible text for screen readers.
 - Right-to-left: the window takes the scene orientation of the application language; the preview and the icons
   are kept left-to-right (the preview is mirrored like a selfie, head-turn arrows show the physical direction).
-- No model names, scores or reasons unless `mosip.registration.liveness.diagnostic.enable=Y`, in which case one
-  monospace line shows workflow, policy, engine state, phase, attempts and the failure reason code.
+- No model names, scores or reasons unless `mosip.registration.liveness.diagnostic.enable=Y` (diagnostic mode,
+  G5, off by default, set by the administrator through the synced configuration). Then a monospace block under
+  the counters shows, in fixed English technical terms for support staff:
+  - `DIAGNOSTIC workflow=... policy=... maxAttempts=... engine=<status> <engine tag>`;
+  - `phase=<UI phase> state=<session state> t=<ms> pad=<PAD score> fps=... planarity=... binding=... flags=...`
+    from the latest diagnostic record of the run (the same values as the `LIVENESS-DIAG` log line);
+  - `attempts=i/n result=<PASS or failure reason> code=<REG-LIV code>` once a session ended;
+  - `models=<id>@<version>#<SHA-256 prefix>, ...`.
+  No image, template, user ID or registration ID is shown or logged. Switching the mode is audited
+  (`REG-EVT-LV17`).
+- Replacement texts (G4): an administrator can replace any liveness text for one language through the synced key
+  `mosip.registration.liveness.guidance.<messageKey>.<lang>` (for example
+  `...guidance.liveness.feedback.success.eng`); `<lang>` is the client language code (`eng`, `fra`, `ara`). A blank
+  value is ignored. Placeholders `{0}`, `{1}` work as in the bundles.
+
+### 5.1 Model import window (B6)
+
+The header menu shows "Import liveness models" above "User guide" for `REGISTRATION_SUPERVISOR` and
+`REGISTRATION_ADMIN` users only. The window shows the running bundle (name, version, "installed with the client"
+or "imported") and its models, a path field with "Folder..." and "ZIP file..." buttons, and "Verify and import"
+(default button). The import runs on a background thread (`liveness-model-import`) with a busy indicator; the
+result is one sentence in the display language, green for success and red for a refusal, and always says that the
+current models stay in use when the bundle is refused. The service rules are in
+[desktop-liveness-services.md](desktop-liveness-services.md) section 6.1. All texts are in `labels_en/fr/ar`
+(`liveness.models.*`).
 - Offline badge: "Offline - verification runs on this device" when the server is not reachable (liveness itself
   never needs the network).
 
 ## 6. Tests
 
-JUnit 4 in `registration-client/src/test/java/io/mosip/registration/controller/liveness/` (26 tests; the client
+JUnit 4 in `registration-client/src/test/java/io/mosip/registration/controller/liveness/` (36 tests; the client
 module had no tests before, so `junit` was added with test scope):
 
 | Test | Covers |
 |---|---|
 | `LivenessBundleParityTest` | every `MessageKeys.all()` key and every `liveness.ui.*` label in `labels_en/fr/ar`; same `liveness.*` key set in the three bundles; same placeholders; alert messages with `#TYPE#` in `messages_en/fr/ar`; French and Arabic differ from English; bundles equal `docs/ux/message-catalogue.csv` |
 | `LivenessViewModelTest` | passive, challenge, feedback, liveness failure with guidance, PAD failure, max attempts with count, device error, success, French and Arabic resolution |
-| `LivenessTextsTest` | primary / fallback / key lookup, placeholders with apostrophes, null bundles, language code mapping |
+| `LivenessTextsTest` | primary / fallback / key lookup, placeholders with apostrophes, null bundles, language code mapping, replacement texts per language (blank ignored, placeholders, unknown key) |
+| `DiagnosticTextTest` | diagnostic lines with policy, engine, PAD score, frame rate, planarity, binding, flags and model hashes; missing parts; model versions from the record |
+| `LivenessModelImportDialogTest` | every import status has its text in English, French and Arabic; result texts fill the versions; model lines; only supervisors and administrators see the menu item |
 | `FxLivenessListenerTest` | callbacks only run on the UI executor, in order; detach drops queued and later callbacks; invalid preview frames ignored |
 
 Run: `mvn -B test -Djacoco.skip=true` in `registration-client`.

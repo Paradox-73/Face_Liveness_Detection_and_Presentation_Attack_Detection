@@ -31,6 +31,7 @@ import io.mosip.liveness.core.vision.FaceBox;
 import io.mosip.liveness.onnx.OnnxLivenessEngine;
 import io.mosip.liveness.onnx.OnnxLivenessEngines;
 import io.mosip.liveness.onnx.model.ModelSources;
+import io.mosip.liveness.onnx.model.SemanticVersion;
 import io.mosip.registration.config.AppConfig;
 
 /**
@@ -40,7 +41,9 @@ import io.mosip.registration.config.AppConfig;
  * engine is built with {@link OnnxLivenessEngines} from the signed model bundle on the class path
  * ({@code liveness-onnx-*-models.jar}), checked against {@code model.min_version}. Any other ID is looked up
  * among {@link LivenessEngineProvider} Spring beans (a vendor jar with a configuration class in
- * {@code io.mosip.registration.api.config}) and then through {@link ServiceLoader}.
+ * {@code io.mosip.registration.api.config}) and then through {@link ServiceLoader}. A bundle imported with
+ * {@link LivenessModelImporter} takes the place of the class-path bundle, and the minimum version is raised to the
+ * model store's version floor so an older bundle can never be loaded again (anti-rollback).
  *
  * <p><b>Loading</b> starts in the background when the Spring context starts and the master switch is on, so the
  * first capture does not wait for the models (1-2 s); {@link #engine()} also loads on demand. A self-test then
@@ -88,6 +91,7 @@ public class LivenessEngineRegistry {
 	private List<LivenessEngineProvider> providerBeans = Collections.emptyList();
 
 	private volatile ModelSource modelSource = ModelSources.classpath(LivenessEngineRegistry.class.getClassLoader());
+	private volatile LivenessModelStore modelStore;
 	private volatile Status status = Status.NOT_LOADED;
 	private volatile LivenessEngine engine;
 	private volatile EngineException failure;
@@ -251,8 +255,7 @@ public class LivenessEngineRegistry {
 	private LivenessEngine create() throws EngineException {
 		String id = config.engineId();
 		if (OnnxLivenessEngines.ENGINE_ID.equals(id)) {
-			return OnnxLivenessEngines.builder(modelSource).minimumVersion(config.modelMinVersion())
-					.imageDecoder(imageDecoder).metrics(metrics).build();
+			return buildDefault(activeModelSource());
 		}
 		EngineContext context = EngineContext.builder().config(config).models(modelSource).imageDecoder(imageDecoder)
 				.auditSink(auditSink).diagnosticSink(diagnosticSink).build();
@@ -263,6 +266,121 @@ public class LivenessEngineRegistry {
 			}
 		}
 		throw new EngineException(EngineErrorCode.CONFIG_INVALID, "no liveness engine with ID " + id);
+	}
+
+	/**
+	 * Replaces the running default engine by one built from another verified bundle (offline model import). The new
+	 * engine is built and self-tested first; only then is it swapped in and the old one closed. On any failure the
+	 * running engine stays as it was and the exception is returned to the caller, which audits it.
+	 *
+	 * @param source the new bundle; checked again against its signature, hashes and the version floor
+	 * @return the new engine's description
+	 * @throws EngineException {@code CONFIG_INVALID} when a vendor engine is configured; the load or self-test error
+	 */
+	public EngineInfo switchModels(ModelSource source) throws EngineException {
+		Objects.requireNonNull(source, "source");
+		if (!isDefaultEngine()) {
+			throw new EngineException(EngineErrorCode.CONFIG_INVALID, "model import needs the default engine");
+		}
+		synchronized (lock) {
+			LivenessEngine created = null;
+			try {
+				created = buildDefault(source);
+				selfTest(created);
+			} catch (EngineException e) {
+				closeQuietly(created);
+				throw e;
+			} catch (RuntimeException | LinkageError e) {
+				closeQuietly(created);
+				throw new EngineException(EngineErrorCode.MODEL_LOAD,
+						"liveness engine could not start: " + e.getClass().getSimpleName(), e);
+			}
+			LivenessEngine old = engine;
+			engine = created;
+			failure = null;
+			status = Status.READY;
+			closeQuietly(old);
+			LOGGER.info("Liveness engine switched to {}; models {}", created.info().tag(), created.info().models());
+			return created.info();
+		}
+	}
+
+	/**
+	 * Tells whether the configured engine is the built-in ONNX engine, the only one whose models can be imported.
+	 *
+	 * @return {@code true} for {@code mosip-onnx-default}
+	 */
+	public boolean isDefaultEngine() {
+		return OnnxLivenessEngines.ENGINE_ID.equals(config.engineId());
+	}
+
+	/**
+	 * Returns the version of the running model bundle.
+	 *
+	 * @return the version; empty before the engine is loaded or for a vendor engine
+	 */
+	public Optional<String> bundleVersion() {
+		LivenessEngine e = engine;
+		return e instanceof OnnxLivenessEngine ? Optional.ofNullable(((OnnxLivenessEngine) e).bundleVersion())
+				: Optional.<String>empty();
+	}
+
+	/**
+	 * Returns the store of imported model bundles.
+	 *
+	 * @return the store in {@link LivenessConfig#modelStoreDirectory()}, unless a test replaced it
+	 */
+	public LivenessModelStore modelStore() {
+		LivenessModelStore s = modelStore;
+		return s != null ? s : new LivenessModelStore(config.modelStoreDirectory());
+	}
+
+	/**
+	 * Replaces the model store (tests).
+	 *
+	 * @param store the store
+	 */
+	void setModelStore(LivenessModelStore store) {
+		this.modelStore = Objects.requireNonNull(store, "store");
+	}
+
+	/**
+	 * Returns the bundle the default engine loads: the active imported bundle when there is one, else the bundle on
+	 * the class path. An imported bundle that later fails its checks is not replaced by the older class-path
+	 * bundle: the engine fails closed instead.
+	 */
+	ModelSource activeModelSource() {
+		Optional<LivenessModelStore.Installed> imported = modelStore().active();
+		if (imported.isPresent()) {
+			LOGGER.info("Liveness models: imported bundle {} {}", imported.get().bundle(), imported.get().version());
+			return ModelSources.directory(imported.get().folder().toFile());
+		}
+		return modelSource;
+	}
+
+	/**
+	 * Returns the lowest bundle version the engine accepts: {@code model.min_version} or the store's version floor,
+	 * whichever is higher (anti-rollback).
+	 *
+	 * @return {@code MAJOR.MINOR.PATCH}
+	 */
+	String minimumModelVersion() {
+		String configured = config.modelMinVersion();
+		Optional<String> floor = modelStore().floor();
+		if (!floor.isPresent()) {
+			return configured;
+		}
+		try {
+			return SemanticVersion.parse(floor.get()).compareTo(SemanticVersion.parse(configured)) > 0 ? floor.get()
+					: configured;
+		} catch (IllegalArgumentException e) {
+			return configured; // the builder reports an invalid min_version as CONFIG_INVALID
+		}
+	}
+
+	private LivenessEngine buildDefault(ModelSource source) throws EngineException {
+		return OnnxLivenessEngines.builder(source).minimumVersion(minimumModelVersion()).imageDecoder(imageDecoder)
+				.metrics(metrics).build();
 	}
 
 	private List<LivenessEngineProvider> providers() {

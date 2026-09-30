@@ -174,3 +174,20 @@
 	-fx-border-color: #0B2E4F;
 	-fx-border-width: 3;
 }
+
+/* Result line of the model import window (LivenessModelImportDialog); the text always says what happened. */
+.liveness-models-ok {
+	-fx-text-fill: #1E4620;
+	-fx-background-color: #E6F4EA;
+	-fx-border-color: #2E7D32;
+	-fx-padding: 8;
+	-fx-font-size: 14px;
+}
+
+.liveness-models-error {
+	-fx-text-fill: #7A1712;
+	-fx-background-color: #FCE8E6;
+	-fx-border-color: #B3261E;
+	-fx-padding: 8;
+	-fx-font-size: 14px;
+}
