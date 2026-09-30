@@ -119,8 +119,12 @@ is `docs/ux/message-catalogue.csv`.
 
 ## 7. Known limits (measured)
 
-- Genuine head turns to the left are often misread as a smile (mouth ratio rises with yaw), failing with
-  `WRONG_ACTION`: `TURN_LEFT` completed 3 of 33 times for one subject (`docs/eval/calibration-notes.md` F2,
-  engine proposal E1). The end-to-end runs therefore served `active.challenge_types=BLINK,SMILE` from MockSync.
-- A blink already in progress at the prompt fails as `ONSET_TOO_FAST` (F7, proposal E2).
+- Fixed on 2026-09-30: genuine head turns to the left used to be misread as a smile (the mouth-width ratio rises
+  with yaw), failing with `WRONG_ACTION` (`TURN_LEFT` 3 of 33). The smile is now not measured while the head is
+  turned more than `active.smile_max_yaw_deg` (15 degrees) from the neutral face (`ActionLevels.smile`, engine
+  change E1); `TURN_LEFT` completes 15/15 and `TURN_RIGHT` 15/15 in the suite ([calibration
+  notes](../eval/calibration-notes.md) section 0). The end-to-end runs, made before the fix, served
+  `active.challenge_types=BLINK,SMILE` from MockSync.
+- A blink already in progress at the prompt fails as `ONSET_TOO_FAST` (F7). Kept on purpose (proposal E2 not
+  adopted): ignoring it would let a replay that blinks continuously pass on its next blink. The person blinks again.
 - Real-time face reenactment that answers prompts is outside what challenges can stop ([security-privacy.md](security-privacy.md)).

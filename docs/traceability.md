@@ -2,7 +2,7 @@
 
 Every requirement of Problem Statement 04 ("Face Liveness Detection and Presentation Attack Detection for
 Registration and Biometric Authentication"), where it is implemented on each client, the test that shows it, and
-its status on 2026-09-30.
+its status on 2026-09-30 (updated after the engine fixes and the desktop and Android gap fixes of the same day).
 
 - Source of the requirements: the PS04 document (overview, resident / operator / supervisor sections,
   configuration, online and offline, recommended stack, expected tasks, mandatory tasks 1-10, UI/UX 1-8, bonus,
@@ -26,7 +26,10 @@ its status on 2026-09-30.
 |---|---|
 | `DE-D1` ... `DE-D13`, `DE-I1` ... `DE-I3` | Rows of the desktop end-to-end report, [test-report/desktop-e2e.md](test-report/desktop-e2e.md) section 3 (real desktop client, MockSync, MockMDS; reference run 41/41 checks) |
 | `AE-A1` ... `AE-A16` | Rows of the Android end-to-end report, [test-report/android-e2e.md](test-report/android-e2e.md) section 3 (real Android client on an emulator; reference run 58/58 checks) |
-| `scn:<id>` | Scenario `eval/scenarios/<id>.yaml`, replayed through the real engine and models; results in [eval/results/20260930/](eval/results/20260930/) and [eval/calibration-notes.md](eval/calibration-notes.md) |
+| `scn:<id>` | Scenario `eval/scenarios/<id>.yaml`, replayed through the real engine and models. Results of the engine and defaults in this repository now: [eval/results/20260930-engine-fixes/](eval/results/20260930-engine-fixes/) (suite `shipped`); results before the fixes: [eval/results/20260930/](eval/results/20260930/). Comparison: [eval/calibration-notes.md](eval/calibration-notes.md) section 0 |
+| `CN0` | [eval/calibration-notes.md](eval/calibration-notes.md) section 0: the defaults and engine changes adopted on 2026-09-30, with before and after figures |
+| `DE-e2e-13` ... `DE-e2e-16` | Desktop flow `tools/mock-sync/e2e/flows/65-diagnostic-and-models.flow` (diagnostic mode, replacement texts, model import; 15 of 15 checks on 2026-09-30), [design/desktop-liveness-services.md](design/desktop-liveness-services.md) section 12; screenshots `ux/screenshots/desktop/e2e-13..16` |
+| `AND-13` | [design/android-liveness.md](design/android-liveness.md) section 13 (override, metrics, diagnostics, execution provider, release build; unit tests and the emulator run of 2026-09-30) |
 | `APCER`, `BPCER` | Attack acceptance rate and genuine-user rejection rate, ISO/IEC 30107-3 metric definitions, from the automated suite (technology regression results, not an ISO/IEC 30107-3 evaluation) |
 | Test class name | JUnit test class; the module table below gives its folder |
 
@@ -51,10 +54,10 @@ its status on 2026-09-30.
 | `ChallengeSchedulerTest`, `ChallengeObserverTest`, `ActivePhaseTest`, `QualityAndDecisionTest`, `IntegrityAndPlanarityTest`, `CaptureBindingTest`, `SessionScenarioTest`, `SessionEdgeCaseTest`, `ReportingTest`, `UiStateMapperTest`, `FrameHandOffTest`, `MjpegFrameReaderTest`, `MjpegEdgeCaseTest`, `PolicyResolverTest`, `LivenessPolicyTest`, `LivenessConfigKeysTest`, `AuditTest`, `UiContractTest`, `ImageBufferTest`, `DeviceTypesTest`, `ArchitectureTest` | `liveness/liveness-core/src/test/java/` |
 | `ModelRegistryTest`, `ModelSignerTest`, `OnnxGoldenTest`, `OnnxLivenessEnginesTest`, `MiniFasCropTest`, `YuNetDetectorTest`, `HeadPoseEstimatorTest` | `liveness/liveness-onnx/src/test/java/` |
 | `SFaceBioApiContractTest`, `MosipSdkLoaderTest`, `FaceIsoRecordTest` | `liveness/face-match-sdk/src/test/java/` |
-| `LivenessGateTest`, `BioServiceLivenessGateTest`, `LivenessOrchestratorTest`, `FaceStreamSessionTest`, `LivenessConfigTest`, `DesktopAuditSinkTest`, `LivenessPacketEvidenceTest`, `LivenessTokenStoreTest`, `DesktopImageDecoderTest`, `SbiFaceCaptureDeviceResolveTest`, `AuditFactoryTest` | `clients/desktop/registration/registration-services/src/test/java/` |
-| `LivenessViewModelTest`, `LivenessBundleParityTest`, `LivenessTextsTest`, `FxLivenessListenerTest` | `clients/desktop/registration/registration-client/src/test/java/` |
-| `FaceAuthenticatorTest`, `GlobalParamConfigSourceTest`, `ArcAuditSinkTest`, `LivenessServiceTest`, `LivenessCaptureActivityTest`, `MessageResolverTest`, `AndroidImageDecoderTest`, `SbiCaptureCodecTest`, `FaceIsoRecordsTest`, `EngineFaceVerifierTest`, `FrameTimerTest`, `OnnxRuntimeSupplyChainTest` | `clients/android/android/livenessmanager/src/test/java/` |
-| `FaceCaptureLivenessGateTest`, `FaceAuthFlowTest`, `LivenessCaptureLauncherTest`, `LivenessApiTest` | `clients/android/android/app/src/test/java/` |
+| `LivenessGateTest`, `BioServiceLivenessGateTest`, `LivenessOrchestratorTest`, `FaceStreamSessionTest`, `LivenessConfigTest`, `DesktopAuditSinkTest`, `LivenessPacketEvidenceTest`, `LivenessTokenStoreTest`, `DesktopImageDecoderTest`, `SbiFaceCaptureDeviceResolveTest`, `LivenessModelImporterTest`, `LivenessOnMaxFailureTest`, `LivenessAccountLockTest`, `AuditFactoryTest` | `clients/desktop/registration/registration-services/src/test/java/` |
+| `LivenessViewModelTest`, `LivenessBundleParityTest`, `LivenessTextsTest`, `FxLivenessListenerTest`, `DiagnosticTextTest`, `LivenessModelImportDialogTest` | `clients/desktop/registration/registration-client/src/test/java/` |
+| `FaceAuthenticatorTest`, `GlobalParamConfigSourceTest`, `ArcAuditSinkTest`, `LivenessServiceTest`, `LivenessCaptureActivityTest`, `MessageResolverTest`, `AndroidImageDecoderTest`, `SbiCaptureCodecTest`, `FaceIsoRecordsTest`, `EngineFaceVerifierTest`, `FrameTimerTest`, `OnnxRuntimeSupplyChainTest`, `SupervisorOverrideTest`, `PhotoCaptureRunnerTest`, `MetricsReportTest`, `DiagnosticModeTrackerTest`, `AcceleratorCustomizerTest` | `clients/android/android/livenessmanager/src/test/java/` |
+| `FaceCaptureLivenessGateTest`, `FaceAuthFlowTest`, `LivenessCaptureLauncherTest`, `LivenessApiTest`, `SupervisorOverrideFlowTest` | `clients/android/android/app/src/test/java/` |
 | `RegistrationServiceImplTest` | `clients/android/android/clientmanager/src/test/java/` |
 | `face_auth_panel_test.dart`, `liveness_outcome_banner_test.dart` | `clients/android/test/liveness/` |
 
@@ -62,24 +65,24 @@ its status on 2026-09-30.
 
 | ID | PS04 requirement | Desktop | Android | Evidence | Status | Notes |
 |---|---|---|---|---|---|---|
-| O1 | Process face image streams from L0/L1 devices in the desktop and Android clients | `RS/service/bio/liveness/SbiFaceCaptureDevice`, `FaceStreamSession` (SBI MJPEG stream) | `LM/device/BuiltInCameraL0Device`, `CameraXFrameSource`, `ReplayFrameSource` | DE-D1..D13, AE-A1..A16 | partial | Desktop: SBI L0 and L1 devices (DE-D9). Android: the built-in camera as an L0 device only; external SBI face apps give no preview stream (`LM/device/SbiIntentDevice` is written but not wired in), and ARC's `Biometrics095Service.isDeviceValid` still accepts L0 only. |
+| O1 | Process face image streams from L0/L1 devices in the desktop and Android clients | `RS/service/bio/liveness/SbiFaceCaptureDevice`, `FaceStreamSession` (SBI MJPEG stream) | `LM/device/BuiltInCameraL0Device`, `CameraXFrameSource`, `ReplayFrameSource` | DE-D1..D13, AE-A1..A16 | partial | Hardware and integration gap (no vendor Android face app to test with). Desktop: SBI L0 and L1 devices (DE-D9). Android: the built-in camera as an L0 device only; external SBI face apps give no preview stream (`LM/device/SbiIntentDevice` is written but not wired in), and ARC's `Biometrics095Service.isDeviceValid` still accepts L0 only. |
 | O2 | Applies to resident face capture, operator authentication, supervisor authentication | 6 face screens (see sections 2-4) | resident, onboarding, sign-in, packet auth, supervisor approval | DE-D1, D3, D5, D7; AE-A2, A7, A9, A11 | done | |
 | O3 | Passive liveness first, no user action, quality/confidence score | `core/engine/PassivePadAggregator`, `onnx/pad/MiniFasPassivePad` | same engine | `QualityAndDecisionTest`, `SessionScenarioTest`; DE-D3 (score 84, no challenge); AE-A2 | done | Score 0-100; only buckets (for example `80-89`) reach audit and packet. |
 | O4 | Compare the passive result with a configurable threshold | `core/engine/DecisionPolicy`, key `passive.threshold` (80 resident, 95 authentication) | same | `QualityAndDecisionTest`, `PolicyResolverTest` | done | |
 | O5 | Threshold met and no attack: proceed | `DecisionPolicy` → `CAPTURE_READY` | same | DE-D3, AE-A2, AE-A9 | done | |
-| O6 | Threshold not met: start active verification automatically | `DecisionPolicy` (`PASSIVE_THEN_ACTIVE`) | same | `SessionScenarioTest`; DE-D4 (score 74 → 2 challenges); AE-A7 | done | |
+| O6 | Threshold not met: start active verification automatically | `DecisionPolicy` (`PASSIVE_THEN_ACTIVE`) | same | `SessionScenarioTest`; DE-D4 (score 74 → 2 challenges); AE-A7 | done | Shipped defaults since 2026-09-30: `PASSIVE_THEN_ACTIVE` for `packet_auth`, `exception_auth`, `eod_auth`; `ALWAYS_ACTIVE` (challenges whatever the score, after the passive stage) for `registration`, `login_auth`, `onboard_auth` (CN0, P1). One synced key per workflow switches back. |
 | O7 | Prompt dynamically selected facial actions | `core/engine/ChallengeScheduler` (secure random draw) | same | `ChallengeSchedulerTest.drawsAreUniformOverTheAllowedSequences`, `noImmediateRepeats` | done | |
 | O8 | Analyse the following frames to decide whether the action was done by a live person | `core/engine/ChallengeObserver`, `ActiveStage` (active PAD, integrity, planarity during the challenge) | same | `ChallengeObserverTest`, `ActivePhaseTest`; `scn:atk-*-adaptive-wrong-clip` (36/36 refused) | done | |
 | O9 | Proceed only when liveness and PAD criteria are met | `RS/service/bio/liveness/LivenessGate` (capture and authentication gates) | `APP/liveness/FaceCaptureLivenessGate`, `LM/auth/FaceAuthenticator` | `LivenessGateTest`, `BioServiceLivenessGateTest`, `FaceCaptureLivenessGateTest`, `FaceAuthenticatorTest` | done | |
 | O10 | The user does not select the challenge | `ChallengeScheduler` has no selection API | same | `ChallengeSchedulerTest.noPublicSelectionApi` | done | |
-| O11 | Challenge sequence dynamic and unpredictable | `ChallengeScheduler` with `core/SecureRandomSource`, random delays | same | `ChallengeSchedulerTest` | done | The demo configuration narrows the pool to `BLINK,SMILE` (head turns, see O13). |
+| O11 | Challenge sequence dynamic and unpredictable | `ChallengeScheduler` with `core/SecureRandomSource`, random delays | same | `ChallengeSchedulerTest` | done | The end-to-end demos narrowed the pool to `BLINK,SMILE` from MockSync while the head-turn defect was open (O13, now fixed). |
 | O12 | Challenges: blink, smile | `core/ChallengeType` BLINK, SMILE | same | DE-D4 (`SMILE:OK,BLINK:OK`); AE-A7 | done | On the loaded emulator BLINK was usually not eligible (needs 10 analysed frames per second), so Android runs drew SMILE twice. |
-| O13 | Challenges: turn head left/right | TURN_LEFT, TURN_RIGHT | same | `scn:bf-s2-active`; calibration notes 4.2 | partial | Genuine TURN_LEFT completes 3 of 36 times in the suite: head yaw raises the mouth-width ratio over the smile trigger (`WRONG_ACTION`). TURN_RIGHT 15/15. Fix proposal E1 open. |
+| O13 | Challenges: turn head left/right | TURN_LEFT, TURN_RIGHT | same | `ChallengeObserverTest` (turn with a yaw-inflated mouth ratio passes; without the yaw limit it fails as a smile); `scn:bf-*-active`; CN0 | done | Fixed on 2026-09-30 (engine change E1, `active.smile_max_yaw_deg` 15): genuine TURN_LEFT completes 15/15 and TURN_RIGHT 15/15 in the suite (was 3/36). Not re-run on the clients end to end: the demos still serve `BLINK,SMILE`. |
 | O14 | Challenges: look in a specified direction; other movements | LOOK_UP, LOOK_DOWN, GAZE_LEFT, GAZE_RIGHT | same | `ChallengeObserverTest` | partial | Implemented and unit-tested on synthetic landmarks; not exercised by the frame packs or the end-to-end runs. |
 | O15 | Challenge set depends on the technology's capabilities | `ChallengeScheduler` filters by `FaceAnalyzer.features()`, face size and frame rate | same | `ChallengeSchedulerTest.poolIsFilteredByFeaturesFaceSizeAndEngine` | done | |
-| O16 | PAD against printed photographs | passive PAD + challenges + planarity | same | `scn:atk-*-print-*`; DE-D6, DE-D8; AE-A10; `test-report/android-e2e/print-attack-trials.txt` | partial | Under the shipped registration policy (passive first, threshold 80) synthetic prints of one subject pass the passive check: APCER 100% for SYN-A3 (8/8). With `policy.registration=ALWAYS_ACTIVE` all prints are refused (DE-D8, AE-A12, strict suite). Choosing that policy is open (about 7 s more per capture). |
+| O16 | PAD against printed photographs | passive PAD + challenges + planarity | same | `scn:atk-*-print-*`; CN0; DE-D6, DE-D8; AE-A10, AE-A12; `test-report/android-e2e/print-attack-trials.txt` | done | Shipped defaults (`ALWAYS_ACTIVE` for registration, sign-in and onboarding): 0 accepted of 84 print attempts (SYN-A2 0/48, A3 0/24, A4 0/12). Before 2026-09-30 the passive-first registration policy accepted SYN-A3 8/8. Prints are synthetic; real prints wait for the volunteer evaluation (E6). |
 | O17 | PAD against digital images on screens | passive PAD | same | `scn:atk-s2-screen-photo`, `atk-s3-screen-photo` | done | SYN-A5 APCER 0% (0/24) in every suite. |
-| O18 | PAD against video replay | passive PAD, challenges, loop detection | same | `scn:atk-*-screen-replay*`, `atk-*-looped-clip`, `atk-*-adaptive-screen`; DE-D7; AE-A4, A6, A11 | partial | Shipped: SYN-A6 14.3%, SYN-A8 looped clip 100%. Proposed policy: SYN-A8 0%, but the adaptive replay SYN-A7 (a clip that answers the prompt) is still accepted 25% (4/16) in every configuration. |
+| O18 | PAD against video replay | passive PAD, challenges, loop detection | same | `scn:atk-*-screen-replay*`, `atk-*-looped-clip`, `atk-*-adaptive-screen`; CN0; DE-D7; AE-A4, A6, A11 | partial | Shipped defaults: SYN-A6 screen replay 0/36, SYN-A8 looped clip 0/24 (`LOOP`). The adaptive replay SYN-A7 (a clip that answers each prompt) is still accepted 4/16 in every configuration; closing it needs a stronger PAD model or device-side PAD on L1 hardware. |
 | O19 | Other attack techniques | frame integrity (frozen frames, loops, timestamp regression), capture binding | same | `IntegrityAndPlanarityTest`, `CaptureBindingTest`; `scn:atk-*-injected-still` (SYN-A1 0%); DE-D6 (injected still, `FROZEN`) | partial | Injected still streams are refused. Masks, deepfakes and injection of new video were not tested. |
 | O20 | Never accept a capture or complete authentication when liveness/PAD fails | `LivenessGate.admit/complete` in `BioServiceImpl.captureModality`; `AuthenticationServiceImpl.authValidator` | `FaceCaptureLivenessGate` (only a PASS is stored); `FaceAuthenticator` (match only after PASS) | `BioServiceLivenessGateTest`, `LivenessGateTest`, `FaceCaptureLivenessGateTest`, `FaceAuthFlowTest`; DE-D6, AE-A10 | done | A resident capture labelled with a workflow whose policy is OFF passes the desktop gate without evidence (design doc `desktop-liveness-services.md` section 9). |
 
@@ -117,22 +120,22 @@ its status on 2026-09-30.
 
 | ID | PS04 requirement | Desktop | Android | Evidence | Status | Notes |
 |---|---|---|---|---|---|---|
-| C1 | Configurable at Registration Client level | `RS/service/bio/liveness/LivenessConfig` over `ApplicationContext.map()` (MOSIP global params) | `LM/config/GlobalParamConfigSource` over `GlobalParamRepository` | `LivenessConfigTest`, `GlobalParamConfigSourceTest` | done | Same key names on both clients: `mosip.registration.liveness.*` (`core/config/LivenessConfigKeys`, 43 defaults). |
+| C1 | Configurable at Registration Client level | `RS/service/bio/liveness/LivenessConfig` over `ApplicationContext.map()` (MOSIP global params) | `LM/config/GlobalParamConfigSource` over `GlobalParamRepository` | `LivenessConfigTest`, `GlobalParamConfigSourceTest` | done | Same key names on both clients: `mosip.registration.liveness.*` (`core/config/LivenessConfigKeys`, 44 defaults). |
 | C2-C10 | Enable/disable, passive threshold, active enablement, minimum challenges, challenge types, timeout, max retries, per-workflow policies, behaviour on repeated failure | see mandatory task 8 below | | | done | |
 | C11 | Configuration applies online and offline | values cached in the client database after sync | same | DE-D10, AE-A13 | done | |
 | OF1 | Liveness works online and offline | engine and models run locally; no network code in the core (ArchUnit rule) | same | `ArchitectureTest`; DE-D10; AE-A13 | done | Offline was simulated: desktop by routing the client's HTTPS calls to a closed port, Android by removing `adb reverse` plus airplane mode. MockSync logged no request in both windows. |
 | OF2 | Core liveness, PAD, challenge generation and action validation available locally | as above | as above | as above | done | |
 | OF3 | Same behaviour in online registration, offline registration, operator and supervisor authentication | same engine and keys | same | DE-D10, AE-A13 | done | Known differences: see UX8. |
-| OF4 | Configuration and model updates synchronised securely when online | config: MOSIP sync (signed responses); models: signed bundle inside the client release | config: MOSIP sync; models: APK assets checked against the signed manifest at build time | DE-D8, AE-A12 (policy change arrives by sync, audit LV15); `ModelRegistryTest` | partial | Config: done. Models: signature and version are checked at every load, but there is no online model download; a new model set arrives with a client upgrade. |
+| OF4 | Configuration and model updates synchronised securely when online | config: MOSIP sync (signed responses); models: signed bundle inside the client release | config: MOSIP sync; models: APK assets checked against the signed manifest at build time | DE-D8, AE-A12 (policy change arrives by sync, audit LV15); `ModelRegistryTest` | partial | Config: done. Models: signature, hashes and version are checked at every load; the desktop client also imports a newer signed bundle offline (B6). There is no model download through MOSIP sync: Android gets new models with a new APK. |
 
 ## 5. Recommended stack and integration
 
 | ID | PS04 item | Where | Evidence | Status | Notes |
 |---|---|---|---|---|---|
 | TS1 | Desktop: Java, existing device framework, vendor SDK/API, camera/device abstraction | Java 11 engine; SBI 0.9.5 and 1.0 providers extended (`RS/mdm/...`); `core/device/FaceCaptureDevice` | DE-D1..D13 | done | |
-| TS2 | Android: Java/Flutter, camera APIs, vendor SDK/API | `LM/` (Java), CameraX, Flutter widgets in `lib/ui/liveness/` | AE-A1..A16 | partial | CameraX not run with a real camera; vendor SBI face apps not wired (O1). |
+| TS2 | Android: Java/Flutter, camera APIs, vendor SDK/API | `LM/` (Java), CameraX, Flutter widgets in `lib/ui/liveness/` | AE-A1..A16 | partial | Hardware and integration gap (no vendor Android face app to test with). CameraX not run with a real camera; vendor SBI face apps not wired (O1). |
 | TS3 | Common face capture device interface | `core/device/FaceCaptureDevice`, `FaceFrameSource` | `DeviceTypesTest` | done | |
-| TS4 | Device adapter pattern for multiple vendors | `SbiFaceCaptureDevice` (desktop SBI), `BuiltInCameraL0Device`, `SbiIntentDevice` (Android) | `SbiFaceCaptureDeviceResolveTest`, `SbiCaptureCodecTest` | partial | Only MockMDS was used as a vendor device; no second vendor tested. |
+| TS4 | Device adapter pattern for multiple vendors | `SbiFaceCaptureDevice` (desktop SBI), `BuiltInCameraL0Device`, `SbiIntentDevice` (Android) | `SbiFaceCaptureDeviceResolveTest`, `SbiCaptureCodecTest` | partial | Hardware gap. Only MockMDS was used as a vendor device; no second vendor tested. |
 | TS5 | Configurable liveness quality validation | `quality.*` keys, `QualityGate` | `QualityAndDecisionTest` | done | |
 | TS6 | Existing configuration framework | MOSIP global params on both clients | C1 | done | |
 | TS7 | Independent of any vendor | engine plug-in interface `core/api/LivenessEngineProvider` (Java `ServiceLoader`); SFace SDK loaded through MOSIP's `IBioApiV2` | `OnnxLivenessEngineProviderTest`, `MosipSdkLoaderTest` | done | |
@@ -145,11 +148,11 @@ its status on 2026-09-30.
 | E2 | Analyse the desktop and Android face capture workflows | `docs/design/integration-flows.md`, `docs/design/sequences.md`, `docs/ux/flows.md` | review | partial | As E1. |
 | E3 | Define the face frame streaming interface | `core/device/FaceFrameSource`, `FrameSink`, `FaceFrame`; `core/stream/MjpegFrameReader`, `FrameHandOff` (Javadoc) | `MjpegFrameReaderTest`, `FrameHandOffTest` | done | |
 | E4 | Define the liveness/PAD processing interface | `core/api/LivenessEngine`, `LivenessSession`, `core/vision/PassivePad`, `FaceAnalyzer` (Javadoc); `liveness/README.md` | `ApiTypesTest`, `UiContractTest` | done | |
-| E5 | Evaluate liveness and PAD technologies | `models/SOURCES.md` (model choice and licences), `liveness/liveness-onnx/README.md` (rejected SFace int8) | — | partial | No standalone comparison document of candidate technologies. |
-| E6 | Evaluate against ISO/IEC 30107 | `docs/eval/protocol.md`, `tools/eval/`, `docs/eval/calibration-notes.md` | 3 suites x 131 transactions | partial | Automated technology regression with ISO/IEC 30107-3 metrics is done. The evaluation with real people and real artefacts ([protocol](eval/protocol.md)) has not run yet. |
+| E5 | Evaluate liveness and PAD technologies | [design/technology-evaluation.md](design/technology-evaluation.md) (candidates, criteria, choice, sources); `models/SOURCES.md` (model licences) | review | done | Passive CNN models, landmark challenges, rPPG, depth/IR hardware, geometric checks, commercial SDKs and cloud APIs compared on offline use, licence, size, CPU, vendor neutrality and accuracy evidence. |
+| E6 | Evaluate against ISO/IEC 30107 | `docs/eval/protocol.md`, `tools/eval/`, `docs/eval/calibration-notes.md` | 3 suites x 131 transactions | partial | Volunteer gap. Automated technology regression with ISO/IEC 30107-3 metrics is done. The evaluation with real people and real artefacts ([protocol](eval/protocol.md)) has not run yet. |
 | E7-E19 | Implement passive, PAD, active, dynamic selection, action detection, thresholds, resident, operator, supervisor, online/offline, retry, UI/UX, configuration | mandatory tasks 1-10 below | | see rows | |
 | E20 | Audit and diagnostic logging | `core/audit/*`, `RS/.../DesktopAuditSink`, `DesktopDiagnosticSink`; `LM/audit/ArcAuditSink`, `LogcatSinks`; events `REG-EVT-LV01..17` on both clients | `AuditTest`, `DesktopAuditSinkTest`, `ArcAuditSinkTest`; DE-D12, AE-A14 | done | No image, embedding or raw score in any audit row. |
-| E21 | Performance and interoperability testing | latency: `docs/eval/calibration-notes.md` section 5, `test-report/android-e2e.md` section 5 | see [test-report/README.md](test-report/README.md) section 5 | partial | The per-frame target (p95 at most 20 ms) is not met (desktop JVM p95 38-45 ms; emulator much slower). No interoperability framework (B4). |
+| E21 | Performance and interoperability testing | latency: `docs/eval/calibration-notes.md` sections 0.3 and 5, `test-report/android-e2e.md` section 5 | see [test-report/README.md](test-report/README.md) section 5 | partial | The per-frame target (p95 at most 20 ms) is not met: desktop JVM p95 38-45 ms on a quieter machine, about 78 ms with two suites in parallel; the emulator is slower. No idle-machine or physical-tablet measurement (hardware). No interoperability framework (B4). |
 
 ## 7. Mandatory tasks
 
@@ -157,8 +160,8 @@ its status on 2026-09-30.
 
 | ID | Bullet | Desktop | Android | Evidence | Status | Notes |
 |---|---|---|---|---|---|---|
-| 1.1 | Integrate with L0/L1 devices | SBI devices through MOSIP's device framework; L1 digital ID checked against the FTM root | built-in camera as L0 | DE-D9 (LV01 `"certification":"L1"`); AE-A15 (`LIVENESS_DEVICE_LEVEL=L0`) | partial | Android has no L1 path (O1). |
-| 1.2 | Receive face frame streams | `FaceStreamSession` (SBI STREAM, MJPEG) | `CameraXFrameSource`, `ReplayFrameSource` | `FaceStreamSessionTest`; DE-D3 | partial | Android CameraX not run (R2). |
+| 1.1 | Integrate with L0/L1 devices | SBI devices through MOSIP's device framework; L1 digital ID checked against the FTM root | built-in camera as L0 | DE-D9 (LV01 `"certification":"L1"`); AE-A15 (`LIVENESS_DEVICE_LEVEL=L0`) | partial | Hardware and integration gap (no vendor Android face app to test with). Android has no L1 path (O1). |
+| 1.2 | Receive face frame streams | `FaceStreamSession` (SBI STREAM, MJPEG) | `CameraXFrameSource`, `ReplayFrameSource` | `FaceStreamSessionTest`; DE-D3 | partial | Hardware gap. Android CameraX not run (R2). |
 | 1.3 | Continuous or periodic frame processing | `FrameHandOff.latestOnly()`, key `frame.sample_interval_ms` | CameraX `KEEP_ONLY_LATEST`; PAD every n-th frame during challenges | `FrameHandOffTest`, `FrameTimerTest` | done | |
 | 1.4 | Handle device frame formats | `RS/.../DesktopImageDecoder` (JPEG, ISO 19794-5 JPEG 2000), `core/image/PixelFormat` | `LM/image/AndroidImageDecoder` (RGBA_8888, JPEG), `PixelOrientation` | `ImageBufferTest`, `DesktopImageDecoderTest`, `AndroidImageDecoderTest`, `PixelOrientationTest` | done | |
 | 1.5 | Handle device communication failures | read timeouts (2 s), `DeviceErrorCode` (`STALLED`, `FIRST_FRAME_TIMEOUT`, `INVALID_STREAM`) | camera errors mapped to `DeviceErrorCode` | `MjpegEdgeCaseTest`, `FaceStreamSessionTest`; DE-D2 | done | |
@@ -180,10 +183,10 @@ its status on 2026-09-30.
 | ID | Bullet | Where | Evidence | Status | Notes |
 |---|---|---|---|---|---|
 | 3.1 | PAD as part of liveness | passive PAD, active PAD during challenges, `FrameIntegrityChecker`, `PlanarityChecker`, `CaptureBinder` | `IntegrityAndPlanarityTest`, `ActivePhaseTest`, `CaptureBindingTest` | done | |
-| 3.2 | Detect applicable attack types | as above | 22 attack scenarios; shipped suite APCER pooled 17.6% (32/182); proposed policy 1.7% (4/238) | partial | See O16-O19: prints pass the passive check under the shipped registration policy; the adaptive screen replay SYN-A7 passes in every configuration (25%). |
+| 3.2 | Detect applicable attack types | as above | 22 attack scenarios; CN0: shipped defaults pooled APCER 1.7% (4/238) per attempt, 4.9% (4/82) per transaction; before 2026-09-30 17.6% (32/182) | partial | Every synthetic species is refused except the adaptive screen replay SYN-A7 (4/16, O18). Synthetic attacks only; masks and deepfakes not tested (O19). |
 | 3.3 | Prevent face capture on attack | `LivenessGate` (desktop), `FaceCaptureLivenessGate` (Android) | DE-D6; AE-A6, AE-A10 | done | For attacks the engine detects. |
 | 3.4 | Prevent authentication on attack | `authValidator`, `FaceAuthenticator` | DE-D7, DE-D10; AE-A4, AE-A11 | done | For attacks the engine detects. |
-| 3.5 | Evaluate against ISO/IEC 30107 | `docs/eval/` | E6 | partial | Volunteer evaluation pending; placeholder in [test-report/README.md](test-report/README.md) section 7. |
+| 3.5 | Evaluate against ISO/IEC 30107 | `docs/eval/` | E6 | partial | Volunteer gap. Volunteer evaluation pending; placeholder in [test-report/README.md](test-report/README.md) section 7. |
 
 ### 7.4 Task 4: Active liveness
 
@@ -193,7 +196,7 @@ its status on 2026-09-30.
 | 4.2 | Select the challenge dynamically | `ChallengeScheduler` | `ChallengeSchedulerTest` | done | |
 | 4.3 | Prompt the selected action | `core/engine/LivenessUiStateMapper` → `LivenessPanel` / `LivenessCaptureActivity` | `UiStateMapperTest`, `LivenessViewModelTest`; screenshots `e2e-03` (desktop), `e2e-06` (Android) | done | |
 | 4.4 | Receive and analyse later frames | `ChallengeObserver` | `ChallengeObserverTest` | done | |
-| 4.5 | Verify the requested action | `ChallengeObserver`, `ActionLevels`, `NeutralBaseline` | `ChallengeObserverTest`; `scn:bf-s1-active`, `bf-s3-active` (4/4 each) | partial | Head turn left misread (O13); a blink already in progress at the prompt fails as `ONSET_TOO_FAST` (DE-D11, proposal E2). |
+| 4.5 | Verify the requested action | `ChallengeObserver`, `ActionLevels`, `NeutralBaseline` | `ChallengeObserverTest`; CN0 (bona fide challenge completion TURN_LEFT 15/15, TURN_RIGHT 15/15, BLINK 24/24, SMILE 24/24) | done | Head-turn defect fixed (O13). Kept on purpose: a blink already under way at the prompt fails as `ONSET_TOO_FAST` and the person blinks again (seen 3 times under the old configuration, DE-D11); accepting it would let a continuously blinking replay pass (CN0 0.1, proposal E2 not adopted). |
 | 4.6 | Re-evaluate liveness during active verification | active PAD every n-th frame, integrity and planarity on every frame | `ActivePhaseTest`; `scn:atk-s2-screen-replay` under the proposed policy (refused by active PAD) | done | |
 | 4.7 | Complete only after success | `CAPTURE_READY` needs every check | `SessionScenarioTest` | done | |
 
@@ -244,7 +247,7 @@ floors and an LV15 audit when a synced value changes).
 | 8.6 | Challenge timeout | `active.challenge_timeout_ms` (2000-15000) | `PolicyResolverTest`; DE-D6 (`CHALLENGE_TIMEOUT`) | done | |
 | 8.7 | Maximum retry count | `max_retries` (1-10), per workflow | DE-D6, AE-A10 | done | |
 | 8.8 | Workflow-specific policies | `policy.<workflow>` and `<workflow>.*` for `registration`, `exception_photo`, `login_auth`, `packet_auth`, `exception_auth`, `eod_auth`, `onboard_auth` | `LivenessPolicyTest`, `PolicyResolverTest` | done | |
-| 8.9 | Behaviour on repeated failure | `<workflow>.on_max_failure` (`BLOCK`, `SUPERVISOR_OVERRIDE` for residents, `BLOCK_AND_LOCK` for authentication) | `LivenessOrchestratorTest`; DE-I2 (override) | partial | Android treats `SUPERVISOR_OVERRIDE` as `BLOCK` (deviation in `docs/design/android-liveness.md` 11.5). |
+| 8.9 | Behaviour on repeated failure | `<workflow>.on_max_failure` (`BLOCK`, `SUPERVISOR_OVERRIDE` for residents, `BLOCK_AND_LOCK` for authentication) | `LivenessOrchestratorTest`, `LivenessOnMaxFailureTest`, `LivenessAccountLockTest` (desktop); `SupervisorOverrideTest`, `SupervisorOverrideFlowTest`, `FaceCaptureLivenessGateTest` (Android); DE-I2 (override); AND-13 | done | Desktop: all three behaviours; `BLOCK_AND_LOCK` counts one failed login and locks at `invalid_login_count` (it does not end the current session). Android: `SUPERVISOR_OVERRIDE` built on 2026-09-30 (the supervisor must pass face authentication with liveness first); run on the emulator screen by screen, not in the full scripted demo (the host was overloaded). |
 
 ### 7.9 Task 9: Error handling
 
@@ -258,7 +261,7 @@ engine errors never use an attempt.
 | 9.3 | Camera unavailable | `liveness.error.camera_unavailable`, `CAMERA_IN_USE`, `CAMERA_PERMISSION_DENIED` | AE-A5 (`STREAM_OPEN_FAILED`, LV12) | done | |
 | 9.4 | Face not detected | `ReasonCode.NO_FACE` → guidance, no attempt used | `screenshots/desktop/d-r12-no-face.png`; `QualityAndDecisionTest`; `scn:other-no-face` (no response, no attempt counted) | done | |
 | 9.5 | Multiple faces | `ReasonCode.MULTI_FACE`, `CAPTURE_MULTI_FACE` | `QualityAndDecisionTest`, `CaptureBindingTest`; `scn:other-two-faces` (`MULTI_FACE`, no attempt counted) | done | Not part of the client end-to-end runs. |
-| 9.6 | Poor face quality | `TOO_DARK`, `TOO_BRIGHT`, `BLURRY`, `FACE_TOO_SMALL`, `OFF_POSE` | `QualityAndDecisionTest`; `scn:other-too-dark` (`TOO_DARK`), `scn:other-blurred` | partial | Blurred frames reach the challenges instead of the quality gate and end as `NEUTRAL_TIMEOUT` (calibration notes 4.4, proposal P3 `quality.min_sharpness=40`). |
+| 9.6 | Poor face quality | `TOO_DARK`, `TOO_BRIGHT`, `BLURRY`, `FACE_TOO_SMALL`, `OFF_POSE` | `QualityAndDecisionTest`; `scn:other-too-dark` (`TOO_DARK`), `scn:other-blurred` (`BLURRY`); CN0 | done | Since model bundle 1.0.1 (`quality.min_sharpness=40`, P2) blurred frames stop at the quality gate: no attempt is used and the final message is `liveness.error.poor_quality`. While positioning, `BLURRY` shows the guidance `liveness.guide.face_visible`; there is no blur-specific text. |
 | 9.7 | Liveness below threshold | `BELOW_THRESHOLD` → active | DE-D4, AE-A7 | done | |
 | 9.8 | PAD failure | `FAIL_PAD` → generic message only | DE-D6, AE-A6 | done | |
 | 9.9 | Active challenge failure | `WRONG_ACTION`, `NOT_HELD`, `ONSET_TOO_FAST` | `ChallengeObserverTest`; `scn:atk-*-adaptive-wrong-clip` | done | |
@@ -290,25 +293,25 @@ in `livenessmanager/src/main/res/values*/strings.xml` (en, fr, ar, hi, kn, ta) a
 | B1 | Mock L0/L1 device | `devices/mock-mds` (frame sources, capture from the streamed frame, fault injection, L1 toggle; `LIVENESS-EXTENSIONS.md`) | MockMDS 226 tests; DE-D2, DE-D9 | done | Android uses the in-app replay source instead. |
 | B2 | Automated liveness scenarios | `tools/eval/scenario-runner`, 10 bona fide + 7 quality scenarios; scripted client demos `scripts/demo-desktop.sh`, `scripts/demo-android.sh` | 3 suites of 131 transactions; desktop 41/41, Android 58/58 checks | done | |
 | B3 | Automated PAD attack scenarios | 22 attack scenarios over 25 synthetic attack packs (`eval/packs/`) | `docs/eval/results/20260930/*/report.md` | done | Attacks are software-made; not real artefacts. |
-| B4 | Interoperability testing framework | — | — | not done | Only MockMDS (SBI 0.9.5) was tested; no second vendor device or SBI 1.0 device run. |
+| B4 | Interoperability testing framework | — | — | not done | Hardware gap. Only MockMDS (SBI 0.9.5) was tested; no second vendor device or SBI 1.0 device run. |
 | B5 | Model version management | `onnx/model/ModelRegistry` (`model.min_version`), signed `models/manifest.json`; `LIVENESS_ENGINE` and `LIVENESS_MODEL_SHA` in every packet | `ModelRegistryTest`; DE-D13, AE-A15 | done | |
-| B6 | Secure offline model updates | RSA-3072 signed manifest, `onnx/tools/ModelSigner`, verification at every load, fail closed | `ModelRegistryTest`, `ModelSignerTest` | partial | Verification is done; a client-side import of a new signed bundle (without a client upgrade) is not built. |
-| B7 | Low-resource Android optimisation | latest-frame-only camera, PAD on every n-th challenge frame, thread count setting, arm64-only release (120.9 MB) | `test-report/android-e2e.md` sections 5-6 | partial | Measured on an x86_64 emulator only (p50 per frame 37-251 ms); no physical low-end device. |
-| B8 | Hardware acceleration | `onnx/runtime/OnnxRuntimeOptions` hook for an execution provider | — | partial | The hook exists; neither client enables NNAPI, XNNPACK or a GPU provider, and nothing was measured. |
+| B6 | Secure offline model updates | Signed manifest (RSA-3072, `onnx/tools/ModelSigner`), checked at every load, fail closed. Desktop: supervisor import of a signed bundle from a folder or ZIP (`RS/service/bio/liveness/LivenessModelImporter`, `LivenessModelStore`; header menu "Import liveness models") with signature, hash and anti-rollback checks | `ModelRegistryTest`, `ModelSignerTest`, `LivenessModelImporterTest`, `LivenessModelImportDialogTest`; DE-e2e-14..16 (tampered refused, 1.1.0 imported, 1.0.0 refused as rollback) | partial | Desktop done. Android has no in-app import: new models arrive with a new signed APK, and are still checked against the signed manifest at every load. The trust anchor is the development key built into `liveness-onnx`; a production key is not configured. |
+| B7 | Low-resource Android optimisation | latest-frame-only camera, PAD on every n-th challenge frame, thread count setting, model warm-up after load, arm64-only release (120.9 MB) | `test-report/android-e2e.md` sections 5-6; AND-13 | partial | Hardware gap: measured on an x86_64 emulator only (p50 per frame 37-251 ms); no physical low-end tablet. |
+| B8 | Hardware acceleration | `onnx/runtime/OnnxRuntimeOptions.ExecutionProvider` (`CPU`, `XNNPACK`, `NNAPI`) and key `engine.execution_provider`; Android `LM/engine/Accelerator`, `AcceleratorCustomizer` with CPU fallback | `AcceleratorCustomizerTest`; CN0 0.4; AND-13 | partial | Hardware gap: selection and fallback are built and unit-tested, but no speed was measured. The Windows ONNX Runtime package offers only CPU, so desktop stays on CPU; on Android XNNPACK / NNAPI need a physical tablet to measure. Shipped value `CPU`. |
 
 ## 9. Good-to-have tasks
 
 | ID | Task | Where | Evidence | Status | Notes |
 |---|---|---|---|---|---|
 | G1 | Configurable challenge pools | `active.challenge_types` | DE and AE runs use a synced `BLINK,SMILE` pool | done | |
-| G2 | Multiple facial actions | 8 challenge types (`core/ChallengeType`) | `ChallengeObserverTest` | partial | See O13, O14. |
+| G2 | Multiple facial actions | 8 challenge types (`core/ChallengeType`) | `ChallengeObserverTest`; CN0 | partial | Blink, smile and both head turns verified on replayed people (O13). LOOK_UP, LOOK_DOWN and the gaze types are unit-tested on synthetic landmarks only (O14). |
 | G3 | Different policies per workflow | `policy.<workflow>`, `<workflow>.*` | 8.8 | done | |
-| G4 | Configurable user guidance | `guidance.<messageKey>.<lang>` via `LivenessUiStateMapper.resolveText` | `UiStateMapperTest`, `MessageResolverTest` | partial | Android applies the override (`LM/ui/MessageResolver`); the desktop screens read only the resource bundles. |
-| G5 | Diagnostic mode | `diagnostic.enable`; `core/engine/DiagnosticLog`; desktop `DesktopDiagnosticSink` and a diagnostic line on the panel; Android `LogcatSinks` | `AuditTest.diagnosticLineHasOnlyTechnicalFields` | partial | No end-to-end run with diagnostics on; no device-troubleshooting screen. |
-| G6 | Multiple device vendors | adapter interface (TS4); SBI 0.9.5 and 1.0 providers on desktop | — | partial | One vendor (MockMDS) tested. |
-| G7 | Anonymised operational metrics | `core/engine/LivenessMetrics`; desktop `RS/.../LivenessMeterBinder` → `logs/metrics.log` (`metrics.enable`) | `ReportingTest` | partial | Android does not publish the metrics (per-frame times are logged by `LM/session/FrameTimer`). |
-| G8 | Average processing time, challenge completion time, retry rate, failure rate | `LivenessMetrics.snapshot()` | `ReportingTest` | partial | As G7. |
-| G9 | Device capability discovery | `padCapability` read from SBI discovery (desktop DTOs accept unknown fields); certification level reported in LV01 | `LivenessGateTest` (signed capture reading); DE-D9 (certification level in LV01) | partial | Discovery tolerates and reads `padCapability`, but no test device advertises it, and the rCapture request does not yet send the challenge to such devices. |
+| G4 | Configurable user guidance | `guidance.<messageKey>.<lang>` via `LivenessUiStateMapper.resolveText`; desktop `RC/controller/liveness/LivenessTexts.withOverrides`; Android `LM/ui/MessageResolver` | `UiStateMapperTest`, `LivenessTextsTest`, `MessageResolverTest`; DE-e2e-13 (replaced "Checking" text on screen) | done | Both clients apply the synced replacement text for any liveness message and language. Android checked by unit test only. |
+| G5 | Diagnostic mode | `diagnostic.enable`; `core/engine/DiagnosticLog`; desktop `DesktopDiagnosticSink`, `DiagnosticTap`, diagnostic lines on the panel (`RC/.../DiagnosticText`), audit `REG-EVT-LV17` (`DiagnosticModeAudit`); Android diagnostic panel, `LogcatSinks`, `LV17` (`LM/audit/DiagnosticModeTracker`) | `AuditTest.diagnosticLineHasOnlyTechnicalFields`, `DiagnosticTextTest`, `DiagnosticModeTrackerTest`, `LivenessCaptureActivityTest`; DE-e2e-13 (lines on screen, `LV17` in the audit table); AND-13 (panel on the emulator) | done | Off by default. Shows only technical fields (state, PAD score, frame rate, model versions); no image, template or ID. The desktop line shows `ENGINE` for engine failures without the engine error code. |
+| G6 | Multiple device vendors | adapter interface (TS4); SBI 0.9.5 and 1.0 providers on desktop | — | partial | Hardware gap. One vendor (MockMDS) tested. |
+| G7 | Anonymised operational metrics | `core/engine/LivenessMetrics`; desktop `RS/.../LivenessMeterBinder` → `logs/metrics.log`; Android `LM/metrics/MetricsReport`, `MetricsLog` → Logcat tag `LivenessMetrics` and `files/liveness/metrics.log` (`metrics.enable`) | `ReportingTest`, `MetricsReportTest`; AND-13 (file written, no user or registration ID) | done | Same metric names on both clients. |
+| G8 | Average processing time, challenge completion time, retry rate, failure rate | `LivenessMetrics.snapshot()`: `time.frame.*`, `time.challenge.avg_ms`, `rate.retry`, `rate.failure` | `ReportingTest`, `MetricsReportTest` | done | As G7. |
+| G9 | Device capability discovery | `padCapability` read from SBI discovery (desktop DTOs accept unknown fields); certification level reported in LV01 | `LivenessGateTest` (signed capture reading); DE-D9 (certification level in LV01) | partial | Hardware gap. Discovery tolerates and reads `padCapability`, but no test device advertises it, and the rCapture request does not yet send the challenge to such devices. |
 
 ## 10. Deliverables
 
@@ -318,10 +321,10 @@ The design pages in `docs/design/` answer the PS04 bullets one by one; the engin
 
 | Bullet | Document | Status | Notes |
 |---|---|---|---|
-| High-level architecture for L0/L1 device integration | `docs/design/architecture.md` | done | Component and deployment views (Mermaid). |
+| High-level architecture for L0/L1 device integration | `docs/design/architecture.md` | done | Component and deployment views (Mermaid); component view also as a picture, `docs/design/img/architecture.svg` / `.png`. |
 | Face frame streaming architecture | `docs/design/streaming.md` | done | |
 | Liveness and PAD processing architecture | `docs/design/engine.md`, `liveness/README.md` "Engine algorithms" | done | |
-| Passive-to-active decision flow | `docs/design/decision-flow.md` | done | |
+| Passive-to-active decision flow | `docs/design/decision-flow.md` | done | Also as a picture, `docs/design/img/decision-flow.svg` / `.png`. |
 | Dynamic challenge mechanism | `docs/design/challenges.md` | done | |
 | Resident registration integration flow | `docs/design/integration-flows.md` section 2, `docs/design/sequences.md` sections 1 and 4 | done | |
 | Operator authentication integration flow | `docs/design/integration-flows.md` section 3, `docs/design/sequences.md` sections 2 and 5 | done | |
@@ -332,7 +335,7 @@ The design pages in `docs/design/` answer the PS04 bullets one by one; the engin
 | Liveness engine interface | `docs/design/engine-interface.md`, `core/api` Javadoc | done | |
 | Error handling and recovery flow | `docs/ux/flows.md` sections 5-6, `docs/design/sequences.md` section 6 | done | |
 | Sequence diagrams | `docs/design/sequences.md` (8 diagrams, desktop and Android), `docs/ux/flows.md` | done | |
-| Security and privacy considerations | `liveness/README.md` conventions, `docs/design/android-liveness.md` section 5 (device key trust model), `docs/design/desktop-liveness-services.md` section 4 (gates, pass tokens) | partial | No consolidated threat model page. |
+| Security and privacy considerations | `docs/design/security-privacy.md` (assets, threats and mitigations, stream-to-capture binding, privacy, keys, supply chain, what is not covered), `docs/design/android-liveness.md` section 5 (device key trust model), `docs/design/desktop-liveness-services.md` section 4 (gates, pass tokens) | done | |
 | ISO/IEC 30107 alignment | `docs/eval/protocol.md`, `docs/eval/calibration-notes.md` | partial | The alignment matrix of the protocol (section 11) is filled only after the volunteer evaluation. |
 
 ### 10.2 UI/UX design
@@ -363,13 +366,13 @@ See [ux/README.md](ux/README.md) for the screen index. Summary:
 | Passive liveness detection | 7.2 | done |
 | Active liveness challenge | 7.4 | done |
 | Dynamic challenge selection | 4.2 | done |
-| Facial action validation | 4.5 | partial (head-turn defect) |
+| Facial action validation | 4.5 | done |
 | Configurable liveness threshold | 8.2 | done |
 | Resident face capture integration | 7.5 | done |
 | Operator authentication integration | 7.6 | done |
 | Supervisor authentication integration | 7.7 | done |
 | Retry and failure handling | 5.4, 5.5, 7.9 | done |
-| Online/offline support | OF1-OF4 | done (model download by upgrade only) |
+| Online/offline support | OF1-OF4 | done (models: desktop offline import, Android by upgrade) |
 | Configuration support | 7.8 | done |
 | Audit and diagnostic logging | E20 | done |
 | Desktop Registration Client changes | `clients/desktop` (84 files changed against the upstream import) | done |
@@ -377,12 +380,18 @@ See [ux/README.md](ux/README.md) for the screen index. Summary:
 
 ## 11. Summary of open items
 
-| Item | Rows | What would close it |
-|---|---|---|
-| Prints and looped clips pass the passive check under the shipped registration policy | O16, O18, 3.2 | Ship `policy.registration=ALWAYS_ACTIVE` (proposal P1; about 7 s more per capture), or a stronger passive model |
-| Adaptive screen replay (SYN-A7) accepted in every configuration | O18, 3.2 | Stronger active PAD or device-side PAD (L1) |
-| Head turn left misread as smile | O13, 4.5 | Engine proposal E1 (pose-normalised smile measure) |
-| Android: no L1 or vendor SBI face device | O1, 1.1, TS2 | Wire `SbiIntentDevice`, accept L1 in `Biometrics095Service.isDeviceValid` |
-| Evaluation with real people and real artefacts | E6, 3.5 | Run [eval/protocol.md](eval/protocol.md) |
-| Interoperability framework, hardware acceleration, offline model import | B4, B6, B8 | Not started |
-| Per-frame latency target | E21 | Mesh only during challenges (proposal E4); measure on an idle machine and a physical tablet |
+| Item | Rows | Kind of gap | What would close it |
+|---|---|---|---|
+| Adaptive screen replay (SYN-A7) accepted 4/16 in every configuration | O18, 3.2 | engine | A stronger passive / active PAD model, or device-side PAD on L1 hardware |
+| Evaluation with real people and real artefacts | E6, 3.5 | volunteers | Run [eval/protocol.md](eval/protocol.md) (about 12 subjects, printed, screen and replay artefacts) |
+| Android: no L1 or vendor SBI face device | O1, 1.1, 1.2, TS2 | hardware and integration | Wire `SbiIntentDevice`, accept L1 in `Biometrics095Service.isDeviceValid`, test with a vendor face app; run CameraX with a real camera |
+| Only one device vendor (MockMDS) tested; no interoperability framework | TS4, G6, B4 | hardware | Run a second vendor's SBI 0.9.5 / 1.0 face device |
+| Speed: per-frame p95 above 20 ms; accelerators not measured; no physical tablet | E21, B7, B8 | hardware | Measure on an idle PC and an arm64 tablet; try XNNPACK / NNAPI there; proposal E4 (Face Mesh only during challenges) |
+| Android offline model import | B6 | not built | Port the desktop importer, or accept APK upgrades as the Android update path |
+| Look up / down and gaze challenges only unit-tested | O14, G2 | data | Record bona fide clips with those actions |
+| Device capability discovery sends no challenge to devices with PAD | G9 | hardware | A device that advertises `padCapability` |
+
+Closed on 2026-09-30: prints and looped clips passing the passive check (O16; defaults `ALWAYS_ACTIVE` and
+`passive.min_frames=30`), head turn left misread as a smile (O13, 4.5), blurred frames reaching the challenges
+(9.6), desktop replacement texts (G4), diagnostic mode (G5), Android metrics (G7, G8), Android supervisor
+override (8.9), desktop offline model import (B6, desktop part), the technology evaluation (E5).

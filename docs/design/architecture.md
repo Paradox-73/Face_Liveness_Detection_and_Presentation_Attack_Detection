@@ -17,48 +17,56 @@ Terms used on this page:
 
 ## 1. Component view
 
+![Component view: face devices, the two Registration Clients, the shared liveness engine, the signed model bundle and the MOSIP server](img/architecture.svg)
+
+PNG version for slides: [img/architecture.png](img/architecture.png). The picture is rendered from the Mermaid
+source below with the Mermaid CLI ([README.md](README.md), "Diagrams"); edit the source, then render again.
+
+- The clients call only the engine contract (`liveness-core` api, device, config, audit). The engine, the ONNX
+  adapters and the model bundle can be replaced behind `LivenessEngineProvider` without a client change.
+- The dotted lines are the only network links. Every liveness decision runs on the registration machine, online or
+  offline.
+- The desktop client can also import a newer signed model bundle without a client upgrade
+  (`LivenessModelImporter`, [desktop-liveness-services.md](desktop-liveness-services.md) section 6.1); Android takes models from the APK.
+
 ```mermaid
-flowchart LR
-  subgraph DEV["Face devices"]
-    MDS["SBI device service (L0/L1)<br/>vendor MDS or MockMDS<br/>devices/mock-mds"]
-    CAM["Android camera (CameraX)<br/>built-in L0 device"]
-  end
-  subgraph CORE["liveness/ (shared engine, Java 11, MIT)"]
-    API["liveness-core api + device + config<br/>LivenessEngine, LivenessSession,<br/>FaceCaptureDevice, ConfigSource, AuditSink"]
-    ENG["liveness-core engine<br/>DefaultLivenessEngine, session state machine,<br/>passive PAD, challenges, integrity, binding"]
-    STR["liveness-core stream<br/>MjpegFrameReader, FrameHandOff"]
-    POL["liveness-core policy<br/>PolicyResolver"]
-    ONNX["liveness-onnx<br/>YuNet, Face Mesh, MiniFASNet x2, SFace,<br/>ModelRegistry (signed bundle)"]
-    SDK["face-match-sdk<br/>SFaceBioApi implements IBioApiV2"]
+flowchart TB
+  subgraph DEV["Face devices (L0 / L1)"]
+    direction LR
+    MDS["SBI face device service<br/>vendor MDS or MockMDS (devices/mock-mds)<br/>127.0.0.1:4501-4600"]
+    CAM["Tablet camera (CameraX)<br/>built-in L0 device"]
   end
   subgraph RC["Desktop Registration Client (clients/desktop)"]
-    RCS["registration-services<br/>service/bio/liveness: LivenessOrchestrator,<br/>LivenessRun, LivenessGate, SbiFaceCaptureDevice"]
-    RCU["registration-client<br/>controller/liveness: LivenessDialog, LivenessPanel"]
+    direction TB
+    RCU["Screens: LivenessDialog, LivenessPanel<br/>login, onboarding, resident capture,<br/>packet, reviewer and end-of-day authentication"]
+    RCS["Services: LivenessOrchestrator, LivenessGate,<br/>SbiFaceCaptureDevice, DesktopAuditSink,<br/>LivenessModelImporter"]
+    RCU --> RCS
   end
   subgraph ARC["Android Registration Client (clients/android)"]
-    LM["livenessmanager module<br/>LivenessService, LivenessRunner,<br/>BuiltInCameraL0Device, LivenessCaptureActivity"]
-    APP["app + Flutter<br/>FaceCaptureLivenessGate, FaceAuthFlow,<br/>LivenessApi (Pigeon)"]
+    direction TB
+    APP["Screens: Flutter face panels,<br/>LivenessCaptureActivity"]
+    LM["livenessmanager: LivenessRunner,<br/>BuiltInCameraL0Device, FaceCaptureLivenessGate,<br/>FaceAuthenticator, ArcAuditSink"]
+    APP --> LM
   end
-  MS["MOSIP server, or MockSync (tools/mock-sync)<br/>config sync, users, CA certificates,<br/>packet upload"]
-  MODELS["models/ signed bundle<br/>manifest.json + manifest.jws"]
+  subgraph CORE["Shared engine (liveness/, Java 11, the same jar on both clients)"]
+    API["liveness-core contract<br/>LivenessEngine, LivenessSession,<br/>FaceCaptureDevice, ConfigSource, AuditSink"]
+    ENG["liveness-core engine<br/>passive PAD, then active challenges;<br/>frame integrity, planarity, capture binding;<br/>PolicyResolver, audit events, metrics"]
+    ONNX["liveness-onnx<br/>YuNet, Face Mesh, MiniFASNet x2, SFace<br/>ModelRegistry (signature check)"]
+    SDK["face-match-sdk<br/>SFace IBioApiV2 (1:1 face match)"]
+    API --> ENG --> ONNX
+  end
+  MODELS[("models/ signed bundle<br/>manifest.json + manifest.jws")]
+  MS["MOSIP server, or MockSync (tools/mock-sync)<br/>sends mosip.registration.liveness.* keys<br/>receives packets with LIVENESS_* evidence"]
 
-  MDS -- "STREAM (MJPEG) / RCAPTURE (signed ISO 19794-5)" --> RCS
-  CAM -- "RGBA frames" --> LM
-  STR --> ENG
-  POL --> ENG
-  API --> ENG
-  ONNX --> ENG
-  MODELS --> ONNX
-  ENG --> RCS
-  ENG --> LM
-  RCS --> RCU
-  LM --> APP
-  SDK --> RC
-  SDK --> ARC
-  MS -- "mosip.registration.liveness.* keys, CA certs" --> RC
-  MS -- "same keys" --> ARC
-  RC -- "packets with LIVENESS_* evidence" --> MS
-  ARC -- "packets with LIVENESS_* evidence" --> MS
+  MDS -- "STREAM (MJPEG preview)<br/>RCAPTURE (signed face)" --> RCS
+  CAM -- "camera frames" --> LM
+  RCS --> API
+  LM --> API
+  RCS --> SDK
+  LM --> SDK
+  MODELS -- "loaded and verified at start-up" --> ONNX
+  MS -. "online sync only" .- RC
+  MS -. "online sync only" .- ARC
 ```
 
 ## 2. Layers and what each one owns

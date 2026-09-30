@@ -6,7 +6,7 @@ client's local database and therefore effective offline. Both clients read the s
 
 Source of truth: `io.mosip.liveness.core.config.LivenessConfigKeys` (names, defaults, ranges) and
 `io.mosip.liveness.core.policy.PolicyResolver` (how values are combined, clamped and reported).
-`LivenessConfigKeys.defaultValues()` returns the 43 shipped defaults; MockSync serves the same list from
+`LivenessConfigKeys.defaultValues()` returns the 44 shipped defaults; MockSync serves the same list from
 `tools/mock-sync/data/mock-sync-defaults.properties`.
 
 ## 1. Resolution rules
@@ -42,16 +42,17 @@ flowchart LR
 |---|---|---|---|---|---|
 | `mosip.registration.liveness.enable` | Y/N | `Y` | | no | Master switch. `N` resolves every workflow to `OFF`. |
 | `mosip.registration.liveness.engine` | string | `mosip-onnx-default` | engine IDs found by `ServiceLoader` | no | Which `LivenessEngineProvider` builds the engine. |
+| `mosip.registration.liveness.engine.execution_provider` | `CPU` / `XNNPACK` / `NNAPI` | `CPU` | unknown value means `CPU` | no | ONNX Runtime back end of the default engine, read when the engine loads (restart needed). A back end the installed runtime lacks falls back to CPU. Android reads it (`livenessmanager/engine/AcceleratorCustomizer`); the desktop Windows runtime has only CPU and does not read it ([calibration notes](../eval/calibration-notes.md) 0.4). |
 | `mosip.registration.liveness.model.min_version` | semantic version | `1.0.0` | | no | Oldest model bundle version accepted; an older bundle fails to load (rollback protection, audit LV14). |
 
 ## 3. Policy per workflow
 
 | Key | Type | Default | Local | Meaning |
 |---|---|---|---|---|
-| `mosip.registration.liveness.policy.registration` | `OFF` / `PASSIVE_ONLY` / `PASSIVE_THEN_ACTIVE` / `ALWAYS_ACTIVE` | `PASSIVE_THEN_ACTIVE` | no | Resident face capture |
+| `mosip.registration.liveness.policy.registration` | `OFF` / `PASSIVE_ONLY` / `PASSIVE_THEN_ACTIVE` / `ALWAYS_ACTIVE` | `ALWAYS_ACTIVE` | no | Resident face capture |
 | `mosip.registration.liveness.policy.exception_photo` | same | `OFF` | no | Exception photo of a resident with a biometric exception |
-| `mosip.registration.liveness.policy.onboard_auth` | same | `PASSIVE_THEN_ACTIVE` | no | Operator / supervisor onboarding face |
-| `mosip.registration.liveness.policy.login_auth` | same | `PASSIVE_THEN_ACTIVE` | no | Face sign-in |
+| `mosip.registration.liveness.policy.onboard_auth` | same | `ALWAYS_ACTIVE` | no | Operator / supervisor onboarding face |
+| `mosip.registration.liveness.policy.login_auth` | same | `ALWAYS_ACTIVE` | no | Face sign-in |
 | `mosip.registration.liveness.policy.packet_auth` | same | `PASSIVE_THEN_ACTIVE` | no | Operator packet authentication |
 | `mosip.registration.liveness.policy.exception_auth` | same | `PASSIVE_THEN_ACTIVE` | no | Supervisor review of an exception registration |
 | `mosip.registration.liveness.policy.eod_auth` | same | `PASSIVE_THEN_ACTIVE` | no | Supervisor end-of-day approval |
@@ -62,6 +63,12 @@ Policy modes:
 - `PASSIVE_THEN_ACTIVE`: PS04 flow; challenges when the score is below the threshold.
 - `ALWAYS_ACTIVE`: passive PAD still runs and can reject, then challenges always.
 
+Why three workflows default to `ALWAYS_ACTIVE` (since 2026-09-30, proposal P1): the synthetic suite showed prints
+and screen replays that the passive model scores 82-99, above both passive thresholds. With challenges on
+registration, sign-in and onboarding the pooled APCER fell from 17.6% to 1.7% per attempt; the cost is about 3 s
+more per accepted capture (median 6.6 s to 9.7 s). Details: [decision-flow.md](decision-flow.md) section 5,
+[calibration notes](../eval/calibration-notes.md) section 0.
+
 ## 4. Passive stage
 
 | Key | Type | Default | Range | Local | Meaning |
@@ -69,7 +76,7 @@ Policy modes:
 | `mosip.registration.liveness.passive.threshold` | int 0-100 | 80 | 50-100 | yes | Score at or above which the face passes without a challenge |
 | `mosip.registration.liveness.<workflow>.passive.threshold` | int 0-100 | 95 for `onboard_auth`, `login_auth`, `packet_auth`, `exception_auth`, `eod_auth`; unset for others | 50-100 | yes | Per-workflow threshold |
 | `mosip.registration.liveness.pad.reject_threshold` | int 0-100 | 20 | 5-100, at most the passive threshold | yes | Score below which the face counts as a presentation attack and fails at once |
-| `mosip.registration.liveness.passive.min_frames` | int | 8 | 1-60 | no | Good frames the passive score is taken over |
+| `mosip.registration.liveness.passive.min_frames` | int | 30 | 1-60 | no | Good frames the passive score is taken over (30 frames = 2 s at 15 fps, long enough for the loop detector). If `passive.timeout_ms` ends first, a session with at least 8 good frames (engine parameter `passive.timeout_min_frames`) decides on those |
 | `mosip.registration.liveness.passive.timeout_ms` | int ms | 4,000 | 1,000-60,000 | yes | Maximum time for acquisition plus the passive stage |
 
 ## 5. Active stage
@@ -152,7 +159,7 @@ Details: [../api/face-match-sdk.md](../api/face-match-sdk.md).
 
 Values such as the head-turn angle (20 degrees), blink duration (80-500 ms) or the frozen-frame difference
 (0.5 grey levels) are `EngineParameter`s. They change only with a new signed model bundle (`engineParams` in
-`models/manifest.json`), never through sync, so a configuration change cannot weaken detection below what was
+`models/manifest.json`; bundle 1.0.1 sets `quality.min_sharpness=40`), never through sync, so a configuration change cannot weaken detection below what was
 tested. The full list with defaults is in `liveness/README.md`, "Tunable parameters".
 
 ## 13. Changing a key for a demo

@@ -2,6 +2,23 @@
 
 - Email the starred questions to decode@mosip.io today, and post Q1–Q3 on the Unstop Discussions board (FAQ Q8, Q17).
 
+## Ask first today (updated 2026-09-30, after the engine and gap fixes)
+
+Each question is tied to a decision already built into the code; the answer either confirms it or tells us what to
+change. The original list follows.
+
+| # | Question | What we built, and why it needs an answer | If the answer is no |
+|---|---|---|---|
+| T1 | ★ Is `ALWAYS_ACTIVE` an acceptable **default** for resident registration, face sign-in and onboarding, given PS04 says "passive first, active when below threshold"? | Passive-first let synthetic prints pass (APCER 17.6% pooled, 100% for two species); challenges on every capture cut it to 1.7%, at about 3 s more per capture (median 9.7 s). The passive stage still runs first and still rejects attacks. The mode is one synced key per workflow. | Ship `PASSIVE_THEN_ACTIVE` as default and document `ALWAYS_ACTIVE` as the recommended hardening. |
+| T2 | ★ Will judges run the clients against a real MOSIP (Collab) server or accept our local mock server (MockSync) for the demo? Do they need a physical L0/L1 face device, and which SBI version? | Both clients were run end to end against MockSync with the mock face device (MockMDS, SBI 0.9.5) and an Android emulator; no physical device or Collab environment was used. | Plan a Collab run and a device test before the deadline (Q1, Q2, Q14). |
+| T3 | ★ Is a supervisor override after the last failed resident attempt acceptable? | On both clients, when `registration.on_max_failure=SUPERVISOR_OVERRIDE`, a supervisor can accept the face; the packet says `LIVENESS_DECISION=OVERRIDE` and audit LV16 names the supervisor. It is never offered after an attack (PAD, integrity, binding). PS04 task 5 says to prevent acceptance of a face that fails liveness. The shipped core default is `BLOCK`. | Keep `BLOCK` only and remove the override value (Q10). |
+| T4 | On Android, is an in-app camera (CameraX) acceptable as an L0 face device, since vendor SBI face apps show the preview in their own screen and send ARC no frames? | Built and run (replayed frames on the emulator). An adapter for vendor SBI apps exists but is not wired in, and ARC's device check still accepts L0 only. | Wire the SBI intent adapter and ask vendors for a stream channel (Q4). |
+| T5 | Is an evaluation by the team following the ISO/IEC 30107-3 method (about 12 volunteers, home-made prints, screens and replays) enough, and are there target APCER / BPCER values? | Only the automated synthetic suite has run. The volunteer protocol is written (`docs/eval/protocol.md`) and not run. | Adjust the protocol to the expected targets (Q7). |
+| T6 | Is a desktop-only offline model import (supervisor loads a signed model bundle from a folder or ZIP) enough for "secure offline model updates", with Android models updated through a new APK? | Desktop import checks signature, version (no rollback) and hashes, and was run end to end. Android has no in-app import. | Build the Android import. |
+| T7 | Pitch: live or recorded, how long, and when? Is a recorded demo on the emulator and MockSync acceptable? | Deck outline, summary and video script are ready (`docs/pitch/`). | — |
+
+## Original list
+
 1. ★ Is a local mock MOSIP backend acceptable for judging the Registration Client flows?
    - It serves the syncdata and IDA endpoints, and the clients' sync code stays unchanged.
    - Context: Collab lead times.

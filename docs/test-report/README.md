@@ -16,11 +16,11 @@ stay in the linked reports; requirement-by-requirement status is in [../traceabi
 
 | Area | Result |
 |---|---|
-| Unit and component tests | **2,144 tests (2 skipped by design), 0 failures, 0 errors** in 13 test suites, all re-run on 2026-09-30 between 10:40 and 10:55 (section 2) |
-| Automated liveness and attack scenarios | 39 scenarios x 3 configurations, 131 transactions each; decisions reproducible run to run (section 3) |
+| Unit and component tests | **2,224 tests, 0 failures, 0 errors** in 13 test suites (section 2). All run on 2026-09-30; the counts grew after the engine and gap fixes of that afternoon |
+| Automated liveness and attack scenarios | 39 scenarios, 131 transactions per suite; decisions reproducible run to run. **Shipped defaults: pooled APCER 1.7% (4/238) per attempt, BPCER 29.4% (15/51)**; before the fixes of 2026-09-30: 17.6% and 58.2% (section 3) |
 | Desktop end-to-end | reference run 2026-09-30 04:49-04:59: **41 of 41 checks passed** (section 4) |
 | Android end-to-end | reference run 2026-09-30 09:09-09:40: **58 of 58 checks passed**; a repeat run found one real weakness (section 4) |
-| Headline weakness | synthetic printed photos and looped clips pass the passive check under the shipped registration policy; the stricter `ALWAYS_ACTIVE` policy refuses them on both clients (section 6) |
+| Headline weakness | an adaptive screen replay that answers each prompt (SYN-A7) is accepted 4 of 16 times; every other synthetic attack species is refused. The earlier weakness, prints and looped clips passing the passive check, is closed by the new defaults (`ALWAYS_ACTIVE` for registration, sign-in and onboarding; 30 passive frames) (section 6) |
 | Evaluation with real people and artefacts | not run yet; placeholder in section 7 |
 
 ## 2. Unit and component tests
@@ -31,20 +31,27 @@ this project's changes.
 
 | Module | What it tests | Command | Tests | Failures / errors | Skipped |
 |---|---|---|---|---|---|
-| `liveness/liveness-core` | engine: session state machine, passive decision, challenges, action detection, integrity, planarity, capture binding, policy, audit, UI states, MJPEG reader | `with_lock liveness-build mvn -o -f liveness/pom.xml verify -Dliveness.benchmark.frames=0` | 264 | 0 | 0 |
-| `liveness/liveness-onnx` | ONNX adapters, golden outputs of the 5 models, signed model registry, engine factory | same run | 93 | 0 | 2 (latency benchmark, off by property) |
+| `liveness/liveness-core` | engine: session state machine, passive decision, challenges, action detection, integrity, planarity, capture binding, policy, audit, UI states, MJPEG reader | `with_lock liveness-build mvn -o -f liveness/pom.xml verify -Dliveness.benchmark.frames=0` | 272 | 0 | 0 |
+| `liveness/liveness-onnx` | ONNX adapters, golden outputs of the 5 models, signed model registry, engine factory, execution providers | same run | 95 | 0 | 0 |
 | `liveness/face-match-sdk` | SFace face-match SDK behind MOSIP's `IBioApiV2`, ISO 19794-5 records, MOSIP loader | same run | 42 | 0 | 0 |
-| desktop `registration-services` (liveness and audit tests) | capture and authentication gates, stream session, orchestrator, config, audit sink, packet evidence, pass tokens | `cd clients/desktop/registration && mvn -o -pl registration-services test "-Dtest=io/mosip/registration/service/bio/liveness/*Test.java,**/AuditFactoryTest.java"` | 85 | 0 | 0 |
-| desktop `registration-client` | liveness panel view model, texts, bundle parity (en/fr/ar), JavaFX listener | `cd clients/desktop/registration/registration-client && mvn -o test -Dgpg.skip -Djacoco.skip=true` | 27 | 0 | 0 |
-| Android `livenessmanager` | engine loader, config, audit sink, face authenticator, capture screen (Robolectric), image decoding, SBI codec, replay | `cd clients/android/android && ./gradlew.bat --no-daemon :livenessmanager:testDebugUnitTest --rerun` | 82 | 0 | 0 |
-| Android `app` | capture gate, face-auth flow, capture launcher, Flutter bridge | same, `:app:testDebugUnitTest --rerun` | 27 | 0 | 0 |
+| desktop `registration-services` (liveness and audit tests) | capture and authentication gates, stream session, orchestrator, config, audit sink, packet evidence, pass tokens, model import, behaviour on repeated failure, account lock | `cd clients/desktop/registration && mvn -o -pl registration-services test "-Dtest=io/mosip/registration/service/bio/liveness/*Test.java,**/AuditFactoryTest.java"` | 111 | 0 | 0 |
+| desktop `registration-client` (liveness tests) | liveness panel view model, texts and replacement texts, bundle parity (en/fr/ar), JavaFX listener, diagnostic lines, model import window | `cd clients/desktop/registration/registration-client && mvn -o test -Dgpg.skip -Djacoco.skip=true "-Dtest=io/mosip/registration/controller/liveness/*Test.java"` | 36 | 0 | 0 |
+| Android `livenessmanager` | engine loader, config, audit sink, face authenticator, capture screen (Robolectric), image decoding, SBI codec, replay, supervisor override, metrics, diagnostic mode, execution provider | `cd clients/android/android && ./gradlew.bat --no-daemon :livenessmanager:testDebugUnitTest --rerun` | 109 | 0 | 0 |
+| Android `app` | capture gate, face-auth flow, capture launcher, Flutter bridge, supervisor override flow | same, `:app:testDebugUnitTest --rerun` | 35 | 0 | 0 |
 | Android `clientmanager` (upstream + liveness) | packet building with `LIVENESS_*` evidence, meta info; all upstream tests | same, `:clientmanager:testDebugUnitTest --rerun` | 1,186 | 0 | 0 |
 | Android Flutter widgets | face-auth panel, outcome banner, Arabic right-to-left | `cd clients/android && flutter test test/liveness/` (JDK 21) | 13 | 0 | 0 |
 | `tools/mock-sync` | sync endpoints, Android contract (key wrapping), response signatures, packet inspector | `cd tools/mock-sync && mvn -o test` | 37 | 0 | 0 |
 | `devices/mock-mds` (upstream + extensions) | frame sources, capture from the streamed frame, faults, renewed FTM keys | `cd devices/mock-mds && mvn -o test -Dgpg.skip=true` (JDK 21) | 226 | 0 | 0 |
 | `tools/eval/scenario-runner` | scenario loading, playlists, classification, output | `mvn -o -f tools/eval/scenario-runner/pom.xml test` | 29 | 0 | 0 |
 | `tools/eval` Python | APCER/BPCER, confidence intervals, frame-pack manifests | `python -m pytest -q tools/eval/tests` | 33 | 0 | 0 |
-| **Total** | | | **2,144** | **0** | **2** |
+| **Total** | | | **2,224** | **0** | **0** |
+
+When each count was taken (all 2026-09-30):
+
+- `liveness/*` and `tools/eval/scenario-runner`: the engine engineer's run after the engine fixes (surefire reports of 11:49-11:53, no engine source changed since).
+- desktop `registration-services` and `registration-client` liveness tests: re-run for this page at 15:20, after the desktop gap fixes.
+- Android `livenessmanager`, `app` and `clientmanager`: the Android engineer's run after the Android gap fixes (`scripts/android-build.sh --test-only`, [../design/android-liveness.md](../design/android-liveness.md) section 13.8). Not re-run for this page: the emulator host was overloaded.
+- Flutter, `tools/mock-sync`, `devices/mock-mds` and the Python tests: unchanged since the 10:40-10:55 run.
 
 Not re-run for this page (results from the engineers' reports of the same day):
 
@@ -72,36 +79,45 @@ software from those clips), 7 quality and behaviour cases. Full method: [../eval
 
 **These are technology regression results on synthetic attacks, not an ISO/IEC 30107-3 evaluation.**
 
-### 3.1 Headline (runs of 2026-09-30, [../eval/results/20260930/](../eval/results/20260930/))
+### 3.1 Headline
+
+The engine and defaults in this repository are the **shipped (after)** row, run on 2026-09-30 after the engine
+fixes ([../eval/results/20260930-engine-fixes/](../eval/results/20260930-engine-fixes/)). The other rows are the
+engine before those fixes ([../eval/results/20260930/](../eval/results/20260930/)); comparison in
+[../eval/calibration-notes.md](../eval/calibration-notes.md) section 0.
 
 | Suite | Configuration | APCER_max per attempt (worst species) | APCER pooled per attempt | APCER pooled per transaction | BPCER per attempt | BPCER per transaction |
 |---|---|---|---|---|---|---|
-| shipped | defaults (registration passive first, threshold 80) | **100% (8/8)**, SYN-A3 and SYN-A8 | 17.6% (32/182) | 39.0% (32/82) | 58.2% (39/67) | 30.0% (12/40) |
-| strict | `policy.registration=ALWAYS_ACTIVE` | **25% (4/16)**, SYN-A7 | 3.5% (8/230) | 9.8% (8/82) | 68.0% (51/75) | 40.0% (16/40) |
-| proposed | `ALWAYS_ACTIVE` for `registration`, `login_auth`, `onboard_auth`; `passive.min_frames=30`; `quality.min_sharpness=40` | **25% (4/16)**, SYN-A7 | 1.7% (4/238) | 4.9% (4/82) | 66.7% (48/72) | 40.0% (16/40) |
+| **shipped (after)** | new defaults: `ALWAYS_ACTIVE` for `registration`, `login_auth`, `onboard_auth`; `passive.min_frames=30`; `quality.min_sharpness=40`; engine fixes E1 and E3 | **25% (4/16)**, SYN-A7 | **1.7% (4/238)** | **4.9% (4/82)** | **29.4% (15/51)** | **10.0% (4/40)** |
+| before: old shipped | old defaults (registration passive first, threshold 80) | **100% (8/8)**, SYN-A3 and SYN-A8 | 17.6% (32/182) | 39.0% (32/82) | 58.2% (39/67) | 30.0% (12/40) |
+| before: strict | `policy.registration=ALWAYS_ACTIVE` | **25% (4/16)**, SYN-A7 | 3.5% (8/230) | 9.8% (8/82) | 68.0% (51/75) | 40.0% (16/40) |
+| before: proposed | same configuration as shipped (after), old engine | **25% (4/16)**, SYN-A7 | 1.7% (4/238) | 4.9% (4/82) | 66.7% (48/72) | 40.0% (16/40) |
 
 - APCER: share of attack attempts accepted. BPCER: share of genuine attempts rejected. A transaction is up to 3
   attempts. Intervals (95% Clopper-Pearson) are in each `report.md`; with 8-48 attempts per species they are wide.
-- BPCER is dominated by one engine defect and one synthetic pack: every head turn to the left by subject S2 is
-  misread as a smile (`WRONG_ACTION`), and the synthetic dim pack scores 3-4 on the passive check. Every
-  normal-light (C1) bona fide attempt of S1 and S3 is accepted under the proposed configuration.
+- Before the fixes, BPCER was dominated by one engine defect: every head turn to the left by subject S2 was
+  misread as a smile (`WRONG_ACTION`). Fixed: TURN_LEFT now completes 15/15.
+- Now 12 of the 15 rejected bona fide attempts, and all 4 rejected bona fide transactions, come from one synthetic
+  very dim pack (`bf-s3-dim`, passive score 3). The other 3 are S2 attempts whose capture frame is still turned
+  40-65 degrees (`CAPTURE_PAD_SCORE`); each is followed by an accepted retry. In normal light (C1), 36 of 39
+  bona fide attempts and 36 of 36 transactions are accepted.
 
 ### 3.2 Per attack species, per attempt
 
-| Species | What it is | shipped | strict | proposed | Layer that stops it |
-|---|---|---|---|---|---|
-| SYN-P0 | stock MockMDS still image | 0/6 | 0/6 | 0/6 | frame integrity (`FROZEN`) |
-| SYN-A1 | injected still (identical frames) | 0/12 | 0/12 | 0/12 | frame integrity (`FROZEN`) |
-| SYN-A2 | hand-held print | 8/32 | 4/40 | 0/48 | challenges (timeout) |
-| SYN-A3 | print moved in 2-D | **8/8** | 0/24 | 0/24 | challenges |
-| SYN-A4 | print tilted to fake a turn | 0/12 | 0/12 | 0/12 | challenges |
-| SYN-A5 | photo on a screen | 0/24 | 0/24 | 0/24 | passive PAD or challenges |
-| SYN-A6 | video replay on a screen | 4/28 | 0/36 | 0/36 | passive PAD or challenges |
-| SYN-A7 | adaptive replay (clip answers the prompt) | 4/16 | 4/16 | **4/16** | passive PAD for S2; S3 passes every layer |
-| SYN-A8 | looped 1.3 s clip | **8/8** | 0/24 | 0/24 | loop detection during challenges |
-| SYN-A9 | genuine clip of the wrong action | 0/36 | 0/36 | 0/36 | challenges (`WRONG_ACTION`) |
+| Species | What it is | before: old shipped | before: strict | before: proposed | **shipped (after)** | Layer that stops it |
+|---|---|---|---|---|---|---|
+| SYN-P0 | stock MockMDS still image | 0/6 | 0/6 | 0/6 | 0/6 | frame integrity (`FROZEN`) |
+| SYN-A1 | injected still (identical frames) | 0/12 | 0/12 | 0/12 | 0/12 | frame integrity (`FROZEN`) |
+| SYN-A2 | hand-held print | 8/32 | 4/40 | 0/48 | 0/48 | challenges (timeout) |
+| SYN-A3 | print moved in 2-D | **8/8** | 0/24 | 0/24 | 0/24 | challenges |
+| SYN-A4 | print tilted to fake a turn | 0/12 | 0/12 | 0/12 | 0/12 | challenges |
+| SYN-A5 | photo on a screen | 0/24 | 0/24 | 0/24 | 0/24 | passive PAD or challenges |
+| SYN-A6 | video replay on a screen | 4/28 | 0/36 | 0/36 | 0/36 | passive PAD or challenges |
+| SYN-A7 | adaptive replay (clip answers the prompt) | 4/16 | 4/16 | **4/16** | **4/16** | passive PAD for S2; S3 passes every layer |
+| SYN-A8 | looped 1.3 s clip | **8/8** | 0/24 | 0/24 | 0/24 | loop detection during challenges |
+| SYN-A9 | genuine clip of the wrong action | 0/36 | 0/36 | 0/36 | 0/36 | challenges (`WRONG_ACTION`) |
 
-### 3.3 Quality and behaviour scenarios (shipped suite)
+### 3.3 Quality and behaviour scenarios (shipped (after) suite)
 
 | Scenario | Result | Expected |
 |---|---|---|
@@ -110,7 +126,7 @@ software from those clips), 7 quality and behaviour cases. Full method: [../eval
 | `other-too-dark` | no response (`TOO_DARK`) | yes |
 | `other-stream-ends` | no response (device error) | yes |
 | `other-s1-wrong-action`, `other-s3-ignores-prompt` | rejected (`CHALLENGE_TIMEOUT`) | yes |
-| `other-blurred` | rejected (`NEUTRAL_TIMEOUT`) instead of a quality message | **no**: blurred frames pass the quality gate (proposal P3 in the calibration notes) |
+| `other-blurred` | no response (`BLURRY`, then `PASSIVE_TIMEOUT`), no attempt counted, final message `liveness.error.poor_quality` | yes (before the fixes: rejected as `NEUTRAL_TIMEOUT` after a prompt) |
 
 ## 4. End-to-end runs on the real clients
 
@@ -161,8 +177,8 @@ Reference run 7: **58 checks passed, 0 failed.**
 | A14-A16 audit, packet evidence, latency | same LV event IDs and `LIVENESS_*` keys as desktop |
 
 - **Run 8** (same day, final script): 48 of 57 checks. The 9 failures are one real finding: the printed photo
-  `a-s2-print-still` passed the passive check (score bucket 80-89) under the shipped registration policy.
-  Repeated on the capture screen: `a-s3-print-still` accepted 6/6, `a-s2-print-still` 1/6 with the shipped
+  `a-s2-print-still` passed the passive check (score bucket 80-89) under the registration policy shipped at the time (passive first; `ALWAYS_ACTIVE` has been the default since the afternoon of 2026-09-30).
+  Repeated on the capture screen: `a-s3-print-still` accepted 6/6, `a-s2-print-still` 1/6 with the old
   policy; 0/12 with `ALWAYS_ACTIVE` ([android-e2e/print-attack-trials.txt](android-e2e/print-attack-trials.txt)).
 - Problems found and fixed: exception photo on tablets without an SBI face app, an upstream quality off-by-one,
   attempts reset per screen, missing officer face and meta info in the packet, emulator crashes (GPU mode).
@@ -177,11 +193,12 @@ Reference run 7: **58 checks passed, 0 failed.**
 | Per analysed frame, same, loaded machine (about 25 other Java processes) | desktop JVM | p50 25-75 ms, p95 118-154 ms | calibration notes section 5 |
 | Per analysed frame, passive-only attempts | Android x86_64 emulator, CPU | p50 57-251 ms, p95 295-998 ms | [android-e2e.md](android-e2e.md) section 5 |
 | Per analysed frame, attempts with challenges | Android emulator | p50 37-45 ms, p95 106-374 ms | same |
-| Time to a passive decision | stream clock (replay) | 0.53 s (8 frames) | calibration notes |
-| Accepted attempt, passive only / with 2 challenges | stream clock | 0.83 s / 6.8 s median | calibration notes 4.1 |
+| Time to a passive decision | stream clock (replay) | 2.0 s (30 frames, shipped); 0.53 s with the old 8 frames | calibration notes 0.2 |
+| Accepted bona fide attempt, median | stream clock | 9.7 s under the shipped defaults (every registration and sign-in runs 2 challenges); 6.6 s under the old defaults | calibration notes 0.2 |
+| Per analysed frame, shipped suite, two suites in parallel on a loaded machine | desktop JVM | p50 34.1 ms, p95 78.4 ms | calibration notes 0.3 |
 | Passive pass, user-visible | Android emulator | 2.2-3.0 s; with 2 challenges 7.4-12.1 s | android-e2e section 5 |
 
-- The design target of p95 at most 20 ms per frame is **not met** on either platform. Face analysis (YuNet plus
+- The design target of p95 at most 20 ms per frame is **not met** on either platform (T-PERF-01). Face analysis (YuNet plus
   Face Mesh on every frame) is two thirds of the frame; proposal E4 runs the mesh only during challenges.
 - No idle-machine measurement and no physical Android device yet.
 
@@ -189,17 +206,23 @@ Reference run 7: **58 checks passed, 0 failed.**
 
 | # | Limitation | Effect | Where described |
 |---|---|---|---|
-| 1 | Printed photos (SYN-A2/A3) and looped clips (SYN-A8) of one subject pass the passive check under the shipped registration policy (passive first, threshold 80) | attack accepted without a challenge; `ALWAYS_ACTIVE` refuses them on both clients at about 7 s extra per capture; the choice is open | calibration notes 4.1; desktop 5.1; Android 8.1 |
-| 2 | Adaptive screen replay of subject S3 (SYN-A7) passes every layer | APCER_max stays 25% per attempt in every configuration | calibration notes 4.9 |
-| 3 | Genuine head turns to the left are misread as a smile | BPCER dominated by one subject; demo pool set to `BLINK,SMILE` | calibration notes 4.2 |
-| 4 | A blink already in progress at the prompt fails (`ONSET_TOO_FAST`) | one retry needed for frequent blinkers | calibration notes 4.7; desktop 5.3 |
-| 5 | Desktop supervisor override accepted a print after challenge timeouts (override is refused only after PAD, integrity or binding failures) | the capture is marked `OVERRIDE` in the packet for review | desktop 5.2 |
-| 6 | Android: built-in camera as L0 only; no L1 and no vendor SBI face app path; CameraX path not run | Android tested with replayed frames on an emulator | Android 8.5; traceability O1 |
-| 7 | Offline simulated (client-side network cut), not by stopping the server | same client-side failure as a real outage | desktop 5.5; Android 8.6 |
-| 8 | Per-frame latency above target; no physical tablet measured | see section 5 | section 5 |
-| 9 | The stored resident photo can show the challenge expression (smile) | image quality for the ID record | Android 8.2 |
-| 10 | SFace match threshold 40 chosen from published values, not calibrated on a larger set | match error rates unknown | desktop 5.10; `liveness/face-match-sdk/README.md` |
-| 11 | All attack data is synthetic; bona fide data is three people from stock clips | numbers are regression figures, not security claims | section 3 |
+| 1 | Adaptive screen replay of subject S3 (SYN-A7) passes every layer | APCER_max 25% per attempt (4/16), 50% per transaction, in every configuration | calibration notes 0.2, 4.9 |
+| 2 | The synthetic very dim pack `bf-s3-dim` is rejected by passive PAD (score 3) | 12 of the 15 rejected bona fide attempts; real dim-light behaviour unknown until the volunteer evaluation | calibration notes 0.2, 4.5 |
+| 3 | Every registration, sign-in and onboarding now answers 2 challenges | median accepted attempt 9.7 s instead of 6.6 s; one synced key per workflow switches back to passive first | calibration notes 0.2; `design/decision-flow.md` section 5 |
+| 4 | A blink already in progress at the prompt fails (`ONSET_TOO_FAST`); kept on purpose against replays that blink continuously | the person blinks again (0 cases in the shipped suite, 3 under the old configuration) | calibration notes 0.1, 4.7; desktop 5.3 |
+| 5 | The capture frame can be the last streamed frame while the head is still turned | 3 of 15 S2 attempts fail `CAPTURE_PAD_SCORE`, each followed by an accepted retry | calibration notes 0.2 |
+| 6 | Desktop supervisor override accepted a print after challenge timeouts (override is refused only after PAD, integrity or binding failures) | the capture is marked `OVERRIDE` in the packet for review; same rule on Android since 2026-09-30 | desktop 5.2; `design/android-liveness.md` 13.1 |
+| 7 | Android: built-in camera as L0 only; no L1 and no vendor SBI face app path; CameraX path not run | Android tested with replayed frames on an emulator | Android 8.5; traceability O1 |
+| 8 | Offline simulated (client-side network cut), not by stopping the server | same client-side failure as a real outage | desktop 5.5; Android 8.6 |
+| 9 | Per-frame latency above target; no physical tablet measured; accelerators (XNNPACK, NNAPI) selectable but not measured | see section 5 | section 5; calibration notes 0.4 |
+| 10 | Under heavy CPU load the inference watchdog (3 inferences over 500 ms) can end a session with `ENGINE` / `INFERENCE_TIMEOUT` | the person retries; no attempt is used | desktop 5.4; `design/android-liveness.md` 13.5 |
+| 11 | The stored resident photo can show the challenge expression (smile) | image quality for the ID record | Android 8.2 |
+| 12 | SFace match threshold 40 chosen from published values, not calibrated on a larger set | match error rates unknown | desktop 5.10; `liveness/face-match-sdk/README.md` |
+| 13 | All attack data is synthetic; bona fide data is three people from stock clips | numbers are regression figures, not security claims | section 3 |
+| 14 | The end-to-end client runs (sections 4.1, 4.2) were made before the new defaults; the full Android demo was not completed again after the gap fixes | the clients' behaviour under `ALWAYS_ACTIVE` is shown by DE-D8 and AE-A12 and the new desktop flow 65 (15/15), not by a full re-run | `design/android-liveness.md` 13.8 |
+
+Closed on 2026-09-30: prints and looped clips passing the passive check (old #1), head turns to the left misread as
+a smile (old #3), blurred frames reaching the challenges.
 
 ## 7. In-house evaluation with volunteers (ISO/IEC 30107-3 method) — placeholder
 

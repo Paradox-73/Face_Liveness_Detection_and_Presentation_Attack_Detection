@@ -54,7 +54,7 @@ curl -s http://127.0.0.1:8080/v1/syncdata/actuator/info
 curl -s http://127.0.0.1:8080/admin/config/mosip.registration.liveness.policy.registration
 ```
 ```json
-{"key":"mosip.registration.liveness.policy.registration","value":"PASSIVE_THEN_ACTIVE"}
+{"key":"mosip.registration.liveness.policy.registration","value":"ALWAYS_ACTIVE"}
 ```
 
 ```bash

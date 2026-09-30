@@ -64,7 +64,10 @@ the claim.
 **Title:** Five layers, each stopping a different attack
 
 **On the slide**
-- Architecture diagram (to draw from `liveness/README.md` and the design docs; not yet a committed image):
+- Architecture diagram: [`docs/design/img/architecture.png`](../design/img/architecture.png) (SVG next to it for
+  a sharp slide; source in `docs/design/architecture.md` section 1). The passive-to-active decision picture for a
+  question: [`docs/design/img/decision-flow.png`](../design/img/decision-flow.png).
+- The layers, as speaker reference (not a second picture on the slide):
 
 ```
  SBI face device (L0/L1)        Android built-in camera (L0)
@@ -84,8 +87,9 @@ the claim.
   service gate -> packet (LIVENESS_* in the biometric record) + audit REG-EVT-LV01..17
 ```
 
-- Side table "which layer stops which attack" from `docs/eval/calibration-notes.md` 3.2: injected still → integrity;
-  screen photo → passive PAD; print → challenges; looped clip → loop detection; wrong clip → challenge check.
+- Side table "which layer stops which attack" from `docs/test-report/README.md` 3.2 (shipped suite): injected still
+  → integrity; screen photo → passive PAD; print → challenges; screen replay → active PAD; looped clip → loop
+  detection; wrong clip → challenge check.
 
 **Speaker notes**
 - Models: YuNet (face detection, MIT), Face Mesh (landmarks, Apache-2.0), two MiniFASNet models (PAD, Apache-2.0),
@@ -107,7 +111,7 @@ the claim.
 | MOSIP mechanism | What we used it for |
 |---|---|
 | SBI device interface (STREAM, RCAPTURE, L0/L1 certification) | frame stream and the signed capture; L1 digital ID checked against the device CA |
-| Global parameters + sync | 43 `mosip.registration.liveness.*` keys, per workflow; a change on the server reaches the client at the next sync (audit LV15) |
+| Global parameters + sync | 44 `mosip.registration.liveness.*` keys, per workflow; a change on the server reaches the client at the next sync (audit LV15) |
 | Packet (CBEFF biometric record `others`) | `LIVENESS_DECISION`, `METHOD`, score bucket, challenges, engine and model hash on every face |
 | Audit framework | 17 events `REG-EVT-LV01..17`, same IDs on desktop and Android, no images or raw scores |
 | Biometric SDK interface (`IBioApiV2`) | SFace face-match SDK loaded by MOSIP's own SDK factory for FACE |
@@ -131,7 +135,7 @@ the claim.
 
 **On the slide**
 - Four large numbers:
-  - **2,144** unit and component tests, 0 failures (13 suites).
+  - **2,224** unit and component tests, 0 failures (13 suites).
   - **41 / 41** checks: scripted end-to-end run on the real desktop client.
   - **58 / 58** checks: scripted end-to-end run on the real Android client.
   - **39** automated liveness and attack scenarios, scored with ISO/IEC 30107-3 metrics.
@@ -139,9 +143,8 @@ the claim.
 
 | Configuration | Worst attack species | All attacks | Genuine rejected |
 |---|---|---|---|
-| shipped (passive first) | 100% (print moved, looped clip) | 17.6% | 58.2% |
-| registration always active | 25% (adaptive replay) | 3.5% | 68.0% |
-| proposed | 25% (adaptive replay) | 1.7% | 66.7% |
+| before: passive first everywhere | 100% (print moved, looped clip) | 17.6% | 58.2% |
+| **shipped now** (challenges on registration, sign-in, onboarding; engine fixes) | 25% (adaptive replay) | **1.7%** | **29.4%** |
 
 - Printed on the slide: "Synthetic attacks, three people from open clips: regression results, not an ISO/IEC
   30107-3 evaluation. Volunteer evaluation next."
@@ -150,10 +153,13 @@ the claim.
 - The end-to-end runs cover every PS04 flow on both clients: passive pass, challenges, attacks, maximum attempts,
   device disconnect, supervisor approval, configuration by sync, offline, a live but wrong person refused by the
   face match, audit rows and packet evidence decrypted on the server side.
-- The weak point is visible and explained: under the shipped policy some synthetic prints pass the passive check.
-  With registration set to "always active" (one config key, pushed by sync), both clients refuse them. Cost: about 7
-  seconds per capture. The genuine rejection rate is dominated by one engine defect (a left head turn read as a
-  smile) that is understood and has a proposed fix.
+- The suite changed our defaults: passive first let synthetic prints through, so registration, sign-in and
+  onboarding now always ask for challenges (one synced key per workflow). All attacks fell from 17.6% to 1.7%;
+  cost about 3 seconds per capture (median 9.7 s instead of 6.6 s).
+- The same run found an engine defect (a left head turn read as a smile) that we fixed: genuine rejection fell from
+  58.2% to 29.4%, and 12 of the remaining 15 rejections come from one synthetic very dark clip.
+- What still passes: a replay that plays the right clip for each prompt, 4 of 16 attempts. That needs a stronger
+  model or device-side PAD.
 - Per-frame time is 21-23 ms median on a laptop, 38-45 ms at the 95th percentile: above our own 20 ms target.
 
 ---
@@ -187,16 +193,18 @@ the claim.
 - Done: shared engine, desktop and Android integration, six workflows, audit and packet evidence, mock device and
   mock server, automated attack suite, end-to-end runs on both clients.
 - Next (in order):
-  1. Decide the registration policy (always active) and fix the head-turn defect.
-  2. Run the volunteer evaluation (12 people, 8 attack types, ISO/IEC 30107-3 method).
-  3. Android: vendor SBI face devices and L1; physical low-end device measurements; hardware acceleration.
-  4. Device-side PAD for L1 devices (challenge sent in the capture request); offline import of a signed model update.
+  1. Run the volunteer evaluation (12 people, 8 attack types, ISO/IEC 30107-3 method).
+  2. Android: vendor SBI face devices and L1; measurements on a physical low-end tablet, including the XNNPACK and
+     NNAPI accelerators already selectable.
+  3. Device-side PAD for L1 devices (challenge sent in the capture request), the answer to adaptive replays.
+  4. Offline model import on Android (built on desktop).
   5. Contribute the changes upstream as reviewable pull requests.
 - Team alias only; links to the repository and the video.
 
 **Speaker notes**
 - Everything on this slide is in [../traceability.md](../traceability.md) section 11 with the rows it would close.
-- Ask: feedback on the default registration policy trade-off (security versus about 7 extra seconds).
+- Ask: feedback on the default registration policy trade-off (challenges on every capture: security versus about
+  3 extra seconds).
 
 ---
 
@@ -207,8 +215,9 @@ the claim.
 | A1 | Session state diagram | `docs/ux/flows.md` section 1 |
 | A2 | Configuration keys and defaults | `liveness/liveness-core/.../config/LivenessConfigKeys.java`, `docs/design/desktop-liveness-services.md` section 5 |
 | A3 | Audit events LV01-LV17 | `docs/design/desktop-liveness-services.md` section 6 |
-| A4 | Per-species results with confidence intervals | `docs/eval/results/20260930/*/report.md` |
+| A4 | Per-species results with confidence intervals | `docs/eval/results/20260930-engine-fixes/shipped/report.md` (before: `docs/eval/results/20260930/*/report.md`) |
 | A5 | Latency tables | `docs/test-report/README.md` section 5 |
 | A6 | Limitations and claims we do not make | `docs/test-report/README.md` section 6 |
 | A7 | Traceability summary | `docs/traceability.md` |
+| A9 | Technologies considered and why these | `docs/design/technology-evaluation.md` |
 | A8 | Screen index, both clients | `docs/ux/README.md` |

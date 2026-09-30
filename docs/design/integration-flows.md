@@ -10,10 +10,10 @@ what happens on pass and failure. The step-by-step sequence diagrams are in [seq
 
 | Workflow ID | Who | Face is | Default policy | Default passive threshold |
 |---|---|---|---|---|
-| `registration` | Resident | stored in the packet | `PASSIVE_THEN_ACTIVE` | 80 |
+| `registration` | Resident | stored in the packet | `ALWAYS_ACTIVE` | 80 |
 | `exception_photo` | Resident with a biometric exception | stored as the exception photo | `OFF` | (80) |
-| `onboard_auth` | Operator or supervisor at onboarding | stored as the user's reference template | `PASSIVE_THEN_ACTIVE` | 95 |
-| `login_auth` | Operator or supervisor at sign-in | matched 1:1, not stored | `PASSIVE_THEN_ACTIVE` | 95 |
+| `onboard_auth` | Operator or supervisor at onboarding | stored as the user's reference template | `ALWAYS_ACTIVE` | 95 |
+| `login_auth` | Operator or supervisor at sign-in | matched 1:1, not stored | `ALWAYS_ACTIVE` | 95 |
 | `packet_auth` | Operator confirming a packet | matched 1:1, stored as officer biometrics | `PASSIVE_THEN_ACTIVE` | 95 |
 | `exception_auth` | Supervisor reviewing an exception registration | matched 1:1, stored as supervisor biometrics | `PASSIVE_THEN_ACTIVE` | 95 |
 | `eod_auth` | Supervisor approving packets at end of day | matched 1:1 | `PASSIVE_THEN_ACTIVE` | 95 |

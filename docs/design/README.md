@@ -24,6 +24,7 @@ the code differs from the team's original plan, the page says so.
 | Sequence diagrams | [sequences.md](sequences.md) |
 | Security and privacy considerations | [security-privacy.md](security-privacy.md) |
 | ISO/IEC 30107 alignment considerations | [iso-30107.md](iso-30107.md) |
+| (Expected task E5) Evaluation of liveness and PAD technologies | [technology-evaluation.md](technology-evaluation.md) |
 
 Also here:
 - [audit-and-evidence.md](audit-and-evidence.md): audit events `REG-EVT-LV01..17`, packet evidence keys,
@@ -51,7 +52,10 @@ Also here:
 
 ## Diagrams
 
-All diagrams are Mermaid blocks inside the pages (GitHub renders them). To get SVG files, for example for a PDF,
+All diagrams are Mermaid blocks inside the pages (GitHub renders them). Two are also committed as pictures, for
+the README and the slides: [img/architecture.svg](img/architecture.svg) / `.png` (component view) and
+[img/decision-flow.svg](img/decision-flow.svg) / `.png` (passive-to-active decision). Render them again after
+changing the Mermaid source. To get SVG files, for example for a PDF,
 use the Mermaid CLI with a local Chrome:
 
 ```bash
