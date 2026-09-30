@@ -1,16 +1,61 @@
 Face liveness and PAD for MOSIP Registration Clients
 Copyright (c) 2026 Team Badmosip
 
+The code written for this project (liveness/, tools/, scripts/, eval/, docs/, and the new files in
+clients/android/android/livenessmanager/) is licensed under the MIT License (LICENSE).
+
 This repository contains source code imported from MOSIP projects:
 
 - clients/desktop/  from https://github.com/mosip/registration-client (commit 22fe01f),
   licensed under the Mozilla Public License 2.0 (clients/desktop/LICENSE).
   The upstream design/ folder (design source files) was not imported.
+  Changes made by this project to MPL-2.0 files stay under the MPL-2.0.
 - clients/android/  from https://github.com/mosip/android-registration-client (commit c4d3ca7),
   licensed under the MIT License (clients/android/LICENSE).
 - devices/mock-mds/ from https://github.com/mosip/mosip-mock-services (commit 3d2174d, MockMDS/),
   licensed under the Mozilla Public License 2.0 (devices/mock-mds/LICENSE).
   The upstream files/sdkDependeny/ folder (third-party binary libraries not used by the mock) was not imported.
+- tools/mock-sync/data/upstream/ holds data converted or copied from https://github.com/mosip/mosip-data
+  (branch 1.2.0.1, commit 6985016c) and https://github.com/mosip/mosip-config (tag v1.2.0.1, commit d4c4f7ed),
+  licensed under the Mozilla Public License 2.0 (tools/mock-sync/data/LICENSE-NOTE.md).
 
-Third-party components and model files added by this project are listed with their licences
-in licenses/ and models/SOURCES.md.
+Model files (models/, shipped inside liveness-onnx-<version>-models.jar and the Android APK):
+
+- YuNet face detector, OpenCV Zoo (https://github.com/opencv/opencv_zoo), MIT License,
+  Copyright (c) 2020 Shiqi Yu (licenses/MIT-YuNet.txt).
+- MediaPipe Face Mesh V2 landmark model, Google, converted by PINTO0309 (PINTO_model_zoo 410_FaceMeshV2),
+  Apache License 2.0; weights stored as float16 by this project (models/tools/fp16_weights.py).
+- MiniFASNetV2 and MiniFASNetV1SE, Minivision Silent-Face-Anti-Spoofing
+  (https://github.com/minivision-ai/Silent-Face-Anti-Spoofing), ONNX export by yakhyo
+  (https://github.com/yakhyo/face-anti-spoofing), Apache License 2.0.
+- SFace face recognition model, OpenCV Zoo, trained by Yaoyao Zhong, converted by Chengrui Wang,
+  Apache License 2.0; weights stored as float16 by this project.
+- 30 vertices of the MediaPipe canonical face model (google-ai-edge/mediapipe,
+  mediapipe/modules/face_geometry/data/canonical_face_model.obj), Apache License 2.0, embedded in
+  liveness/liveness-onnx/src/main/java/io/mosip/liveness/onnx/mesh/CanonicalFace.java.
+Sources, commits, hashes and use caveats: models/SOURCES.md.
+
+Third-party libraries added by this project:
+
+- ONNX Runtime (com.microsoft.onnxruntime:onnxruntime 1.20.0, onnxruntime-android 1.28.0),
+  Copyright (c) Microsoft Corporation, MIT License (licenses/MIT-onnxruntime.txt). The native libraries in these
+  artefacts are covered by Microsoft's ThirdPartyNotices.txt, shipped inside the jar and the AAR.
+- AndroidX CameraX 1.4.2 (camera-core, camera-camera2, camera-lifecycle, camera-view), The Android Open Source
+  Project, Apache License 2.0.
+- In tools/mock-sync (mock-sync.jar): Spring Boot 2.7.18 and Spring Framework 5.3.31, Apache Tomcat 9.0.83,
+  Jackson 2.13.5, springdoc-openapi 1.7.0, Swagger Core 2.2.9, swagger-ui 4.18.2, SnakeYAML 1.30,
+  Apache Commons Lang 3.12.0, Apache Log4j API 2.17.2 (Apache License 2.0);
+  SLF4J 1.7.36, Copyright (c) QOS.ch (MIT License);
+  Logback 1.2.12, Copyright (C) QOS.ch (EPL-1.0 / LGPL-2.1, used under EPL-1.0);
+  jakarta.annotation-api 1.3.5 (EPL-2.0 / GPL-2.0 with Classpath Exception, used under EPL-2.0);
+  jakarta.xml.bind-api 2.3.3 and jakarta.activation-api 1.2.2 (Eclipse Distribution License 1.0, BSD-3-Clause);
+  Microsoft TSS.Java 0.3.0, Copyright (c) Microsoft Corporation (MIT License);
+  JNA 4.4.0 (LGPL-2.1 / Apache License 2.0, used under Apache License 2.0);
+  Bouncy Castle 1.70, Copyright (c) 2000-2021 The Legion of the Bouncy Castle Inc. (MIT-style licence).
+
+Licence texts: licenses/ (index in licenses/README.md).
+Full component list with versions and the licence review: docs/sbom/README.md and the CycloneDX files in docs/sbom/.
+
+Not distributed: ffmpeg (installed by the user, LGPL/GPL depending on the build) and the openly licensed video clips
+used for local regression tests (eval/packs/sources.yaml; CC BY-SA 3.0 and Pexels License), which are downloaded at
+test time and never committed.

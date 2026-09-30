@@ -3,40 +3,92 @@
 Team **Badmosip** — MOSIP Decode 2026, Problem Statement 04:
 *Face Liveness Detection and Presentation Attack Detection for Registration and Biometric Authentication.*
 
-This repository adds offline face liveness and presentation attack detection (PAD) to both MOSIP
-registration clients, for resident face capture, operator authentication and supervisor authentication.
+This repository adds offline face liveness and presentation attack detection (PAD) to both MOSIP Registration
+Clients (desktop JavaFX and Android), for resident face capture, operator authentication and supervisor
+authentication.
+
+- **Hybrid check:** passive PAD on the incoming frames first; if the score is below the configured threshold, the
+  client automatically prompts randomly chosen actions (blink, smile, turn or look) and verifies them on the
+  following frames. Photos, screens, replays, frozen or looped streams and face swaps are refused.
+- **One engine, two clients:** a Java 11 library with no runtime dependencies (`liveness/`) runs unchanged on the
+  desktop client and on Android, with the same thresholds, prompts, audit events and packet evidence.
+- **Device independent:** any SBI 0.9.5 / 1.0 L0 or L1 face device on the desktop; the tablet camera as a built-in
+  L0 device on Android; a mock L0/L1 device with fault injection for tests.
+- **Bound to the signed capture:** a single-use pass token and a face-similarity check tie the stored or matched
+  face to the stream that passed, enforced in the client's service layer, not in the screens.
+- **Configurable and offline:** 43 `mosip.registration.liveness.*` keys synced from the server, per-workflow
+  policies, floors that cannot be undercut; everything runs without a network.
+- **Evidence:** audit events `REG-EVT-LV01..17` and `LIVENESS_*` entries in every face record of the packet.
+
+## Status (2026-09-30)
+
+| Part | State | Evidence |
+|---|---|---|
+| Shared engine (`liveness/liveness-core`) | Passive PAD, active challenges, frame integrity, planarity, capture binding, policy resolution, audit, metrics | 264 tests; `liveness/README.md` |
+| ONNX adapters and models (`liveness/liveness-onnx`, `models/`) | YuNet, Face Mesh, MiniFASNet V2 + V1SE, SFace; signed bundle with rollback protection | 93 tests; `models/SOURCES.md` |
+| Face-match SDK (`liveness/face-match-sdk`) | SFace `IBioApiV2` for FACE 1:1 matching | 42 tests |
+| Desktop client (`clients/desktop`) | Liveness gates resident capture, exception photo, onboarding, face login, packet and reviewer authentication, end-of-day approval | end-to-end run 41 of 41 checks: `docs/test-report/desktop-e2e.md` |
+| Android client (`clients/android`) | `livenessmanager` module with the built-in camera device; resident capture, onboarding, face sign-in, packet authentication, supervisor approval | end-to-end run 58 of 58 checks: `docs/test-report/android-e2e.md` |
+| Mock face device (`devices/mock-mds`) | Image sequences, video or webcam; capture signed from the streamed frame; 13 fault types; L0/L1; provisional PAD capability | 226 tests; `devices/mock-mds/LIVENESS-EXTENSIONS.md` |
+| Mock MOSIP server (`tools/mock-sync`) | Both real clients log in, sync, onboard and upload against it; live config changes; packet evidence viewer | 37 tests; `tools/mock-sync/README.md` |
+| Evaluation (`tools/eval`, `eval/`) | Scenario runner with ISO/IEC 30107-3 metrics on 39 scenarios | `docs/eval/calibration-notes.md` |
+
+Known limits, stated in the linked documents: under the shipped `PASSIVE_THEN_ACTIVE` policy a good print can pass
+passively (the stricter `ALWAYS_ACTIVE` policy refuses it); an adaptive screen replay passed 25% of attempts in the
+synthetic suite; the per-frame latency target (p95 at most 20 ms) is not met (desktop p95 38-45 ms); no physical
+Android device and no live volunteer evaluation yet; online model updates are not implemented.
 
 ## Repository map
 
 | Path | What it is | Licence |
 |---|---|---|
-| `liveness/` | Shared liveness engine used by both clients (Java 11 library) | MIT |
-| `clients/desktop/` | MOSIP desktop Registration Client (JavaFX), upstream `mosip/registration-client` `master@22fe01f`, plus our changes | MPL-2.0 |
-| `clients/android/` | MOSIP Android Registration Client (Flutter + Java), upstream `mosip/android-registration-client` `release-1.2.x@c4d3ca7`, plus our changes | MIT |
-| `devices/mock-mds/` | MOSIP mock biometric device service, upstream `mosip/mosip-mock-services` `master@3d2174d` (`MockMDS/`), extended to stream real frames | MPL-2.0 |
-| `tools/` | Mock MOSIP server, model signer, evaluation scripts | MIT |
-| `models/` | Model files, hashes and licences | see `models/SOURCES.md` |
-| `docs/` | Design, API, UX, evaluation and install documentation | MIT |
+| `liveness/` | Shared engine (`liveness-core`), ONNX adapters (`liveness-onnx`), SFace SDK (`face-match-sdk`) | MIT |
+| `models/` | Signed ONNX model bundle, hashes, sources | per model (MIT, Apache-2.0) |
+| `clients/desktop/` | MOSIP desktop Registration Client, upstream `mosip/registration-client` `master@22fe01f`, plus the integration | MPL-2.0 |
+| `clients/android/` | MOSIP Android Registration Client, upstream `mosip/android-registration-client` `release-1.2.x@c4d3ca7`, plus `livenessmanager` | MIT |
+| `devices/mock-mds/` | MOSIP MockMDS, upstream `mosip/mosip-mock-services` `master@3d2174d` (`MockMDS/`), extended into a mock L0/L1 face device | MPL-2.0 |
+| `tools/mock-sync/` | Local stand-in for the MOSIP server | MIT (data MPL-2.0) |
+| `tools/eval/`, `eval/` | Scenario runner, analysis, frame-pack manifests and scenarios | MIT |
+| `scripts/` | Build, run and demo scripts for both clients and the mocks | MIT |
+| `docs/` | Design, API, install, UX, test reports, evaluation, SBOM | MIT |
+| `licenses/`, `NOTICE` | Third-party licence texts and attributions | — |
 
-Each upstream directory was imported unchanged in its own commit, so `git log -- <path>` and
-`git diff <import-commit> -- <path>` show exactly what this project changed.
-
-## Status (Sep 30, 2026)
-
-| Part | State |
-|---|---|
-| Shared liveness engine (`liveness/`) | Passive check, active challenges, frame-integrity and planarity checks, capture binding, policy/config, audit, engine factory; SFace face-match SDK for MOSIP (IBioApiV2) |
-| ONNX models (`models/`) | YuNet, Face Mesh, MiniFASNet V2 + V1SE, SFace; SHA-256 manifest with signature |
-| Mock face device (`devices/mock-mds/`) | Streams image sequences, video or webcam; capture built from the streamed frame; fault injection |
-| Mock MOSIP server (`tools/mock-sync/`) | Desktop and Android clients complete first login and sync against it |
-| Desktop client | Liveness gates resident capture, onboarding, face login and supervisor approval; end-to-end report in `docs/test-report/desktop-e2e.md` |
-| Android client | Native liveness module on the shared engine; resident capture, face sign-in and supervisor approval wired; end-to-end run pending |
+Each upstream folder was imported unchanged in its own commit, so `git diff <import commit> -- <folder>` shows
+exactly what this project changed ([ADR 0001](docs/adr/0001-monorepo.md)).
 
 ## Quick start
 
-- Build and test the engine: `mvn -f liveness/pom.xml verify`
-- Desktop client: see `docs/install/desktop.md`
-- Android client: see `docs/install/android.md`
-- Mock MOSIP server: see `tools/mock-sync/README.md`
-- Mock face device: see `devices/mock-mds/LIVENESS-EXTENSIONS.md`
-- Evaluation tooling: see `docs/eval/README.md`
+Full clean-machine guide (Windows): [docs/install/README.md](docs/install/README.md).
+
+```bash
+mvn -f liveness/pom.xml install -Dliveness.benchmark.frames=0     # engine, models jar, SDK; runs the tests
+(cd tools/mock-sync && scripts/run-mock-sync.sh)                  # own terminal; local MOSIP server: HTTPS 8443, HTTP 8080
+bash scripts/mockmds-run.sh --build                               # mock face device on 127.0.0.1:4501 (Java 21)
+bash scripts/desktop-build.sh --mocksync                          # desktop client run folder in ../run/desktop
+bash scripts/android-build.sh                                     # Android debug APK (JDK 21, Flutter 3.10.4)
+```
+
+Then: register the machine with MockSync and start the desktop client with `scripts\desktop-run.ps1`
+([docs/install/desktop.md](docs/install/desktop.md)); or boot the emulator with `scripts/android-run-emulator.sh`
+and run `scripts/android-mocksync-setup.sh --login` ([docs/install/android.md](docs/install/android.md)).
+Scripted demos of every flow: `scripts/demo-desktop.sh`, `scripts/demo-android.sh`. Demo logins:
+`docs/test-data.md`.
+
+## Documentation
+
+| Topic | Where |
+|---|---|
+| Technical design (PS04 Deliverable 1): architecture, streaming, engine, decision flow, challenges, integration flows, online/offline, configuration, interfaces, errors, sequence diagrams, security and privacy, ISO/IEC 30107 | [docs/design/README.md](docs/design/README.md) |
+| Architecture decision records | [docs/adr/README.md](docs/adr/README.md) |
+| API documentation: engine, device adapter, desktop services, Android API, face-match SDK, SBI calls, MockMDS admin, MockSync | [docs/api/README.md](docs/api/README.md) |
+| UI/UX design (PS04 Deliverable 2): flows, screens, message catalogue | `docs/ux/` (`flows.md`, `desktop-liveness.md`, `message-catalogue.csv`) |
+| Install and run | [docs/install/README.md](docs/install/README.md), [desktop.md](docs/install/desktop.md), [android.md](docs/install/android.md) |
+| Test reports | [desktop](docs/test-report/desktop-e2e.md), [Android](docs/test-report/android-e2e.md) |
+| PAD evaluation protocol and results | [docs/eval/](docs/eval/README.md) |
+| Test data and demo accounts | [docs/test-data.md](docs/test-data.md) |
+| Licences and SBOM | [licenses/README.md](licenses/README.md), [NOTICE](NOTICE), [docs/sbom/README.md](docs/sbom/README.md) |
+
+## Licence
+
+Code written for this project: MIT ([LICENSE](LICENSE)). Imported MOSIP code keeps its licence (MPL-2.0 for the
+desktop client and MockMDS, MIT for the Android client). Models and third-party components: [NOTICE](NOTICE).

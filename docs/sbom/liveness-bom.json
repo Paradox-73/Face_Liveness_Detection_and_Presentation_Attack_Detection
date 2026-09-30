@@ -1,0 +1,413 @@
+{
+  "bomFormat" : "CycloneDX",
+  "specVersion" : "1.6",
+  "serialNumber" : "urn:uuid:d2c85545-97df-37c1-8d89-54295cc90262",
+  "version" : 1,
+  "metadata" : {
+    "lifecycles" : [
+      {
+        "phase" : "build"
+      }
+    ],
+    "tools" : {
+      "components" : [
+        {
+          "type" : "library",
+          "author" : "OWASP Foundation",
+          "group" : "org.cyclonedx",
+          "name" : "cyclonedx-maven-plugin",
+          "version" : "2.9.1",
+          "description" : "CycloneDX Maven plugin",
+          "hashes" : [
+            {
+              "alg" : "MD5",
+              "content" : "9c7a565cf28cce58557d0c621c5ea4b1"
+            },
+            {
+              "alg" : "SHA-1",
+              "content" : "be882d5a22050bfa9d19090b1420c188617d0e1c"
+            },
+            {
+              "alg" : "SHA-256",
+              "content" : "698e0f37184a5b28c245c4065fd036dfce253b52f82fbb7113d81d36326cc249"
+            },
+            {
+              "alg" : "SHA-512",
+              "content" : "c0f0b11026858166f872a2eb54719492e5cecaa0bc9cd6b30b3ecb4a174eed220f4a1b5829d18d6734128e778d3cb3db7ffed177c92866133129cb29081814a0"
+            },
+            {
+              "alg" : "SHA-384",
+              "content" : "d80964707dfe5caca8c70521d5066f57589304c0a657e6fbc7c0614ea0fc7b3b3dbe7778361eee0f54ba111e9cb0ffcb"
+            },
+            {
+              "alg" : "SHA3-384",
+              "content" : "80bc3a275d9514bc457461ff52a72add8c7ecbbc01d8912efce57139016c544ee776981851be0a58fa977ab4221f703f"
+            },
+            {
+              "alg" : "SHA3-256",
+              "content" : "142317d6f245390f4fd2d0c100b16281b8dfc5c0c2cff86943bdcc97039cb699"
+            },
+            {
+              "alg" : "SHA3-512",
+              "content" : "af0fb9137c90b65d1a07f72e4d51ae509956cdb8800f35c961b037cdda1fe4a14ce3b496cef71ba85f1621affcfe29cd42704ae4191ff0b090a9602087c8997b"
+            }
+          ]
+        }
+      ]
+    },
+    "component" : {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/io.mosip.liveness/liveness-parent@1.0.0-SNAPSHOT?type=pom",
+      "group" : "io.mosip.liveness",
+      "name" : "liveness-parent",
+      "version" : "1.0.0-SNAPSHOT",
+      "description" : "Shared face liveness and presentation attack detection engine for the MOSIP desktop and Android registration clients.",
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "MIT",
+            "url" : "https://opensource.org/license/mit/"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/io.mosip.liveness/liveness-parent@1.0.0-SNAPSHOT?type=pom",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "https://github.com/Paradox-73/Mosip-face-liveness-pad"
+        }
+      ]
+    },
+    "properties" : [
+      {
+        "name" : "maven.goal",
+        "value" : "makeAggregateBom"
+      },
+      {
+        "name" : "maven.scopes",
+        "value" : "compile,provided,runtime,system"
+      },
+      {
+        "name" : "cdx:reproducible",
+        "value" : "enabled"
+      }
+    ]
+  },
+  "components" : [
+    {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/io.mosip.liveness/liveness-core@1.0.0-SNAPSHOT?type=jar",
+      "group" : "io.mosip.liveness",
+      "name" : "liveness-core",
+      "version" : "1.0.0-SNAPSHOT",
+      "description" : "Platform-neutral liveness API, session model, policy, audit and UI-state types. No runtime dependencies; runs on Java 11 desktops and Android API 28.",
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "MIT",
+            "url" : "https://opensource.org/license/mit/"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/io.mosip.liveness/liveness-core@1.0.0-SNAPSHOT?type=jar",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "https://github.com/Paradox-73/Mosip-face-liveness-pad/liveness-core"
+        }
+      ]
+    },
+    {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/io.mosip.liveness/liveness-onnx@1.0.0-SNAPSHOT?type=jar",
+      "group" : "io.mosip.liveness",
+      "name" : "liveness-onnx",
+      "version" : "1.0.0-SNAPSHOT",
+      "description" : "ONNX Runtime adapters for the liveness core: YuNet face detection, MediaPipe Face Mesh landmarks, MiniFASNet passive PAD and SFace embeddings, plus the signed model bundle loader. Runs on Java 11 desktops and on Android API 28; each client supplies its own ONNX Runtime.",
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "MIT",
+            "url" : "https://opensource.org/license/mit/"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/io.mosip.liveness/liveness-onnx@1.0.0-SNAPSHOT?type=jar",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "https://github.com/Paradox-73/Mosip-face-liveness-pad/liveness-onnx"
+        }
+      ]
+    },
+    {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.microsoft.onnxruntime/onnxruntime@1.20.0?type=jar",
+      "publisher" : "Microsoft",
+      "group" : "com.microsoft.onnxruntime",
+      "name" : "onnxruntime",
+      "version" : "1.20.0",
+      "description" : "ONNX Runtime is a performance-focused inference engine for ONNX (Open Neural Network Exchange) models.",
+      "scope" : "required",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "50a09859d159df2fd42b9111bf62d83a"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "717cd187f7d5080a8cc5c8aa761cafe2db028de1"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "c46608681692b3693914defb42fa3119ad7cb6146870581ece247e0ed5793fe8"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "611fc496b9022ae200a2795ec764a6ec4972f50e76d5ffc6121f6c3c9bb6a3e41bbd525815d0da9e04924ad24ee5f83f8f15deccbc466d0eccc6b5e1b319e619"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "33d01955fd0870386d693351862e3c410a26e3c1f2d0be4f804631dd117fb82a0f50f23fcc3870e8c3f611fbeb1b8f26"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "95e1983bb8c62d8e0f34980582ef9aa49dffbb7c713b7e7b880e81af8ede1501a1b5e6062e8a666c20f1b2724245739e"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "b4262af8064b707c05b40b3a6ae856ea3d4164431ce0bad8c6dd80d81b7516da"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "c0cffecd0a82e6543da738dbb8f7f74c26ae562dcd9b72cbcd6f4ece19a68506372cfb494f32059c58186faf7ccf565fb86a219f18dfd2fda1a6a7c6173addee"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "MIT",
+            "url" : "https://opensource.org/license/mit/"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/com.microsoft.onnxruntime/onnxruntime@1.20.0?type=jar",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "https://microsoft.github.io/onnxruntime/"
+        },
+        {
+          "type" : "vcs",
+          "url" : "https://github.com/microsoft/onnxruntime"
+        }
+      ]
+    },
+    {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/io.mosip.liveness/face-match-sdk@1.0.0-SNAPSHOT?type=jar",
+      "group" : "io.mosip.liveness",
+      "name" : "face-match-sdk",
+      "version" : "1.0.0-SNAPSHOT",
+      "description" : "MOSIP biometric SDK (IBioApiV2, API version 0.9) for FACE: quality check, template extraction and 1:1 / 1:n match with the SFace embedding model of the liveness bundle. Runs in the desktop Registration Client (BioAPIFactory) and the Android Registration Client (BioSdkProviderFactory).",
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "MIT",
+            "url" : "https://opensource.org/license/mit/"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/io.mosip.liveness/face-match-sdk@1.0.0-SNAPSHOT?type=jar",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "https://github.com/Paradox-73/Mosip-face-liveness-pad/face-match-sdk"
+        }
+      ]
+    },
+    {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/io.mosip.kernel/kernel-biometrics-api@1.2.0.2?type=jar",
+      "group" : "io.mosip.kernel",
+      "name" : "kernel-biometrics-api",
+      "version" : "1.2.0.2",
+      "description" : "biometrics api definitions",
+      "scope" : "required",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "c3feeee7c26c2662047ae3c0a2640921"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "cca169384514396ba3524bf4e0197ad3336d957e"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "b164eaefc89839d8f64175812d3d5e9c08885bd93701b04b149e2540aa322518"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "e406a3bc164ec8f03cc3cd2ac5e7095278cb3d8118a105b37180382bc4cf3c4b8cf036d9c2a4d00318c27bf7f2a74a01a91f94e5bc3e4be2f71b9c97d8aa02f6"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "fd4d7e02e18cd52e91a4e80db394de6311e00a2cae70bbca3d637e32134e1b113dd18efe421ee8efbd09b879e19f3a15"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "2835c47671e7e95123bf25a17fe8798e2221d048b0bc4b3f22f85ea02d4aab83b18da5884eef2166dee1ee7f3c74f7ec"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "bddd7408cc1b66d0bc9ac73f112cdf470ce676893bcdc46c72a731ce868b6e0f"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "e67901fa86c595e76b89ec670bacde3afeb79fb32f0b2cd7b7bb118bbc9c692c032e3ef9bb8ab15d073b8982febd372232fda4da2b4a5eda2593f783cb663473"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "MPL-2.0"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/io.mosip.kernel/kernel-biometrics-api@1.2.0.2?type=jar",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "https://github.com/mosip/commons"
+        },
+        {
+          "type" : "distribution-intake",
+          "url" : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+        },
+        {
+          "type" : "vcs",
+          "url" : "https://github.com/mosip/commons"
+        }
+      ]
+    },
+    {
+      "type" : "library",
+      "bom-ref" : "pkg:maven/javax.xml.bind/jaxb-api@2.3.1?type=jar",
+      "publisher" : "Oracle Corporation",
+      "group" : "javax.xml.bind",
+      "name" : "jaxb-api",
+      "version" : "2.3.1",
+      "description" : "JAXB (JSR 222) API",
+      "scope" : "required",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "bcf270d320f645ad19f5edb60091e87f"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "8531ad5ac454cc2deb9d4d32c40c4d7451939b5d"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "88b955a0df57880a26a74708bc34f74dcaf8ebf4e78843a28b50eae945732b06"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "93a47b245ab830d664a48c9d14e86198a38809ce94f72ca66b3d68746ae1d7b902f6fef2d1ac1a92c01701549ae80a07db69bd822ffd831a95d8dbffad435790"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "1eb2d7f307bda8cbf6a4ab5b2b97d830d33ca48ad94eb4bb1cbce860c54fca96285dbcb1ce9b164dbf37d4475f9a198f"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "8df7409d3f60888f3a80f4d49af66c2cab6dc9f00e79c87c17703faad19d8ba6c8fc96ad897434170ce2686952921cdd"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "41338683257d5ecead579ccc137bdef7bc4fea685d039a3d894e1d6730425e1d"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "3371a96171f69876b0e6b8354674d252680e6d52c509a2645b1a0b0d7f9e176274bde6c89edb40986264733ffb6794cb7b2cba417666b1e82075bd4fd51197b6"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "CDDL-1.1"
+          }
+        },
+        {
+          "license" : {
+            "id" : "GPL-2.0-with-classpath-exception"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/javax.xml.bind/jaxb-api@2.3.1?type=jar",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "https://github.com/javaee/jaxb-spec/jaxb-api"
+        },
+        {
+          "type" : "distribution-intake",
+          "url" : "https://maven.java.net/service/local/staging/deploy/maven2/"
+        },
+        {
+          "type" : "issue-tracker",
+          "url" : "https://github.com/javaee/jaxb-spec/issues"
+        },
+        {
+          "type" : "vcs",
+          "url" : "https://github.com/javaee/jaxb-spec.git/jaxb-api"
+        }
+      ]
+    }
+  ],
+  "dependencies" : [
+    {
+      "ref" : "pkg:maven/io.mosip.liveness/liveness-parent@1.0.0-SNAPSHOT?type=pom",
+      "dependsOn" : [
+        "pkg:maven/io.mosip.liveness/liveness-core@1.0.0-SNAPSHOT?type=jar",
+        "pkg:maven/io.mosip.liveness/liveness-onnx@1.0.0-SNAPSHOT?type=jar",
+        "pkg:maven/io.mosip.liveness/face-match-sdk@1.0.0-SNAPSHOT?type=jar"
+      ]
+    },
+    {
+      "ref" : "pkg:maven/io.mosip.liveness/liveness-core@1.0.0-SNAPSHOT?type=jar",
+      "dependsOn" : [ ]
+    },
+    {
+      "ref" : "pkg:maven/io.mosip.liveness/liveness-onnx@1.0.0-SNAPSHOT?type=jar",
+      "dependsOn" : [
+        "pkg:maven/io.mosip.liveness/liveness-core@1.0.0-SNAPSHOT?type=jar",
+        "pkg:maven/com.microsoft.onnxruntime/onnxruntime@1.20.0?type=jar"
+      ]
+    },
+    {
+      "ref" : "pkg:maven/com.microsoft.onnxruntime/onnxruntime@1.20.0?type=jar",
+      "dependsOn" : [ ]
+    },
+    {
+      "ref" : "pkg:maven/io.mosip.liveness/face-match-sdk@1.0.0-SNAPSHOT?type=jar",
+      "dependsOn" : [
+        "pkg:maven/io.mosip.liveness/liveness-core@1.0.0-SNAPSHOT?type=jar",
+        "pkg:maven/io.mosip.liveness/liveness-onnx@1.0.0-SNAPSHOT?type=jar",
+        "pkg:maven/io.mosip.kernel/kernel-biometrics-api@1.2.0.2?type=jar",
+        "pkg:maven/javax.xml.bind/jaxb-api@2.3.1?type=jar",
+        "pkg:maven/com.microsoft.onnxruntime/onnxruntime@1.20.0?type=jar"
+      ]
+    },
+    {
+      "ref" : "pkg:maven/io.mosip.kernel/kernel-biometrics-api@1.2.0.2?type=jar",
+      "dependsOn" : [ ]
+    },
+    {
+      "ref" : "pkg:maven/javax.xml.bind/jaxb-api@2.3.1?type=jar",
+      "dependsOn" : [ ]
+    }
+  ]
+}

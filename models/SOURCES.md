@@ -8,7 +8,10 @@ This folder is the signed model bundle used by `liveness/liveness-onnx` on both 
   model-signing key (`kid` `sha256:99538367853153c2`).
 - `model-signing-dev.pub.pem`: that key's public half. The same key is built into
   `io.mosip.liveness.onnx.model.ModelTrustAnchors`. The private half is not in this repository.
-- `LICENSES/`: licence texts the model licences require us to ship (Apache-2.0, and YuNet's MIT notice).
+- `LICENSES/`: licence texts the model licences require us to ship (Apache-2.0, and YuNet's MIT notice). The
+  same two texts are also in the repository-wide `licenses/` folder (`Apache-2.0.txt`, `MIT-YuNet.txt`), and the
+  models are listed in `NOTICE` and in the licence review `docs/sbom/README.md`. All five model licences (MIT,
+  Apache-2.0) are OSI-approved; the caveats below concern training data and intended use, not the licences.
 - `tools/fp16_weights.py`: the script that produced the two `*_fp16w.onnx` files.
 
 Bundle version 1.0.0. Total size of the five model files: 25,671,839 bytes (24.5 MiB).
