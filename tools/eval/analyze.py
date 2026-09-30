@@ -585,19 +585,31 @@ def build_report(records: Sequence[Record], det_file: Optional[str], det_ok: boo
     platform = records[0].raw.get("platform", {}) if records else {}
     att = compute(records, "attempt")
     txn = compute(records, "transaction")
-    parts = [
-        "# Liveness technology regression report\n",
-        "Computed with ISO/IEC 30107-3:2023 metric definitions from replayed frame packs. The attack packs are "
-        "synthetic (software-made prints, screens and replays) and the frames are injected into the engine, so "
-        "these figures are **technology regression results, not an ISO/IEC 30107-3 evaluation** and not "
-        "comparable to laboratory results. Per ISO/IEC 30107-3, a non-zero APCER shows that an attack can "
-        "succeed; zero observed errors bound the error rate but do not prove security.\n",
+    manual = bool(records) and all((r.raw.get("platform") or {}).get("source") == "manual sheet" for r in records)
+    if manual:
+        head = [
+            "# Liveness live test report\n",
+            "In-house test following ISO/IEC 30107-3:2023 methodology: real people and home-made attack artefacts "
+            "in front of the real client, results recorded by hand (tools/eval/sheet-to-attempts.py). It is not a "
+            "certified laboratory evaluation. Per ISO/IEC 30107-3, a non-zero APCER shows that an attack can "
+            "succeed; zero observed errors bound the error rate but do not prove security.\n",
+        ]
+    else:
+        head = [
+            "# Liveness technology regression report\n",
+            "Computed with ISO/IEC 30107-3:2023 metric definitions from replayed frame packs. The attack packs are "
+            "synthetic (software-made prints, screens and replays) and the frames are injected into the engine, so "
+            "these figures are **technology regression results, not an ISO/IEC 30107-3 evaluation** and not "
+            "comparable to laboratory results. Per ISO/IEC 30107-3, a non-zero APCER shows that an attack can "
+            "succeed; zero observed errors bound the error rate but do not prove security.\n",
+        ]
+    parts = head + [
         "## Item under test\n",
         _table(["field", "value"], [
             ("runs", ", ".join(runs)),
             ("attempt records", len(records)),
             ("transactions", len(attempts_by_txn(records))),
-            ("model set SHA-256", ", ".join(m[:16] + "..." for m in models)),
+            ("model set SHA-256", ", ".join((m or "?")[:16] + "..." for m in models)),
             ("configuration hashes", len(configs)),
             ("platform", ", ".join(f"{k} {v}" for k, v in platform.items())),
         ]),

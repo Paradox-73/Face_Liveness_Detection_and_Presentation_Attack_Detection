@@ -55,4 +55,15 @@ change. The original list follows.
 
 ## Answers
 
-_Filled in after the call._
+### Mentor call, 2026-09-30
+
+| Question | Answer | What it changes |
+|---|---|---|
+| Q1 / T2: is a local mock MOSIP server acceptable for judging the Registration Client flows? | Yes, a local set-up is fine. | No Collab environment needed. MockSync stays the demo and judging server. |
+| Q3: do judges expect working desktop **and** Android versions? | Both: design and implementation for both, since the approach is almost the same. | Both are built. Android now needs the same depth of real-camera testing as desktop, ideally on a physical phone. |
+| Q7 / T5: is an in-house test with 8-12 people and home-made attacks acceptable, and are there target APCER / BPCER values? | The mentors will check and reply. | Open. Follow up by email. The team self-test ([eval/team-self-test.md](eval/team-self-test.md)) goes ahead meanwhile. |
+| Q6: `develop` or `master` as the base? | `master`, the latest released code; `develop` changes too often. | Desktop client: already on `master` (`22fe01f`). MockMDS: already on `master`. Android client: on `release-1.2.x` (`c4d3ca7`), which is upstream `master` (tag `v1.1.1`, `8f4643a`) plus 12 later upstream commits (unit-test fixes, an exception-photo dedupe fix, centre remapping, UI automation). Kept, and confirmed by email, because moving back to `master` would drop those upstream fixes. |
+
+Not asked on the call, to send by email to decode@mosip.io: T1 (`ALWAYS_ACTIVE` default), T3 (supervisor override),
+T4 (in-app camera as L0 on Android), T6 (desktop-only offline model import), T7 (pitch format), Q5 (#1117 PAD
+block), Q8 (where liveness evidence goes in the packet), Q16 (college ID upload) and the Android base branch above.

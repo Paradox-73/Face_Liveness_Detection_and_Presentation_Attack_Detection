@@ -3,6 +3,7 @@
 Tools and data descriptions for testing the face liveness engine automatically and for reporting results with ISO/IEC 30107-3 metrics.
 
 - [protocol.md](protocol.md): the in-house evaluation with real people and real artefacts (who, what, how many, consent, metrics).
+- [team-self-test.md](team-self-test.md): how the team tests the real clients with their own faces and home-made attacks, and turns the hand-filled sheet into APCER / BPCER (`tools/eval/sheet-to-attempts.py`).
 - [calibration-notes.md](calibration-notes.md): results of the automated suite on the shipped engine and the parameter changes they support.
 - [results/](results/): the reports of the runs quoted in the calibration notes.
 

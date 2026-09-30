@@ -1,0 +1,7 @@
+txn_id,platform,subject_id,kind,species,condition,workflow,attempt_no,result,reason,notes
+T001,desktop,S1,bona_fide,BONA_FIDE,C1,REGISTRATION,1,PASS,,
+T002,desktop,S1,attack,P1,,REGISTRATION,1,FAIL,PAD,
+T002,desktop,S1,attack,P1,,REGISTRATION,2,FAIL,ACTIVE,
+T002,desktop,S1,attack,P1,,REGISTRATION,3,FAIL,PAD,
+T003,desktop,S1,bona_fide,BONA_FIDE,C2,REGISTRATION,1,NO_FACE,too dark,
+T003,desktop,S1,bona_fide,BONA_FIDE,C2,REGISTRATION,2,PASS,,
