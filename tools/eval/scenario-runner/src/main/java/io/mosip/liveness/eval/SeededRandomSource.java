@@ -9,7 +9,7 @@ import java.util.Random;
  *
  * <p>It fixes the challenge order, prompt delays and nonces of a scenario so that a run can be repeated. The core
  * accepts it only through {@code SessionRequest.Builder.random}; no configuration key of either client can
- * select it, and production code always uses {@link RandomSource#secure()} (design section 4.20).
+ * select it, and production code always uses {@link RandomSource#secure()} (docs/design/challenges.md).
  */
 final class SeededRandomSource implements RandomSource {
 

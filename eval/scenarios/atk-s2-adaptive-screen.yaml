@@ -17,3 +17,4 @@ stream:
     TURN_RIGHT: a-s2-screen-turn-right
 expect:
   outcome: reject
+notes: The challenge pool is limited to TURN_LEFT,TURN_RIGHT because the adaptive attacker needs a clip of each prompted action, and the licensed S2 footage holds genuine clips of these two actions only (eval/packs/sources.yaml).

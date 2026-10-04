@@ -36,7 +36,9 @@ import java.util.Optional;
  * {@link #promptAfter} frames it prompts {@link #challenge}; it reaches {@code CAPTURE_READY} once
  * {@link #framesToPass} frames of the pack {@link #answerPack} arrive, and fails with {@code CHALLENGE_TIMEOUT}
  * after {@link #timeoutFrames} frames without them. Three frames of a pack whose name starts with {@code blank}
- * fail the session with {@code QUALITY / NO_FACE}.
+ * fail the session with {@code QUALITY / NO_FACE}. Three frames of a pack whose name starts with {@code dark} fail
+ * the session with {@code QUALITY / LOW_LIGHT} while the session's {@link SessionRequest#lowLightRetries()} is
+ * tracked and below {@link #lowLightMaxUncounted}, and with {@code PAD / PAD_SCORE} otherwise.
  */
 final class ScriptedEngine implements LivenessEngine {
 
@@ -45,7 +47,10 @@ final class ScriptedEngine implements LivenessEngine {
     int promptAfter = 3;
     int framesToPass = 2;
     int timeoutFrames = 20;
+    int lowLightMaxUncounted = 3;
     int sessionsOpened;
+    /** The {@code lowLightRetries} each opened session was given, in order. */
+    final java.util.List<Integer> lowLightSeen = new java.util.ArrayList<>();
     private final StageTimer timer;
 
     ScriptedEngine(StageTimer timer) {
@@ -64,6 +69,7 @@ final class ScriptedEngine implements LivenessEngine {
     @Override
     public LivenessSession open(SessionRequest request, LivenessListener listener) {
         sessionsOpened++;
+        lowLightSeen.add(request.lowLightRetries());
         return new Session(request, listener);
     }
 
@@ -121,6 +127,7 @@ final class ScriptedEngine implements LivenessEngine {
         private int frames;
         private int answered;
         private int blank;
+        private int dark;
         private long promptMs = -1;
         private LivenessResult result;
 
@@ -156,6 +163,17 @@ final class ScriptedEngine implements LivenessEngine {
             String pack = new String(frame.data(), StandardCharsets.US_ASCII).split("#")[0];
             if (pack.startsWith("blank") && ++blank >= 3) {
                 finish(builder().fail(FailureReason.QUALITY).reason(ReasonCode.NO_FACE).method(LivenessMethod.NONE));
+                return;
+            }
+            if (pack.startsWith("dark") && ++dark >= 3) {
+                int used = request.lowLightRetries();
+                if (used >= 0 && used < lowLightMaxUncounted) {
+                    finish(builder().fail(FailureReason.QUALITY).reason(ReasonCode.LOW_LIGHT)
+                            .method(LivenessMethod.PASSIVE).passiveScore(3));
+                } else {
+                    finish(builder().fail(FailureReason.PAD).reason(ReasonCode.PAD_SCORE)
+                            .method(LivenessMethod.PASSIVE).passiveScore(3));
+                }
                 return;
             }
             if (promptMs < 0 && frames >= promptAfter) {

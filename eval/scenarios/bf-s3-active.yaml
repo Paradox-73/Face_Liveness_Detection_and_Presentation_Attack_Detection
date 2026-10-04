@@ -17,3 +17,4 @@ stream:
     SMILE: s3-smile
 expect:
   outcome: accept
+notes: The challenge pool is limited to BLINK,SMILE because the licensed S3 footage holds genuine clips of these two actions only (its only head turn, made while looking down, is read as a wrong action, and it holds no look-up; eval/packs/sources.yaml).

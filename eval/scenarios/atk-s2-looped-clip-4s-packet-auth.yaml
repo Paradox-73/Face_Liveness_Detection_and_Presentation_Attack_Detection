@@ -1,0 +1,16 @@
+# Scenario for tools/eval/scenario-runner (format: docs/eval/README.md). Technology regression test,
+# not an ISO/IEC 30107-3 evaluation result.
+id: atk-s2-looped-clip-4s-packet-auth
+title: 'S2: 4 s (60 frames) of genuine video looped at packet close (shipped packet_auth policy, T-SCN-P-09)'
+kind: attack
+species: SYN-A8
+subject: S2
+condition: C1
+workflow: packet_auth
+repeat: 4
+stream:
+  main: a-s2-loop-4s
+  at_end: loop
+expect:
+  outcome: reject
+notes: Same pack as atk-s2-looped-clip-4s, on the packet_auth workflow (operator authentication that closes a registration packet) with its shipped policy.

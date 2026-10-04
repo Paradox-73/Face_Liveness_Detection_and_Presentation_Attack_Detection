@@ -17,3 +17,4 @@ stream:
     TURN_RIGHT: s2-turn-right
 expect:
   outcome: accept
+notes: The challenge pool is limited to TURN_LEFT,TURN_RIGHT because the licensed S2 footage holds genuine clips of these two actions only (no blink, smile or look-up clip; eval/packs/sources.yaml).

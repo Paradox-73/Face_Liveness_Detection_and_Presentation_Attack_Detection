@@ -1,0 +1,11 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+  <!-- The upstream MOSIP desktop poms still list retired Sonatype and Spring repositories; route them to Maven Central.
+       Use it with: mvn -s .github/maven-settings.xml ... (or MAVEN_ARGS="-s <path>/.github/maven-settings.xml"). It lists the repositories of docs/install/README.md, section 1, and a few more Spring ones. -->
+  <mirrors>
+    <mirror>
+      <id>central-for-retired-repos</id>
+      <mirrorOf>ossrh,sonatype-snapshots,snapshots-repo,oss-sonatype,spring-milestones,spring-snapshots,repository.spring.milestone,spring-releases,spring-milestone,spring-snapshot</mirrorOf>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </mirror>
+  </mirrors>
+</settings>

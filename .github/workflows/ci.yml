@@ -36,6 +36,122 @@ jobs:
           cache: maven
       - run: mvn -B -f tools/mock-sync/pom.xml verify
 
+  mock-mds:
+    name: MockMDS (build + tests)
+    runs-on: ubuntu-latest
+    env:
+      MAVEN_ARGS: -s ${{ github.workspace }}/.github/maven-settings.xml
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build and test devices/mock-mds
+        run: mvn -B -f devices/mock-mds/pom.xml package -Dgpg.skip=true
+
+  scenario-runner:
+    name: scenario runner (engine install + build + tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+          cache: maven
+      - name: Install the liveness engine (the runner reads it from the local Maven repository)
+        run: mvn -B -f liveness/pom.xml install -DskipTests -Dliveness.benchmark.frames=0
+      - name: Build and test tools/eval/scenario-runner
+        run: mvn -B -f tools/eval/scenario-runner/pom.xml package
+
+  eval-python:
+    name: evaluation tools (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: tools/eval/requirements.txt
+      - run: pip install -r tools/eval/requirements.txt
+      - run: python -m pytest -q tools/eval/tests
+
+  desktop-liveness:
+    name: desktop client liveness tests
+    runs-on: ubuntu-latest
+    env:
+      # The upstream desktop poms list retired repositories; the file routes them to Maven Central.
+      MAVEN_ARGS: -s ${{ github.workspace }}/.github/maven-settings.xml
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '11'
+          java-package: jdk+fx
+          cache: maven
+      - name: Install the liveness engine (the desktop client reads it from the local Maven repository)
+        run: mvn -B -f liveness/pom.xml install -DskipTests -Dliveness.benchmark.frames=0
+      - name: registration-services and registration-client liveness tests
+        # xvfb-run gives the JavaFX tests a virtual display. -am builds the modules the two depend on;
+        # -DfailIfNoTests=false lets those modules, which match none of the -Dtest patterns, pass.
+        run: >
+          xvfb-run -a mvn -B -f clients/desktop/registration/pom.xml test
+          -pl registration-services,registration-client -am
+          -Dgpg.skip -Djacoco.skip=true -DfailIfNoTests=false
+          "-Dtest=io/mosip/registration/service/bio/liveness/*Test.java,**/AuditFactoryTest.java,io/mosip/registration/controller/liveness/*Test.java"
+
+  android-unit:
+    name: Android unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      PUB_CACHE: /home/runner/.pub-cache
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+          cache-dependency-path: |
+            clients/android/android/**/*.gradle*
+            clients/android/android/gradle/wrapper/gradle-wrapper.properties
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.10.4'
+          cache: true
+      - name: Cache the Maven repository (the liveness engine is installed into it) and the Dart packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.pub-cache
+          key: android-${{ runner.os }}-${{ hashFiles('liveness/**/pom.xml', 'clients/android/pubspec.lock') }}
+          restore-keys: android-${{ runner.os }}-
+      - name: Android SDK packages
+        run: |
+          set +o pipefail
+          yes | sdkmanager --licenses > /dev/null
+          yes | sdkmanager "platforms;android-34" "build-tools;34.0.0" "ndk;23.1.7779620" > /dev/null
+      - name: Engine install, code generation (pub get, build_runner, pigeon) and Gradle wrapper, then the unit tests
+        # scripts/android-build.sh --test-only does all of that: it installs liveness-core, liveness-onnx and
+        # face-match-sdk, runs the code generation on a fresh clone, and runs the testDebugUnitTest tasks of
+        # :livenessmanager and :app (and of :clientmanager, which holds the upstream tests).
+        run: scripts/android-build.sh --test-only
+      - name: Flutter widget tests (use the code the previous step generated)
+        working-directory: clients/android
+        run: flutter test test/liveness/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-unit-test-reports
+          path: clients/android/build/*/test-results/testDebugUnitTest/
+
   dco:
     name: DCO sign-off check
     runs-on: ubuntu-latest

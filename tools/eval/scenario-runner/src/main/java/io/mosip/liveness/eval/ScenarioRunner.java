@@ -1,6 +1,7 @@
 package io.mosip.liveness.eval;
 
 import io.mosip.liveness.core.EngineException;
+import io.mosip.liveness.core.api.SessionRequest;
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.config.LivenessPolicy;
@@ -34,6 +35,7 @@ final class ScenarioRunner {
     private final Map<String, String> globalEngineParams;
     private final AttemptRecord.RunInfo run;
     private final PrintStream log;
+    private final boolean trackLowLight;
 
     /** Supplies an engine and its timer for a set of engine parameter overrides. */
     interface EngineParts {
@@ -60,6 +62,26 @@ final class ScenarioRunner {
      */
     ScenarioRunner(EngineParts engines, FramePackStore store, Map<String, String> globalConfig,
                    Map<String, String> globalEngineParams, AttemptRecord.RunInfo run, PrintStream log) {
+        this(engines, store, globalConfig, globalEngineParams, run, log, true);
+    }
+
+    /**
+     * Creates a runner.
+     *
+     * @param engines            engine source
+     * @param store              frame packs
+     * @param globalConfig       configuration overrides applied before each scenario's own (full key names)
+     * @param globalEngineParams engine parameter overrides applied before each scenario's own
+     * @param run                facts written into every record
+     * @param log                progress output
+     * @param trackLowLight      {@code true} to give each session the transaction's low-light count, as the clients
+     *                           do, so a dark face can end a session as {@code LOW_LIGHT} without using up an
+     *                           attempt; {@code false} reproduces runs made before that was tracked
+     */
+    ScenarioRunner(EngineParts engines, FramePackStore store, Map<String, String> globalConfig,
+                   Map<String, String> globalEngineParams, AttemptRecord.RunInfo run, PrintStream log,
+                   boolean trackLowLight) {
+        this.trackLowLight = trackLowLight;
         this.engines = Objects.requireNonNull(engines, "engines");
         this.store = Objects.requireNonNull(store, "store");
         this.globalConfig = globalConfig;
@@ -97,20 +119,28 @@ final class ScenarioRunner {
         }
     }
 
-    private void runTransaction(Scenario sc, LivenessPolicy policy, AttemptDriver driver, long seed,
-                                String configHash, String paramsHash, Writer jsonl, SummaryTable summary)
+    private void runTransaction(Scenario sc, LivenessPolicy policy, AttemptDriver driver,
+                                long seed, String configHash, String paramsHash, Writer jsonl, SummaryTable summary)
             throws IOException, EngineException {
         String txnId = sc.id() + "#" + seed;
         LivenessTransaction txn = new LivenessTransaction(policy);
         SeededRandomSource random = new SeededRandomSource(seed);
         List<AttemptResult> attempts = new ArrayList<>();
         int maxSessions = policy.maxRetries() + EXTRA_SESSIONS;
-        while (txn.status() == LivenessTransaction.Status.IN_PROGRESS && attempts.size() < maxSessions) {
+        int lowLightEndings = 0;
+        // low-light endings do not use up the session budget: the engine ends at most
+        // passive.low_light_max_uncounted of them between two counted failures
+        while (txn.status() == LivenessTransaction.Status.IN_PROGRESS
+                && attempts.size() - lowLightEndings < maxSessions) {
             int attemptNo = txn.nextAttempt();
             Playlist playlist = new Playlist(sc.stream(), store::pack);
             AttemptResult a = driver.run(policy, attemptNo, random, playlist, sc.fps(), sc.maxStreamMs(),
-                    "EVAL-" + sc.subject());
+                    "EVAL-" + sc.subject(),
+                    trackLowLight ? txn.lowLightRetries() : SessionRequest.LOW_LIGHT_NOT_TRACKED);
             txn.record(a.result());
+            if (a.result().isLowLightRetry()) {
+                lowLightEndings++;
+            }
             attempts.add(a);
             summary.addTimings(a);
         }

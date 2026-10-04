@@ -11,7 +11,7 @@
 
     <name>Liveness scenario runner</name>
     <description>Headless runner that replays recorded frame packs through the real liveness engine and ONNX models
-        and writes one JSON line per attempt (technology regression tests, design section 10.4).</description>
+        and writes one JSON line per attempt (technology regression tests, docs/eval/protocol.md section 12).</description>
 
     <licenses>
         <license>

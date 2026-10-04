@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
  */
 final class ScenarioLoader {
 
-    /** Default replay frame rate: the MockMDS default and the plan's 10-15 fps range. */
+    /** Default replay frame rate: the MockMDS default stream rate. */
     static final int DEFAULT_FPS = 15;
     /** Default stream time one attempt may use. */
     static final long DEFAULT_MAX_STREAM_MS = 60_000L;

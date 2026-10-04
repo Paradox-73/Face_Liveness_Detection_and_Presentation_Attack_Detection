@@ -8,8 +8,6 @@ subject: S3
 condition: C1
 workflow: registration
 repeat: 4
-config:
-  active.challenge_types: BLINK,SMILE
 stream:
   main: a-s3-screen-replay
 expect:

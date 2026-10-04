@@ -1,0 +1,16 @@
+# Scenario for tools/eval/scenario-runner (format: docs/eval/README.md). Technology regression test,
+# not an ISO/IEC 30107-3 evaluation result.
+id: atk-s3-looped-clip-8s
+title: 'S3: 8 s (120 frames) of genuine video looped (T-SCN-P-09)'
+kind: attack
+species: SYN-A8
+subject: S3
+condition: C1
+workflow: registration
+repeat: 4
+stream:
+  main: a-s3-loop-8s
+  at_end: loop
+expect:
+  outcome: reject
+notes: Loop period of 120 frames at 15 fps; the 30-frame loop buffer of the engine parameters at commit 441815c never flagged periods of 25 frames or more.

@@ -40,6 +40,7 @@ class ScenarioRunnerTest {
         pack("blink", 6);
         pack("smile", 6);
         pack("blank", 10);
+        pack("dark", 10);
         pack("short", 4);
         StageTimer timer = new StageTimer();
         engine = new ScriptedEngine(timer);
@@ -56,6 +57,10 @@ class ScenarioRunnerTest {
     }
 
     private Result run(String yaml) throws Exception {
+        return run(yaml, true);
+    }
+
+    private Result run(String yaml, boolean trackLowLight) throws Exception {
         Scenario sc = ScenarioLoader.parse(new StringReader(yaml));
         StageTimer timer = new StageTimer();
         engine = new ScriptedEngine(timer);
@@ -68,7 +73,8 @@ class ScenarioRunnerTest {
             requestedParams.add(p);
             return new AttemptDriver(engine, timer, ScriptedEngine.decoder());
         }, new FramePackStore(packs), Collections.<String, String>emptyMap(), Collections.<String, String>emptyMap(),
-                new AttemptRecord.RunInfo("run-1", "1.0.0", "abc", platform), new PrintStream(log, true, "UTF-8"));
+                new AttemptRecord.RunInfo("run-1", "1.0.0", "abc", platform), new PrintStream(log, true, "UTF-8"),
+                trackLowLight);
         StringWriter jsonl = new StringWriter();
         SummaryTable summary = new SummaryTable();
         runner.run(sc, jsonl, summary);
@@ -188,6 +194,33 @@ class ScenarioRunnerTest {
             assertFalse(line.contains("main#"), "frame bytes must never reach the records: " + line);
             assertFalse(line.contains("\"image"), line);
             assertFalse(line.contains("embedding"), line);
+        }
+    }
+
+    @Test
+    void lowLightEndingsAreTrackedAndTheFourthPadFailureCounts() throws Exception {
+        Result r = run("id: dim\nkind: bona_fide\nstream: {main: dark}\nexpect: {outcome: accept}\n");
+        assertEquals(Arrays.asList(0, 1, 2, 3), engine.lowLightSeen.subList(0, 4));
+        for (int i = 0; i < 3; i++) {
+            String line = r.lines.get(i);
+            assertTrue(line.contains("\"outcome\":\"NO_RESPONSE\""), line);
+            assertTrue(line.contains("\"no_response_reason\":\"LOW_LIGHT\""), line);
+        }
+        assertTrue(r.lines.get(3).contains("\"outcome\":\"REJECT\""), r.lines.get(3));
+        assertTrue(r.lines.get(3).contains("\"reason_codes\":[\"PAD_SCORE\"]"), r.lines.get(3));
+        assertTrue(r.lines.size() > 4, "a counted failure restarts the low-light count, so more sessions follow");
+        assertEquals(Integer.valueOf(0), engine.lowLightSeen.get(4));
+    }
+
+    @Test
+    void noLowLightTrackingPassesNoCountToTheSessions() throws Exception {
+        Result r = run("id: dim\nkind: bona_fide\nstream: {main: dark}\nexpect: {outcome: accept}\n", false);
+        assertEquals(3, r.lines.size());
+        for (int seen : engine.lowLightSeen) {
+            assertEquals(io.mosip.liveness.core.api.SessionRequest.LOW_LIGHT_NOT_TRACKED, seen);
+        }
+        for (String line : r.lines) {
+            assertTrue(line.contains("\"reason_codes\":[\"PAD_SCORE\"]"), line);
         }
     }
 }

@@ -189,3 +189,192 @@ def test_main_writes_report(tmp_path):
     text = out.read_text(encoding="utf-8")
     assert text.startswith("# Liveness technology regression report")
     assert "Evaluation type (b)" in text
+
+
+# ------------------------------------------------------------------ first attempt, workflow, artefacts, IAPAR
+
+
+def attempts(txn, n_attempts, accept_on=None, species="SYN-A7", subject="S3", workflow="registration",
+             packs=("p1",), kind="attack", **extra):
+    """Attempts of one transaction that ends at its first pass, like the runner and the clients."""
+    out = []
+    last_no = accept_on or n_attempts
+    for no in range(1, last_no + 1):
+        outcome = "ACCEPT" if no == accept_on else "REJECT"
+        out.append(rec(txn, kind, outcome, species, "none" if outcome == "ACCEPT" else "active_pad",
+                       last=no == last_no, txn_outcome="ACCEPT" if accept_on else "REJECT", subject=subject,
+                       workflow=workflow, attempt_no=no, frames_per_pack={p: 10 for p in packs}, **extra))
+    return out
+
+
+def audit_sample():
+    # One artefact passes every first attempt; the other is refused three times per transaction.
+    records = []
+    for i in range(4):
+        records += attempts(f"s3#{i}", 3, accept_on=1, subject="S3", packs=("a-s3-blink", "a-s3-replay"))
+        records += attempts(f"s2#{i}", 3, subject="S2", packs=("a-s2-replay",))
+    return records
+
+
+def test_per_attempt_rate_dilutes_a_species_that_passes_at_once():
+    records = audit_sample()
+    assert analyze.compute(records, "attempt").species["SYN-A7"].apcer().value == pytest.approx(0.25)
+    assert analyze.compute(records, "transaction").species["SYN-A7"].apcer().value == pytest.approx(0.5)
+    first = analyze.compute(records, "first_attempt").species["SYN-A7"]
+    assert (first.accept, first.reject) == (4, 4)
+
+
+def test_first_attempt_is_attempt_one_even_when_lines_are_out_of_order():
+    txn = attempts("t#1", 3, accept_on=2)
+    m = analyze.compute(list(reversed(txn)), "first_attempt")
+    assert (m.species["SYN-A7"].accept, m.species["SYN-A7"].reject) == (0, 1)
+    m = analyze.compute(attempts("t#2", 3, accept_on=1), "first_attempt")
+    assert m.species["SYN-A7"].accept == 1
+
+
+def test_species_rows_count_packs_subjects_and_artefacts():
+    c = analyze.compute(audit_sample(), "transaction").species["SYN-A7"]
+    assert c.packs == {"a-s3-blink", "a-s3-replay", "a-s2-replay"}
+    assert c.subjects == {"S2", "S3"}
+    assert c.artefact_text() == "3 / 2"
+    art = c.artefact_apcer()                      # one of two source artefacts accepted
+    assert (art.errors, art.n) == (1, 2)
+    assert art.interval[0] < 0.02 and art.interval[1] > 0.98
+
+
+def test_recorded_artefact_id_replaces_packs_and_subject_as_the_unit():
+    records = (attempts("a#1", 1, accept_on=1, subject="S1", artefact_id="print-1")
+               + attempts("a#2", 3, subject="S1", artefact_id="print-2"))
+    c = analyze.compute(records, "transaction").species["SYN-A7"]
+    assert c.packs == {"print-1", "print-2"}
+    assert (c.artefact_apcer().errors, c.artefact_apcer().n) == (1, 2)
+
+
+def test_report_leads_with_transaction_and_first_attempt_per_species():
+    records = audit_sample()
+    report = analyze.build_report(records, None, False, 3, None)
+    headline = report.index("## Headline: APCER per species per transaction and on the first attempt")
+    assert headline < report.index("## Evaluation type (b)") < report.index("## First attempt of each transaction") \
+        < report.index("## Evaluation type (a): per attempt (secondary)")
+    block = report[headline:report.index("## Evaluation type (b)")]
+    assert "| registration | SYN-A7 | 3 / 2 | 8 | 50.0% (4/8;" in block
+    assert "APCER on the first attempt" in block and "source artefacts accepted" in block
+    assert "50.0% (1/2;" in block                                   # interval over artefacts
+    assert "Transactions are not independent" in block
+    pooled = [line for line in block.splitlines() if "pooled" in line]
+    assert pooled and all(line.startswith("- Secondary") for line in pooled)
+    assert "attempts not independent" in report
+
+
+def test_every_table_is_grouped_by_workflow():
+    records = audit_sample() + attempts("l#1", 3, species="SYN-A2", subject="S2", workflow="LOGIN_AUTH") + [
+        rec("f#1", "bona_fide", "ACCEPT", workflow="login_auth", challenges=[
+            {"type": "BLINK", "outcome": "PASSED", "duration_ms": 900}])]
+    report = analyze.build_report(records, None, False, 3, None)
+    assert "login_auth 2, registration 8" in report
+    metadata = ("| field", "| runs", "| attempt records", "| transactions", "| model set", "| configuration",
+                "| platform")
+    for line in report.splitlines():
+        if line.startswith("| ") and not line.startswith(metadata):
+            assert line.split("|")[1].strip() in ("workflow", "login_auth", "registration"), line
+    assert "| login_auth | SYN-A2 |" in report and "| registration | SYN-A7 |" in report
+    assert "| login_auth | BLINK | 1/1" in report
+
+
+def test_workflows_are_computed_separately():
+    records = audit_sample() + attempts("l#1", 1, accept_on=1, species="SYN-A7", subject="S9", workflow="login_auth")
+    groups = analyze.by_workflow(records)
+    assert list(groups) == ["login_auth", "registration"]
+    assert analyze.compute(groups["login_auth"], "transaction").species["SYN-A7"].apcer().value == 1.0
+    assert analyze.compute(groups["registration"], "transaction").species["SYN-A7"].apcer().value == 0.5
+
+
+def wrong_action_sample():
+    return [rec("w#1", "attack", "REJECT", "SYN-A9", "challenge", passive=90, scenario="atk-wrong-clip"),
+            rec("b#1", "attack", "REJECT", "SYN-B", "passive_pad", passive=10),
+            rec("f#1", "bona_fide", "ACCEPT", passive=95)]
+
+
+def test_wrong_action_clips_stay_out_of_apcer_and_the_det():
+    m = analyze.compute(wrong_action_sample(), "attempt")
+    assert set(m.species) == {"SYN-B"}
+    assert m.wrong_action["SYN-A9"].reject == 1
+    assert m.attacks_total().total == 1
+    bona, attacks = analyze.scores_for_det(wrong_action_sample())
+    assert set(attacks) == {"SYN-B"} and bona == [95.0]
+    pts = analyze.det_points(bona, [s for v in attacks.values() for s in v])
+    assert analyze.bpcer_at_apcer(pts, 0.05)[0] == 0.0           # not 100%: the genuine clip no longer counts
+
+
+def test_wrong_action_species_can_be_changed_or_cleared():
+    m = analyze.compute(wrong_action_sample(), "attempt", genuine_species=())
+    assert set(m.species) == {"SYN-A9", "SYN-B"} and not m.wrong_action
+    bona, attacks = analyze.scores_for_det(wrong_action_sample(), genuine_species=())
+    assert set(attacks) == {"SYN-A9", "SYN-B"}
+
+
+def test_report_lists_wrong_action_clips_in_their_own_section():
+    report = analyze.build_report(wrong_action_sample(), None, False, 3, None)
+    section = report[report.index("## Genuine clips of the wrong action"):report.index("## Full-system results")]
+    assert "| - | SYN-A9 |" in section                     # no workflow recorded: grouped under "-"
+    headline = report[report.index("## Headline"):report.index("## Evaluation type (b)")]
+    assert "SYN-A9" not in headline
+
+
+def login(txn, kind, steps, species="P1", subject="S1"):
+    """Attempts of one login transaction: steps are (liveness outcome, match outcome or None)."""
+    out = []
+    for no, (outcome, match) in enumerate(steps, 1):
+        last = no == len(steps)
+        out.append(rec(txn, kind, outcome, species if kind == "attack" else "BONA_FIDE", "none", last=last,
+                       txn_outcome="ACCEPT" if any(o == "ACCEPT" for o, _ in steps) else "REJECT",
+                       subject=subject, workflow="login", attempt_no=no, match_outcome=match))
+    return out
+
+
+def test_iapar_counts_attacks_accepted_by_liveness_and_the_matcher():
+    records = (login("t1", "attack", [("ACCEPT", "ACCEPT")])                         # impostor accepted
+               + login("t2", "attack", [("ACCEPT", "REJECT"), ("ACCEPT", "ACCEPT")])  # accepted on retry
+               + login("t3", "attack", [("ACCEPT", "REJECT"), ("REJECT", None)])      # matcher stopped it
+               + login("t4", "attack", [("REJECT", None), ("REJECT", None)])          # liveness stopped it
+               + login("t5", "attack", [("ACCEPT", None)]))                           # match not recorded
+    assert analyze.has_match_results(records)
+    species, _ = analyze.compute_full_system(records)
+    c = species["P1"]
+    assert (c.accept, c.reject, c.missing) == (2, 2, 1)
+    assert c.accept_rate().value == pytest.approx(0.5)
+    assert c.matcher_refused == 2
+    assert (c.first_accept, c.first_decided) == (1, 4)
+    assert c.first_accept_rate().value == pytest.approx(0.25)
+
+
+def test_frr_counts_genuine_users_refused_by_liveness_or_the_matcher():
+    records = (login("g1", "bona_fide", [("ACCEPT", "ACCEPT")])
+               + login("g2", "bona_fide", [("ACCEPT", "REJECT")])
+               + login("g3", "bona_fide", [("REJECT", None)]))
+    _, bona = analyze.compute_full_system(records)
+    assert bona.reject_rate().value == pytest.approx(2 / 3)
+    assert analyze.compute(records, "transaction").bona_fide.bpcer().value == pytest.approx(1 / 3)
+
+
+def test_report_shows_iapar_only_for_workflows_with_match_results():
+    records = login("t1", "attack", [("ACCEPT", "ACCEPT")]) + audit_sample()
+    report = analyze.build_report(records, None, False, 3, None)
+    section = report[report.index("## Full-system results"):report.index("## Per scenario")]
+    assert "| login | P1 | 1 | 100.0% (1/1;" in section
+    assert "registration" not in section
+    plain = analyze.build_report(audit_sample(), None, False, 3, None)
+    assert "IAPAR and FRR are not computed" in plain
+
+
+def test_shipped_run_reproduces_the_audit_figures():
+    path = (analyze.Path(__file__).resolve().parents[3]
+            / "docs/eval/results/20260930-engine-fixes/shipped/attempts.jsonl")
+    if not path.exists():
+        pytest.skip("shipped results not in this checkout")
+    records = analyze.load_records([path])
+    reg = analyze.by_workflow(records)["registration"]
+    assert analyze.compute(reg, "attempt").species["SYN-A7"].apcer().value == pytest.approx(0.25)
+    first = analyze.compute(reg, "first_attempt").species["SYN-A7"]
+    assert (first.accept, first.decided) == (4, 8)
+    assert "SYN-A9" not in analyze.compute(records, "transaction").species

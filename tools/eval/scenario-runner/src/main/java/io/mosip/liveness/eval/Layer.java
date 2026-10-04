@@ -10,8 +10,8 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * The defence layer that ended an attempt, for the stage attribution of design section 10.6 ("share of attacks
- * stopped at the passive vs the active stage").
+ * The defence layer that ended an attempt, for the stage attribution of docs/eval/protocol.md, section 9 (share
+ * of rejected attacks stopped before any challenge and during or after challenges).
  */
 enum Layer {
 

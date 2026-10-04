@@ -10,7 +10,6 @@ workflow: registration
 repeat: 4
 config:
   policy.registration: ALWAYS_ACTIVE
-  active.challenge_types: TURN_LEFT,TURN_RIGHT
 stream:
   main: a-s2-print-still
   actions:
@@ -18,3 +17,4 @@ stream:
     TURN_RIGHT: a-s2-print-yaw-right
 expect:
   outcome: reject
+notes: Runs on the shipped five-action challenge pool, where the tilted print answers TURN_LEFT and TURN_RIGHT prompts, and cannot answer BLINK, SMILE or LOOK_UP.

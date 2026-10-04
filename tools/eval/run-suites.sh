@@ -4,10 +4,12 @@
 #   bash tools/eval/run-suites.sh [OUT_DIR] [SUITE...]
 #
 # Suites (default: shipped legacy legacy-strict latency):
-#   shipped        shipped configuration: registration, operator onboarding and login always run challenges,
-#                  30 passive frames; blur threshold 40 from the signed model bundle
-#   legacy         the configuration shipped before 2026-09-30 (passive first everywhere, 8 passive frames,
-#                  blur threshold 10), on the current engine
+#   shipped        shipped configuration: registration, operator onboarding, login and the three supervisor
+#                  workflows (packet_auth, exception_auth, eod_auth) always run challenges from the shipped
+#                  five-action pool, 30 passive frames; blur threshold 40 and the 300-frame loop window from
+#                  the signed model bundle. Runs every scenario in eval/scenarios.
+#   legacy         the configuration shipped before 2026-09-30 (passive first on every workflow, including
+#                  the supervisor ones, 8 passive frames, blur threshold 10), on the current engine
 #   legacy-strict  legacy with challenges forced for registration (the former "strict" suite)
 #   latency        bona fide scenarios with one ONNX Runtime thread, for per-frame timing
 #
@@ -44,9 +46,12 @@ run_suite() {
     "$PYTHON" "$REPO/tools/eval/analyze.py" "$OUT/$name/attempts.jsonl" --out "$OUT/$name/report.md"
 }
 
-# The configuration shipped before the calibration was adopted (docs/eval/calibration-notes.md, section 6).
+# The configuration shipped before the calibration was adopted (docs/eval/calibration-notes.md, section 6):
+# passive first on every workflow that now defaults to ALWAYS_ACTIVE, the supervisor workflows included.
 LEGACY=(--config policy.registration=PASSIVE_THEN_ACTIVE --config policy.login_auth=PASSIVE_THEN_ACTIVE
-        --config policy.onboard_auth=PASSIVE_THEN_ACTIVE --config passive.min_frames=8
+        --config policy.onboard_auth=PASSIVE_THEN_ACTIVE --config policy.packet_auth=PASSIVE_THEN_ACTIVE
+        --config policy.exception_auth=PASSIVE_THEN_ACTIVE --config policy.eod_auth=PASSIVE_THEN_ACTIVE
+        --config passive.min_frames=8
         --engine-param quality.min_sharpness=10)
 
 for suite in "${SUITES[@]}"; do

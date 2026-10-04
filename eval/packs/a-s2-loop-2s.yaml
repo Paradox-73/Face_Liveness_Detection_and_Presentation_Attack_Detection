@@ -1,0 +1,56 @@
+# Frame pack manifest. The recipe is edited by hand; the outputs block is written by
+# tools/eval/fetch-frame-packs.py or tools/eval/make-attack-packs.py with --update-manifests.
+# The frames themselves are never committed; regenerate them with those scripts.
+id: a-s2-loop-2s
+kind: synthetic_attack
+subject: S2
+description: 'Subject S2: 2 s (30 frames at 15 fps) of genuine video replayed in a loop (the scenario loops it),
+  a period the 30-frame loop buffer of the engine parameters at commit 441815c never flagged (25 frames or more).
+  SYNTHETIC: simulated in software from a bona fide pack; not a physical presentation attack instrument.'
+recipe:
+  type: synthetic
+  generator: loop
+  base: s2-main
+  first: 30
+  last: 59
+  fps: 15
+labels:
+  species: SYN-A8
+outputs:
+  generator: tools/eval/make-attack-packs.py with Pillow 12.3.0, numpy 2.5.3
+  width: 640
+  height: 480
+  fps: 15
+  frames: 30
+  tree_sha256: d9ff83bc21c7167d6468f23e6fefedb0a81a9f569e5a31ca15403ffb1a8bad8d
+  files:
+    frame_00000.jpg: 769957c1975a575ad15e965fc50013a631c3ea480272265351830f1945bd2a1f
+    frame_00001.jpg: 27dc263488ceab48739a393757fd9530117833e2c36e3e2f79ff91d80c03ba2b
+    frame_00002.jpg: 83d0c0260c4e31bc9541e32dd6c83a8e59cfa9476c3b4665efd5fc2e21f10889
+    frame_00003.jpg: be20e4cdb8c91f65d37065043bfbd241917370250abd379f3681d477bdae40bf
+    frame_00004.jpg: 39c5a9307d236d8eaa7cd9fbb1966d4cfe7fa5ae9e17a0f4eaf16efc28084fb6
+    frame_00005.jpg: 91b0d85c964e8d34ddade63497ce6e69fd8de9a9142772e8c6510818c213cf46
+    frame_00006.jpg: e2ff999680ab9a47deda0ed1692e26fc48fd447f7902b2f7d0365c884e4167a3
+    frame_00007.jpg: 054672b6702a1a57b58c224861d2af5ce4944312ca7f40a0f09bdb3071099d3d
+    frame_00008.jpg: 1483a1c2a5f1b428c5971e101b0235d5591c8a333cd85ca6176c49b1b233bfca
+    frame_00009.jpg: 4a21992f2b1f34f25eab99cd39885b32e21631aaacca9702d84846af5d25be01
+    frame_00010.jpg: cf051250911c6a1109d47678f1dfc712986d63e1c4e4c6153f8f5f80c5a8446a
+    frame_00011.jpg: 088e9a548e9e58c9140276c50880dd251fdee02b19ad9af94cd08bac7de16220
+    frame_00012.jpg: 2e4596e6b0553390ad3e30390b046f7938f00d47914590789a08fd122f46ae48
+    frame_00013.jpg: 6751da706e97f844eb35f7fc25dd0b635145cb9499a45e14478d9ac07f20a723
+    frame_00014.jpg: 03c3092f7d8a709708599ee8a6c12a0bf42e26525d12413843d8f0daa144d192
+    frame_00015.jpg: cd2dae399338b084c4e3412f0e70bd8f9617b4e8969cc602e50a3a4dc786a7ba
+    frame_00016.jpg: 7caec90662acc67cae03526ba103d77083eb6ad5e4cd4cd71f67565bfd9ab745
+    frame_00017.jpg: f887b64a142b902affbbee969cc28df7fef708991de3be66b90696733b9f0e4e
+    frame_00018.jpg: 4cdf7f2924336c5df0f08f63a6303eacd3802470f2bc628a01076c5ada2fcab0
+    frame_00019.jpg: 4d029d99c7a336fc3618b2f0d3c04815d64f14859a32ef14981fc2132cb7d5e5
+    frame_00020.jpg: 87646e4cbd97d6bcd51f53553914ca03a3bdb3cb5ab1ad12f21ff88c12569e4d
+    frame_00021.jpg: 13d7fdc17c040b3db3ccb3b9c0e4e3f92c43b6d759b85c8f0d3c754770ea2017
+    frame_00022.jpg: c10301fdd0f4a51900828830d2e1c17812c8121f1ab3c6f96c2d71049bcd033a
+    frame_00023.jpg: 8bbe5f92a29b9ec9021bd2d5288e0da31c39ebddb1087ee001a4a2eeee3b2627
+    frame_00024.jpg: caad3b55362147cf8067e7b50ce5ab14ea1d3d587ed62e63e274026b0315cb48
+    frame_00025.jpg: 5ae63f1e502233dee4e0aaf842210baa771cf4688606083d1ecd894f061b6716
+    frame_00026.jpg: f3f72ea35820a3f8c48bf55eb313acfa3d013b7e0865381636dadee7b9cea9d0
+    frame_00027.jpg: 087d240c1b7c4ba69ef156c1c007ac9f46d7dd887ff51da226a07aad9a469bc3
+    frame_00028.jpg: 6e646773a0ee1f07d4f65e500d8f546eb9bf6b294fbfbd11844a2d94692c71e0
+    frame_00029.jpg: 6b81f261af119e229bf60f0e619ec0a0d7db5c6313c57d6018159037bc7f41f8

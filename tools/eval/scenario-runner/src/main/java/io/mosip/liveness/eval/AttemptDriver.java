@@ -90,11 +90,37 @@ final class AttemptDriver {
      */
     AttemptResult run(LivenessPolicy policy, int attempt, RandomSource random, Playlist playlist, int fps,
                       long maxStreamMs, String subjectRef) throws EngineException {
+        return run(policy, attempt, random, playlist, fps, maxStreamMs, subjectRef,
+                SessionRequest.LOW_LIGHT_NOT_TRACKED);
+    }
+
+    /**
+     * Runs one attempt and tells the session how many low-light endings the transaction has had since its last
+     * counted failure, the way the clients do.
+     *
+     * @param policy          resolved policy of the scenario's workflow
+     * @param attempt         attempt number (1-based)
+     * @param random          the transaction's random source
+     * @param playlist        frame source, positioned at its start
+     * @param fps             stream frame rate
+     * @param maxStreamMs     stream time after which the runner cancels the attempt
+     * @param subjectRef      subject reference bound into the pass token
+     * @param lowLightRetries low-light endings so far ({@code LivenessTransaction.lowLightRetries()}), or
+     *                        {@link SessionRequest#LOW_LIGHT_NOT_TRACKED} to not pass any
+     * @return what happened
+     * @throws EngineException if the engine refuses to open a session
+     */
+    AttemptResult run(LivenessPolicy policy, int attempt, RandomSource random, Playlist playlist, int fps,
+                      long maxStreamMs, String subjectRef, int lowLightRetries) throws EngineException {
         ManualClock clock = new ManualClock();
         Listener listener = new Listener();
         List<DiagnosticRecord> diagnostics = new ArrayList<>();
-        SessionRequest request = SessionRequest.builder(policy, subjectRef, device()).attempt(attempt).clock(clock)
-                .random(random).diagnosticSink(diagnostics::add).build();
+        SessionRequest.Builder builder = SessionRequest.builder(policy, subjectRef, device()).attempt(attempt)
+                .clock(clock).random(random).diagnosticSink(diagnostics::add);
+        if (lowLightRetries != SessionRequest.LOW_LIGHT_NOT_TRACKED) {
+            builder.lowLightRetries(lowLightRetries);
+        }
+        SessionRequest request = builder.build();
         AttemptResult.Builder out = new AttemptResult.Builder();
         long wall0 = System.nanoTime();
         LivenessSession session = engine.open(request, listener);

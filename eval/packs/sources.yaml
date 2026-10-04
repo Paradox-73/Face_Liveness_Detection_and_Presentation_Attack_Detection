@@ -66,3 +66,22 @@ sources:
     notes: 1920x1080, 30 fps, 10.1 s. Frontal woman in warm indoor light with a lamp in the frame; neutral with
       natural blinks, then a broad smile, then looks down to her left.
     sha256: 0bfe6a2ef71cdb8c6d3d895ac2aa5b5e3cbc2ba671a6c9bd519ed58e8f5921c5
+#
+# Head-turn and look-up footage (searched 2026-10-04). Every frame of the five clips above, cut at 15 fps, was
+# measured with the scenario runner's inspect command (java -jar scenario-runner.jar inspect --packs
+# ../run/frame-packs/_full --all; head pose per frame from the shipped face analyser). A turn is triggered at
+# 20 degrees of yaw from the neutral face and a look-up at 15 degrees of pitch (active.turn_yaw_deg,
+# active.look_pitch_deg).
+#   - S1 (commons-cbl-blinking, commons-cbl-smiling): yaw -4.3 to -0.5, pitch 4.0 to 8.6 degrees in every
+#     frame. No head turn and no look-up.
+#   - S2 (pexels-5474329, pexels-5474326): genuine turns to both sides in pexels-5474326 (packs s2-turn-left,
+#     s2-turn-right). Pitch -9.9 to 6.5 degrees in every frame: no look-up.
+#   - S3 (pexels-6781549): one turn to her own left at the end of the clip (frames 136-151, yaw +8 to +36,
+#     pitch from about +6 down to -11 degrees, eyes half closed), cut as pack s3-turn-left. A probe on 2026-10-04 with
+#     TURN_LEFT prompts ended all 4 transactions as WRONG_ACTION within 0.5 s of the prompt (her eye
+#     openness drops to about a fifth as the turn starts), so no scenario uses it as a TURN_LEFT answer. No turn to her right.
+#     Pitch at most 8.6 degrees in any frame, never 15 above a neutral frame: no look-up.
+#   So genuine TURN_LEFT and TURN_RIGHT answers exist only for S2, and no subject has a LOOK_UP clip. Scenarios
+#   that play genuine answers (bona fide, adaptive replays) keep a two-action pool for that reason; every other
+#   attack scenario runs on the shipped five-action pool. Demos with scripted head turns and look-ups need
+#   recordings of the enrolled face itself.

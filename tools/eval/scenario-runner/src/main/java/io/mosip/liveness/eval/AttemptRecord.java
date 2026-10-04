@@ -11,8 +11,8 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Builds the JSON line written for one attempt (schema {@value #SCHEMA}). Field names follow design section
- * 10.6 item 6; no field holds image data, embeddings or personal identifiers.
+ * Builds the JSON line written for one attempt (schema {@value #SCHEMA}). Field names follow the attempt record of
+ * docs/eval/protocol.md, section 8; no field holds image data, embeddings or personal identifiers.
  */
 final class AttemptRecord {
 

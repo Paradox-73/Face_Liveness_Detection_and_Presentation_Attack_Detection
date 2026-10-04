@@ -33,9 +33,13 @@ import java.util.regex.Pattern;
  * <pre>
  * java -jar scenario-runner.jar run --packs DIR --out DIR [--scenarios PATH]... [--filter REGEX]
  *      [--models DIR] [--threads N] [--provider CPU|XNNPACK|NNAPI] [--config KEY=VALUE]...
- *      [--engine-param KEY=VALUE]... [--run-id ID] [--no-fail]
+ *      [--engine-param KEY=VALUE]... [--run-id ID] [--no-fail] [--no-low-light]
  * java -jar scenario-runner.jar inspect --packs DIR (--pack ID... | --all) [--out FILE.csv] [--models DIR]
  * </pre>
+ *
+ * Sessions get the transaction's low-light count by default, as the clients pass it, so a dark face can end a
+ * session as {@code LOW_LIGHT} without using up an attempt; {@code --no-low-light} turns that off to reproduce
+ * earlier runs.
  *
  * Exit codes: 0 every expectation met, 1 at least one mismatch (0 with {@code --no-fail}), 2 usage or setup
  * error.
@@ -100,7 +104,7 @@ public final class ScenarioRunnerCli {
                     factory.modelSetSha256(), platform);
             ScenarioRunner runner = new ScenarioRunner(
                     p -> new AttemptDriver(factory.engine(factory.parameters(p)), factory.timer(), factory.decoder()), store, o.config,
-                    o.engineParams, info, out);
+                    o.engineParams, info, out, !o.noLowLight);
             SummaryTable summary = new SummaryTable();
             try (Writer jsonl = new OutputStreamWriter(Files.newOutputStream(outDir.resolve("attempts.jsonl")),
                     StandardCharsets.UTF_8)) {
@@ -218,6 +222,7 @@ public final class ScenarioRunnerCli {
         m.put("global_config", o.config);
         m.put("signed_engine_params", factory.signedParams());
         m.put("global_engine_params", o.engineParams);
+        m.put("low_light_tracking", !o.noLowLight);
         m.put("packs_root", o.packsRoot().toString());
         m.put("scenarios", o.scenarioPaths);
         m.put("filter", o.filter == null ? null : o.filter.pattern());
@@ -246,6 +251,7 @@ public final class ScenarioRunnerCli {
         Pattern filter;
         String runId;
         boolean noFail;
+        boolean noLowLight;
         boolean all;
 
         static Options parse(String[] args) {
@@ -295,6 +301,9 @@ public final class ScenarioRunnerCli {
                         break;
                     case "--no-fail":
                         o.noFail = true;
+                        break;
+                    case "--no-low-light":
+                        o.noLowLight = true;
                         break;
                     default:
                         throw new IllegalArgumentException("unknown option: " + a);

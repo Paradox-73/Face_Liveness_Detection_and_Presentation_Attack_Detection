@@ -8,8 +8,6 @@ subject: S2
 condition: C1
 workflow: registration
 repeat: 4
-config:
-  active.challenge_types: TURN_LEFT,TURN_RIGHT
 stream:
   main: a-s2-print-still
 expect:

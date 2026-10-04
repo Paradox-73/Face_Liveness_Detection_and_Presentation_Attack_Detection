@@ -17,3 +17,4 @@ stream:
     SMILE: a-s3-screen-smile
 expect:
   outcome: reject
+notes: The challenge pool is limited to BLINK,SMILE because the adaptive attacker needs a clip of each prompted action, and the licensed S3 footage holds genuine clips of these two actions only (eval/packs/sources.yaml).

@@ -17,3 +17,4 @@ stream:
     SMILE: s1-smile
 expect:
   outcome: accept
+notes: The challenge pool is limited to BLINK,SMILE because the licensed S1 footage holds genuine clips of these two actions only (no head turn or look-up; eval/packs/sources.yaml).

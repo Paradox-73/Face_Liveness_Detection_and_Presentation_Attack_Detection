@@ -21,3 +21,4 @@ expect:
   outcome: reject
   layers:
   - challenge
+notes: The challenge pool is limited to BLINK,SMILE because the adaptive attacker needs a clip of each prompted action, and the licensed S1 footage holds genuine clips of these two actions only (eval/packs/sources.yaml).
