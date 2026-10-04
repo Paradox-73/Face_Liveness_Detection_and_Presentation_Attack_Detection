@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # Starts the native face liveness capture screen (LivenessCaptureActivity) of the
 # Registration Client debug build on an attached emulator or device, feeds it a
 # replay frame pack instead of the camera, and saves a series of screenshots and

@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 Team Badmosip
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 package io.mosip.registration.livenessmanager.engine;
 
 import android.content.res.AssetManager;
@@ -7,11 +13,14 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import io.mosip.liveness.core.EngineErrorCode;
@@ -20,6 +29,7 @@ import io.mosip.liveness.core.api.EngineContext;
 import io.mosip.liveness.core.api.ImageDecoder;
 import io.mosip.liveness.core.api.LivenessEngine;
 import io.mosip.liveness.core.api.LivenessEngineProvider;
+import io.mosip.liveness.core.api.ModelSource;
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.engine.LivenessMetrics;
@@ -29,6 +39,8 @@ import io.mosip.liveness.core.vision.FaceBox;
 import io.mosip.liveness.onnx.OnnxLivenessEngine;
 import io.mosip.liveness.onnx.OnnxLivenessEngines;
 import io.mosip.liveness.onnx.OnnxModelSet;
+import io.mosip.liveness.onnx.model.ModelSources;
+import io.mosip.liveness.onnx.model.SemanticVersion;
 import io.mosip.liveness.onnx.runtime.OnnxRuntimeOptions;
 
 /**
@@ -46,6 +58,11 @@ import io.mosip.liveness.onnx.runtime.OnnxRuntimeOptions;
  * thread until the engine is ready. A model integrity failure (signature, hash or version) is kept until the app
  * restarts: liveness then fails closed with audit {@code REG-EVT-LV14}. Other load failures are retried at the
  * next {@link #preload()} or {@link #await(long)}.
+ *
+ * <p>The built-in engine loads the bundle a supervisor imported ({@link ModelBundleStore}, bonus B6) when there is
+ * one, else the bundle in the APK assets, and refuses bundles below {@code model.min_version} or the store's version
+ * floor. {@link #switchModels(ModelSource)} replaces the running engine by one built from another bundle, after a
+ * self-test.
  *
  * <p>Thread-safe.
  */
@@ -66,12 +83,30 @@ public final class EngineLoader implements AutoCloseable {
         LivenessEngine create() throws EngineException;
     }
 
+    /** Builds the built-in engine over a given model bundle; may block. */
+    @FunctionalInterface
+    interface ModelBuilder {
+
+        /**
+         * Creates a ready engine over a bundle.
+         *
+         * @param source the bundle
+         * @return the engine
+         * @throws EngineException if the models cannot be verified or loaded, or a vendor engine is configured
+         */
+        LivenessEngine build(ModelSource source) throws EngineException;
+    }
+
     private final Factory factory;
+    private final ModelBuilder modelBuilder;
+    private final BooleanSupplier importSupported;
+    private final AtomicInteger openCaptures = new AtomicInteger();
     private volatile String acceleratorStatus = Accelerator.CPU.name();
     private LivenessEngine engine;
     private EngineException failure;
     private CountDownLatch loading;
     private boolean closed;
+    private int generation;
 
     /**
      * Creates a loader around any engine factory (tests pass scripted engines).
@@ -79,7 +114,23 @@ public final class EngineLoader implements AutoCloseable {
      * @param factory engine factory
      */
     public EngineLoader(Factory factory) {
+        this(factory, null);
+    }
+
+    /**
+     * Creates a loader whose engine can also be rebuilt over another model bundle ({@link #switchModels}).
+     *
+     * @param factory      engine factory
+     * @param modelBuilder builds the engine over a given bundle; {@code null} when models cannot be switched
+     */
+    EngineLoader(Factory factory, ModelBuilder modelBuilder) {
+        this(factory, modelBuilder, () -> true);
+    }
+
+    private EngineLoader(Factory factory, ModelBuilder modelBuilder, BooleanSupplier importSupported) {
         this.factory = Objects.requireNonNull(factory, "factory");
+        this.modelBuilder = modelBuilder;
+        this.importSupported = importSupported;
     }
 
     /**
@@ -129,7 +180,25 @@ public final class EngineLoader implements AutoCloseable {
      */
     public static EngineLoader fromConfig(AssetManager assets, ConfigSource config, ImageDecoder decoder,
                                           LivenessMetrics metrics, AcceleratorCustomizer.ExecutionProviders providers) {
-        EngineLoader builtIn = onnxOnly(assets, config, decoder, metrics, providers);
+        return fromConfig(assets, config, decoder, metrics, providers, null);
+    }
+
+    /**
+     * Creates the loader of the engine named by {@code mosip.registration.liveness.engine}, as the method above,
+     * with the built-in engine reading imported bundles from a store.
+     *
+     * @param assets    application assets
+     * @param config    liveness configuration
+     * @param decoder   platform image decoder
+     * @param metrics   metrics shared by all sessions of the built-in engine
+     * @param providers ONNX Runtime execution provider access
+     * @param store     imported model bundles; {@code null} for the APK bundle only
+     * @return the loader; nothing is loaded until {@link #preload()} or {@link #await(long)}
+     */
+    public static EngineLoader fromConfig(AssetManager assets, ConfigSource config, ImageDecoder decoder,
+                                          LivenessMetrics metrics, AcceleratorCustomizer.ExecutionProviders providers,
+                                          ModelBundleStore store) {
+        EngineLoader builtIn = onnxOnly(assets, config, decoder, metrics, providers, store);
         return select(config, builtIn, EngineLoader::serviceProviders,
                 () -> EngineContext.builder().config(config).models(new AssetModelSource(assets))
                         .imageDecoder(decoder).build());
@@ -153,6 +222,14 @@ public final class EngineLoader implements AutoCloseable {
         Objects.requireNonNull(providers, "providers");
         Objects.requireNonNull(context, "context");
         EngineLoader[] self = new EngineLoader[1];
+        ModelBuilder models = builtIn.modelBuilder == null ? null : source -> {
+            if (!LivenessConfigKeys.DEFAULT_ENGINE.equals(configuredEngineId(config))) {
+                throw new EngineException(EngineErrorCode.CONFIG_INVALID, "model import needs the default engine");
+            }
+            LivenessEngine e = builtIn.modelBuilder.build(source);
+            self[0].acceleratorStatus = builtIn.acceleratorStatus;
+            return e;
+        };
         self[0] = new EngineLoader(() -> {
             String id = configuredEngineId(config);
             if (LivenessConfigKeys.DEFAULT_ENGINE.equals(id)) {
@@ -176,7 +253,7 @@ public final class EngineLoader implements AutoCloseable {
             }
             Log.e(TAG, "No liveness engine provider for " + LivenessConfigKeys.ENGINE + "=" + id);
             throw new EngineException(EngineErrorCode.CONFIG_INVALID, "no liveness engine with ID " + id);
-        });
+        }, models, () -> LivenessConfigKeys.DEFAULT_ENGINE.equals(configuredEngineId(config)));
         return self[0];
     }
 
@@ -228,18 +305,39 @@ public final class EngineLoader implements AutoCloseable {
      */
     public static EngineLoader onnxOnly(AssetManager assets, ConfigSource config, ImageDecoder decoder,
                                         LivenessMetrics metrics, AcceleratorCustomizer.ExecutionProviders providers) {
+        return onnxOnly(assets, config, decoder, metrics, providers, null);
+    }
+
+    /**
+     * Creates the loader of the built-in ONNX engine, as the method above, over the active bundle of a store of
+     * imported bundles when it has one, else the APK bundle. The lowest accepted bundle version is
+     * {@code model.min_version} or the store's version floor, whichever is higher (anti-rollback). An imported bundle
+     * that later fails its checks is not replaced by the older APK bundle: the engine fails closed instead.
+     *
+     * @param assets    application assets
+     * @param config    liveness configuration ({@code model.min_version}, {@code android.accelerator})
+     * @param decoder   platform image decoder
+     * @param metrics   metrics shared by all sessions of the engine
+     * @param providers ONNX Runtime execution provider access
+     * @param store     imported model bundles; {@code null} for the APK bundle only
+     * @return the loader; nothing is loaded until {@link #preload()} or {@link #await(long)}
+     */
+    public static EngineLoader onnxOnly(AssetManager assets, ConfigSource config, ImageDecoder decoder,
+                                        LivenessMetrics metrics, AcceleratorCustomizer.ExecutionProviders providers,
+                                        ModelBundleStore store) {
         Objects.requireNonNull(assets, "assets");
         Objects.requireNonNull(config, "config");
         Objects.requireNonNull(decoder, "decoder");
         Objects.requireNonNull(metrics, "metrics");
         Objects.requireNonNull(providers, "providers");
         EngineLoader[] self = new EngineLoader[1];
-        self[0] = new EngineLoader(() -> {
+        ModelBuilder models = source -> {
             Accelerator accelerator = Accelerator.parse(config.get(Accelerator.CONFIG_KEY).orElse(null));
+            String minimum = minimumModelVersion(config, store);
             long start = System.nanoTime();
             LivenessEngine e;
             try {
-                e = buildOnnx(assets, config, decoder, metrics, accelerator, providers, self[0]);
+                e = buildOnnx(source, minimum, decoder, metrics, accelerator, providers, self[0]);
             } catch (EngineException | RuntimeException | LinkageError failure) {
                 boolean integrity = failure instanceof EngineException
                         && ((EngineException) failure).getErrorCode().isModelIntegrityFailure();
@@ -248,18 +346,61 @@ public final class EngineLoader implements AutoCloseable {
                 }
                 Log.w(TAG, "Liveness engine did not load with " + accelerator + " ("
                         + failure.getClass().getSimpleName() + "); loading it on the CPU");
-                e = buildOnnx(assets, config, decoder, metrics, Accelerator.CPU, providers, self[0]);
+                e = buildOnnx(source, minimum, decoder, metrics, Accelerator.CPU, providers, self[0]);
                 self[0].acceleratorStatus = "CPU (" + accelerator + " failed to load)";
             }
             Log.i(TAG, "Liveness engine ready: " + e.info().tag() + " in "
                     + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) + " ms, execution "
                     + self[0].acceleratorStatus);
             return e;
-        });
+        };
+        self[0] = new EngineLoader(() -> models.build(activeModelSource(assets, store)), models);
         return self[0];
     }
 
-    private static LivenessEngine buildOnnx(AssetManager assets, ConfigSource config, ImageDecoder decoder,
+    /**
+     * Returns the bundle the built-in engine loads: the active imported bundle of the store when there is one, else
+     * the bundle in the APK assets.
+     *
+     * @param assets application assets
+     * @param store  imported model bundles, or {@code null}
+     * @return the model source
+     */
+    public static ModelSource activeModelSource(AssetManager assets, ModelBundleStore store) {
+        Optional<ModelBundleStore.Installed> imported = store == null ? Optional.empty() : store.active();
+        if (imported.isPresent()) {
+            Log.i(TAG, "Liveness models: imported bundle " + imported.get().bundle() + " "
+                    + imported.get().version());
+            return ModelSources.directory(imported.get().folder().toFile());
+        }
+        return new AssetModelSource(assets);
+    }
+
+    /**
+     * Returns the lowest bundle version the built-in engine accepts: {@code model.min_version} or the store's
+     * version floor, whichever is higher (anti-rollback).
+     *
+     * @param config liveness configuration
+     * @param store  imported model bundles, or {@code null}
+     * @return {@code MAJOR.MINOR.PATCH}; an invalid {@code model.min_version} is returned unchanged, so the engine
+     *         reports {@code CONFIG_INVALID}
+     */
+    static String minimumModelVersion(ConfigSource config, ModelBundleStore store) {
+        String configured = config.get(LivenessConfigKeys.MODEL_MIN_VERSION)
+                .orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION);
+        Optional<String> floor = store == null ? Optional.empty() : store.floor();
+        if (!floor.isPresent()) {
+            return configured;
+        }
+        try {
+            return SemanticVersion.parse(floor.get()).compareTo(SemanticVersion.parse(configured.trim())) > 0
+                    ? floor.get() : configured;
+        } catch (IllegalArgumentException e) {
+            return configured;
+        }
+    }
+
+    private static LivenessEngine buildOnnx(ModelSource source, String minimumVersion, ImageDecoder decoder,
                                             LivenessMetrics metrics, Accelerator accelerator,
                                             AcceleratorCustomizer.ExecutionProviders providers,
                                             EngineLoader loader) throws EngineException {
@@ -270,9 +411,8 @@ public final class EngineLoader implements AutoCloseable {
                 outcomes.add(outcome);
             }
         });
-        LivenessEngine e = OnnxLivenessEngines.builder(new AssetModelSource(assets))
-                .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION)
-                        .orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION))
+        LivenessEngine e = OnnxLivenessEngines.builder(source)
+                .minimumVersion(minimumVersion)
                 .runtimeOptions(OnnxRuntimeOptions.builder().intraOpThreads(threads).customizer(customizer).build())
                 .imageDecoder(decoder)
                 .metrics(metrics)
@@ -338,6 +478,136 @@ public final class EngineLoader implements AutoCloseable {
     }
 
     /**
+     * Tells whether the running engine's models can be replaced by an imported bundle.
+     *
+     * @return {@code true} for the built-in ONNX engine ({@code mosip-onnx-default})
+     */
+    public boolean supportsModelImport() {
+        return modelBuilder != null && importSupported.getAsBoolean();
+    }
+
+    /**
+     * Records that a liveness capture screen opened; models are not swapped until it has closed.
+     */
+    public void captureStarted() {
+        openCaptures.incrementAndGet();
+    }
+
+    /**
+     * Records that a liveness capture screen closed (call once per {@link #captureStarted()}).
+     */
+    public void captureEnded() {
+        openCaptures.updateAndGet(n -> Math.max(0, n - 1));
+    }
+
+    /**
+     * Tells whether a liveness capture screen is open.
+     *
+     * @return {@code true} between {@link #captureStarted()} and {@link #captureEnded()}
+     */
+    public boolean captureInProgress() {
+        return openCaptures.get() > 0;
+    }
+
+    /**
+     * Returns the version of the model bundle the loaded engine runs. Does not wait or load.
+     *
+     * @return the version; empty before the engine is loaded or for a vendor engine
+     */
+    public synchronized Optional<String> bundleVersion() {
+        return engine instanceof OnnxLivenessEngine
+                ? Optional.ofNullable(((OnnxLivenessEngine) engine).bundleVersion()) : Optional.empty();
+    }
+
+    /**
+     * Replaces the running engine by one built from another verified bundle (offline model import). The new
+     * engine is built (signature, hashes and version checked again) and self-tested first; only then is it swapped
+     * in and the old one closed. On any failure the running engine stays as it was and the exception is returned
+     * to the caller, which audits it. A load still running in the background is discarded when it finishes.
+     *
+     * @param source the new bundle
+     * @throws EngineException {@code CONFIG_INVALID} when a vendor engine is configured, {@code NOT_READY} after
+     *                         {@link #close()}; the load or self-test error
+     */
+    public void switchModels(ModelSource source) throws EngineException {
+        Objects.requireNonNull(source, "source");
+        if (!supportsModelImport()) {
+            throw new EngineException(EngineErrorCode.CONFIG_INVALID, "model import needs the default engine");
+        }
+        LivenessEngine created = null;
+        try {
+            created = modelBuilder.build(source);
+            selfTest(created);
+        } catch (EngineException e) {
+            closeQuietly(created);
+            throw e;
+        } catch (RuntimeException | LinkageError e) {
+            closeQuietly(created);
+            throw new EngineException(EngineErrorCode.MODEL_LOAD,
+                    "liveness engine could not start: " + e.getClass().getSimpleName(), e);
+        }
+        LivenessEngine old;
+        CountDownLatch pending;
+        synchronized (this) {
+            if (closed) {
+                closeQuietly(created);
+                throw new EngineException(EngineErrorCode.NOT_READY, "engine loader is closed");
+            }
+            old = engine;
+            engine = created;
+            failure = null;
+            generation++;
+            pending = loading;
+            loading = null;
+        }
+        if (pending != null) {
+            pending.countDown();
+        }
+        closeQuietly(old);
+        Log.i(TAG, "Liveness engine switched to " + created.info().tag());
+    }
+
+    /**
+     * Checks that a new engine reports ready and, for the built-in engine, runs the face detector and the passive
+     * PAD model once on a blank frame, so a model that does not run is found before the switch, not at the next
+     * capture. Unlike {@link #warmUp}, a failure here is thrown.
+     *
+     * @param created the new engine
+     * @throws EngineException {@code NOT_READY} or the inference error
+     */
+    static void selfTest(LivenessEngine created) throws EngineException {
+        if (!created.isReady()) {
+            throw new EngineException(EngineErrorCode.NOT_READY, "engine reports not ready after creation");
+        }
+        if (!(created instanceof OnnxLivenessEngine)) {
+            return;
+        }
+        int w = 160;
+        int h = 120;
+        ImageBuffer blank = ImageBuffer.ofBytes(w, h, PixelFormat.RGB888, new byte[w * h * 3]);
+        try {
+            OnnxModelSet models = ((OnnxLivenessEngine) created).modelSet();
+            models.detectorOnlyAnalyzer().analyze(blank);
+            if (models.passivePad() != null) {
+                models.passivePad().score(blank, FaceBox.of(40, 20, 80, 80, 1.0));
+            }
+        } finally {
+            blank.wipe();
+        }
+    }
+
+    private static void closeQuietly(LivenessEngine e) {
+        if (e == null) {
+            return;
+        }
+        try {
+            e.close();
+        } catch (RuntimeException ignored) {
+            // close() must not throw; nothing more to do.
+        }
+    }
+
+    /**
      * Tells how the models run once the engine is loaded.
      *
      * @return {@code CPU}, the accelerator name, or a CPU fallback description
@@ -354,7 +624,8 @@ public final class EngineLoader implements AutoCloseable {
         failure = null;
         CountDownLatch latch = new CountDownLatch(1);
         loading = latch;
-        Thread t = new Thread(() -> load(latch), "liveness-engine-load");
+        int started = generation;
+        Thread t = new Thread(() -> load(latch, started), "liveness-engine-load");
         t.setDaemon(true);
         t.start();
     }
@@ -413,7 +684,7 @@ public final class EngineLoader implements AutoCloseable {
         }
     }
 
-    private void load(CountDownLatch latch) {
+    private void load(CountDownLatch latch, int started) {
         LivenessEngine created = null;
         EngineException error = null;
         try {
@@ -425,6 +696,12 @@ public final class EngineLoader implements AutoCloseable {
                     + e.getClass().getSimpleName(), e);
         }
         synchronized (this) {
+            if (generation != started) {
+                // switchModels installed another engine while this one loaded: keep that one.
+                closeQuietly(created);
+                latch.countDown();
+                return;
+            }
             if (closed && created != null) {
                 created.close();
                 created = null;

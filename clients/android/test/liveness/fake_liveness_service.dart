@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 Team Badmosip
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 import 'dart:async';
 
 import 'package:registration_client/pigeon/liveness_pigeon.dart';
@@ -49,4 +55,23 @@ class FakeLivenessService implements LivenessService {
     }
     return next;
   }
+
+  /// Answer of [importModelBundle] and [getModelBundle].
+  ModelBundleOutcome bundle = ModelBundleOutcome(
+      status: 'IMPORTED',
+      bundle: 'mosip-liveness-models',
+      version: '1.3.0',
+      previousVersion: '',
+      fromStore: false);
+
+  final List<String> importCalls = [];
+
+  @override
+  Future<ModelBundleOutcome> importModelBundle(String path) async {
+    importCalls.add(path);
+    return bundle;
+  }
+
+  @override
+  Future<ModelBundleOutcome> getModelBundle() async => bundle;
 }

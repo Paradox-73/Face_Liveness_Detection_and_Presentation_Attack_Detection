@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 Team Badmosip
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 import 'package:registration_client/pigeon/liveness_pigeon.dart';
 import 'package:registration_client/platform_android/liveness_service_impl.dart';
 
@@ -17,6 +23,13 @@ abstract class LivenessService {
 
   /// Liveness, then a match against the face [userId] enrolled at onboarding.
   Future<LivenessOutcome> authenticateFace(String userId, String workflow);
+
+  /// Supervisor action: imports the signed model bundle at [path] (folder or
+  /// .zip; empty for the app's import folder) and switches the engine to it.
+  Future<ModelBundleOutcome> importModelBundle(String path);
+
+  /// The model bundle the liveness engine runs.
+  Future<ModelBundleOutcome> getModelBundle();
 
   factory LivenessService() => getLivenessServiceImpl();
 }

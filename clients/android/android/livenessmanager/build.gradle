@@ -58,6 +58,14 @@ android {
         targetCompatibility JavaVersion.VERSION_21
     }
 
+    // LivenessParityDeviceTest: the cross-client parity file and the committed MockMDS images it streams.
+    sourceSets {
+        androidTest {
+            assets.srcDirs += [rootProject.file('../../../eval/interop'),
+                               rootProject.file('../../../liveness/liveness-onnx/src/test/resources')]
+        }
+    }
+
     testOptions {
         unitTests {
             includeAndroidResources = true
@@ -195,6 +203,26 @@ tasks.register('verifyNoOnnxTelemetry') {
 }
 tasks.named('preBuild') { dependsOn 'verifyNoOnnxTelemetry' }
 
+// Unit tests run on the JVM: they take the ai.onnxruntime classes and native library from the JVM package of the
+// same version (testImplementation in the dependencies below), so onnxruntime-android, whose classes would shadow
+// them, is left out of their run time class path. OnnxRuntimeSupplyChainTest still inspects the onnxruntime-android
+// classes jar, whose path it gets from the system property set here.
+configurations.matching { it.name.endsWith('UnitTestRuntimeClasspath') }.configureEach {
+    exclude group: 'com.microsoft.onnxruntime', module: 'onnxruntime-android'
+}
+def onnxAndroidClasses = provider {
+    configurations.getByName('debugRuntimeClasspath').incoming.artifactView {
+        attributes { attribute(Attribute.of('artifactType', String), 'android-classes-jar') }
+        componentFilter { id -> id instanceof ModuleComponentIdentifier && id.module == 'onnxruntime-android' }
+    }.files
+}
+tasks.withType(Test).configureEach {
+    inputs.files(onnxAndroidClasses).withPropertyName('onnxAndroidClasses').withPathSensitivity(PathSensitivity.NONE)
+    doFirst {
+        systemProperty 'liveness.onnxruntimeAndroidClasses', onnxAndroidClasses.get().singleFile.absolutePath
+    }
+}
+
 dependencies {
     // api: LivenessService and the Dagger module expose core types (Workflow, LivenessPolicy, AuditSink).
     api "io.mosip.liveness:liveness-core:${rootProject.ext.livenessEngineVersion}"
@@ -250,7 +278,13 @@ dependencies {
     testImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoCoreVersion}"
     // ARC parses SBI payloads with Jackson; the tests check the built-in capture against ARC's own DTOs.
     testImplementation "com.fasterxml.jackson.core:jackson-databind:${rootProject.ext.jacksonVersion}"
+    // Cross-client parity (LivenessParityTest): the replay from liveness-core's tests jar, and the JVM package of
+    // ONNX Runtime at the same version as onnxruntime-android, because unit tests run on the build machine's JVM,
+    // where the Android native library cannot load.
+    testImplementation "io.mosip.liveness:liveness-core:${rootProject.ext.livenessEngineVersion}:tests"
+    testImplementation "com.microsoft.onnxruntime:onnxruntime:${rootProject.ext.onnxruntimeAndroidVersion}"
 
+    androidTestImplementation "io.mosip.liveness:liveness-core:${rootProject.ext.livenessEngineVersion}:tests"
     androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.androidxJunitVersion}"
     androidTestImplementation "androidx.test:runner:${rootProject.ext.androidxTestRunnerVersion}"
     androidTestImplementation "androidx.test:core:${rootProject.ext.androidxTestCoreVersion}"

@@ -428,6 +428,32 @@
   "liveness_face_verified": "Visage vérifié",
   "liveness_face_captured": "Très bien, visage capturé avec succès",
   "liveness_auth_errors": "{code, select, FACE_NOT_ENROLLED{Aucun visage n’est enregistré pour cet utilisateur sur cet appareil. Utilisez le mot de passe ou terminez d’abord l’intégration de l’opérateur.} FACE_MISMATCH{Le visage ne correspond pas à cet utilisateur. Veuillez réessayer.} NOT_SUPERVISOR{Cet utilisateur n’est pas un superviseur. Un superviseur doit vérifier.} USER_LOCKED{Nombre maximal de tentatives de connexion atteint. Réessayez plus tard !} MAX_ATTEMPTS{La vérification du visage n’a pas pu être effectuée. Nombre maximal de tentatives atteint. Utilisez une autre méthode de connexion ou contactez votre superviseur.} LIVENESS_FAILED{La vérification du visage n’a pas pu être effectuée. Veuillez réessayer.} ENGINE_UNAVAILABLE{La vérification du visage n’est pas disponible sur cet appareil. Contactez votre superviseur.} CANCELLED{La vérification du visage a été annulée.} BUSY{Une autre vérification du visage est en cours. Fermez-la et réessayez.} REG_FACE_NOT_VERIFIED{La vérification du visage est requise avant la connexion.} other{La vérification du visage n’a pas pu être effectuée. Veuillez réessayer.}}",
-  "liveness_capture_status": "{status, select, FAILED{Nous n’avons pas pu vérifier la présence réelle du visage. Veuillez réessayer.} BLOCKED{La capture du visage n’a pas pu être effectuée après les tentatives autorisées. Demandez à votre superviseur de suivre la procédure de reprise du centre.} CANCELLED{La capture du visage a été annulée. Le visage n’a pas été enregistré.} BUSY{Une autre vérification du visage est en cours. Fermez-la et réessayez.} other{Nous n’avons pas pu vérifier la présence réelle du visage. Veuillez réessayer.}}"
+  "liveness_capture_status": "{status, select, FAILED{Nous n’avons pas pu vérifier la présence réelle du visage. Veuillez réessayer.} BLOCKED{La capture du visage n’a pas pu être effectuée après les tentatives autorisées. Demandez à votre superviseur de suivre la procédure de reprise du centre.} CANCELLED{La capture du visage a été annulée. Le visage n’a pas été enregistré.} BUSY{Une autre vérification du visage est en cours. Fermez-la et réessayez.} other{Nous n’avons pas pu vérifier la présence réelle du visage. Veuillez réessayer.}}",
+  "liveness_model_title": "Modèle de détection du vivant",
+  "liveness_model_import": "Importer un modèle de détection du vivant",
+  "liveness_model_current": "Modèle utilisé : version {version}",
+  "liveness_model_unknown": "Modèle utilisé : inconnu",
+  "liveness_model_import_result": "{status, select, IMPORTED{Le modèle de détection du vivant {version} est maintenant utilisé.} NOT_ALLOWED{Seul un superviseur ou un administrateur peut importer un modèle de détection du vivant.} BUSY{Une capture du visage est en cours. Terminez-la ou fermez-la, puis réessayez l’import.} NOT_SUPPORTED{Cet appareil utilise un moteur de détection du vivant d’un fournisseur. Ses modèles ne sont pas gérés par cette application.} NOT_FOUND{Aucun lot de modèles n’a été trouvé à cet emplacement. Choisissez un fichier .zip contenant un lot signé.} INVALID{Le lot a échoué à la vérification de la signature ou des fichiers. Rien n’a été installé.} TOO_OLD{La version {version} n’est pas plus récente que le modèle utilisé ou la version minimale ({previous}). Rien n’a été installé.} other{Le nouveau modèle n’a pas pu démarrer. Le modèle précédent reste utilisé.}}",
+  "@liveness_model_current": {
+    "description": "Liveness model version in use",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "@liveness_model_import_result": {
+    "description": "Result of importing a liveness model bundle, by status",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      },
+      "previous": {
+        "type": "String"
+      }
+    }
+  }
 }
-

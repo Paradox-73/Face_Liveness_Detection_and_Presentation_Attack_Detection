@@ -180,10 +180,12 @@ ext {
     desugarJdkLibsVersion      = "2.0.4"
     r8Version                  = "3.0.73"
 
-    // Face liveness (livenessmanager). ONNX Runtime stays on 1.28.0: 1.29 and later add a telemetry
-    // initializer (checked by :livenessmanager:verifyNoOnnxTelemetry). CameraX 1.5 needs compileSdk 35.
+    // Face liveness (livenessmanager). ONNX Runtime 1.20.0, the version the desktop client pins (newer ones do
+    // not load on its bundled JRE; docs/adr/0003), so both clients run the models on the same runtime release
+    // (checked by the cross-client parity test). 1.29 and later would also add a telemetry initializer
+    // (checked by :livenessmanager:verifyNoOnnxTelemetry). CameraX 1.5 needs compileSdk 35.
     livenessEngineVersion      = "1.0.0-SNAPSHOT"
-    onnxruntimeAndroidVersion  = "1.28.0"
+    onnxruntimeAndroidVersion  = "1.20.0"
     cameraxVersion             = "1.4.2"
     androidxTestRunnerVersion  = "1.6.2"
 

@@ -5,6 +5,7 @@ import '../../../model/settings.dart';
 import '../../../platform_spi/biometrics_service.dart';
 import '../../../utils/app_config.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:registration_client/ui/liveness/model_import_panel.dart';
 
 class DeviceSettingsTab extends StatefulWidget {
   DeviceSettingsTab(
@@ -86,6 +87,11 @@ class _DeviceSettingsTabState extends State<DeviceSettingsTab> {
                     child: Text(AppLocalizations.of(context)!.scan),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: ModelImportPanel(),
               ),
               const SizedBox(height: 16),
               Expanded(

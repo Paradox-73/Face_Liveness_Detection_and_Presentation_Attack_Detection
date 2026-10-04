@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 Team Badmosip
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 package io.mosip.registration.livenessmanager.di;
 
 import android.app.Application;
@@ -72,14 +78,18 @@ public class LivenessModule {
     /**
      * Installs the process-wide runtime the capture screen uses.
      *
-     * @param config configuration source
-     * @param audit  audit sink
+     * @param config       configuration source
+     * @param audit        audit sink
+     * @param loginService ARC's login service (roles)
      * @return the runtime
      */
     @Provides
     @Singleton
-    LivenessRuntime provideLivenessRuntime(GlobalParamConfigSource config, AuditSink audit) {
+    LivenessRuntime provideLivenessRuntime(GlobalParamConfigSource config, AuditSink audit,
+                                           LoginService loginService) {
         LivenessRuntime runtime = LivenessRuntime.install(application, config, audit);
+        // Roles of the signed-in user for the model import (supervisor or admin only).
+        runtime.setRolesLookup(loginService::getRolesByUserId);
         // The signed-in user as SessionManager keeps it (audit REG-EVT-LV17, supervisor override prompt).
         runtime.setUserIdSupplier(() -> application.getSharedPreferences(
                 application.getString(io.mosip.registration.clientmanager.R.string.app_name), Context.MODE_PRIVATE)

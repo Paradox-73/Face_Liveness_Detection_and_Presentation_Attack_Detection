@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 Team Badmosip
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:registration_client/pigeon/liveness_pigeon.dart';
@@ -13,6 +19,13 @@ class LivenessServiceImpl implements LivenessService {
 
   static LivenessOutcome _failed(String errorCode) => LivenessOutcome(
       status: 'FAILED', errorCode: errorCode, attemptsUsed: 0, maxAttempts: 0);
+
+  static ModelBundleOutcome _bundleStatus(String status) => ModelBundleOutcome(
+      status: status,
+      bundle: '',
+      version: '',
+      previousVersion: '',
+      fromStore: false);
 
   @override
   Future<bool> isEnforced(String workflow) async {
@@ -62,6 +75,26 @@ class LivenessServiceImpl implements LivenessService {
     } on PlatformException catch (e) {
       debugPrint('LivenessApi.authenticateFace failed: ${e.code}');
       return _failed('ENGINE_UNAVAILABLE');
+    }
+  }
+
+  @override
+  Future<ModelBundleOutcome> importModelBundle(String path) async {
+    try {
+      return await _api.importModelBundle(path);
+    } on PlatformException catch (e) {
+      debugPrint('LivenessApi.importModelBundle failed: ${e.code}');
+      return _bundleStatus('LOAD_FAILED');
+    }
+  }
+
+  @override
+  Future<ModelBundleOutcome> getModelBundle() async {
+    try {
+      return await _api.getModelBundle();
+    } on PlatformException catch (e) {
+      debugPrint('LivenessApi.getModelBundle failed: ${e.code}');
+      return _bundleStatus('NOT_FOUND');
     }
   }
 }

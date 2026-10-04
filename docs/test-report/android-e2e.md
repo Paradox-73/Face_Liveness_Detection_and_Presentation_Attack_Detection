@@ -11,6 +11,10 @@ Android 14 x86_64 emulator, against MockSync as the MOSIP server. The camera was
   lines are saved and when the offline screenshot is taken): 48 of 57 checks passed. The 9 failures are one real
   finding: a printed photo passed the passive check under the shipped registration policy (section 3, section 8
   item 1). Its results and attack-section Logcat are in `docs/test-report/android-e2e/run8/`.
+- **Re-run at the shipped defaults (2026-10-05, section 11):** 12 checks ran in one pass of `login` and `resident`,
+  5 passed and 7 failed; nothing else could be run. The runs above used the replay profile (`PASSIVE_THEN_ACTIVE`,
+  8 passive frames, SMILE and BLINK challenges only), not the shipped policy, so the tables in sections 3 and 5 are
+  not measurements of the shipped defaults.
 - **Committed screenshots** without any face: `docs/ux/screenshots/android/e2e-*.png` (the capture screen's preview is
   kept dark by the replay's `masked` option; ARC screens that show the stored face are not committed).
 - **Earlier runs** of the same script (same day) found the problems in section 4; each was fixed and the script run
@@ -41,7 +45,7 @@ Policies in force (shipped values, as on desktop): resident `registration` PASSI
 . toolchain/env.sh; use_java21                          # JDK 21, Flutter 3.10.4, ANDROID_HOME
 ARC_WEBCAM=emulated bash scripts/android-run-emulator.sh --headless --no-install
 bash scripts/android-build.sh && adb install -r -g clients/android/build/app/outputs/flutter-apk/app-debug.apk
-bash scripts/demo-android.sh                            # about 30 minutes
+bash scripts/demo-android.sh                            # shipped policy (default); --policy replay = the profile of runs 5 to 8
 ```
 
 Prerequisites (MockSync, machine registration, onboarded users, frame packs) are in `docs/install/android.md`
@@ -210,3 +214,47 @@ Room, BouncyCastle and the ONNX Runtime JNI would need keep rules); not attempte
 | `docs/test-report/android-e2e/run8/` | results, log, attack-section Logcat and frame times of run 8 |
 | `docs/test-report/android-e2e/print-attack-trials.txt` | 18 repeated print attacks on the capture screen, shipped and `ALWAYS_ACTIVE` registration policy |
 | `docs/ux/screenshots/android/e2e-*.png` | screenshots of runs 7 and 8 (capture screen masked; no face); `e2e-14` is run 8's accepted print |
+
+## 11. Re-run at the shipped defaults (2026-10-05)
+
+`scripts/demo-android.sh` now runs at the policy MockSync ships (`--policy shipped`, the default): registration and
+all authentication workflows `ALWAYS_ACTIVE`, 30 passive frames, two challenges drawn from the five actions BLINK,
+SMILE, TURN_LEFT, TURN_RIGHT, LOOK_UP, three attempts. `--policy replay` applies the earlier profile of runs 5 to 8.
+Before the run two leftover MockSync overrides (`active.challenge_types=BLINK,SMILE`, `registration.max_retries=3`)
+were removed, so the pool and limits were the shipped ones. Client: debug APK built 2026-10-05 from the current tree
+(x86_64, `scripts/android-build.sh --abis x86_64`), emulator `arc_api34` headless, `ARC_WEBCAM=emulated`.
+
+| Flow | Result (2026-10-05) | Measured detail |
+|---|---|---|
+| Profile step (A-P0) | PASS | no policy override; tablet synchronised |
+| A1 operator password sign-in | PASS (A-L1) | home screen |
+| A2 "Sign in with face" offered | PASS (A-L2) | |
+| A2 operator face sign-in, pack `s3` | FAIL (A-L3, A-L4, A-L5) | attempt 1: passive pass (bucket 90-100), SMILE answered, then TURN_LEFT asked; the pack has no matching footage and the clip repeated: `FAIL_PAD/INTEGRITY`, `LOOP` (LV08). Attempt 2: TURN_LEFT drawn again, `WRONG_ACTION` (LV06). The 3 attempts were used up. |
+| A3 live person not enrolled, pack `s1` | FAIL (A-L6, A-L7, A-L8) | passive bucket 60-69, then TURN_RIGHT / TURN_LEFT asked; `s1` has no turn footage: `CHALLENGE_TIMEOUT` on attempts 1, 2, 3, then `MAX_ATTEMPTS`. The no-match step was never reached. |
+| A4 screen replay at sign-in | FAIL (A-L9), not a verdict | the sign-in attempts of the earlier steps were already used up ("Face authentication not started: attempts used up for login_auth"), so no attack attempt ran. The generic refusal text was shown (A-L10 PASS). |
+| A5 resident, Lost UIN to the biometrics grid | PASS (A-R0) | |
+| A5 to A16 (resident capture, attacks, packet authentication, approval, upload, configuration change, offline, override, latency) | NOT RUN | the emulator process exited at about 03:46 during the resident section, with no check of that section run; see below |
+
+Totals of the run: 12 checks, 5 passed, 7 failed. The 7 failures come from two causes: the packs have no footage
+for the turn actions the shipped pool asks for (A-L3 to A-L8), and the attempts spent on them (A-L9). None of them
+shows a faulty refusal of an attack.
+
+What could not run, and why:
+
+- **Genuine turn and look-up footage does not exist** (WP04: no LOOK_UP footage of any subject; the enrolled face
+  `s3` has main, blink, smile and one left turn that the engine rejects as `WRONG_ACTION`, no right turn; `s1` has no
+  turn at all). At the shipped pool, a replayed genuine person passes only when both drawn actions are ones the pack
+  holds, about 3 of 10 pairs for `s3`. Recording `s3-turn-right` and `s3-look-up` is the missing input; no clip was
+  synthesised from stills. Every flow that needs a genuine pass (A2, A7, A9, A11, A12, A13) is therefore not
+  reproducible at the shipped defaults with the current packs.
+- **The emulator stopped twice on the biometrics screens** (`adb: device 'emulator-5554' not found`, 03:46 in the first
+  stretch and about 04:03 in the second, which was to run the `attacks` section, with the renderer in `-gpu auto`
+  mode; section 4 records the same crash and the `-gpu host` remedy). The second stretch ended after the profile
+  step with no attack check run. A third stretch with `ARC_EMULATOR_GPU=host` was not started: the emulator lock
+  directory `toolchain/locks/emulator` was left behind when the second run's processes were stopped, and removing
+  it was refused, so the lock was not taken again.
+- The emulator is not running after these runs. Rows A5 to A16 of section 3 keep the values of run 7 (replay
+  profile, 2026-09-30) and are not shipped-default measurements.
+
+Raw output of the runs (outside the repository): `run/demo/android-20261005-wp20a/` (results, log, Logcat of the
+login section, screenshots) and `run/demo/android-20261005-wp20b/`.

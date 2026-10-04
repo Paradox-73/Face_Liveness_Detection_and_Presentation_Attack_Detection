@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # Provisions the built-in face camera of the Registration Client on an attached
 # emulator or device with a DEVICE certificate issued by MockSync's DEVICE CA,
 # so the client's unchanged SBI trust check accepts its captures.

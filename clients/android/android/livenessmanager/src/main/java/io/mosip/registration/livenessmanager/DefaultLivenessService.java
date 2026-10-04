@@ -1,13 +1,22 @@
+/*
+ * Copyright (c) 2026 Team Badmosip
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 package io.mosip.registration.livenessmanager;
 
 import android.content.Context;
 import android.content.Intent;
 
+import java.io.File;
 import java.util.Objects;
+import java.util.Optional;
 
 import io.mosip.liveness.core.Workflow;
 import io.mosip.liveness.core.config.LivenessPolicy;
 import io.mosip.registration.livenessmanager.device.FaceDeviceSelection;
+import io.mosip.registration.livenessmanager.engine.ModelBundleImporter;
 import io.mosip.registration.livenessmanager.ui.LivenessCaptureActivity;
 
 /**
@@ -66,5 +75,22 @@ public final class DefaultLivenessService implements LivenessService {
     @Override
     public boolean isBuiltInCameraFaceDevice() {
         return FaceDeviceSelection.kind(runtime.config()) == FaceDeviceSelection.Kind.BUILTIN;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The user is the one signed in to ARC; the roles come from ARC's login service.
+     */
+    @Override
+    public ModelBundleImporter.Result importModelBundle(File location) {
+        String user = runtime.currentUserId();
+        return runtime.modelImporter().importBundle(Objects.requireNonNull(location, "location").toPath(), user,
+                runtime.rolesOf(user));
+    }
+
+    @Override
+    public Optional<ModelBundleImporter.Result> currentModelBundle() {
+        return runtime.modelImporter().current();
     }
 }

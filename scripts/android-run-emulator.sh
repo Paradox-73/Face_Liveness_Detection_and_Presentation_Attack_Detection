@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # Starts an Android 14 (API 34) x86_64 emulator whose front camera is the PC
 # webcam, installs the Registration Client debug APK, launches it and saves a
 # screenshot.

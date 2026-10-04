@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # Builds the Android Registration Client (clients/android) debug APK and,
 # optionally, runs its native unit tests.
 #
@@ -6,7 +10,8 @@
 #   0. Face liveness engine: when io.mosip.liveness:liveness-core,
 #      liveness-onnx or face-match-sdk is not in the local Maven repository
 #      (~/.m2), all three are built from this repository's liveness/ folder
-#      with Maven and installed there (the livenessmanager module and its
+#      with Maven and installed there, with the tests jar of liveness-core
+#      that the parity test uses (the livenessmanager module and its
 #      Gradle build read them from ~/.m2; no binary jar is committed).
 #      --install-engine rebuilds them.
 #   1. Code generation: flutter pub get, build_runner and the pigeon bridge
@@ -208,6 +213,8 @@ ensure_liveness_engine() {
     jar="$repo/io/mosip/liveness/$artifact/$version/$artifact-$version.jar"
     [ -f "$jar" ] || missing="$missing $artifact"
   done
+  # The tests jar of liveness-core holds the cross-client parity replay (livenessmanager LivenessParityTest).
+  [ -f "$repo/io/mosip/liveness/liveness-core/$version/liveness-core-$version-tests.jar" ]     || missing="$missing liveness-core:tests"
   if [ -z "$missing" ] && [ "$FORCE_ENGINE" = "0" ]; then
     log "liveness engine $version ($ENGINE_ARTIFACTS) found in $repo"
     return
@@ -223,6 +230,8 @@ ensure_liveness_engine() {
     jar="$repo/io/mosip/liveness/$artifact/$version/$artifact-$version.jar"
     [ -f "$jar" ] || die "Maven did not install $jar"
   done
+  jar="$repo/io/mosip/liveness/liveness-core/$version/liveness-core-$version-tests.jar"
+  [ -f "$jar" ] || die "Maven did not install $jar"
 }
 
 run_codegen() {

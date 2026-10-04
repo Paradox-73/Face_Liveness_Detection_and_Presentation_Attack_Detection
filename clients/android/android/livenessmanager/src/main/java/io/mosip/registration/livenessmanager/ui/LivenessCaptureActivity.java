@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 Team Badmosip
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 package io.mosip.registration.livenessmanager.ui;
 
 import android.Manifest;
@@ -107,6 +113,7 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
     /** This screen's context in the language the caller asked for (ARC's language, not the device's). */
     private Context ui;
     private LivenessRuntime runtime;
+    private boolean captureCounted;
     private ConfigSource config;
     private MessageResolver messages;
     private CaptureRunner runner;
@@ -151,6 +158,8 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
         bindViews();
 
         runtime = LivenessRuntime.get(this);
+        runtime.engines().captureStarted();
+        captureCounted = true;
         config = BuildConfig.DEBUG && !request.configOverrides().isEmpty()
                 ? new OverlayConfigSource(runtime.config(), request.configOverrides()) : runtime.config();
         messages = new MessageResolver(ui.getResources(), config, request.language());
@@ -208,6 +217,10 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         main.removeCallbacksAndMessages(null);
+        if (captureCounted) {
+            captureCounted = false;
+            runtime.engines().captureEnded();
+        }
         if (runner != null) {
             runner.close();
         }

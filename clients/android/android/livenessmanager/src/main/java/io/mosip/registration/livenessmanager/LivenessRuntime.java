@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 Team Badmosip
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 package io.mosip.registration.livenessmanager;
 
 import android.content.Context;
@@ -6,10 +12,12 @@ import android.os.Build;
 import android.util.Log;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import io.mosip.liveness.core.Clock;
@@ -28,14 +36,18 @@ import io.mosip.registration.livenessmanager.config.GlobalParamConfigSource;
 import io.mosip.registration.livenessmanager.device.AndroidKeystoreSigner;
 import io.mosip.registration.livenessmanager.device.DeviceSigner;
 import io.mosip.registration.livenessmanager.engine.AcceleratorCustomizer;
+import io.mosip.registration.livenessmanager.engine.AssetModelSource;
 import io.mosip.registration.livenessmanager.engine.EngineLoader;
+import io.mosip.registration.livenessmanager.engine.ModelBundleImporter;
+import io.mosip.registration.livenessmanager.engine.ModelBundleStore;
 import io.mosip.registration.livenessmanager.image.AndroidImageDecoder;
 import io.mosip.registration.livenessmanager.metrics.MetricsLog;
 import io.mosip.registration.livenessmanager.metrics.MetricsReport;
 
 /**
  * The process-wide pieces the liveness screen and service share: configuration, audit and diagnostic sinks,
- * image decoder, engine loader, device identity and key, and the anonymised metrics of all sessions.
+ * image decoder, engine loader, store and import of model bundles, device identity and key, and the anonymised
+ * metrics of all sessions.
  *
  * <p>Inside ARC the Dagger {@code LivenessModule} installs it with ARC's configuration and audit service when the
  * app starts. When the capture screen is started on its own (a debug launch from adb before ARC was opened), a
@@ -56,12 +68,15 @@ public final class LivenessRuntime {
     private final DiagnosticSink diagnostics;
     private final AndroidImageDecoder decoder;
     private final EngineLoader engines;
+    private final ModelBundleStore modelStore;
+    private final ModelBundleImporter modelImporter;
     private final LivenessMetrics metrics;
     private final MetricsLog metricsLog;
     private final DiagnosticModeTracker diagnosticMode;
     private final Clock clock;
     private final boolean isStandalone;
     private volatile Supplier<String> userId = () -> "";
+    private volatile Function<String, List<String>> roles = id -> Collections.emptyList();
     private volatile DeviceSigner signer;
 
     private LivenessRuntime(Context context, ConfigSource config, AuditSink audit, boolean isStandalone) {
@@ -71,9 +86,13 @@ public final class LivenessRuntime {
         this.diagnostics = LogcatSinks.diagnostics();
         this.decoder = new AndroidImageDecoder();
         this.metrics = new LivenessMetrics();
-        this.engines = EngineLoader.onnx(this.context.getAssets(), config, decoder, metrics,
-                AcceleratorCustomizer.ortProviders());
+        this.modelStore = new ModelBundleStore(new File(new File(this.context.getFilesDir(), "liveness"),
+                "model-store").toPath());
+        this.engines = EngineLoader.fromConfig(this.context.getAssets(), config, decoder, metrics,
+                AcceleratorCustomizer.ortProviders(), modelStore);
         this.clock = Clock.system();
+        this.modelImporter = new ModelBundleImporter(config, modelStore,
+                () -> new AssetModelSource(this.context.getAssets()), ModelBundleImporter.over(engines), audit, clock);
         this.isStandalone = isStandalone;
         this.metricsLog = new MetricsLog(new File(new File(this.context.getFilesDir(), "liveness"), "metrics.log"),
                 MetricsLog.DEFAULT_MAX_BYTES, e -> Log.w(METRICS_TAG, "Metrics not written: " + e.getMessage()));
@@ -170,6 +189,38 @@ public final class LivenessRuntime {
      */
     public void setUserIdSupplier(Supplier<String> userId) {
         this.userId = Objects.requireNonNull(userId, "userId");
+    }
+
+    /**
+     * Sets how the roles of a user are looked up (ARC's login service), for the model import.
+     *
+     * @param roles returns the role codes of a user ID; empty for an unknown user
+     */
+    public void setRolesLookup(Function<String, List<String>> roles) {
+        this.roles = Objects.requireNonNull(roles, "roles");
+    }
+
+    /**
+     * Returns the roles of a user.
+     *
+     * @param userId user ID
+     * @return role codes, for example {@code REGISTRATION_SUPERVISOR}; empty when unknown
+     */
+    public List<String> rolesOf(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<String> r = roles.apply(userId.trim());
+        return r == null ? Collections.emptyList() : r;
+    }
+
+    /**
+     * Returns the importer of signed model bundles (secure offline model update).
+     *
+     * @return the importer over this runtime's engine loader and store
+     */
+    public ModelBundleImporter modelImporter() {
+        return modelImporter;
     }
 
     /**

@@ -1,10 +1,20 @@
+/*
+ * Copyright (c) 2026 Team Badmosip
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 package io.mosip.registration.livenessmanager;
 
 import android.content.Context;
 import android.content.Intent;
 
+import java.io.File;
+import java.util.Optional;
+
 import io.mosip.liveness.core.Workflow;
 import io.mosip.liveness.core.config.LivenessPolicy;
+import io.mosip.registration.livenessmanager.engine.ModelBundleImporter;
 
 /**
  * Face liveness for the rest of ARC: resident face capture, operator onboarding and packet authentication, and
@@ -84,5 +94,25 @@ public interface LivenessService {
      */
     default boolean isBuiltInCameraFaceDevice() {
         return true;
+    }
+
+    /**
+     * Imports a signed model bundle for the signed-in user and switches the engine to it (secure offline model
+     * update, see {@link ModelBundleImporter}). Blocks for the engine build; call it off the main thread.
+     *
+     * @param location folder or {@code .zip} file with {@code manifest.json}, {@code manifest.jws} and the models
+     * @return the result; never throws for a bad bundle
+     */
+    default ModelBundleImporter.Result importModelBundle(File location) {
+        return ModelBundleImporter.Result.of(ModelBundleImporter.Status.NOT_SUPPORTED);
+    }
+
+    /**
+     * Describes the model bundle the engine runs or would load.
+     *
+     * @return name, version and whether it was imported; empty when no bundle can be read
+     */
+    default Optional<ModelBundleImporter.Result> currentModelBundle() {
+        return Optional.empty();
     }
 }

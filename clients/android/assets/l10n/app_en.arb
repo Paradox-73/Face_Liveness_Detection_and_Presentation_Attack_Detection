@@ -429,6 +429,33 @@
   "liveness_face_captured": "Good, face captured successfully",
   "liveness_auth_errors": "{code, select, FACE_NOT_ENROLLED{No face is enrolled for this user on this device. Use the password, or complete operator onboarding first.} FACE_MISMATCH{The face does not match this user. Please try again.} NOT_SUPERVISOR{This user is not a supervisor. A supervisor must verify.} USER_LOCKED{Maximum login attempt limit reached. Try again later!} MAX_ATTEMPTS{Face verification could not be completed. Maximum attempts reached. Use another sign-in method or contact your supervisor.} LIVENESS_FAILED{Face verification could not be completed. Please try again.} ENGINE_UNAVAILABLE{Face verification is unavailable on this machine. Contact your supervisor.} CANCELLED{Face verification was cancelled.} BUSY{Another face verification is in progress. Close it and try again.} REG_FACE_NOT_VERIFIED{Face verification is required before signing in.} other{Face verification could not be completed. Please try again.}}",
   "liveness_capture_status": "{status, select, FAILED{We could not verify face liveness. Please try again.} BLOCKED{Face capture could not be completed after the allowed attempts. Please ask your supervisor to follow the recovery process of the centre.} CANCELLED{Face capture was cancelled. The face was not saved.} BUSY{Another face verification is in progress. Close it and try again.} other{We could not verify face liveness. Please try again.}}",
+  "liveness_model_title": "Liveness model",
+  "liveness_model_import": "Import liveness model",
+  "liveness_model_current": "Model in use: version {version}",
+  "liveness_model_unknown": "Model in use: not known",
+  "liveness_model_import_result": "{status, select, IMPORTED{Liveness model {version} is now in use.} NOT_ALLOWED{Only a supervisor or administrator can import a liveness model.} BUSY{A face capture is in progress. Finish or close it, then import again.} NOT_SUPPORTED{This device uses a vendor liveness engine. Its models are not managed by this app.} NOT_FOUND{No model bundle was found at that location. Choose a .zip file that contains a signed bundle.} INVALID{The bundle failed the signature or file check. Nothing was installed.} TOO_OLD{Version {version} is not newer than the model in use or the minimum version ({previous}). Nothing was installed.} other{The new model could not be started. The previous model is still in use.}}",
+  "@liveness_model_current": {
+    "description": "Liveness model version in use",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "@liveness_model_import_result": {
+    "description": "Result of importing a liveness model bundle, by status",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      },
+      "previous": {
+        "type": "String"
+      }
+    }
+  },
   "@liveness_auth_errors": {
     "description": "Face authentication failure, by error code",
     "placeholders": {
