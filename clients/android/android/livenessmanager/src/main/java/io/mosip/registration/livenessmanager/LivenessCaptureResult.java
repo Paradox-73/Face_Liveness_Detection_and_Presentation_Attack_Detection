@@ -58,6 +58,7 @@ public final class LivenessCaptureResult {
     static final String EXTRA_PROVISIONED = "liveness.result.device_provisioned";
     static final String EXTRA_EVIDENCE = "liveness.result.evidence";
     static final String EXTRA_OVERRIDE_REQUEST = "liveness.result.override_requested_by";
+    static final String EXTRA_LOW_LIGHT = "liveness.result.low_light";
 
     private final Decision decision;
     private final FailureReason failureReason;
@@ -78,6 +79,7 @@ public final class LivenessCaptureResult {
     private final boolean deviceProvisioned;
     private final Map<String, String> evidence;
     private final String overrideRequestedBy;
+    private final int lowLightRetries;
 
     private LivenessCaptureResult(Builder b) {
         this.decision = b.decision;
@@ -99,6 +101,7 @@ public final class LivenessCaptureResult {
         this.deviceProvisioned = b.deviceProvisioned;
         this.evidence = Collections.unmodifiableMap(new LinkedHashMap<>(b.evidence));
         this.overrideRequestedBy = b.overrideRequestedBy;
+        this.lowLightRetries = b.lowLightRetries;
     }
 
     /**
@@ -142,7 +145,8 @@ public final class LivenessCaptureResult {
                 .capture(x.getString(EXTRA_TRANSACTION), x.getByteArray(EXTRA_ISO), x.getString(EXTRA_RCAPTURE),
                         x.getBoolean(EXTRA_PROVISIONED))
                 .tokenNonce(x.getString(EXTRA_TOKEN_NONCE))
-                .overrideRequestedBy(x.getString(EXTRA_OVERRIDE_REQUEST));
+                .overrideRequestedBy(x.getString(EXTRA_OVERRIDE_REQUEST))
+                .lowLightRetries(x.getInt(EXTRA_LOW_LIGHT));
         String onMax = x.getString(EXTRA_ON_MAX);
         if (onMax != null) {
             b.onMaxFailure(OnMaxFailure.valueOf(onMax));
@@ -190,6 +194,7 @@ public final class LivenessCaptureResult {
         }
         i.putExtra(EXTRA_EVIDENCE, ev);
         i.putExtra(EXTRA_OVERRIDE_REQUEST, overrideRequestedBy);
+        i.putExtra(EXTRA_LOW_LIGHT, lowLightRetries);
         return i;
     }
 
@@ -219,7 +224,7 @@ public final class LivenessCaptureResult {
                 .retryAllowed(retryAllowed).overrideAllowed(overrideAllowed).lockRequired(lockRequired)
                 .onMaxFailure(onMaxFailure).tokenNonce(tokenNonce)
                 .capture(transactionId, faceIso, rCaptureResponse, deviceProvisioned)
-                .evidence(evidence).overrideRequestedBy(overrideRequestedBy);
+                .evidence(evidence).overrideRequestedBy(overrideRequestedBy).lowLightRetries(lowLightRetries);
         return b;
     }
 
@@ -332,6 +337,17 @@ public final class LivenessCaptureResult {
     }
 
     /**
+     * Returns the uncounted dim-light results of the transaction since its last counted failure, including those
+     * the screen was told about ({@code LivenessCaptureRequest#priorLowLight()}). The next screen of the same
+     * subject and capture continues from this number.
+     *
+     * @return 0 or more; 0 after a counted failure
+     */
+    public int lowLightRetries() {
+        return lowLightRetries;
+    }
+
+    /**
      * Tells whether another attempt was allowed when the screen closed.
      *
      * @return {@code true} if the user cancelled while a retry was still possible
@@ -428,7 +444,8 @@ public final class LivenessCaptureResult {
     public String toString() {
         return "LivenessCaptureResult[" + workflow.id() + ", " + decision
                 + (failureReason != null ? "/" + failureReason : "") + ", reasons=" + reasonCodes
-                + ", attempts=" + attemptsUsed + "/" + maxAttempts + ", capture=" + (faceIso != null)
+                + ", attempts=" + attemptsUsed + "/" + maxAttempts
+                + (lowLightRetries > 0 ? ", lowLight=" + lowLightRetries : "") + ", capture=" + (faceIso != null)
                 + (overrideRequestedBy != null ? ", override requested" : "") + "]";
     }
 
@@ -443,6 +460,7 @@ public final class LivenessCaptureResult {
         private String sessionId;
         private int attemptsUsed;
         private int maxAttempts;
+        private int lowLightRetries;
         private boolean retryAllowed;
         private boolean overrideAllowed;
         private boolean lockRequired;
@@ -514,6 +532,17 @@ public final class LivenessCaptureResult {
         public Builder attempts(int used, int max) {
             this.attemptsUsed = used;
             this.maxAttempts = max;
+            return this;
+        }
+
+        /**
+         * Sets the uncounted dim-light results of the transaction since its last counted failure.
+         *
+         * @param count 0 or more (negative values are kept as 0)
+         * @return this builder
+         */
+        public Builder lowLightRetries(int count) {
+            this.lowLightRetries = Math.max(0, count);
             return this;
         }
 

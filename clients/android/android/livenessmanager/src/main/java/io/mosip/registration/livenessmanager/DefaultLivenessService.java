@@ -6,8 +6,8 @@ import android.content.Intent;
 import java.util.Objects;
 
 import io.mosip.liveness.core.Workflow;
-import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.config.LivenessPolicy;
+import io.mosip.registration.livenessmanager.device.FaceDeviceSelection;
 import io.mosip.registration.livenessmanager.ui.LivenessCaptureActivity;
 
 /**
@@ -56,9 +56,15 @@ public final class DefaultLivenessService implements LivenessService {
         return runtime.deviceSigner().isProvisioned();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Reads {@code mosip.registration.liveness.android.device} through {@link FaceDeviceSelection#kind}, the same
+     * rule that routes face captures: a missing, blank or unknown value means the built-in camera; only {@code SBI}
+     * selects the vendor face app.
+     */
     @Override
     public boolean isBuiltInCameraFaceDevice() {
-        return LivenessConfigKeys.DEFAULT_ANDROID_DEVICE.equalsIgnoreCase(runtime.config()
-                .get(LivenessConfigKeys.ANDROID_DEVICE).orElse(LivenessConfigKeys.DEFAULT_ANDROID_DEVICE).trim());
+        return FaceDeviceSelection.kind(runtime.config()) == FaceDeviceSelection.Kind.BUILTIN;
     }
 }

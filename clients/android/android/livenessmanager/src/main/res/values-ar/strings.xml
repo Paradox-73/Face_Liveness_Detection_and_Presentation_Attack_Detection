@@ -12,6 +12,7 @@
     <string name="liveness_feedback_continue">يرجى المتابعة</string>
     <string name="liveness_feedback_detected">تم اكتشاف الحركة</string>
     <string name="liveness_feedback_hold_still">اثبت دون حركة</string>
+    <string name="liveness_feedback_look_straight">انظر مباشرة إلى الكاميرا واثبت دون حركة.</string>
     <string name="liveness_feedback_success">جيد، تم التقاط الوجه بنجاح</string>
     <string name="liveness_fail_liveness">تعذّر التحقق من حيوية الوجه. يرجى المحاولة مرة أخرى.</string>
     <string name="liveness_fail_pad">تعذّر إكمال التحقق من الوجه. يرجى المحاولة مرة أخرى.</string>
@@ -21,7 +22,15 @@
     <string name="liveness_guide_in_area">أبقِ وجهك داخل منطقة الالتقاط.</string>
     <string name="liveness_guide_follow_action">اتبع الحركة المطلوبة.</string>
     <string name="liveness_retry_available">المحاولة {0} من {1}. اختر إعادة المحاولة للمحاولة مجددًا.</string>
-    <string name="liveness_retry_max_resident">تعذّر إكمال التقاط الوجه بعد {0} محاولات. يرجى الطلب من المشرف اتباع إجراء الاسترداد المعتمد في المركز.</string>
+    <!-- Quantity forms follow the language's plural rules; {0} is the number of attempts. -->
+    <plurals name="liveness_retry_max_resident">
+        <item quantity="zero">تعذّر إكمال التقاط الوجه بعد {0} محاولة. يرجى الطلب من المشرف اتباع إجراء الاسترداد المعتمد في المركز.</item>
+        <item quantity="one">تعذّر إكمال التقاط الوجه بعد محاولة واحدة. يرجى الطلب من المشرف اتباع إجراء الاسترداد المعتمد في المركز.</item>
+        <item quantity="two">تعذّر إكمال التقاط الوجه بعد محاولتين. يرجى الطلب من المشرف اتباع إجراء الاسترداد المعتمد في المركز.</item>
+        <item quantity="few">تعذّر إكمال التقاط الوجه بعد {0} محاولات. يرجى الطلب من المشرف اتباع إجراء الاسترداد المعتمد في المركز.</item>
+        <item quantity="many">تعذّر إكمال التقاط الوجه بعد {0} محاولة. يرجى الطلب من المشرف اتباع إجراء الاسترداد المعتمد في المركز.</item>
+        <item quantity="other">تعذّر إكمال التقاط الوجه بعد {0} محاولة. يرجى الطلب من المشرف اتباع إجراء الاسترداد المعتمد في المركز.</item>
+    </plurals>
     <string name="liveness_retry_max_auth">تعذّر إكمال التحقق من الوجه. تم بلوغ الحد الأقصى للمحاولات. استخدم طريقة تسجيل دخول أخرى أو اتصل بالمشرف.</string>
     <string name="liveness_override_confirm">تجاوز المشرف: سيتم وضع علامة على هذا الوجه للمراجعة في الحزمة. هل تريد المتابعة؟</string>
     <string name="liveness_error_no_face">لم يتم اكتشاف أي وجه. أبقِ وجهك داخل منطقة الالتقاط.</string>

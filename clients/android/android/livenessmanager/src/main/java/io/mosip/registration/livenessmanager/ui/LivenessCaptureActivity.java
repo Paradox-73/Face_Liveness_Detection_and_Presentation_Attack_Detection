@@ -120,6 +120,7 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
     private PreviewView preview;
     private ImageView replayView;
     private OvalGuideView guide;
+    private View status;
     private ImageView icon;
     private TextView prompt;
     private TextView guidance;
@@ -139,7 +140,9 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
         request = LivenessCaptureRequest.fromIntent(getIntent());
         if (!BuildConfig.DEBUG && request.source() == LivenessCaptureRequest.Source.REPLAY) {
             request = LivenessCaptureRequest.builder(request.workflow(), request.subjectRef())
-                    .language(request.language()).build();
+                    .language(request.language()).photoWhenOff(request.isPhotoWhenOff())
+                    .priorAttempts(request.priorAttempts()).priorSuspectedAttack(request.isPriorSuspectedAttack())
+                    .priorLowLight(request.priorLowLight()).build();
         }
         ui = localized(MessageResolver.localeOf(request.language()));
         View root = LayoutInflater.from(ui).inflate(R.layout.liveness_capture_activity, null);
@@ -222,6 +225,7 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
         preview = findViewById(R.id.liveness_preview);
         replayView = findViewById(R.id.liveness_replay);
         guide = findViewById(R.id.liveness_guide);
+        status = findViewById(R.id.liveness_status);
         icon = findViewById(R.id.liveness_icon);
         prompt = findViewById(R.id.liveness_prompt);
         guidance = findViewById(R.id.liveness_guidance);
@@ -266,7 +270,7 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
         String blocked = runtime.isBlockedEmulator() ? MessageKeys.ERROR_EMULATOR : null;
         return new LivenessRunner(policy, request.subjectRef(), runtime.engines(), device, runtime.decoder(),
                 runtime.audit(), diagnostics, runtime.clock(), blocked, request.priorAttempts(),
-                new LivenessRunner.Listener() {
+                request.isPriorSuspectedAttack(), request.priorLowLight(), new LivenessRunner.Listener() {
             @Override
             public void onUiState(LivenessUiState state) {
                 main.post(() -> render(state));
@@ -355,26 +359,48 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
         return new ReplayFrameSource(frames, request.replayFps(), true, runtime.clock(), serial, this::showReplayFrame);
     }
 
-    /** Replays {@code <prefix>-main} and switches to the movement packs when the screen prompts for them. */
+    /**
+     * Replays {@code <prefix>-main} and switches to {@code <prefix>-<action>} when the screen prompts for that
+     * action (every challenge type, pack names compared without case; see {@link ReplayPromptFollower}).
+     */
     private FaceFrameSource openFollowingReplay(String serial, String prefix)
             throws io.mosip.liveness.core.device.DeviceException {
-        List<byte[]> neutral = readPack(prefix + "-main");
+        ReplayPromptFollower.Packs packs = ReplayPromptFollower.findPacks(prefix, availablePacks());
+        List<byte[]> neutral = readPack(packs.main() != null ? packs.main()
+                : prefix + "-" + ReplayPromptFollower.MAIN_ACTION);
         Map<PromptIcon, List<byte[]>> movements = new EnumMap<>(PromptIcon.class);
-        String[][] names = {{"BLINK", "blink"}, {"SMILE", "smile"}, {"TURN_LEFT", "turn-left"},
-                {"TURN_RIGHT", "turn-right"}};
-        for (String[] n : names) {
-            File folder = replayFolder(prefix + "-" + n[1]);
-            if (folder != null && folder.isDirectory()) {
-                movements.put(PromptIcon.valueOf(n[0]), ReplayFrameSource.readDirectory(folder));
-            }
+        for (Map.Entry<PromptIcon, String> e : packs.movements().entrySet()) {
+            movements.put(e.getKey(), readPack(e.getValue()));
         }
         ReplayFrameSource source = new ReplayFrameSource(neutral, request.replayFps(), true, runtime.clock(), serial,
                 this::showReplayFrame);
         follower = new ReplayPromptFollower(source, neutral, movements, main::postDelayed,
                 ReplayPromptFollower.DEFAULT_REACTION_MS);
-        Log.i(TAG, "Replay " + prefix + "-main following prompts " + movements.keySet() + " at "
+        Log.i(TAG, "Replay " + prefix + "-main following prompts " + packs.prompts() + " at "
                 + request.replayFps() + " fps");
         return source;
+    }
+
+    /** Names of the replay packs on the device: pushed folders first, then the APK's asset packs. */
+    private List<String> availablePacks() {
+        List<String> names = new ArrayList<>();
+        File external = getExternalFilesDir(REPLAY_ASSETS);
+        File[] folders = external == null ? null : external.listFiles(File::isDirectory);
+        if (folders != null) {
+            java.util.Arrays.sort(folders);
+            for (File f : folders) {
+                names.add(f.getName());
+            }
+        }
+        try {
+            String[] assets = getAssets().list(REPLAY_ASSETS);
+            if (assets != null) {
+                names.addAll(java.util.Arrays.asList(assets));
+            }
+        } catch (java.io.IOException e) {
+            Log.w(TAG, "Replay asset packs not readable: " + e.getMessage());
+        }
+        return names;
     }
 
     private List<byte[]> readPack(String pack) throws io.mosip.liveness.core.device.DeviceException {
@@ -404,7 +430,12 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
 
     // ------------------------------------------------------------------ rendering
 
-    private void render(LivenessUiState state) {
+    /**
+     * Shows one engine state: prompt, guidance, step, icon, status colours, progress and attempt dots.
+     *
+     * @param state the state to show
+     */
+    void render(LivenessUiState state) {
         if (finishing) {
             return;
         }
@@ -436,9 +467,13 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
         } else {
             step.setVisibility(View.GONE);
         }
-        int color = ContextCompat.getColor(this, colorOf(state.severity()));
+        StatusPalette palette = StatusPalette.of(state.severity());
+        status.setBackgroundResource(palette.bannerDrawable);
+        prompt.setTextColor(ContextCompat.getColor(this, palette.text));
         icon.setImageResource(iconOf(state.promptIcon()));
-        icon.setImageTintList(ColorStateList.valueOf(color));
+        icon.setTag(R.id.liveness_icon, iconOf(state.promptIcon()));
+        icon.setImageTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.liveness_text)));
+        icon.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, palette.accent)));
         guide.setSeverity(state.severity());
         guide.setProgress(state.progress());
         progress.setProgress((int) Math.round(state.progress() * 100));
@@ -611,7 +646,8 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
         }
         LivenessCaptureResult r = lastResult != null ? lastResult
                 : LivenessCaptureResult.builder(request == null ? io.mosip.liveness.core.Workflow.REGISTRATION
-                : request.workflow(), Decision.CANCELLED).failureReason(FailureReason.CANCELLED).build();
+                : request.workflow(), Decision.CANCELLED).failureReason(FailureReason.CANCELLED)
+                .lowLightRetries(request == null ? 0 : request.priorLowLight()).build();
         finishWith(Activity.RESULT_CANCELED, r);
     }
 
@@ -656,8 +692,11 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
             case BLINK:
                 return R.drawable.ic_liveness_eye;
             case SMILE:
-            case FACE_OVAL:
                 return R.drawable.ic_liveness_smile;
+            case FACE_OVAL:
+                // Positioning and "Look directly at the camera and hold still": the engine waits for a neutral
+                // face, so the icon is a face outline, never the smile prompt.
+                return R.drawable.ic_liveness_face;
             case TURN_LEFT:
             case GAZE_LEFT:
                 return R.drawable.ic_liveness_arrow_left;
@@ -682,19 +721,6 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
                 return R.drawable.ic_liveness_lock;
             default:
                 return R.drawable.ic_liveness_progress;
-        }
-    }
-
-    static int colorOf(Severity severity) {
-        switch (severity) {
-            case SUCCESS:
-                return R.color.liveness_success;
-            case WARNING:
-                return R.color.liveness_warning;
-            case ERROR:
-                return R.color.liveness_error;
-            default:
-                return R.color.liveness_info;
         }
     }
 }

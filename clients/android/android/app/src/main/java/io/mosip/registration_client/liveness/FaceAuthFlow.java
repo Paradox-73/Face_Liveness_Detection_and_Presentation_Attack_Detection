@@ -13,7 +13,11 @@ import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import io.mosip.liveness.core.FailureReason;
 import io.mosip.liveness.core.Workflow;
+import io.mosip.liveness.core.ui.MessageKeys;
+import io.mosip.registration.livenessmanager.LivenessCaptureRequest;
+import io.mosip.registration.livenessmanager.LivenessCaptureResult;
 import io.mosip.registration.livenessmanager.auth.FaceAuthOutcome;
 import io.mosip.registration.livenessmanager.auth.FaceAuthStatus;
 import io.mosip.registration.livenessmanager.auth.FaceAuthenticator;
@@ -25,6 +29,25 @@ import io.mosip.registration.livenessmanager.auth.FaceAuthenticator;
  * <p>Sign-in: a successful {@code login_auth} leaves a one-time grant for that user, valid
  * {@value #LOGIN_GRANT_MS} ms, which {@code AuthenticationApi.loginWithFace} consumes to open the session. The
  * session therefore opens only after this flow verified the face in this process.
+ *
+ * <p>Retry limit across screens (PS04 task 5): the liveness attempts a user used are kept per workflow and user ID
+ * and passed to the next capture screen as prior attempts, so closing the screen and opening face authentication
+ * again continues the count ("Attempt 3 of 3") instead of starting over. The count is kept whatever the screen's
+ * last result was (a cancellation after counted failures keeps them) and is cleared by a liveness pass. When the
+ * screen reports the configured block ({@code on_max_failure}):
+ * <ul>
+ *   <li>{@code BLOCK}: face authentication of that user in that workflow stays refused without opening the camera
+ *       until the app restarts (the workflow's other authentication methods still apply);</li>
+ *   <li>{@code BLOCK_AND_LOCK}: the account is locked by {@code FaceAuthenticator}, the precheck refuses the user
+ *       while the lock lasts, and the count starts again after it.</li>
+ * </ul>
+ * This applies to operator and supervisor face authentication alike (sign-in, packet, exception, end of day and the
+ * supervisor of a resident override).
+ *
+ * <p>With the attempts, the next screen also receives whether an earlier screen saw a suspected attack (counted PAD,
+ * frame integrity or binding failure) and the uncounted dim-light results since the last counted failure, so
+ * closing and reopening the screen gives no new "Improve lighting" tries ({@code passive.low_light_max_uncounted}).
+ * A counted failure resets the dim-light count; a liveness pass clears everything.
  */
 @Singleton
 public class FaceAuthFlow {
@@ -43,6 +66,7 @@ public class FaceAuthFlow {
     });
     private final Handler main = new Handler(Looper.getMainLooper());
     private final Map<String, Long> loginGrants = new HashMap<>();
+    private final Map<String, AttemptCount> attempts = new HashMap<>();
 
     /**
      * Creates the flow.
@@ -81,23 +105,129 @@ public class FaceAuthFlow {
             done.accept(refused);
             return;
         }
-        boolean started = launcher.launch(workflow, userId, result -> matcher.execute(() -> {
-            FaceAuthOutcome outcome;
-            try {
-                outcome = authenticator.complete(userId, workflow, result);
-            } catch (RuntimeException e) {
-                Log.e(TAG, "Face authentication failed", e);
-                outcome = FaceAuthOutcome.early(workflow, FaceAuthStatus.ENGINE_UNAVAILABLE, null);
-            }
-            if (outcome.isSuccess() && workflow == Workflow.LOGIN_AUTH) {
-                grantLogin(userId);
-            }
-            FaceAuthOutcome finalOutcome = outcome;
-            main.post(() -> done.accept(finalOutcome));
-        }));
+        FaceAuthOutcome blocked = blockedOutcome(userId, workflow);
+        if (blocked != null) {
+            Log.i(TAG, "Face authentication not started: attempts used up for " + workflow.id());
+            done.accept(blocked);
+            return;
+        }
+        boolean started = launcher.launch(nextRequest(userId, workflow), result -> {
+            // Counted before the match, so a screen opened right after this one continues the count.
+            recordAttempts(userId, workflow, result);
+            matcher.execute(() -> finish(userId, workflow, result, done));
+        });
         if (!started) {
             done.accept(FaceAuthOutcome.early(workflow, FaceAuthStatus.BUSY, null));
         }
+    }
+
+    private void finish(String userId, Workflow workflow, LivenessCaptureResult result,
+                        Consumer<FaceAuthOutcome> done) {
+        FaceAuthOutcome outcome;
+        try {
+            outcome = authenticator.complete(userId, workflow, result);
+        } catch (RuntimeException e) {
+            Log.e(TAG, "Face authentication failed", e);
+            outcome = FaceAuthOutcome.early(workflow, FaceAuthStatus.ENGINE_UNAVAILABLE, null);
+        }
+        if (outcome.isSuccess() && workflow == Workflow.LOGIN_AUTH) {
+            grantLogin(userId);
+        }
+        FaceAuthOutcome finalOutcome = outcome;
+        main.post(() -> done.accept(finalOutcome));
+    }
+
+    /**
+     * Returns the liveness attempts a user already used for a workflow on earlier capture screens.
+     *
+     * @param userId   user ID
+     * @param workflow authentication workflow
+     * @return counted failed attempts since the last liveness pass, 0 or more
+     */
+    public synchronized int usedAttempts(String userId, Workflow workflow) {
+        AttemptCount count = attempts.get(attemptKey(userId, workflow));
+        return count == null ? 0 : count.used;
+    }
+
+    /**
+     * Tells whether an earlier capture screen of the user in the workflow saw a suspected attack since the last
+     * liveness pass.
+     *
+     * @param userId   user ID
+     * @param workflow authentication workflow
+     * @return {@code true} after a counted PAD, frame integrity or binding failure
+     */
+    public synchronized boolean isSuspectedAttack(String userId, Workflow workflow) {
+        AttemptCount count = attempts.get(attemptKey(userId, workflow));
+        return count != null && count.attack;
+    }
+
+    /**
+     * Returns the uncounted dim-light results of the user in the workflow since the last counted failure.
+     *
+     * @param userId   user ID
+     * @param workflow authentication workflow
+     * @return 0 or more
+     */
+    public synchronized int lowLightRetries(String userId, Workflow workflow) {
+        AttemptCount count = attempts.get(attemptKey(userId, workflow));
+        return count == null ? 0 : count.lowLight;
+    }
+
+    /** Starts the next capture screen's request with the state of the user's earlier screens in the workflow. */
+    synchronized LivenessCaptureRequest.Builder nextRequest(String userId, Workflow workflow) {
+        AttemptCount count = attempts.get(attemptKey(userId, workflow));
+        LivenessCaptureRequest.Builder request = LivenessCaptureRequest.builder(workflow, userId);
+        if (count != null) {
+            request.priorAttempts(count.used).priorSuspectedAttack(count.attack).priorLowLight(count.lowLight);
+        }
+        return request;
+    }
+
+    /**
+     * Keeps the attempts, the suspected-attack mark and the dim-light count the capture screen reported. A liveness
+     * pass clears them; a block with {@code BLOCK_AND_LOCK} leaves the user to the account lock and clears them too.
+     * A counted failure resets the dim-light count; a screen that counted a failure of its own restarted that count,
+     * so its number replaces the stored one; otherwise the higher of the two is kept.
+     */
+    synchronized void recordAttempts(String userId, Workflow workflow, LivenessCaptureResult result) {
+        String key = attemptKey(userId, workflow);
+        if (result.isPass() || result.isLockRequired()) {
+            attempts.remove(key);
+            return;
+        }
+        AttemptCount stored = attempts.get(key);
+        int used = Math.max(stored == null ? 0 : stored.used, result.attemptsUsed());
+        int max = Math.max(stored == null ? 0 : stored.max, result.maxAttempts());
+        FailureReason reason = result.failureReason();
+        boolean counts = reason != null && reason.countsAsAttempt();
+        boolean blocked = (stored != null && stored.blocked)
+                || (counts && (!result.isRetryAllowed() || (max > 0 && used >= max)));
+        boolean attack = (stored != null && stored.attack) || (counts && !reason.allowsOverride());
+        int storedUsed = stored == null ? 0 : stored.used;
+        int storedLowLight = stored == null ? 0 : stored.lowLight;
+        int lowLight = counts || blocked ? 0
+                : result.attemptsUsed() > storedUsed ? result.lowLightRetries()
+                : Math.max(storedLowLight, result.lowLightRetries());
+        if (used > 0 || blocked || attack || lowLight > 0) {
+            attempts.put(key, new AttemptCount(blocked ? Math.max(used, max) : used, max, blocked, attack,
+                    lowLight));
+        } else {
+            attempts.remove(key);
+        }
+    }
+
+    private synchronized FaceAuthOutcome blockedOutcome(String userId, Workflow workflow) {
+        AttemptCount count = attempts.get(attemptKey(userId, workflow));
+        if (count == null || !count.blocked) {
+            return null;
+        }
+        return new FaceAuthOutcome(workflow, FaceAuthStatus.MAX_ATTEMPTS, MessageKeys.RETRY_MAX_AUTH, count.used,
+                count.max);
+    }
+
+    private static String attemptKey(String userId, Workflow workflow) {
+        return workflow.id() + '|' + normalise(userId);
     }
 
     /**
@@ -118,5 +248,22 @@ public class FaceAuthFlow {
 
     private static String normalise(String userId) {
         return userId == null ? "" : userId.trim().toLowerCase(java.util.Locale.ROOT);
+    }
+
+    /** Liveness attempts of one user in one workflow. */
+    private static final class AttemptCount {
+        final int used;
+        final int max;
+        final boolean blocked;
+        final boolean attack;
+        final int lowLight;
+
+        AttemptCount(int used, int max, boolean blocked, boolean attack, int lowLight) {
+            this.used = used;
+            this.max = max;
+            this.blocked = blocked;
+            this.attack = attack;
+            this.lowLight = lowLight;
+        }
     }
 }

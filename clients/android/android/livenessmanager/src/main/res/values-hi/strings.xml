@@ -12,6 +12,7 @@
     <string name="liveness_feedback_continue">कृपया जारी रखें</string>
     <string name="liveness_feedback_detected">क्रिया पहचानी गई</string>
     <string name="liveness_feedback_hold_still">स्थिर रहें</string>
+    <string name="liveness_feedback_look_straight">सीधे कैमरे की ओर देखें और स्थिर रहें।</string>
     <string name="liveness_feedback_success">बढ़िया, चेहरा सफलतापूर्वक कैप्चर हो गया</string>
     <string name="liveness_fail_liveness">हम चेहरे की जीवंतता सत्यापित नहीं कर सके। कृपया फिर से प्रयास करें।</string>
     <string name="liveness_fail_pad">चेहरे का सत्यापन पूरा नहीं हो सका। कृपया फिर से प्रयास करें।</string>
@@ -21,7 +22,11 @@
     <string name="liveness_guide_in_area">अपना चेहरा कैप्चर क्षेत्र के भीतर रखें।</string>
     <string name="liveness_guide_follow_action">बताई गई क्रिया का पालन करें।</string>
     <string name="liveness_retry_available">प्रयास {1} में से {0}। फिर से प्रयास करने के लिए पुनः प्रयास चुनें।</string>
-    <string name="liveness_retry_max_resident">{0} प्रयासों के बाद भी चेहरा कैप्चर पूरा नहीं हो सका। कृपया अपने पर्यवेक्षक से केंद्र की पुनर्प्राप्ति प्रक्रिया अपनाने को कहें।</string>
+    <!-- Quantity forms follow the language's plural rules; {0} is the number of attempts. -->
+    <plurals name="liveness_retry_max_resident">
+        <item quantity="one">{0} प्रयास के बाद भी चेहरा कैप्चर पूरा नहीं हो सका। कृपया अपने पर्यवेक्षक से केंद्र की पुनर्प्राप्ति प्रक्रिया अपनाने को कहें।</item>
+        <item quantity="other">{0} प्रयासों के बाद भी चेहरा कैप्चर पूरा नहीं हो सका। कृपया अपने पर्यवेक्षक से केंद्र की पुनर्प्राप्ति प्रक्रिया अपनाने को कहें।</item>
+    </plurals>
     <string name="liveness_retry_max_auth">चेहरे का सत्यापन पूरा नहीं हो सका। अधिकतम प्रयास पूरे हो गए। कोई अन्य साइन-इन विधि उपयोग करें या अपने पर्यवेक्षक से संपर्क करें।</string>
     <string name="liveness_override_confirm">पर्यवेक्षक ओवरराइड: इस चेहरे को पैकेट में समीक्षा के लिए चिह्नित किया जाएगा। जारी रखें?</string>
     <string name="liveness_error_no_face">कोई चेहरा नहीं मिला। अपना चेहरा कैप्चर क्षेत्र के भीतर रखें।</string>

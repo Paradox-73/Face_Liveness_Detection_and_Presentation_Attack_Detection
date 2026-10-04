@@ -12,12 +12,11 @@ import io.mosip.liveness.core.ui.Severity;
 
 /**
  * The face guide drawn over the camera preview: the area outside an upright oval is dimmed, the oval's outline
- * takes the colour of the state's severity, and an arc along the outline shows the session's progress. Colour is
+ * takes the colour of the state's severity (the oval colours of the status palette shared with the desktop client,
+ * {@link StatusPalette}), and an arc along the outline shows the session's progress. Colour is
  * never the only signal: the prompt text and icon below always say the same thing.
  */
 public final class OvalGuideView extends View {
-
-    private static final int PROGRESS_COLOR = 0xFF4FC3F7;
 
     /** Largest oval width as a share of the view width. */
     static final float OVAL_WIDTH = 0.70f;
@@ -33,6 +32,7 @@ public final class OvalGuideView extends View {
     private final Paint progressPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path path = new Path();
     private final RectF oval = new RectF();
+    private final int progressColor;
     private float progress;
     private int bottomInset;
 
@@ -51,7 +51,8 @@ public final class OvalGuideView extends View {
         progressPaint.setStyle(Paint.Style.STROKE);
         progressPaint.setStrokeWidth(8 * density);
         progressPaint.setStrokeCap(Paint.Cap.ROUND);
-        progressPaint.setColor(PROGRESS_COLOR);
+        progressColor = context.getColor(io.mosip.registration.livenessmanager.R.color.liveness_accent);
+        progressPaint.setColor(progressColor);
         setSeverity(Severity.INFO);
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
     }
@@ -62,25 +63,20 @@ public final class OvalGuideView extends View {
      * @param severity the state's severity
      */
     public void setSeverity(Severity severity) {
-        int color;
-        switch (severity) {
-            case SUCCESS:
-                color = 0xFF66BB6A;
-                break;
-            case WARNING:
-                color = 0xFFFFCA28;
-                break;
-            case ERROR:
-                color = 0xFFEF5350;
-                break;
-            default:
-                color = 0xFFFFFFFF;
-                break;
-        }
+        int color = getContext().getColor(StatusPalette.of(severity).oval);
         outline.setColor(color);
         // A finished progress arc covers the outline; on success it turns green with it.
-        progressPaint.setColor(severity == Severity.SUCCESS ? color : PROGRESS_COLOR);
+        progressPaint.setColor(severity == Severity.SUCCESS ? color : progressColor);
         invalidate();
+    }
+
+    /**
+     * Returns the outline colour of the current severity.
+     *
+     * @return ARGB colour
+     */
+    int outlineColor() {
+        return outline.getColor();
     }
 
     /**

@@ -27,6 +27,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:registration_client/utils/app_config.dart';
 import 'package:registration_client/utils/biometrics_utils.dart';
+import 'package:registration_client/ui/liveness/face_attempt_count.dart';
 import 'package:registration_client/ui/liveness/liveness_outcome_banner.dart';
 import 'package:registration_client/ui/liveness/liveness_texts.dart';
 
@@ -190,6 +191,8 @@ class _BiometricCaptureScanBlockPortraitState
                   thickness: 1,
                   color: secondaryColors.elementAt(22),
                 ),
+                if (faceLivenessOutcome == null ||
+                    biometricAttributeData.title != "Face")
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -494,7 +497,26 @@ class _BiometricCaptureScanBlockPortraitState
               SizedBox(
                 height: 6.h,
               ),
-              Column(
+              // Face with liveness: the liveness screen owns the attempt count,
+              // so ARC's capture chips give way to the liveness count.
+              FaceAttemptCount(
+                isFace: biometricAttributeData.title == "Face",
+                outcome: faceLivenessOutcome,
+                liveness: (context, chips) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.attempts,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 24, color: blackShade1, fontWeight: semiBold),
+                    ),
+                    const SizedBox(
+                      height: 29.4,
+                    ),
+                    chips,
+                  ],
+                ),
+                arc: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
@@ -588,6 +610,7 @@ class _BiometricCaptureScanBlockPortraitState
                     ],
                   ),
                 ],
+              ),
               ),
               SizedBox(
                 height: 18.h,

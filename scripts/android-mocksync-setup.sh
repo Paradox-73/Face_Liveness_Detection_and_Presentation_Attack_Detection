@@ -17,12 +17,17 @@
 #      steps), restarts the app, logs in again and waits for the home screen.
 #   6. With --offline-check: removes the adb reverse rule (MockSync unreachable),
 #      logs in offline, then restores the rule.
+#   7. With --device-cert: provisions the built-in face camera with a DEVICE
+#      certificate from MockSync's DEVICE CA, inside the app (Keystore key and
+#      certificate request; scripts/android-liveness-device-cert.sh --csr), so
+#      resident face captures pass ARC's device trust check.
 # Screenshots of every stage go to <out>/.
 #
 # Usage (Git Bash on Windows, or bash on Linux/macOS), from the repository root:
 #   scripts/android-mocksync-setup.sh                       # steps 1-4, then prints the manual login steps
 #   scripts/android-mocksync-setup.sh --login               # steps 1-5 as officer1
 #   scripts/android-mocksync-setup.sh --login --offline-check
+#   scripts/android-mocksync-setup.sh --login --device-cert
 #   scripts/android-mocksync-setup.sh --reset --login       # wipe the app first: new machine name and keys
 #   scripts/android-mocksync-setup.sh --keys-file F         # register keys copied by hand
 #
@@ -30,6 +35,7 @@
 #   --login                 run the first login and sync (step 5)
 #   --user U --password P   account for --login (default officer1 / Mosip@Officer1; no spaces or quotes)
 #   --offline-check         step 6 (needs a user who logged in online before)
+#   --device-cert           step 7 (works on release and debug builds)
 #   --reset                 'pm clear' the app and remove its old MockSync registration first
 #   --keys-file F           register the Machine Keys JSON in F instead of reading it from the app
 #   --start-mocksync        start MockSync in the background when it does not answer
@@ -63,6 +69,7 @@ PASSWORD="Mosip@Officer1"
 DO_LOGIN=0
 DO_OFFLINE=0
 DO_RESET=0
+DO_DEVICE_CERT=0
 KEYS_FILE=""
 START_MOCKSYNC=0
 EMULATOR_ARGS=(--no-install)
@@ -78,11 +85,12 @@ while [ $# -gt 0 ]; do
     --password) [ $# -ge 2 ] || die "--password needs a value"; PASSWORD="$2"; shift 2 ;;
     --offline-check) DO_OFFLINE=1; shift ;;
     --reset) DO_RESET=1; shift ;;
+    --device-cert) DO_DEVICE_CERT=1; shift ;;
     --keys-file) [ $# -ge 2 ] || die "--keys-file needs a path"; KEYS_FILE="$2"; shift 2 ;;
     --start-mocksync) START_MOCKSYNC=1; shift ;;
     --headless) EMULATOR_ARGS+=(--headless); shift ;;
     --out) [ $# -ge 2 ] || die "--out needs a path"; OUT_DIR="$2"; shift 2 ;;
-    -h|--help) sed -n '2,46p' "${BASH_SOURCE[0]}"; exit 0 ;;
+    -h|--help) sed -n '2,52p' "${BASH_SOURCE[0]}"; exit 0 ;;
     *) die "unknown option: $1 (see --help)" ;;
   esac
 done
@@ -343,6 +351,8 @@ print_manual_steps() {
        adb shell am force-stop $PACKAGE && adb shell am start -n $ACTIVITY
   3. Log in again: the home screen ("HELLO, Test Officer One") appears.
   Or run: scripts/android-mocksync-setup.sh --login
+Device certificate of the built-in face camera (needed to store a resident face):
+  scripts/android-liveness-device-cert.sh --csr
 EOF
 }
 
@@ -364,4 +374,8 @@ else
   print_manual_steps
 fi
 [ "$DO_OFFLINE" = "1" ] && offline_check
+if [ "$DO_DEVICE_CERT" = "1" ]; then
+  log "provisioning the built-in face camera with a DEVICE certificate (in-app key)"
+  bash "$REPO_ROOT/scripts/android-liveness-device-cert.sh" --csr
+fi
 log "done (screenshots in $OUT_DIR)"

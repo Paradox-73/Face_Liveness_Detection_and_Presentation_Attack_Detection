@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Face outline: the desktop client's face-oval icon (LivenessIcons, PromptIcon.FACE_OVAL). Shown while the
+     screen waits for a neutral face (positioning, "Look directly at the camera and hold still"), so it never
+     suggests a smile. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="@android:color/white" android:fillType="evenOdd"
+        android:pathData="M12,2C7.6,2 5,5.6 5,10.5S7.6,22 12,22s7,-6.6 7,-11.5S16.4,2 12,2zM12,4c3.1,0 5,2.7 5,6.5S15.1,20 12,20s-5,-5.7 -5,-9.5S8.9,4 12,4z" />
+</vector>

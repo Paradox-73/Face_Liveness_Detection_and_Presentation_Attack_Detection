@@ -3,11 +3,12 @@
 # optionally, runs its native unit tests.
 #
 # Steps:
-#   0. Face liveness engine: when io.mosip.liveness:liveness-core and
-#      liveness-onnx are not in the local Maven repository (~/.m2), they are
-#      built from this repository's liveness/ folder with Maven and installed
-#      there (the livenessmanager module and its Gradle build read them from
-#      ~/.m2; no binary jar is committed). --install-engine rebuilds them.
+#   0. Face liveness engine: when io.mosip.liveness:liveness-core,
+#      liveness-onnx or face-match-sdk is not in the local Maven repository
+#      (~/.m2), all three are built from this repository's liveness/ folder
+#      with Maven and installed there (the livenessmanager module and its
+#      Gradle build read them from ~/.m2; no binary jar is committed).
+#      --install-engine rebuilds them.
 #   1. Code generation: flutter pub get, build_runner and the pigeon bridge
 #      classes, driven by the upstream clients/android/pigeon.sh. The iOS
 #      outputs of pigeon.sh are redirected to clients/android/build/ so the
@@ -19,7 +20,9 @@
 #          (shown in the app footer; upstream read it from a bundled .git folder).
 #   3. With --test: ./gradlew :clientmanager:testDebugUnitTest
 #      :livenessmanager:testDebugUnitTest :app:testDebugUnitTest and a pass/fail
-#      summary per module.
+#      summary per module. --test-only skips steps 1 and 2 when their outputs
+#      exist; on a fresh clone it runs the code generation (step 1) and creates
+#      the git-ignored Gradle wrapper from Flutter's copy, as a build would.
 #   4. With --device-test: ./gradlew :livenessmanager:connectedDebugAndroidTest
 #      on the attached emulator or device (the real engine on replay frames).
 #
@@ -57,7 +60,12 @@
 #   PUB_CACHE                 Dart package cache; on Windows it must be on the same
 #                             drive as this repository (see use_same_drive_pub_cache)
 #   MOSIP_RUN_ROOT            parent of the default same-drive package cache
-#                             (default: the folder next to this repository, ../run)
+#                             (default: the folder next to this repository, ../run;
+#                             for a clone inside that folder, the folder itself)
+#   MAVEN_LOCAL_REPO          local Maven repository the liveness engine is installed
+#                             into and read from, by Maven and by Gradle (default
+#                             ~/.m2/repository); a separate one keeps the engine of
+#                             one checkout from replacing that of another
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -155,7 +163,13 @@ use_same_drive_pub_cache() {
   repo_drive="$(cygpath -w "$REPO_ROOT" | cut -c1 | tr '[:lower:]' '[:upper:]')"
   cache_drive="$(printf '%s' "$LOCALAPPDATA" | cut -c1 | tr '[:lower:]' '[:upper:]')"
   if [ "$repo_drive" != "$cache_drive" ]; then
-    local run_root="${MOSIP_RUN_ROOT:-$(cd "$REPO_ROOT/.." && pwd)/run}"
+    local parent run_root
+    parent="$(cd "$REPO_ROOT/.." && pwd)"
+    run_root="${MOSIP_RUN_ROOT:-$parent/run}"
+    # A clone made inside the run folder (for example a fresh-clone check) reuses its package cache.
+    if [ -z "${MOSIP_RUN_ROOT:-}" ] && [ ! -d "$run_root/cache/pub-cache" ] && [ -d "$parent/cache/pub-cache" ]; then
+      run_root="$parent"
+    fi
     mkdir -p "$run_root/cache/pub-cache"
     PUB_CACHE="$(cygpath -w "$run_root/cache/pub-cache")"
     export PUB_CACHE
@@ -165,24 +179,50 @@ use_same_drive_pub_cache() {
 
 # The livenessmanager module (and its Gradle build script, which verifies the
 # signed model bundle with the engine's ModelRegistry) needs the liveness engine
-# in the local Maven repository. The version is the one android/build.gradle
-# asks for (livenessEngineVersion).
+# in the local Maven repository: liveness-core, liveness-onnx and the face
+# matcher face-match-sdk (operator and supervisor face authentication). The
+# version is the one android/build.gradle asks for (livenessEngineVersion).
+ENGINE_ARTIFACTS="liveness-core liveness-onnx face-match-sdk"
+MAVEN_LOCAL_REPO_NATIVE=""
+
+# With MAVEN_LOCAL_REPO set, Gradle (the unit tests and 'flutter build apk') must read the engine from
+# that repository too: its mavenLocal() follows the maven.repo.local system property, which Gradle
+# passes on from GRADLE_OPTS to the build.
+use_maven_local_repo() {
+  [ -n "${MAVEN_LOCAL_REPO:-}" ] || return 0
+  mkdir -p "$MAVEN_LOCAL_REPO"
+  MAVEN_LOCAL_REPO="$(cd "$MAVEN_LOCAL_REPO" && pwd)"
+  local native="$MAVEN_LOCAL_REPO"
+  case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) native="$(cygpath -w "$MAVEN_LOCAL_REPO")" ;; esac
+  case "$native" in *" "*) die "MAVEN_LOCAL_REPO must not contain spaces: $native" ;; esac
+  MAVEN_LOCAL_REPO_NATIVE="$native"
+  export GRADLE_OPTS="${GRADLE_OPTS:+$GRADLE_OPTS }-Dmaven.repo.local=$native"
+  log "local Maven repository for the liveness engine: $native"
+}
 ensure_liveness_engine() {
-  local version repo jar missing=0 artifact
+  local version repo jar missing="" artifact
   version="$(sed -n 's/^ *livenessEngineVersion *= *"\([^"]*\)".*/\1/p' "$ARC_DIR/android/build.gradle" | head -n 1)"
   [ -n "$version" ] || die "livenessEngineVersion not found in android/build.gradle"
   repo="${MAVEN_LOCAL_REPO:-$HOME/.m2/repository}"
-  for artifact in liveness-core liveness-onnx; do
+  for artifact in $ENGINE_ARTIFACTS; do
     jar="$repo/io/mosip/liveness/$artifact/$version/$artifact-$version.jar"
-    [ -f "$jar" ] || missing=1
+    [ -f "$jar" ] || missing="$missing $artifact"
   done
-  if [ "$missing" = "0" ] && [ "$FORCE_ENGINE" = "0" ]; then
-    log "liveness engine $version found in $repo"
+  if [ -z "$missing" ] && [ "$FORCE_ENGINE" = "0" ]; then
+    log "liveness engine $version ($ENGINE_ARTIFACTS) found in $repo"
     return
   fi
+  [ -z "$missing" ] || log "not in $repo:$missing"
   command -v mvn >/dev/null 2>&1 || die "Maven (mvn) is needed once to build the liveness engine (liveness/)"
-  log "building the liveness engine $version (liveness-core, liveness-onnx) into $repo"
-  mvn -q -f "$REPO_ROOT/liveness/pom.xml" -pl liveness-core,liveness-onnx -am install -DskipTests
+  log "building the liveness engine $version ($ENGINE_ARTIFACTS) into $repo"
+  local args=()
+  [ -z "${MAVEN_LOCAL_REPO:-}" ] || args+=("-Dmaven.repo.local=$MAVEN_LOCAL_REPO_NATIVE")
+  mvn -q -f "$REPO_ROOT/liveness/pom.xml" ${args[@]+"${args[@]}"} \
+      -pl "$(printf '%s' "$ENGINE_ARTIFACTS" | tr ' ' ',')" -am install -DskipTests
+  for artifact in $ENGINE_ARTIFACTS; do
+    jar="$repo/io/mosip/liveness/$artifact/$version/$artifact-$version.jar"
+    [ -f "$jar" ] || die "Maven did not install $jar"
+  done
 }
 
 run_codegen() {
@@ -202,6 +242,61 @@ run_codegen() {
   actual="$(ls "$ARC_DIR"/lib/pigeon/*_pigeon.dart 2>/dev/null | wc -l | tr -d ' ')"
   [ "$actual" -ge "$expected" ] || die "pigeon generated $actual of $expected Dart files"
   log "pigeon generated $actual Dart bridge files"
+}
+
+# Prints the first missing output of the code generation that the Gradle build
+# of the native modules reads (nothing when all exist): local.properties with
+# flutter.sdk (settings.gradle), the plugin registrant and the pigeon bridge
+# classes (app module). All are git-ignored.
+codegen_missing() {
+  local expected actual
+  if ! grep -q '^flutter\.sdk=' "$ARC_DIR/android/local.properties" 2>/dev/null; then
+    echo "android/local.properties"
+  elif [ ! -f "$ARC_DIR/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java" ]; then
+    echo "GeneratedPluginRegistrant.java"
+  else
+    expected="$(grep -c '^dart run pigeon' "$ARC_DIR/pigeon.sh")"
+    actual="$(ls "$ARC_DIR"/android/app/src/main/java/io/mosip/registration_client/model/*Pigeon.java 2>/dev/null \
+      | wc -l | tr -d ' ')"
+    [ "$actual" -ge "$expected" ] || echo "pigeon Java classes ($actual of $expected)"
+  fi
+}
+
+# The Gradle wrapper (gradlew, gradlew.bat, gradle/wrapper/gradle-wrapper.jar)
+# is git-ignored; 'flutter build apk' copies it from Flutter's cache
+# (bin/cache/artifacts/gradle_wrapper) into android/ when it is missing. The
+# same copy is made here so that the tests can run without a build. Existing
+# files and the tracked gradle-wrapper.properties (which pins the Gradle
+# version) are kept.
+ensure_gradle_wrapper() {
+  local android="$ARC_DIR/android" file missing=0 flutter_root src
+  for file in gradlew gradlew.bat gradle/wrapper/gradle-wrapper.jar; do
+    [ -f "$android/$file" ] || missing=1
+  done
+  [ "$missing" = "1" ] || return 0
+  # local.properties escapes the path (E\:\\flutter); fall back to the flutter on PATH.
+  flutter_root="$(sed -n 's/^flutter\.sdk=//p' "$android/local.properties" 2>/dev/null | head -n 1 \
+    | tr -d '\r' | sed -e 's/\\\\/\//g' -e 's/\\:/:/g')"
+  case "$(uname -s)" in
+    MINGW*|MSYS*|CYGWIN*) [ -z "$flutter_root" ] || flutter_root="$(cygpath -u "$flutter_root")" ;;
+  esac
+  if [ -z "$flutter_root" ] || [ ! -d "$flutter_root" ]; then
+    flutter_root="$(cd "$(dirname "$(command -v flutter)")/.." && pwd)"
+  fi
+  src="$flutter_root/bin/cache/artifacts/gradle_wrapper"
+  if [ ! -f "$src/gradle/wrapper/gradle-wrapper.jar" ]; then
+    log "downloading Flutter's Gradle wrapper (flutter precache --android)"
+    flutter precache --android >/dev/null
+  fi
+  [ -f "$src/gradle/wrapper/gradle-wrapper.jar" ] || die "Gradle wrapper not found in $src"
+  log "creating the Gradle wrapper in android/ from $src"
+  for file in gradlew gradlew.bat gradle/wrapper/gradle-wrapper.jar; do
+    if [ ! -f "$android/$file" ]; then
+      mkdir -p "$(dirname "$android/$file")"
+      cp "$src/$file" "$android/$file"
+    fi
+  done
+  chmod +x "$android/gradlew"
 }
 
 build_apk() {
@@ -269,7 +364,7 @@ summarise_tests() {
 run_tests() {
   local gradlew="./gradlew"
   case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) gradlew="./gradlew.bat" ;; esac
-  [ -f "$ARC_DIR/android/${gradlew#./}" ] || die "Gradle wrapper missing; run a build first (flutter creates it)"
+  [ -f "$ARC_DIR/android/${gradlew#./}" ] || die "Gradle wrapper missing in $ARC_DIR/android"
   log "native unit tests: :clientmanager:testDebugUnitTest :livenessmanager:testDebugUnitTest :app:testDebugUnitTest"
   export ARC_DEBUG_SERVER_BASE_URL="$SERVER_URL"
   local status=0 module
@@ -300,12 +395,22 @@ run_device_tests() {
 
 check_tools
 use_same_drive_pub_cache
+use_maven_local_repo
 ensure_liveness_engine
+if [ "$DO_BUILD" = "0" ] && [ "$DO_CODEGEN" = "0" ] && [ "$DO_TEST" = "1" ]; then
+  # --test-only: a fresh clone has no generated code; generate it as a build would.
+  MISSING_CODEGEN="$(codegen_missing)"
+  if [ -n "$MISSING_CODEGEN" ]; then
+    log "generated code missing ($MISSING_CODEGEN); running the code generation first"
+    DO_CODEGEN=1
+  fi
+fi
 if [ "$DO_CODEGEN" = "1" ] || [ "$DO_BUILD" = "1" ]; then
   disable_desktop_targets
 fi
 if [ "$DO_CODEGEN" = "1" ]; then run_codegen; fi
 if [ "$DO_BUILD" = "1" ]; then build_apk; fi
+if [ "$DO_TEST" = "1" ] || [ "$DO_DEVICE_TEST" = "1" ]; then ensure_gradle_wrapper; fi
 if [ "$DO_TEST" = "1" ]; then run_tests; fi
 if [ "$DO_DEVICE_TEST" = "1" ]; then run_device_tests; fi
 log "done"

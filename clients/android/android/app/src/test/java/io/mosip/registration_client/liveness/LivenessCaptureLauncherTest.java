@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.mosip.liveness.core.Decision;
+import io.mosip.liveness.core.FailureReason;
 import io.mosip.liveness.core.Workflow;
 import io.mosip.registration.livenessmanager.LivenessCaptureRequest;
 import io.mosip.registration.livenessmanager.LivenessCaptureResult;
@@ -122,6 +123,31 @@ public class LivenessCaptureLauncherTest {
         assertEquals(10, masked.fps);
         assertTrue(DebugReplay.parse("s3-main masked").masked);
         assertEquals(15, DebugReplay.parse("s3-main masked").fps);
+    }
+
+    @Test
+    public void fieldCaptureStartsWithTheGatesStoredState() {
+        liveness.enforced.add(Workflow.REGISTRATION);
+        FaceCaptureLivenessGate gate = new FaceCaptureLivenessGate(liveness);
+        gate.record("rid", "individualBiometrics", LivenessCaptureResult.builder(Workflow.REGISTRATION,
+                FailureReason.PAD.decision()).failureReason(FailureReason.PAD).attempts(1, 3).retryAllowed(true)
+                .build());
+        gate.record("rid", "individualBiometrics", LivenessCaptureResult.builder(Workflow.REGISTRATION,
+                FailureReason.QUALITY.decision()).failureReason(FailureReason.QUALITY).attempts(1, 3)
+                .retryAllowed(true).lowLightRetries(2).build());
+        launcher.attach(activity);
+
+        assertTrue(launcher.launch(gate, "rid", "individualBiometrics", false, results::add));
+
+        LivenessCaptureRequest request = liveness.requests.get(0);
+        assertEquals(Workflow.REGISTRATION, request.workflow());
+        assertEquals("rid", request.subjectRef());
+        assertEquals(1, request.priorAttempts());
+        assertTrue(request.isPriorSuspectedAttack());
+        assertEquals(2, request.priorLowLight());
+        Intent started = shadowOf(activity).getNextStartedActivityForResult().intent;
+        assertTrue(started.getBooleanExtra(LivenessCaptureRequest.EXTRA_PRIOR_SUSPECTED_ATTACK, false));
+        assertEquals(2, started.getIntExtra(LivenessCaptureRequest.EXTRA_PRIOR_LOW_LIGHT, 0));
     }
 
     /** An activity whose capture screen cannot be found. */

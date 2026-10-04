@@ -86,7 +86,9 @@ public class LivenessCaptureLauncher {
     }
 
     /**
-     * Opens the capture screen.
+     * Opens the capture screen with no prior attempts. Callers that keep a count across screens pass it with
+     * {@link #launch(FaceCaptureLivenessGate, String, String, boolean, Callback)} (resident and onboarding face
+     * captures) or {@link #launch(LivenessCaptureRequest.Builder, Callback)} ({@link FaceAuthFlow}).
      *
      * @param workflow   the workflow
      * @param subjectRef registration ID or user ID
@@ -112,6 +114,24 @@ public class LivenessCaptureLauncher {
                                        int priorAttempts, Callback callback) {
         return launch(LivenessCaptureRequest.builder(workflow, subjectRef).photoWhenOff(photoWhenOff)
                 .priorAttempts(priorAttempts), callback);
+    }
+
+    /**
+     * Opens the capture screen of a face field with the state the gate kept from the field's earlier screens: the
+     * attempts used, the suspected-attack mark (no supervisor override) and the dim-light count, so closing the
+     * screen and pressing Scan again continues the same transaction.
+     *
+     * @param gate         the gate that records the field's results
+     * @param subjectRef   registration ID or operator user ID
+     * @param fieldId      ARC field ID (the gate's key, which also gives the workflow)
+     * @param photoWhenOff take a signed photo without liveness when the workflow's policy is {@code OFF} (the
+     *                     exception photo) instead of closing at once
+     * @param callback     receives the result
+     * @return {@code false} when no activity is attached or another capture is open (nothing started)
+     */
+    public synchronized boolean launch(FaceCaptureLivenessGate gate, String subjectRef, String fieldId,
+                                       boolean photoWhenOff, Callback callback) {
+        return launch(gate.nextRequest(subjectRef, fieldId, photoWhenOff), callback);
     }
 
     /**

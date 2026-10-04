@@ -12,6 +12,7 @@
     <string name="liveness_feedback_continue">தயவுசெய்து தொடரவும்</string>
     <string name="liveness_feedback_detected">செயல் கண்டறியப்பட்டது</string>
     <string name="liveness_feedback_hold_still">அசையாமல் இருக்கவும்</string>
+    <string name="liveness_feedback_look_straight">கேமராவை நேராகப் பார்த்து அசையாமல் இருக்கவும்.</string>
     <string name="liveness_feedback_success">நன்று, முகம் வெற்றிகரமாகப் பதிவுசெய்யப்பட்டது</string>
     <string name="liveness_fail_liveness">முகத்தின் உயிர்ப்புத்தன்மையைச் சரிபார்க்க இயலவில்லை. மீண்டும் முயலவும்.</string>
     <string name="liveness_fail_pad">முகச் சரிபார்ப்பை முடிக்க இயலவில்லை. மீண்டும் முயலவும்.</string>
@@ -21,7 +22,11 @@
     <string name="liveness_guide_in_area">உங்கள் முகத்தைப் பதிவுப் பகுதிக்குள் வைத்திருக்கவும்.</string>
     <string name="liveness_guide_follow_action">கேட்கப்பட்ட செயலைப் பின்பற்றவும்.</string>
     <string name="liveness_retry_available">முயற்சி {0} / {1}. மீண்டும் முயல மறுமுயற்சியைத் தேர்ந்தெடுக்கவும்.</string>
-    <string name="liveness_retry_max_resident">{0} முயற்சிகளுக்குப் பிறகும் முகப் பதிவை முடிக்க இயலவில்லை. மையத்தின் மீட்பு நடைமுறையைப் பின்பற்ற உங்கள் மேற்பார்வையாளரிடம் கேட்கவும்.</string>
+    <!-- Quantity forms follow the language's plural rules; {0} is the number of attempts. -->
+    <plurals name="liveness_retry_max_resident">
+        <item quantity="one">{0} முயற்சிக்குப் பிறகும் முகப் பதிவை முடிக்க இயலவில்லை. மையத்தின் மீட்பு நடைமுறையைப் பின்பற்ற உங்கள் மேற்பார்வையாளரிடம் கேட்கவும்.</item>
+        <item quantity="other">{0} முயற்சிகளுக்குப் பிறகும் முகப் பதிவை முடிக்க இயலவில்லை. மையத்தின் மீட்பு நடைமுறையைப் பின்பற்ற உங்கள் மேற்பார்வையாளரிடம் கேட்கவும்.</item>
+    </plurals>
     <string name="liveness_retry_max_auth">முகச் சரிபார்ப்பை முடிக்க இயலவில்லை. அதிகபட்ச முயற்சிகள் முடிந்துவிட்டன. வேறு உள்நுழைவு முறையைப் பயன்படுத்தவும் அல்லது உங்கள் மேற்பார்வையாளரைத் தொடர்புகொள்ளவும்.</string>
     <string name="liveness_override_confirm">மேற்பார்வையாளர் மேலெழுதல்: இந்த முகம் தொகுப்பில் மறுஆய்வுக்காகக் குறிக்கப்படும். தொடரவா?</string>
     <string name="liveness_error_no_face">முகம் எதுவும் கண்டறியப்படவில்லை. உங்கள் முகத்தைப் பதிவுப் பகுதிக்குள் வைத்திருக்கவும்.</string>

@@ -12,6 +12,7 @@
     <string name="liveness_feedback_continue">Veuillez continuer</string>
     <string name="liveness_feedback_detected">Action détectée</string>
     <string name="liveness_feedback_hold_still">Ne bougez plus</string>
+    <string name="liveness_feedback_look_straight">Regardez directement la caméra et ne bougez plus.</string>
     <string name="liveness_feedback_success">Parfait, visage capturé avec succès</string>
     <string name="liveness_fail_liveness">Nous n\'avons pas pu vérifier la présence réelle du visage. Veuillez réessayer.</string>
     <string name="liveness_fail_pad">La vérification du visage n\'a pas pu être effectuée. Veuillez réessayer.</string>
@@ -21,7 +22,12 @@
     <string name="liveness_guide_in_area">Gardez votre visage dans la zone de capture.</string>
     <string name="liveness_guide_follow_action">Suivez l\'action demandée.</string>
     <string name="liveness_retry_available">Tentative {0} sur {1}. Sélectionnez Réessayer pour recommencer.</string>
-    <string name="liveness_retry_max_resident">La capture du visage n\'a pas abouti après {0} tentatives. Veuillez demander à votre superviseur d\'appliquer la procédure de reprise du centre.</string>
+    <!-- Quantity forms follow the language's plural rules; {0} is the number of attempts. -->
+    <plurals name="liveness_retry_max_resident">
+        <item quantity="one">La capture du visage n\'a pas abouti après {0} tentative. Veuillez demander à votre superviseur d\'appliquer la procédure de reprise du centre.</item>
+        <item quantity="many">La capture du visage n\'a pas abouti après {0} tentatives. Veuillez demander à votre superviseur d\'appliquer la procédure de reprise du centre.</item>
+        <item quantity="other">La capture du visage n\'a pas abouti après {0} tentatives. Veuillez demander à votre superviseur d\'appliquer la procédure de reprise du centre.</item>
+    </plurals>
     <string name="liveness_retry_max_auth">La vérification du visage n\'a pas pu être effectuée. Nombre maximal de tentatives atteint. Utilisez une autre méthode de connexion ou contactez votre superviseur.</string>
     <string name="liveness_override_confirm">Dérogation du superviseur : ce visage sera signalé pour contrôle dans le paquet. Continuer ?</string>
     <string name="liveness_error_no_face">Aucun visage détecté. Gardez votre visage dans la zone de capture.</string>

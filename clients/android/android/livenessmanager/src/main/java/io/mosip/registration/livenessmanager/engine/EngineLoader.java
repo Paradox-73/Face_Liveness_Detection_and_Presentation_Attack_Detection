@@ -3,16 +3,23 @@ package io.mosip.registration.livenessmanager.engine;
 import android.content.res.AssetManager;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Objects;
+import java.util.ServiceConfigurationError;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import io.mosip.liveness.core.EngineErrorCode;
 import io.mosip.liveness.core.EngineException;
+import io.mosip.liveness.core.api.EngineContext;
 import io.mosip.liveness.core.api.ImageDecoder;
 import io.mosip.liveness.core.api.LivenessEngine;
+import io.mosip.liveness.core.api.LivenessEngineProvider;
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.engine.LivenessMetrics;
@@ -26,6 +33,13 @@ import io.mosip.liveness.onnx.runtime.OnnxRuntimeOptions;
 
 /**
  * Loads the liveness engine once per process, on a background thread, and hands it to the sessions.
+ *
+ * <p>The engine is the one named by {@code mosip.registration.liveness.engine}, as on the desktop client: the
+ * built-in ONNX engine ({@code mosip-onnx-default}, the default) or a vendor engine whose jar is added to the APK
+ * with a {@link LivenessEngineProvider} listed in
+ * {@code META-INF/services/io.mosip.liveness.core.api.LivenessEngineProvider} ({@link ServiceLoader}). The ONNX
+ * engine is always built here, with the Android model assets, execution provider and warm-up, even though the
+ * liveness-onnx jar also lists a provider for it.
  *
  * <p>Loading verifies the signed model bundle and creates the ONNX Runtime sessions (about 1-3 s on a phone).
  * {@link #preload()} starts it early (when the app starts); {@link #await(long)} blocks the calling liveness
@@ -69,7 +83,8 @@ public final class EngineLoader implements AutoCloseable {
     }
 
     /**
-     * Creates the loader of the default ONNX engine over the model bundle in the APK assets.
+     * Creates the loader of the configured engine ({@link #fromConfig}) with a new metrics collector and the
+     * device's ONNX Runtime execution providers.
      *
      * @param assets  application assets
      * @param config  liveness configuration (for {@code model.min_version})
@@ -81,8 +96,125 @@ public final class EngineLoader implements AutoCloseable {
     }
 
     /**
-     * Creates the loader of the default ONNX engine over the model bundle in the APK assets, with the execution
-     * provider of {@link Accelerator#CONFIG_KEY} and the given metrics collector.
+     * Creates the loader of the configured engine ({@link #fromConfig}). Kept under this name for existing
+     * callers; the built-in ONNX engine is still what loads unless {@code mosip.registration.liveness.engine}
+     * names a vendor engine.
+     *
+     * @param assets    application assets
+     * @param config    liveness configuration
+     * @param decoder   platform image decoder
+     * @param metrics   metrics shared by all sessions of the built-in engine
+     * @param providers ONNX Runtime execution provider access
+     * @return the loader; nothing is loaded until {@link #preload()} or {@link #await(long)}
+     */
+    public static EngineLoader onnx(AssetManager assets, ConfigSource config, ImageDecoder decoder,
+                                    LivenessMetrics metrics, AcceleratorCustomizer.ExecutionProviders providers) {
+        return fromConfig(assets, config, decoder, metrics, providers);
+    }
+
+    /**
+     * Creates the loader of the engine named by {@code mosip.registration.liveness.engine}: the built-in ONNX
+     * engine ({@link #onnxOnly}) for {@code mosip-onnx-default} or no value, otherwise the vendor engine of the
+     * {@link LivenessEngineProvider} with that ID found by {@link ServiceLoader}. A vendor engine gets the
+     * configuration, the model assets and the image decoder in its {@link EngineContext}. An ID that no provider
+     * serves fails the load with {@code CONFIG_INVALID}: liveness fails closed, and the load is tried again at the
+     * next capture.
+     *
+     * @param assets    application assets
+     * @param config    liveness configuration
+     * @param decoder   platform image decoder
+     * @param metrics   metrics shared by all sessions of the built-in engine
+     * @param providers ONNX Runtime execution provider access
+     * @return the loader; nothing is loaded until {@link #preload()} or {@link #await(long)}
+     */
+    public static EngineLoader fromConfig(AssetManager assets, ConfigSource config, ImageDecoder decoder,
+                                          LivenessMetrics metrics, AcceleratorCustomizer.ExecutionProviders providers) {
+        EngineLoader builtIn = onnxOnly(assets, config, decoder, metrics, providers);
+        return select(config, builtIn, EngineLoader::serviceProviders,
+                () -> EngineContext.builder().config(config).models(new AssetModelSource(assets))
+                        .imageDecoder(decoder).build());
+    }
+
+    /**
+     * Creates the loader that picks the engine by {@code mosip.registration.liveness.engine}.
+     *
+     * @param config    liveness configuration
+     * @param builtIn   loader of the built-in ONNX engine, used for {@code mosip-onnx-default} or no value; its
+     *                  factory runs on the returned loader's thread and its execution status is reported
+     * @param providers vendor engine providers, listed when the engine loads
+     * @param context   platform services handed to a vendor engine
+     * @return the loader; nothing is loaded until {@link #preload()} or {@link #await(long)}
+     */
+    static EngineLoader select(ConfigSource config, EngineLoader builtIn,
+                               Supplier<? extends Iterable<LivenessEngineProvider>> providers,
+                               Supplier<EngineContext> context) {
+        Objects.requireNonNull(config, "config");
+        Objects.requireNonNull(builtIn, "builtIn");
+        Objects.requireNonNull(providers, "providers");
+        Objects.requireNonNull(context, "context");
+        EngineLoader[] self = new EngineLoader[1];
+        self[0] = new EngineLoader(() -> {
+            String id = configuredEngineId(config);
+            if (LivenessConfigKeys.DEFAULT_ENGINE.equals(id)) {
+                LivenessEngine e = builtIn.factory.create();
+                self[0].acceleratorStatus = builtIn.acceleratorStatus;
+                return e;
+            }
+            for (LivenessEngineProvider p : providers.get()) {
+                if (p != null && id.equals(p.engineId())) {
+                    long start = System.nanoTime();
+                    LivenessEngine e = p.create(context.get());
+                    if (e == null) {
+                        throw new EngineException(EngineErrorCode.MODEL_LOAD,
+                                "engine provider " + id + " returned no engine");
+                    }
+                    self[0].acceleratorStatus = "vendor engine " + id;
+                    Log.i(TAG, "Liveness engine ready: " + e.info().tag() + " from " + p.getClass().getName()
+                            + " in " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) + " ms");
+                    return e;
+                }
+            }
+            Log.e(TAG, "No liveness engine provider for " + LivenessConfigKeys.ENGINE + "=" + id);
+            throw new EngineException(EngineErrorCode.CONFIG_INVALID, "no liveness engine with ID " + id);
+        });
+        return self[0];
+    }
+
+    /**
+     * Returns the configured engine ID.
+     *
+     * @param config liveness configuration
+     * @return the trimmed value of {@code mosip.registration.liveness.engine}, or {@code mosip-onnx-default} when
+     *         it is missing or blank
+     */
+    static String configuredEngineId(ConfigSource config) {
+        String id = config.get(LivenessConfigKeys.ENGINE).map(String::trim).orElse("");
+        return id.isEmpty() ? LivenessConfigKeys.DEFAULT_ENGINE : id;
+    }
+
+    /**
+     * Lists the engine providers on the class path ({@code META-INF/services}). A broken provider entry is logged
+     * and the providers found so far are kept.
+     *
+     * @return the providers that could be created
+     */
+    static List<LivenessEngineProvider> serviceProviders() {
+        List<LivenessEngineProvider> all = new ArrayList<>();
+        try {
+            for (LivenessEngineProvider p : ServiceLoader.load(LivenessEngineProvider.class,
+                    EngineLoader.class.getClassLoader())) {
+                all.add(p);
+            }
+        } catch (ServiceConfigurationError | RuntimeException | LinkageError e) {
+            Log.e(TAG, "Liveness engine providers could not be listed: " + e.getClass().getSimpleName());
+        }
+        return all;
+    }
+
+    /**
+     * Creates the loader of the built-in ONNX engine over the model bundle in the APK assets, with the execution
+     * provider of {@link Accelerator#CONFIG_KEY} and the given metrics collector, whatever
+     * {@code mosip.registration.liveness.engine} says.
      *
      * <p>If the engine fails to load with an accelerator for any reason other than a model integrity failure, it
      * is loaded again on the CPU, so a provider problem never switches liveness off.
@@ -94,8 +226,8 @@ public final class EngineLoader implements AutoCloseable {
      * @param providers ONNX Runtime execution provider access
      * @return the loader; nothing is loaded until {@link #preload()} or {@link #await(long)}
      */
-    public static EngineLoader onnx(AssetManager assets, ConfigSource config, ImageDecoder decoder,
-                                    LivenessMetrics metrics, AcceleratorCustomizer.ExecutionProviders providers) {
+    public static EngineLoader onnxOnly(AssetManager assets, ConfigSource config, ImageDecoder decoder,
+                                        LivenessMetrics metrics, AcceleratorCustomizer.ExecutionProviders providers) {
         Objects.requireNonNull(assets, "assets");
         Objects.requireNonNull(config, "config");
         Objects.requireNonNull(decoder, "decoder");

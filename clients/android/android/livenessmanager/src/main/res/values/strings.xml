@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Face liveness messages. Names are the shared message keys (docs: plan section 11.2) with '.' replaced
+<!-- Face liveness messages. Names are the shared message keys (docs/ux/message-catalogue.csv) with '.' replaced
      by '_'; {0} and {1} are filled by the screen. The same keys exist on the desktop client. -->
 <resources>
     <string name="liveness_status_checking">Checking face liveness…</string>
@@ -14,6 +14,7 @@
     <string name="liveness_feedback_continue">Please continue</string>
     <string name="liveness_feedback_detected">Action detected</string>
     <string name="liveness_feedback_hold_still">Hold still</string>
+    <string name="liveness_feedback_look_straight">Look directly at the camera and hold still.</string>
     <string name="liveness_feedback_success">Good, face captured successfully</string>
     <string name="liveness_fail_liveness">We could not verify face liveness. Please try again.</string>
     <string name="liveness_fail_pad">Face verification could not be completed. Please try again.</string>
@@ -23,7 +24,11 @@
     <string name="liveness_guide_in_area">Keep your face within the capture area.</string>
     <string name="liveness_guide_follow_action">Follow the prompted action.</string>
     <string name="liveness_retry_available">Attempt {0} of {1}. Select Retry to try again.</string>
-    <string name="liveness_retry_max_resident">Face capture could not be completed after {0} attempts. Please ask your supervisor to follow the centre\'s recovery process.</string>
+    <!-- Quantity forms follow the language's plural rules; {0} is the number of attempts. -->
+    <plurals name="liveness_retry_max_resident">
+        <item quantity="one">Face capture could not be completed after {0} attempt. Please ask your supervisor to follow the centre\'s recovery process.</item>
+        <item quantity="other">Face capture could not be completed after {0} attempts. Please ask your supervisor to follow the centre\'s recovery process.</item>
+    </plurals>
     <string name="liveness_retry_max_auth">Face verification could not be completed. Maximum attempts reached. Use another sign-in method or contact your supervisor.</string>
     <string name="liveness_override_confirm">Supervisor override: this face will be flagged for review in the packet. Continue?</string>
     <string name="liveness_error_no_face">No face detected. Keep your face within the capture area.</string>

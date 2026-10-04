@@ -27,8 +27,8 @@ import io.mosip.liveness.core.image.ImageDecodeException;
 import io.mosip.registration.livenessmanager.image.AndroidImageDecoder;
 
 /**
- * The phone's or tablet's own camera as an SBI L0 face device inside the client (design section 4.10, "Android
- * built-in L0 device").
+ * The phone's or tablet's own camera as an SBI L0 face device inside the client (docs/design/android-liveness.md,
+ * section 5).
  *
  * <p>The stream is the liveness session's frame source (CameraX, or a replay in debug builds). The signed capture
  * is not a new picture: it is the frontal, neutral frame the session selected ({@link CaptureRequest#sourceFrame()}),

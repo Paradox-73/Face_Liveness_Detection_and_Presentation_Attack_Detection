@@ -33,7 +33,7 @@ import io.mosip.liveness.core.device.StreamStats;
 import io.mosip.liveness.core.image.PixelFormat;
 
 /**
- * Front-camera frames from CameraX (design section 4.9, Android).
+ * Front-camera frames from CameraX (docs/design/streaming.md).
  *
  * <p>{@code ImageAnalysis} delivers {@code RGBA_8888} frames with {@code STRATEGY_KEEP_ONLY_LATEST} on one
  * background thread; each frame is copied into a tightly packed array and handed to the sink, which keeps only

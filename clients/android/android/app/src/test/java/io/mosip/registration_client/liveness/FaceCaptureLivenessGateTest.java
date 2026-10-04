@@ -14,6 +14,7 @@ import io.mosip.liveness.core.Workflow;
 import io.mosip.liveness.core.api.PacketEvidenceKeys;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.ui.MessageKeys;
+import io.mosip.registration.livenessmanager.LivenessCaptureRequest;
 import io.mosip.registration.livenessmanager.LivenessCaptureResult;
 import io.mosip.registration.livenessmanager.auth.FaceAuthOutcome;
 import io.mosip.registration.livenessmanager.auth.FaceAuthStatus;
@@ -174,6 +175,181 @@ public class FaceCaptureLivenessGateTest {
         LivenessCaptureResult cancelled = LivenessCaptureResult.builder(Workflow.REGISTRATION, Decision.CANCELLED)
                 .failureReason(FailureReason.CANCELLED).build();
         assertEquals(CaptureOutcome.Status.BLOCKED, gate.recordOverride(RID, FIELD, cancelled).status());
+    }
+
+    @Test
+    public void padPadCancelKeepsTheCountedAttemptsSoTheNextScreenStartsAtAttempt3() {
+        gate.record(RID, FIELD, failure(FailureReason.PAD, 1, true));
+        // Second PAD failure on the same screen, then Cancel: the screen's last result does not count.
+        CaptureOutcome cancelled = gate.record(RID, FIELD, cancelled(2));
+
+        assertEquals(CaptureOutcome.Status.CANCELLED, cancelled.status());
+        assertEquals(2, cancelled.attemptsUsed());
+        assertEquals("the next screen starts at attempt 3", 2, gate.usedAttempts(RID, FIELD));
+        assertNull(gate.admit(RID, FIELD));
+        CaptureOutcome third = gate.record(RID, FIELD, failure(FailureReason.PAD, 3, false));
+        assertEquals(CaptureOutcome.Status.BLOCKED, third.status());
+        assertEquals(CaptureOutcome.Status.BLOCKED, gate.admit(RID, FIELD).status());
+    }
+
+    @Test
+    public void padPadCancelOnOneScreenIsNotLostWhenTheGateSawNoFailureBefore() {
+        gate.record(RID, FIELD, cancelled(2));
+
+        assertEquals(2, gate.usedAttempts(RID, FIELD));
+        gate.record(RID, FIELD, cancelled(0));
+        assertEquals("a later screen cancelled before any attempt keeps the count", 2,
+                gate.usedAttempts(RID, FIELD));
+    }
+
+    @Test
+    public void padPadQualityKeepsTheTwoCountedAttempts() {
+        LivenessCaptureResult quality = failure(FailureReason.QUALITY, 2, true);
+
+        CaptureOutcome outcome = gate.record(RID, FIELD, quality);
+
+        assertEquals(CaptureOutcome.Status.FAILED, outcome.status());
+        assertEquals(2, outcome.attemptsUsed());
+        assertEquals(2, gate.usedAttempts(RID, FIELD));
+        gate.record(RID, FIELD, failure(FailureReason.DEVICE, 2, true));
+        assertEquals("device errors keep the count as it is", 2, gate.usedAttempts(RID, FIELD));
+    }
+
+    @Test
+    public void earlierAttackForbidsTheOverrideAfterTimeoutsOnLaterScreens() {
+        allowOverride();
+        gate.record(RID, FIELD, failure(FailureReason.PAD, 1, true));
+        assertTrue(gate.isSuspectedAttack(RID, FIELD));
+        gate.record(RID, FIELD, failure(FailureReason.TIMEOUT, 2, true));
+        // The last screen's engine saw only timeouts, so it allows the override.
+        CaptureOutcome last = gate.record(RID, FIELD, overridable(FailureReason.TIMEOUT));
+
+        assertEquals(CaptureOutcome.Status.BLOCKED, last.status());
+        assertNull("a PAD failure on an earlier screen forbids the override", gate.overrideEvidence(RID, FIELD));
+        assertEquals(CaptureOutcome.Status.BLOCKED, gate.recordOverride(RID, FIELD, overridePhoto()).status());
+        assertEquals(CaptureOutcome.Status.BLOCKED, gate.admit(RID, FIELD).status());
+
+        gate.record("rid-2", FIELD, failure(FailureReason.TIMEOUT, 1, true));
+        gate.record("rid-2", FIELD, overridable(FailureReason.TIMEOUT));
+        assertTrue("timeouts alone still allow it", gate.overrideEvidence("rid-2", FIELD) != null);
+    }
+
+    @Test
+    public void earlierAttackOfEveryKindIsRememberedUntilAPass() {
+        for (FailureReason attack : new FailureReason[] {FailureReason.PAD, FailureReason.INTEGRITY,
+                FailureReason.BINDING}) {
+            String rid = "rid-" + attack;
+            gate.record(rid, FIELD, failure(attack, 1, true));
+            assertTrue(attack.name(), gate.isSuspectedAttack(rid, FIELD));
+            assertFalse("kept per registration", gate.isSuspectedAttack(RID, FIELD));
+            gate.record(rid, FIELD, pass());
+            assertFalse(gate.isSuspectedAttack(rid, FIELD));
+        }
+        gate.record(RID, FIELD, failure(FailureReason.ACTIVE, 1, true));
+        gate.record(RID, FIELD, failure(FailureReason.QUALITY, 1, true));
+        assertFalse(gate.isSuspectedAttack(RID, FIELD));
+    }
+
+    @Test
+    public void dimLightCountIsKeptPerKeyUntilACountedFailure() {
+        // Dim, dim on the first screen; the screen is closed.
+        gate.record(RID, FIELD, dim(0, 2));
+        assertEquals(2, gate.lowLightRetries(RID, FIELD));
+        assertEquals("kept per registration", 0, gate.lowLightRetries("another-rid", FIELD));
+        assertEquals("kept per field", 0, gate.lowLightRetries(RID, "operatorBiometrics"));
+        assertEquals("not counted", 0, gate.usedAttempts(RID, FIELD));
+
+        // A screen closed before its first attempt ended reports no count: the stored one stays.
+        gate.record(RID, FIELD, cancelled(0));
+        assertEquals(2, gate.lowLightRetries(RID, FIELD));
+
+        // The reopened screen started at 2 and reports 3.
+        gate.record(RID, FIELD, dim(0, 3));
+        assertEquals(3, gate.lowLightRetries(RID, FIELD));
+
+        CaptureOutcome counted = gate.record(RID, FIELD, failure(FailureReason.PAD, 1, true));
+        assertEquals(CaptureOutcome.Status.FAILED, counted.status());
+        assertEquals("a counted failure resets the dim-light count", 0, gate.lowLightRetries(RID, FIELD));
+        assertEquals(1, gate.usedAttempts(RID, FIELD));
+    }
+
+    @Test
+    public void screenThatCountedAFailureReplacesTheStoredDimLightCount() {
+        gate.record(RID, FIELD, dim(0, 3));
+        // The next screen: the fourth dim try counted (attempt 1), then one more dim try.
+        gate.record(RID, FIELD, dim(1, 1));
+        assertEquals(1, gate.lowLightRetries(RID, FIELD));
+        assertEquals(1, gate.usedAttempts(RID, FIELD));
+    }
+
+    @Test
+    public void passAndBlockResetTheDimLightCount() {
+        gate.record(RID, FIELD, dim(0, 2));
+        gate.record(RID, FIELD, pass());
+        assertEquals(0, gate.lowLightRetries(RID, FIELD));
+
+        gate.record(RID, FIELD, dim(2, 2));
+        gate.record(RID, FIELD, failure(FailureReason.PAD, 3, false));
+        assertEquals(CaptureOutcome.Status.BLOCKED, gate.admit(RID, FIELD).status());
+        assertEquals(0, gate.lowLightRetries(RID, FIELD));
+    }
+
+    @Test
+    public void nextRequestCarriesTheEarlierScreensState() {
+        LivenessCaptureRequest first = gate.nextRequest(RID, FIELD, false).build();
+        assertEquals(Workflow.REGISTRATION, first.workflow());
+        assertEquals(RID, first.subjectRef());
+        assertEquals(0, first.priorAttempts());
+        assertFalse(first.isPriorSuspectedAttack());
+        assertEquals(0, first.priorLowLight());
+
+        gate.record(RID, FIELD, failure(FailureReason.PAD, 1, true));
+        gate.record(RID, FIELD, dim(1, 2));
+        LivenessCaptureRequest next = gate.nextRequest(RID, FIELD, false).build();
+        assertEquals(1, next.priorAttempts());
+        assertTrue("the PAD failure is a suspected attack", next.isPriorSuspectedAttack());
+        assertEquals(2, next.priorLowLight());
+
+        String photo = FaceCaptureLivenessGate.exceptionPhotoField(FIELD);
+        LivenessCaptureRequest photoRequest = gate.nextRequest(RID, photo, true).build();
+        assertEquals(Workflow.EXCEPTION_PHOTO, photoRequest.workflow());
+        assertTrue(photoRequest.isPhotoWhenOff());
+        assertEquals("the exception photo has its own count", 0, photoRequest.priorAttempts());
+        assertFalse(photoRequest.isPriorSuspectedAttack());
+    }
+
+    @Test
+    public void overridePhotoWithoutAPendingOverrideIsRefused() {
+        allowOverride();
+        gate.record(RID, FIELD, failure(FailureReason.ACTIVE, 3, false));
+
+        assertEquals(CaptureOutcome.Status.BLOCKED, gate.recordOverride(RID, FIELD, overridePhoto()).status());
+        assertEquals(CaptureOutcome.Status.BLOCKED, gate.admit(RID, FIELD).status());
+    }
+
+    private static LivenessCaptureResult cancelled(int used) {
+        return LivenessCaptureResult.builder(Workflow.REGISTRATION, Decision.CANCELLED)
+                .failureReason(FailureReason.CANCELLED).attempts(used, 3).retryAllowed(true).build();
+    }
+
+    /** "Improve lighting": a dark face's PAD rejection the screen did not count. */
+    private static LivenessCaptureResult dim(int used, int lowLight) {
+        return LivenessCaptureResult.builder(Workflow.REGISTRATION, FailureReason.QUALITY.decision())
+                .failureReason(FailureReason.QUALITY).reasonCodes(java.util.Collections.singletonList("LOW_LIGHT"))
+                .messageKey(MessageKeys.FAIL_LIVENESS).attempts(used, 3).retryAllowed(true)
+                .lowLightRetries(lowLight).build();
+    }
+
+    private static LivenessCaptureResult overridable(FailureReason reason) {
+        return failure(reason, 3, false).toBuilder().overrideAllowed(true)
+                .evidence(PacketEvidenceKeys.SESSION, "S-2")
+                .evidence(PacketEvidenceKeys.DECISION, PacketEvidenceKeys.DECISION_FAIL).build();
+    }
+
+    private static LivenessCaptureResult overridePhoto() {
+        return LivenessCaptureResult.builder(Workflow.REGISTRATION, Decision.PASS)
+                .reasonCodes(java.util.Collections.singletonList(LivenessCaptureResult.REASON_SUPERVISOR_OVERRIDE))
+                .evidence(PacketEvidenceKeys.DECISION, PacketEvidenceKeys.DECISION_OVERRIDE).build();
     }
 
     private void allowOverride() {

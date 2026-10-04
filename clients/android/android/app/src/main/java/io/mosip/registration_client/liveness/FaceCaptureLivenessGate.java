@@ -3,7 +3,9 @@ package io.mosip.registration_client.liveness;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -11,6 +13,7 @@ import javax.inject.Singleton;
 import io.mosip.liveness.core.FailureReason;
 import io.mosip.liveness.core.Workflow;
 import io.mosip.liveness.core.ui.MessageKeys;
+import io.mosip.registration.livenessmanager.LivenessCaptureRequest;
 import io.mosip.registration.livenessmanager.LivenessCaptureResult;
 import io.mosip.registration.livenessmanager.LivenessService;
 import io.mosip.registration.livenessmanager.SupervisorOverride;
@@ -24,20 +27,30 @@ import io.mosip.registration.livenessmanager.ui.MessageResolver;
  *
  * <p>The capture screen runs the retries of one transaction itself. This gate adds the limit across
  * transactions: failed attempts are counted per subject (registration ID or operator) and field, so closing the
- * screen and pressing Scan again does not reset {@code max_retries}. Once the limit is reached (or the screen
- * reports that no retry is left), face capture stays blocked for that registration; a new registration starts a
- * new count. A pass resets the count. Only a pass stores a face (PS04 task 5).
+ * screen and pressing Scan again does not reset {@code max_retries}. The screen reports the attempts it counted
+ * (including those it was told about), and the gate keeps the higher of that and its own count whatever the
+ * screen's last result was: "PAD, PAD, Cancel" and "PAD, PAD, poor quality" keep 2 attempts. Once the limit is
+ * reached (or the screen reports that no retry is left), face capture stays blocked for that registration; a new
+ * registration starts a new count. A pass resets the count. Only a pass stores a face (PS04 task 5).
  *
  * <p>The exception photo (taken when fingers or irises are marked as exceptions) uses the same screen with the
  * workflow {@code exception_photo}, counted under its own key ({@link #exceptionPhotoField}): with the shipped
  * policy {@code OFF} the built-in camera takes a signed photo without a liveness check, as on the desktop client.
  *
- * <p>{@code SUPERVISOR_OVERRIDE} (resident workflows, plan section 4.16): when the last attempt failed for a
- * reason that allows an override (not a suspected attack, frame integrity or binding failure), the gate keeps
- * the failed transaction's packet evidence ({@link #overrideEvidence}). The capture screen offers the override;
+ * <p>{@code SUPERVISOR_OVERRIDE} (resident workflows, docs/design/android-liveness.md): when the last attempt
+ * failed for a reason that allows an override (not a suspected attack, frame integrity or binding failure), the gate keeps
+ * the failed transaction's packet evidence ({@link #overrideEvidence}). A counted PAD, integrity or binding
+ * failure on any earlier screen of the same subject and field marks a suspected attack, which forbids the
+ * override until a pass, even when the last attempts ended as timeouts. The capture screen offers the override;
  * after the supervisor passed face authentication with liveness ({@code SupervisorOverrideFlow}), the resident's
  * photo is stored with {@code LIVENESS_DECISION=OVERRIDE} ({@link #recordOverride}). Until then the field stays
  * blocked, and pressing Scan again offers the override again instead of a new liveness check.
+ *
+ * <p>Dim light: the screen ends a PAD rejection of a dark face as "Improve lighting", not counted, up to
+ * {@code passive.low_light_max_uncounted} times since the last counted failure. The gate keeps the screen's count
+ * ({@link LivenessCaptureResult#lowLightRetries()}) per subject and field, so closing the screen and pressing Scan
+ * again gives no new uncounted tries; a counted failure, a block or a pass resets it. The next screen receives the
+ * attempts, the suspected-attack mark and this count ({@link #nextRequest}).
  */
 @Singleton
 public class FaceCaptureLivenessGate {
@@ -51,6 +64,8 @@ public class FaceCaptureLivenessGate {
     private final Map<String, Integer> failedAttempts = new HashMap<>();
     private final Map<String, CaptureOutcome> lastOutcome = new HashMap<>();
     private final Map<String, Map<String, String>> overrideEvidence = new HashMap<>();
+    private final Set<String> suspectedAttack = new HashSet<>();
+    private final Map<String, Integer> lowLightRetries = new HashMap<>();
 
     /**
      * Creates the gate.
@@ -137,6 +152,36 @@ public class FaceCaptureLivenessGate {
     }
 
     /**
+     * Returns the uncounted dim-light results of the subject for this field since the last counted failure, so the
+     * next screen continues the dim-light allowance instead of starting it again.
+     *
+     * @param subject registration ID or operator user ID
+     * @param fieldId ARC field ID
+     * @return 0 or more
+     */
+    public synchronized int lowLightRetries(String subject, String fieldId) {
+        return lowLightRetries.getOrDefault(key(subject, fieldId), 0);
+    }
+
+    /**
+     * Starts the request of the next capture screen of the field with the state of the earlier screens: the
+     * attempts used, the suspected-attack mark and the dim-light count.
+     *
+     * @param subject      registration ID or operator user ID
+     * @param fieldId      ARC field ID (its workflow is {@link #workflowFor})
+     * @param photoWhenOff take a signed photo without liveness when the workflow's policy is {@code OFF}
+     * @return the request builder
+     */
+    public synchronized LivenessCaptureRequest.Builder nextRequest(String subject, String fieldId,
+                                                                  boolean photoWhenOff) {
+        String key = key(subject, fieldId);
+        return LivenessCaptureRequest.builder(workflowFor(fieldId), subject).photoWhenOff(photoWhenOff)
+                .priorAttempts(failedAttempts.getOrDefault(key, 0))
+                .priorSuspectedAttack(suspectedAttack.contains(key))
+                .priorLowLight(lowLightRetries.getOrDefault(key, 0));
+    }
+
+    /**
      * Records the capture screen's result and returns the outcome to show.
      *
      * @param subject registration ID or operator user ID
@@ -151,18 +196,27 @@ public class FaceCaptureLivenessGate {
         if (result.isPass()) {
             failedAttempts.remove(key);
             overrideEvidence.remove(key);
+            suspectedAttack.remove(key);
+            lowLightRetries.remove(key);
             outcome = new CaptureOutcome(CaptureOutcome.Status.PASSED, MessageKeys.FEEDBACK_SUCCESS,
                     Collections.emptyList(), result.attemptsUsed(), max);
         } else {
             FailureReason reason = result.failureReason();
             boolean counts = reason != null && reason.countsAsAttempt();
-            // The screen reports the attempts of the whole count, including those it was told about.
-            int failed = counts ? Math.max(failedAttempts.getOrDefault(key, 0), result.attemptsUsed())
-                    : failedAttempts.getOrDefault(key, 0);
-            failedAttempts.put(key, failed);
+            if (counts && !reason.allowsOverride()) {
+                suspectedAttack.add(key);
+            }
+            int storedFailed = failedAttempts.getOrDefault(key, 0);
+            recordLowLight(key, counts, result.attemptsUsed() > storedFailed, result.lowLightRetries());
+            // The screen reports the attempts of the whole count, including those it was told about, whatever its
+            // last result was (a cancellation or a poor-quality frame after counted failures keeps them).
+            int failed = Math.max(storedFailed, result.attemptsUsed());
+            if (failed > 0) {
+                failedAttempts.put(key, failed);
+            }
             if (counts && (failed >= max || !result.isRetryAllowed())) {
                 failedAttempts.put(key, Math.max(failed, max));
-                if (result.isOverrideAllowed() && isOverridePolicy(fieldId)) {
+                if (result.isOverrideAllowed() && isOverridePolicy(fieldId) && !suspectedAttack.contains(key)) {
                     overrideEvidence.put(key, new HashMap<>(result.evidence()));
                 } else {
                     overrideEvidence.remove(key);
@@ -186,11 +240,14 @@ public class FaceCaptureLivenessGate {
      *
      * @param subject registration ID
      * @param fieldId ARC field ID
-     * @return the evidence, or {@code null} when no override is possible for this field
+     * @return the evidence, or {@code null} when no override is possible for this field (also after a suspected
+     *         attack on any of the subject's screens for this field)
      */
     public synchronized Map<String, String> overrideEvidence(String subject, String fieldId) {
-        Map<String, String> evidence = overrideEvidence.get(key(subject, fieldId));
-        return evidence == null || !isOverridePolicy(fieldId) ? null : new HashMap<>(evidence);
+        String key = key(subject, fieldId);
+        Map<String, String> evidence = overrideEvidence.get(key);
+        return evidence == null || !isOverridePolicy(fieldId) || suspectedAttack.contains(key) ? null
+                : new HashMap<>(evidence);
     }
 
     /**
@@ -205,9 +262,10 @@ public class FaceCaptureLivenessGate {
         String key = key(subject, fieldId);
         int max = maxAttempts(fieldId);
         CaptureOutcome outcome;
-        if (photo.isSupervisorOverride()) {
+        if (photo.isSupervisorOverride() && overrideEvidence.containsKey(key) && !suspectedAttack.contains(key)) {
             failedAttempts.remove(key);
             overrideEvidence.remove(key);
+            lowLightRetries.remove(key);
             outcome = new CaptureOutcome(CaptureOutcome.Status.PASSED, MessageResolver.OVERRIDE_USED,
                     Collections.emptyList(), max, max);
         } else {
@@ -271,12 +329,40 @@ public class FaceCaptureLivenessGate {
         lastOutcome.remove(fieldId);
     }
 
+    /**
+     * Keeps the screen's dim-light count. A counted failure resets it. A screen that counted a failure of its own
+     * restarted the count, so its number replaces the stored one; otherwise the screen started from the stored
+     * number and the higher of the two is kept (a result without a session, such as a cancellation before the
+     * first attempt ended, reports none).
+     */
+    private void recordLowLight(String key, boolean counted, boolean countedOnThisScreen, int screenCount) {
+        int count = counted ? 0
+                : countedOnThisScreen ? screenCount : Math.max(lowLightRetries.getOrDefault(key, 0), screenCount);
+        if (count > 0) {
+            lowLightRetries.put(key, count);
+        } else {
+            lowLightRetries.remove(key);
+        }
+    }
+
     private int maxAttempts(String fieldId) {
         return Math.max(1, liveness.policy(workflowFor(fieldId)).maxRetries());
     }
 
     private boolean isOverridePolicy(String fieldId) {
         return SupervisorOverride.isAllowedBy(liveness.policy(workflowFor(fieldId)));
+    }
+
+    /**
+     * Tells whether a counted PAD, integrity or binding failure was recorded for the subject and field since the
+     * last pass.
+     *
+     * @param subject registration ID or operator user ID
+     * @param fieldId ARC field ID
+     * @return {@code true} when a supervisor override must not be offered
+     */
+    public synchronized boolean isSuspectedAttack(String subject, String fieldId) {
+        return suspectedAttack.contains(key(subject, fieldId));
     }
 
     private static CaptureOutcome blocked(String fieldId, int failed, int max) {

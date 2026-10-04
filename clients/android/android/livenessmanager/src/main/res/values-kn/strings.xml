@@ -12,6 +12,7 @@
     <string name="liveness_feedback_continue">ದಯವಿಟ್ಟು ಮುಂದುವರಿಸಿ</string>
     <string name="liveness_feedback_detected">ಕ್ರಿಯೆ ಗುರುತಿಸಲಾಗಿದೆ</string>
     <string name="liveness_feedback_hold_still">ಅಲುಗಾಡದೆ ಇರಿ</string>
+    <string name="liveness_feedback_look_straight">ನೇರವಾಗಿ ಕ್ಯಾಮೆರಾವನ್ನು ನೋಡಿ ಮತ್ತು ಅಲುಗಾಡದೆ ಇರಿ.</string>
     <string name="liveness_feedback_success">ಒಳ್ಳೆಯದು, ಮುಖವನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸೆರೆಹಿಡಿಯಲಾಗಿದೆ</string>
     <string name="liveness_fail_liveness">ಮುಖದ ಜೀವಂತಿಕೆಯನ್ನು ಪರಿಶೀಲಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.</string>
     <string name="liveness_fail_pad">ಮುಖ ಪರಿಶೀಲನೆಯನ್ನು ಪೂರ್ಣಗೊಳಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.</string>
@@ -21,7 +22,11 @@
     <string name="liveness_guide_in_area">ನಿಮ್ಮ ಮುಖವನ್ನು ಸೆರೆಹಿಡಿಯುವ ಪ್ರದೇಶದೊಳಗೆ ಇರಿಸಿ.</string>
     <string name="liveness_guide_follow_action">ಸೂಚಿಸಿದ ಕ್ರಿಯೆಯನ್ನು ಅನುಸರಿಸಿ.</string>
     <string name="liveness_retry_available">{1} ರಲ್ಲಿ {0} ನೇ ಪ್ರಯತ್ನ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಲು ಮರುಪ್ರಯತ್ನ ಆಯ್ಕೆಮಾಡಿ.</string>
-    <string name="liveness_retry_max_resident">{0} ಪ್ರಯತ್ನಗಳ ನಂತರವೂ ಮುಖ ಸೆರೆಹಿಡಿಯುವಿಕೆ ಪೂರ್ಣಗೊಳ್ಳಲಿಲ್ಲ. ಕೇಂದ್ರದ ಪುನಶ್ಚೇತನ ಪ್ರಕ್ರಿಯೆಯನ್ನು ಅನುಸರಿಸಲು ನಿಮ್ಮ ಮೇಲ್ವಿಚಾರಕರನ್ನು ಕೇಳಿ.</string>
+    <!-- Quantity forms follow the language's plural rules; {0} is the number of attempts. -->
+    <plurals name="liveness_retry_max_resident">
+        <item quantity="one">{0} ಪ್ರಯತ್ನದ ನಂತರವೂ ಮುಖ ಸೆರೆಹಿಡಿಯುವಿಕೆ ಪೂರ್ಣಗೊಳ್ಳಲಿಲ್ಲ. ಕೇಂದ್ರದ ಪುನಶ್ಚೇತನ ಪ್ರಕ್ರಿಯೆಯನ್ನು ಅನುಸರಿಸಲು ನಿಮ್ಮ ಮೇಲ್ವಿಚಾರಕರನ್ನು ಕೇಳಿ.</item>
+        <item quantity="other">{0} ಪ್ರಯತ್ನಗಳ ನಂತರವೂ ಮುಖ ಸೆರೆಹಿಡಿಯುವಿಕೆ ಪೂರ್ಣಗೊಳ್ಳಲಿಲ್ಲ. ಕೇಂದ್ರದ ಪುನಶ್ಚೇತನ ಪ್ರಕ್ರಿಯೆಯನ್ನು ಅನುಸರಿಸಲು ನಿಮ್ಮ ಮೇಲ್ವಿಚಾರಕರನ್ನು ಕೇಳಿ.</item>
+    </plurals>
     <string name="liveness_retry_max_auth">ಮುಖ ಪರಿಶೀಲನೆಯನ್ನು ಪೂರ್ಣಗೊಳಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ಗರಿಷ್ಠ ಪ್ರಯತ್ನಗಳು ಮುಗಿದಿವೆ. ಬೇರೆ ಸೈನ್-ಇನ್ ವಿಧಾನವನ್ನು ಬಳಸಿ ಅಥವಾ ನಿಮ್ಮ ಮೇಲ್ವಿಚಾರಕರನ್ನು ಸಂಪರ್ಕಿಸಿ.</string>
     <string name="liveness_override_confirm">ಮೇಲ್ವಿಚಾರಕರ ಅತಿಕ್ರಮಣ: ಈ ಮುಖವನ್ನು ಪ್ಯಾಕೆಟ್‌ನಲ್ಲಿ ಪರಿಶೀಲನೆಗಾಗಿ ಗುರುತಿಸಲಾಗುತ್ತದೆ. ಮುಂದುವರಿಸುವುದೇ?</string>
     <string name="liveness_error_no_face">ಯಾವುದೇ ಮುಖ ಕಂಡುಬಂದಿಲ್ಲ. ನಿಮ್ಮ ಮುಖವನ್ನು ಸೆರೆಹಿಡಿಯುವ ಪ್ರದೇಶದೊಳಗೆ ಇರಿಸಿ.</string>

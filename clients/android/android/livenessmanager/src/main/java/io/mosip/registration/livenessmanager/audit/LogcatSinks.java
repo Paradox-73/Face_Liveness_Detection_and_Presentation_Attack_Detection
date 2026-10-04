@@ -8,9 +8,9 @@ import io.mosip.liveness.core.audit.DiagnosticSink;
 /**
  * Sinks that write to Logcat under the tag {@value #TAG}.
  *
- * <p>The diagnostic sink is the Android side of the engine's diagnostic log (design section 4.17): one line per
- * record, with score buckets, flags and timings only. The audit sink is used only when the capture screen runs
- * without ARC's database (a debug launch from adb before the app was opened); inside the app, audits go to
+ * <p>The diagnostic sink is the Android side of the engine's diagnostic log (docs/design/android-liveness.md, 13.3):
+ * one line per record, with score buckets, flags and timings only. The audit sink is used only when the capture
+ * screen runs without ARC's database (a debug launch from adb before the app was opened); inside the app, audits go to
  * {@link ArcAuditSink}.
  */
 public final class LogcatSinks {

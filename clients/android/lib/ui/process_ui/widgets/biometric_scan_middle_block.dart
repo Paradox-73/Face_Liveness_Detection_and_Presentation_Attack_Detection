@@ -16,6 +16,10 @@ import 'package:registration_client/model/biometric_attribute_data.dart';
 import 'package:registration_client/model/biometrics_dto.dart';
 import 'package:registration_client/model/field.dart';
 import 'package:registration_client/pigeon/biometrics_pigeon.dart';
+import 'package:registration_client/pigeon/liveness_pigeon.dart';
+import 'package:registration_client/platform_spi/liveness_service.dart';
+import 'package:registration_client/ui/liveness/face_attempt_count.dart';
+import 'package:registration_client/ui/liveness/liveness_texts.dart';
 import 'package:registration_client/utils/app_config.dart';
 import 'package:registration_client/utils/biometrics_utils.dart';
 
@@ -41,6 +45,27 @@ class BiometricScanMiddleBlock extends StatefulWidget {
 }
 
 class _BiometricScanMiddleBlockState extends State<BiometricScanMiddleBlock> {
+  // Face liveness outcome of the last face capture (null: no liveness capture ran)
+  LivenessOutcome? faceLivenessOutcome;
+
+  bool get _isFace => widget.parameterTitle == "Face";
+
+  // After a face capture: the liveness count of the capture screen, shown
+  // instead of ARC's capture chips while liveness is checked.
+  Future<void> _readFaceLivenessOutcome() async {
+    if (!_isFace) {
+      return;
+    }
+    LivenessOutcome outcome =
+        await LivenessService().getLastCaptureOutcome(widget.field.id!);
+    if (mounted) {
+      setState(() {
+        faceLivenessOutcome =
+            outcome.status == LivenessStatus.notRequired ? null : outcome;
+      });
+    }
+  }
+
   listOfImages(List<dynamic> images) {
     List<Widget> temp = [];
     for (var e in images) {
@@ -192,6 +217,7 @@ class _BiometricScanMiddleBlockState extends State<BiometricScanMiddleBlock> {
                             widget.biometricAttributeData.noOfCapturesAllowed) {
                           await BiometricsApi().invokeDiscoverSbi(
                               widget.field.id!, widget.parameterTitle);
+                          await _readFaceLivenessOutcome();
                           await BiometricsApi()
                               .extractImageValues(
                                   widget.field.id!, widget.parameterTitle)
@@ -297,6 +323,7 @@ class _BiometricScanMiddleBlockState extends State<BiometricScanMiddleBlock> {
                   List<Uint8List?> temp = [];
                   await BiometricsApi().invokeDiscoverSbi(
                       widget.field.id!, widget.parameterTitle);
+                  await _readFaceLivenessOutcome();
                   await BiometricsApi()
                       .getBestBiometrics(
                           widget.field.id!, widget.parameterTitle)
@@ -437,7 +464,32 @@ class _BiometricScanMiddleBlockState extends State<BiometricScanMiddleBlock> {
                     ),
                   ],
                 ),
-                Row(
+                // Face with liveness: the liveness screen owns the attempt
+                // count, so ARC's capture chips give way to the liveness count.
+                FaceAttemptCount(
+                  isFace: _isFace,
+                  outcome: faceLivenessOutcome,
+                  liveness: (context, chips) => Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)!.attempts,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyLarge
+                            ?.copyWith(fontSize: 12, color: blackShade1),
+                      ),
+                      SizedBox(
+                        width: 13.w,
+                      ),
+                      LivenessAttemptChips(
+                          used: chips.used,
+                          max: chips.max,
+                          passed: chips.passed,
+                          fontSize: 12),
+                    ],
+                  ),
+                  arc: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
@@ -526,7 +578,8 @@ class _BiometricScanMiddleBlockState extends State<BiometricScanMiddleBlock> {
                         ),
                       ),
                   ],
-                )
+                ),
+                ),
               ],
             ),
           ),

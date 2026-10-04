@@ -54,6 +54,17 @@ public final class LivenessCaptureRequest {
     /** Extra: attempts the subject already used for this capture on earlier screens (resident capture). */
     public static final String EXTRA_PRIOR_ATTEMPTS = "liveness.prior_attempts";
     /**
+     * Extra: {@code true} when a counted PAD, frame integrity or binding failure of the subject for this capture was
+     * seen on an earlier screen since the last pass; the screen then never offers the supervisor override.
+     */
+    public static final String EXTRA_PRIOR_SUSPECTED_ATTACK = "liveness.prior_suspected_attack";
+    /**
+     * Extra: dim-light results the subject already had for this capture on earlier screens since the last counted
+     * failure ({@code LivenessCaptureResult#lowLightRetries()}), so closing and reopening the screen does not give
+     * new uncounted dim-light tries.
+     */
+    public static final String EXTRA_PRIOR_LOW_LIGHT = "liveness.prior_low_light";
+    /**
      * Extra: {@code true} opens the screen at the end of a resident transaction whose attempts are used up, only
      * to offer the supervisor override again (no session runs).
      */
@@ -86,6 +97,8 @@ public final class LivenessCaptureRequest {
     private final boolean replayMasked;
     private final boolean photoWhenOff;
     private final int priorAttempts;
+    private final boolean priorSuspectedAttack;
+    private final int priorLowLight;
     private final boolean overrideOffer;
     private final SupervisorOverride override;
     private final Map<String, String> configOverrides;
@@ -101,6 +114,8 @@ public final class LivenessCaptureRequest {
         this.replayMasked = b.replayMasked;
         this.photoWhenOff = b.photoWhenOff;
         this.priorAttempts = b.priorAttempts;
+        this.priorSuspectedAttack = b.priorSuspectedAttack;
+        this.priorLowLight = b.priorLowLight;
         this.overrideOffer = b.overrideOffer;
         this.override = b.override;
         this.configOverrides = Collections.unmodifiableMap(new LinkedHashMap<>(b.configOverrides));
@@ -133,6 +148,8 @@ public final class LivenessCaptureRequest {
                 .language(extras.getString(EXTRA_LANGUAGE, "eng"))
                 .photoWhenOff(parseBoolean(extras.get(EXTRA_PHOTO_WHEN_OFF)))
                 .priorAttempts(parseInt(extras.get(EXTRA_PRIOR_ATTEMPTS), 0))
+                .priorSuspectedAttack(parseBoolean(extras.get(EXTRA_PRIOR_SUSPECTED_ATTACK)))
+                .priorLowLight(parseInt(extras.get(EXTRA_PRIOR_LOW_LIGHT), 0))
                 .overrideOffer(parseBoolean(extras.get(EXTRA_OVERRIDE_OFFER)));
         String supervisor = extras.getString(EXTRA_OVERRIDE_SUPERVISOR, "");
         if (!supervisor.trim().isEmpty()) {
@@ -166,6 +183,8 @@ public final class LivenessCaptureRequest {
         intent.putExtra(EXTRA_LANGUAGE, language);
         intent.putExtra(EXTRA_PHOTO_WHEN_OFF, photoWhenOff);
         intent.putExtra(EXTRA_PRIOR_ATTEMPTS, priorAttempts);
+        intent.putExtra(EXTRA_PRIOR_SUSPECTED_ATTACK, priorSuspectedAttack);
+        intent.putExtra(EXTRA_PRIOR_LOW_LIGHT, priorLowLight);
         intent.putExtra(EXTRA_OVERRIDE_OFFER, overrideOffer);
         if (override != null) {
             intent.putExtra(EXTRA_OVERRIDE_SUPERVISOR, override.supervisorId());
@@ -277,6 +296,26 @@ public final class LivenessCaptureRequest {
     }
 
     /**
+     * Tells whether an earlier screen saw a suspected attack (counted PAD, frame integrity or binding failure) of
+     * the subject for this capture since the last pass.
+     *
+     * @return {@code true} when the supervisor override must not be offered
+     */
+    public boolean isPriorSuspectedAttack() {
+        return priorSuspectedAttack;
+    }
+
+    /**
+     * Returns the dim-light results the subject already had for this capture on earlier screens since the last
+     * counted failure.
+     *
+     * @return 0 or more
+     */
+    public int priorLowLight() {
+        return priorLowLight;
+    }
+
+    /**
      * Tells whether the screen only offers the supervisor override of a transaction whose attempts are used up.
      *
      * @return {@code true} for the override offer
@@ -361,6 +400,8 @@ public final class LivenessCaptureRequest {
         private boolean replayMasked;
         private boolean photoWhenOff;
         private int priorAttempts;
+        private boolean priorSuspectedAttack;
+        private int priorLowLight;
         private boolean overrideOffer;
         private SupervisorOverride override;
         private final Map<String, String> configOverrides = new LinkedHashMap<>();
@@ -442,6 +483,30 @@ public final class LivenessCaptureRequest {
          */
         public Builder priorAttempts(int attempts) {
             this.priorAttempts = Math.max(0, attempts);
+            return this;
+        }
+
+        /**
+         * Marks that an earlier screen saw a suspected attack of the subject for this capture since the last pass,
+         * so the screen's transaction starts with it and never offers the supervisor override.
+         *
+         * @param attack {@code true} after a counted PAD, frame integrity or binding failure
+         * @return this builder
+         */
+        public Builder priorSuspectedAttack(boolean attack) {
+            this.priorSuspectedAttack = attack;
+            return this;
+        }
+
+        /**
+         * Sets the dim-light results the subject already had for this capture on earlier screens since the last
+         * counted failure, so the screen continues the uncounted dim-light allowance instead of starting it again.
+         *
+         * @param lowLight 0 or more
+         * @return this builder
+         */
+        public Builder priorLowLight(int lowLight) {
+            this.priorLowLight = Math.max(0, lowLight);
             return this;
         }
 

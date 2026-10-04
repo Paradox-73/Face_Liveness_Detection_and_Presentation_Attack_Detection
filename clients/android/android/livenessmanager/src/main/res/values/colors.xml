@@ -5,11 +5,38 @@
     <color name="liveness_panel">#E6121A21</color>
     <color name="liveness_text">#FFFFFFFF</color>
     <color name="liveness_text_secondary">#FFE0E0E0</color>
-    <color name="liveness_info">#FFFFFFFF</color>
-    <color name="liveness_success">#FF81C784</color>
-    <color name="liveness_warning">#FFFFD54F</color>
-    <color name="liveness_error">#FFFF8A80</color>
-    <color name="liveness_dot_used">#FFFF8A80</color>
-    <color name="liveness_dot_free">#66FFFFFF</color>
     <color name="liveness_accent">#FF4FC3F7</color>
+
+    <!-- Status palette shared with the desktop client (liveness-panel.css, docs/ux/desktop-liveness.md section 4)
+         and ARC's liveness banner. Four states: neutral (information, instructions), success, attention (warning,
+         guidance) and failure. Each state has a light banner, a border and icon-circle colour, and a text colour.
+         Contrast (WCAG 2.1): prompt text on its banner neutral 12.1:1, success 8.0:1, attention 9.3:1,
+         failure 9.1:1; guidance text #1F2933 on every banner 12.5:1 or more; white icon on its circle 4.5:1 or
+         more. Checked by LivenessCaptureActivityTest. -->
+    <color name="liveness_status_neutral_banner">#FFE8F1FA</color>
+    <color name="liveness_status_neutral_accent">#FF005BAA</color>
+    <color name="liveness_status_neutral_text">#FF0B2E4F</color>
+    <color name="liveness_status_success_banner">#FFE6F4EA</color>
+    <color name="liveness_status_success_accent">#FF1E7B34</color>
+    <color name="liveness_status_success_text">#FF14532D</color>
+    <color name="liveness_status_attention_banner">#FFFFF4DB</color>
+    <color name="liveness_status_attention_accent">#FF8A5A00</color>
+    <color name="liveness_status_attention_text">#FF5B3B00</color>
+    <color name="liveness_status_failure_banner">#FFFCE8E6</color>
+    <color name="liveness_status_failure_accent">#FFB3261E</color>
+    <color name="liveness_status_failure_text">#FF7A1712</color>
+    <color name="liveness_status_guidance">#FF1F2933</color>
+
+    <!-- Oval guide over the camera preview: the desktop oval strokes (liveness-panel.css .liveness-oval). -->
+    <color name="liveness_oval_neutral">#FFFFFFFF</color>
+    <color name="liveness_oval_success">#FF3DDC84</color>
+    <color name="liveness_oval_attention">#FFFFC107</color>
+    <color name="liveness_oval_failure">#FFFF6F61</color>
+
+    <!-- Primary button (Retry): the desktop button colour with white text, 6.8:1. -->
+    <color name="liveness_primary">#FF005BAA</color>
+
+    <!-- Attempt dots on the dark panel: used attempts take the failure oval colour. -->
+    <color name="liveness_dot_used">#FFFF6F61</color>
+    <color name="liveness_dot_free">#66FFFFFF</color>
 </resources>

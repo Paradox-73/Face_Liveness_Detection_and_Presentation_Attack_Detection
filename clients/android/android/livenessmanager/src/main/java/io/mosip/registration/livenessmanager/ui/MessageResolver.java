@@ -19,6 +19,10 @@ import io.mosip.registration.livenessmanager.R;
  * screen's language, replaced by the synced text {@code mosip.registration.liveness.guidance.<key>.<lang>} when
  * one is configured (the same rule as the desktop client), then {@code {0}}, {@code {1}} filled with the state's
  * arguments.
+ *
+ * <p>Messages that count something ({@link #PLURAL_KEYS}, for example "after 1 attempt" / "after 3 attempts") are
+ * Android {@code <plurals>} resources: the quantity form is chosen from the first argument with the plural rules of
+ * the screen's language (Arabic has six forms, French counts 0 and 1 as singular).
  */
 public final class MessageResolver {
 
@@ -31,7 +35,18 @@ public final class MessageResolver {
     public static final java.util.List<String> ANDROID_ONLY_KEYS =
             Collections.unmodifiableList(java.util.Arrays.asList(OVERRIDE_USED));
 
+    /** Message keys whose text is a {@code <plurals>} resource; the first argument is the count. */
+    public static final java.util.List<String> PLURAL_KEYS =
+            Collections.unmodifiableList(java.util.Arrays.asList(MessageKeys.RETRY_MAX_RESIDENT));
+
+    /**
+     * Quantity used when a plural message has no numeric count: 100 selects the general ("other") form in all six
+     * shipped languages.
+     */
+    static final int UNKNOWN_QUANTITY = 100;
+
     private static final Map<String, Integer> IDS = buildIds();
+    private static final Map<String, Integer> PLURAL_IDS = buildPluralIds();
 
     private final Resources resources;
     private final ConfigSource config;
@@ -51,22 +66,37 @@ public final class MessageResolver {
     }
 
     /**
-     * Returns the string resource of a message key.
+     * Returns the string or plurals resource of a message key.
      *
      * @param key message key
-     * @return the resource ID, or {@code null} for an unknown key
+     * @return the resource ID ({@code R.plurals} for {@link #isPlural plural} keys), or {@code null} for an
+     *         unknown key
      */
     public static Integer resourceId(String key) {
-        return IDS.get(key);
+        Integer id = IDS.get(key);
+        return id != null ? id : PLURAL_IDS.get(key);
     }
 
     /**
-     * Returns the keys that have a string resource.
+     * Tells whether a message key is a {@code <plurals>} resource.
      *
-     * @return all mapped keys: the {@link MessageKeys#all()} keys and {@link #ANDROID_ONLY_KEYS}
+     * @param key message key
+     * @return {@code true} for the keys of {@link #PLURAL_KEYS}
+     */
+    public static boolean isPlural(String key) {
+        return PLURAL_IDS.containsKey(key);
+    }
+
+    /**
+     * Returns the keys that have a resource.
+     *
+     * @return all mapped keys: the {@link MessageKeys#all()} keys and {@link #ANDROID_ONLY_KEYS}, each with its
+     *         string resource, or its plurals resource for {@link #PLURAL_KEYS}
      */
     public static Map<String, Integer> mappedKeys() {
-        return Collections.unmodifiableMap(IDS);
+        Map<String, Integer> all = new HashMap<>(IDS);
+        all.putAll(PLURAL_IDS);
+        return Collections.unmodifiableMap(all);
     }
 
     /**
@@ -106,8 +136,31 @@ public final class MessageResolver {
      */
     public String text(String key, List<String> args) {
         Integer id = IDS.get(key);
-        String bundle = id == null ? key : resources.getString(id);
+        Integer plural = PLURAL_IDS.get(key);
+        String bundle;
+        if (plural != null) {
+            bundle = resources.getQuantityString(plural, quantity(args));
+        } else {
+            bundle = id == null ? key : resources.getString(id);
+        }
         return fill(LivenessUiStateMapper.resolveText(config, key, language, bundle), args);
+    }
+
+    /**
+     * Returns the count of a plural message: its first argument as a whole number.
+     *
+     * @param args the message arguments
+     * @return the count, or {@link #UNKNOWN_QUANTITY} when the first argument is missing or not a number
+     */
+    static int quantity(List<String> args) {
+        if (args == null || args.isEmpty() || args.get(0) == null) {
+            return UNKNOWN_QUANTITY;
+        }
+        try {
+            return Integer.parseInt(args.get(0).trim());
+        } catch (NumberFormatException e) {
+            return UNKNOWN_QUANTITY;
+        }
     }
 
     /**
@@ -143,6 +196,7 @@ public final class MessageResolver {
         m.put(MessageKeys.FEEDBACK_CONTINUE, R.string.liveness_feedback_continue);
         m.put(MessageKeys.FEEDBACK_DETECTED, R.string.liveness_feedback_detected);
         m.put(MessageKeys.FEEDBACK_HOLD_STILL, R.string.liveness_feedback_hold_still);
+        m.put(MessageKeys.FEEDBACK_LOOK_STRAIGHT, R.string.liveness_feedback_look_straight);
         m.put(MessageKeys.FEEDBACK_SUCCESS, R.string.liveness_feedback_success);
         m.put(MessageKeys.FAIL_LIVENESS, R.string.liveness_fail_liveness);
         m.put(MessageKeys.FAIL_PAD, R.string.liveness_fail_pad);
@@ -152,7 +206,6 @@ public final class MessageResolver {
         m.put(MessageKeys.GUIDE_IN_AREA, R.string.liveness_guide_in_area);
         m.put(MessageKeys.GUIDE_FOLLOW_ACTION, R.string.liveness_guide_follow_action);
         m.put(MessageKeys.RETRY_AVAILABLE, R.string.liveness_retry_available);
-        m.put(MessageKeys.RETRY_MAX_RESIDENT, R.string.liveness_retry_max_resident);
         m.put(MessageKeys.RETRY_MAX_AUTH, R.string.liveness_retry_max_auth);
         m.put(MessageKeys.OVERRIDE_CONFIRM, R.string.liveness_override_confirm);
         m.put(MessageKeys.ERROR_NO_FACE, R.string.liveness_error_no_face);
@@ -172,6 +225,12 @@ public final class MessageResolver {
         m.put(MessageKeys.OFFLINE_BADGE, R.string.liveness_offline_badge);
         m.put(MessageKeys.CONFIG_UPDATED, R.string.liveness_config_updated);
         m.put(OVERRIDE_USED, R.string.liveness_override_used);
+        return m;
+    }
+
+    private static Map<String, Integer> buildPluralIds() {
+        Map<String, Integer> m = new HashMap<>();
+        m.put(MessageKeys.RETRY_MAX_RESIDENT, R.plurals.liveness_retry_max_resident);
         return m;
     }
 }

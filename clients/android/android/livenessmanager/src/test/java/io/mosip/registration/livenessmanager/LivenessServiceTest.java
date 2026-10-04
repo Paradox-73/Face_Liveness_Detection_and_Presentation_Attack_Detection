@@ -57,6 +57,35 @@ public class LivenessServiceTest {
     }
 
     @Test
+    public void builtInCameraIsTheFaceDeviceUnlessSbiIsSelected() {
+        Map<String, String> values = new HashMap<>();
+        assertTrue("missing", service(values).isBuiltInCameraFaceDevice());
+        for (String value : new String[] {"", "  ", "BUILTIN", " builtin ", "VENDOR_X", "camera"}) {
+            values.put(LivenessConfigKeys.ANDROID_DEVICE, value);
+            assertTrue("'" + value + "' means the built-in camera, as for face capture routing",
+                    service(values).isBuiltInCameraFaceDevice());
+        }
+        for (String value : new String[] {"SBI", " sbi "}) {
+            values.put(LivenessConfigKeys.ANDROID_DEVICE, value);
+            assertFalse("'" + value + "' selects the vendor face app", service(values).isBuiltInCameraFaceDevice());
+        }
+    }
+
+    @Test
+    public void dimLightCountRoundTripsThroughTheResultIntent() {
+        LivenessCaptureResult dim = LivenessCaptureResult.builder(Workflow.REGISTRATION, Decision.FAIL_QUALITY)
+                .failureReason(FailureReason.QUALITY).attempts(1, 3).retryAllowed(true).lowLightRetries(2).build();
+        assertEquals(2, LivenessCaptureResult.fromIntent(dim.toIntent()).lowLightRetries());
+        assertEquals(2, dim.toBuilder().build().lowLightRetries());
+        Intent withoutCount = LivenessCaptureResult.builder(Workflow.REGISTRATION, Decision.CANCELLED).build()
+                .toIntent();
+        withoutCount.removeExtra("liveness.result.low_light");
+        assertEquals("missing means none", 0, LivenessCaptureResult.fromIntent(withoutCount).lowLightRetries());
+        assertEquals(0, LivenessCaptureResult.builder(Workflow.REGISTRATION, Decision.FAIL_QUALITY)
+                .lowLightRetries(-1).build().lowLightRetries());
+    }
+
+    @Test
     public void captureIntentTargetsTheScreenAndCarriesTheRequest() {
         LivenessCaptureRequest request = LivenessCaptureRequest.builder(Workflow.EOD_AUTH, "supervisor1")
                 .language("ara").replay("mockmds-still", 12).replayFollow(true).replayMasked(true)

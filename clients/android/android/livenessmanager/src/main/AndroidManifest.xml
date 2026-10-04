@@ -17,5 +17,23 @@
             android:screenOrientation="locked"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:theme="@style/Theme.Liveness" />
+
+        <!-- In-app provisioning of the built-in face device key (release and debug builds): started over adb by
+             scripts/android-liveness-device-cert.sh in its CSR mode. Only callers holding DUMP may start it (the adb shell
+             does; ordinary apps cannot get it). It shows nothing and closes when the step is done. -->
+        <activity
+            android:name=".device.DeviceProvisioningActivity"
+            android:exported="true"
+            android:permission="android.permission.DUMP"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!-- Tells the device key where the provisioning files are exchanged (app-specific external files). -->
+        <provider
+            android:name=".device.DeviceProvisioningInitializer"
+            android:authorities="${applicationId}.liveness-device-provisioning"
+            android:exported="false" />
     </application>
 </manifest>
