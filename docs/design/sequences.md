@@ -22,7 +22,8 @@ sequenceDiagram
   participant GBC as GenericBiometricsController
   participant DLG as LivenessDialog / LivenessPanel
   participant ORC as LivenessOrchestrator
-  participant RUN as LivenessRun (liveness-worker)
+  participant RUN as LivenessRun
+  participant DRV as LivenessSessionDriver (core, liveness-worker)
   participant DEV as SbiFaceCaptureDevice
   participant MDS as SBI device (MockMDS :4501)
   participant SES as LivenessSession (core)
@@ -34,12 +35,12 @@ sequenceDiagram
   DLG->>ORC: start(LivenessRequest, listener)
   ORC->>ORC: PolicyResolver.resolve(REGISTRATION), LV15 if keys changed
   ORC->>RUN: new run, first session (attempt 1)
-  RUN->>SES: engine.open(SessionRequest), start() (LV01)
-  RUN->>DEV: openStream(StreamRequest)
+  DRV->>SES: engine.open(SessionRequest), start() (LV01)
+  DRV->>DEV: openStream(StreamRequest)
   DEV->>MDS: STREAM {deviceId, deviceSubId, timeout = stream.timeout_ms}
   MDS-->>RUN: MJPEG parts (sbi-stream-reader, MjpegFrameReader -> FrameHandOff)
   loop every frame (newest only) and every 100 ms
-    RUN->>SES: onFrame(frame), tick()
+    DRV->>SES: onFrame(frame), tick()
     SES-->>DLG: onUi(LivenessUiState) via FxLivenessListener
   end
   Note over SES: passive score >= 80: CAPTURE_READY (LV02)<br/>else challenges first (LV03..LV05)
@@ -133,7 +134,8 @@ sequenceDiagram
   participant BDA as BiometricsDetailsApi (Pigeon host)
   participant GATE as FaceCaptureLivenessGate
   participant ACT as LivenessCaptureActivity
-  participant RUN as LivenessRunner (liveness-worker)
+  participant RUN as LivenessRunner
+  participant DRV as LivenessSessionDriver (core, liveness-worker)
   participant CAM as CameraXFrameSource
   participant SES as LivenessSession (core)
   participant DEV as BuiltInCameraL0Device
@@ -143,10 +145,11 @@ sequenceDiagram
   FL->>BDA: invokeDiscoverSbi(field, "Face")
   BDA->>GATE: enforced? attempts left?
   GATE->>ACT: LivenessCaptureLauncher: startActivityForResult(intent, 6)
-  ACT->>RUN: start(policy, priorAttempts)
-  RUN->>CAM: start(FrameHandOff.latestOnly())
+  ACT->>RUN: start(policy, priorAttempts, priorSuspectedAttack, priorLowLight)
+  RUN->>DRV: builder(...).priorFailures(n, attack, lowLight).trackLowLight(true).start()
+  DRV->>CAM: start(FrameHandOff.latestOnly())
   loop newest frame, tick every 100 ms
-    RUN->>SES: onFrame / tick
+    DRV->>SES: onFrame / tick
     SES-->>ACT: LivenessUiState (main thread)
   end
   SES-->>RUN: CAPTURE_READY, passToken, captureFrame()
@@ -203,23 +206,28 @@ sequenceDiagram
   autonumber
   participant DLG as LivenessDialog
   participant RUN as LivenessRun
+  participant DRV as LivenessSessionDriver (core)
   participant TX as LivenessTransaction (core)
-  participant ORC as LivenessOrchestrator
-  participant EXH as ExhaustedTransactions
-  RUN->>TX: record(result FAILED(PAD))
-  TX-->>RUN: canRetry = true (1 of 3 used)
-  RUN-->>DLG: onSessionEnded: "Face verification could not be completed." + Retry
+  participant HIS as AttemptHistory
+  participant SUP as SupervisorOverrideFlow / SupervisorFaceAuth
+  DRV->>TX: record(result FAILED(PAD))
+  TX-->>DRV: canRetry = true (1 of 3 used), suspected attack = true
+  DRV-->>RUN: onAttemptEnded(AttemptOutcome)
+  RUN->>HIS: counted failures, attack mark, low-light count (per workflow and person)
+  RUN-->>DLG: "Face verification could not be completed." + Retry
   DLG->>RUN: retry()
-  RUN->>TX: nextAttempt() = 2, new session
+  RUN->>DRV: retry(), attempt 2, new session
   Note over RUN,TX: ... third counted failure ...
-  RUN->>TX: record(result FAILED(TIMEOUT))
-  TX-->>RUN: canRetry = false, isOverrideAllowed (resident, SUPERVISOR_OVERRIDE, not PAD/INTEGRITY/BINDING)
-  RUN->>RUN: audit LV11 {attempts, onMaxFailure}
-  RUN->>EXH: remember (workflow, subject) - reopening gives no new attempts (REG-LIV-014)
+  DRV->>TX: record(result FAILED(TIMEOUT))
+  TX-->>DRV: canRetry = false; override allowed only if resident, SUPERVISOR_OVERRIDE and no PAD, INTEGRITY or BINDING failure so far
+  DRV->>DRV: audit LV11 {attempts, onMaxFailure}
+  RUN->>HIS: used up: reopening gives no new attempts (REG-LIV-014)
   RUN-->>DLG: max-attempts message, "Supervisor override" if allowed, else Close
-  DLG->>RUN: grantOverride(supervisorId) (signed-in user holds REGISTRATION_SUPERVISOR)
-  RUN-->>DLG: single-use context valid 60 s, audit LV16 {supervisorId}
-  Note over DLG: capture stored with LIVENESS_DECISION=OVERRIDE
+  DLG->>RUN: requestOverride() (refused after a suspected attack)
+  DLG->>SUP: another supervisor's user ID, face authentication
+  SUP-->>RUN: OverrideRequest.grant(SupervisorApproval): role, second person, at most 60 s old
+  RUN-->>DLG: single-use context valid 60 s from the supervisor's match, audit LV16 {decision, supervisorId}
+  Note over DLG: photo checked (one face, passive PAD), then stored with LIVENESS_DECISION=OVERRIDE
 ```
 
 For authentication workflows `on_max_failure=BLOCK_AND_LOCK` makes `LivenessOutcome.isLockRequired()` true and the

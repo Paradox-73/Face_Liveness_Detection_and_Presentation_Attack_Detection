@@ -19,8 +19,7 @@ Team Badmosip · MOSIP Decode 2026 · Problem Statement 04 · summary
 
 - **One engine, both clients.** A Java 11 library (`liveness/`) runs inside the desktop client and inside a new
   native Android module; same code, same models, same configuration keys, same audit event IDs, same messages.
-- **Hybrid, offline check.** Quality gate → passive PAD (two MiniFASNet models) → if needed (and always for
-  registration, sign-in and onboarding in the shipped defaults), 2 challenges drawn
+- **Hybrid, offline check.** Quality gate → passive PAD (two MiniFASNet models) → if needed (and always, in the shipped defaults, for every workflow except the exception photo), 2 challenges drawn
   with a secure random generator from 8 action types → frame integrity (frozen frames, loops, timestamps) and a
   flat-face check → capture binding: the device's signed capture must show the same face within the session's
   time window, with a one-use token.
@@ -64,27 +63,31 @@ Design details: `liveness/README.md`, `docs/design/desktop-liveness-services.md`
 
 | Evidence | Result | Where |
 |---|---|---|
-| Unit and component tests (engine, clients, mocks, tools) | 2,224 run, 0 failures; engine line coverage 93% | `docs/test-report/README.md` section 2 |
-| Desktop client, scripted end-to-end run (13 flows) | 41 of 41 checks passed | `docs/test-report/desktop-e2e.md` |
-| Android client, scripted end-to-end run (16 flows) | 58 of 58 checks passed | `docs/test-report/android-e2e.md` |
-| Automated scenarios (39) with ISO/IEC 30107-3 metrics | shipped defaults: worst species APCER 25% (adaptive replay), all attacks 1.7%, genuine rejected 29.4% per attempt. Before the fixes of 2026-09-30 (passive first everywhere): 100% / 17.6% / 58.2% | `docs/eval/calibration-notes.md` section 0 |
-| Per-frame processing, 640x480 | median 21-23 ms, 95th percentile 38-45 ms (desktop JVM); target 20 ms not met | `docs/test-report/README.md` section 5 |
+| Unit and component tests (engine, clients, mocks, tools) | 2,542 passed on 2026-10-05, 0 failures: about 1,361 are upstream MOSIP tests, about 1,180 are written by the team; engine line coverage 93% | `docs/test-report/README.md` section 2 |
+| Desktop client, scripted end-to-end run (13 flows) | 41 of 41 checks passed (run at the earlier defaults; not repeated at the current ones) | `docs/test-report/desktop-e2e.md` |
+| Android client, scripted end-to-end run (16 flows) | 58 of 58 checks passed (same limit) | `docs/test-report/android-e2e.md` |
+| Desktop and Android give the same decision (bonus B4) | 19 replayed cases on desktop, 19 in Android unit tests, 6 on an emulator; one ONNX Runtime release (1.20.0) on both clients | `docs/test-report/interoperability.md` |
+| Automated scenarios (75, 275 transactions) with ISO/IEC 30107-3 metrics | shipped defaults, per transaction: worst species APCER 50.0% (4/8, adaptive screen replay SYN-A7, registration; 1 of 2 source artefacts accepted); every other species 0.0%; registration genuine rejected 14.3% (4/28, all one synthetic dark clip), sign-in 0.0% (0/12). Legacy configuration (passive first everywhere): APCER_max 100.0% (80/80, SYN-A8) | `docs/eval/results/20261005-shipped/README.md` |
+| Per-frame processing, 640x480 | latency run, 1 thread, shared laptop: p50 69.4 ms, p95 162.4 ms; the 2026-09-30 quieter-machine run gave p50 21-23 ms, p95 38-45 ms (desktop JVM); target 20 ms not met | `docs/eval/results/20261005-latency/report.md`, `docs/test-report/README.md` section 5 |
+| Android phone measurement (bonus B7, B8) | measurement kit written; no phone run yet, emulator numbers only | `docs/test-report/android-performance.md` |
 | PS04 requirements | every bullet traced to code and test; open items listed | `docs/traceability.md` |
 
 **Limits we state openly:** attacks in the automated suite are synthetic and the genuine data is three people from
 open clips, so these are regression results, not an ISO/IEC 30107-3 evaluation (the volunteer evaluation is planned,
-`docs/eval/protocol.md`). Because synthetic prints passed the passive check, registration, sign-in and onboarding
-now always ask for challenges; this costs about 3 s per capture (median 9.7 s). An adaptive replay that plays the
-right clip for each prompt still passes 4 of 16 attempts. Android was tested on an emulator with replayed frames,
-built-in camera only; no physical tablet or L1 device yet.
+`docs/eval/protocol.md`; no real person or real artefact has been tested yet). Because synthetic prints passed the
+passive check, every workflow that matches a face now always asks for challenges; this costs about 3 s per capture
+(median 9.7 s). Replays are refused except an adaptive screen replay that plays the right clip for each prompt: it
+passes 4 of 8 transactions, the known limit of challenge-response. Android was tested on an emulator with replayed
+frames, built-in camera only; no physical phone or L1 device yet, and no live webcam run through the full client.
 
 ## 5. Next steps
 
 1. Run the in-house volunteer evaluation (12 people, 8 attack types, both clients).
-2. Android: vendor SBI face devices and L1; a physical low-end tablet, with the selectable XNNPACK / NNAPI
-   accelerators measured there.
+2. Android: vendor SBI face devices and L1; run the measurement kit on a physical phone (CPU, XNNPACK, NNAPI;
+   code done, not yet run on a phone).
 3. Device-side PAD for L1 devices, against adaptive replays.
-4. Offline import of signed model updates on Android (built on desktop).
+4. Offline import of signed model updates: done on desktop and, as code with unit tests, on Android (bonus B6); the
+   Flutter button that starts the Android import is not built yet.
 5. Upstream contribution as reviewable pull requests.
 
 ## 6. Links

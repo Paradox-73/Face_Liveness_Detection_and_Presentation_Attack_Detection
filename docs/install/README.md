@@ -59,7 +59,7 @@ mvn -f liveness/pom.xml install -Dliveness.benchmark.frames=0
 ```
 
 Builds and installs `liveness-core`, `liveness-onnx` (with the `models` jar) and `face-match-sdk` into `~/.m2`,
-runs the tests (core 264, onnx 93 with 2 benchmark tests skipped by that flag, face-match-sdk 42) and the Android
+runs the tests (core 365, onnx 96 with 2 benchmark tests skipped by that flag, face-match-sdk 42; counts of 2026-10-05) and the Android
 API 28 check. Both clients take the engine from `~/.m2`.
 
 ## 3. Start MockSync (local MOSIP server)
@@ -129,7 +129,7 @@ bash scripts/android-build.sh                               # debug APK, server 
                                                             # puts the Dart cache on the repository drive (<run>/cache/pub-cache) when needed
 ARC_WEBCAM=emulated bash scripts/android-run-emulator.sh --headless   # AVD arc_api34, adb reverse 8080, install, launch
 bash scripts/android-mocksync-setup.sh --login              # registers the tablet in MockSync, first login and 7/7 sync
-bash scripts/android-liveness-device-cert.sh                # device certificate from MockSync's DEVICE CA for the built-in camera
+bash scripts/android-liveness-device-cert.sh --csr          # device certificate from MockSync's DEVICE CA for the built-in camera (also on release builds; android.md 5.1)
 ```
 
 `ARC_WEBCAM=emulated` keeps the laptop webcam out; automated runs replay frame packs instead
@@ -176,11 +176,11 @@ photo of you, and let you sign in with your face, in the desktop Registration Cl
 hands-on time after the tools of section 1 are installed and the builds of sections 2-5 have finished once. A
 first build downloads its dependencies and takes longer; the team has not timed it on a clean machine.
 
-**Status on 2026-10-04: the team has not yet run these steps end to end.** What has been run, and what has not:
+**Status on 2026-10-05: the team has not yet run these steps end to end.** What has been run, and what has not:
 
-| Part | State on 2026-10-04 | Where |
+| Part | State on 2026-10-05 | Where |
 |---|---|---|
-| Engine build and tests; MockSync, MockMDS, desktop client build and login; every liveness flow with recorded frame packs instead of a webcam | run (desktop end-to-end report, 41 of 41 checks) | [../test-report/desktop-e2e.md](../test-report/desktop-e2e.md) |
+| Engine build and tests; MockSync, MockMDS, desktop client build and login; every liveness flow with recorded frame packs instead of a webcam | run on 2026-09-30 at the earlier defaults (supervisor workflows passive first); not re-run at the shipped defaults, which need a desktop window and recordings of turn-right and look-up for the enrolled face (desktop end-to-end report, 41 of 41 checks) | [../test-report/desktop-e2e.md](../test-report/desktop-e2e.md) |
 | MockMDS webcam source (`FFMPEG`) streaming a laptop's built-in camera (first frame after about 1.2 s) | run, outside the client; ffmpeg command lines and a live ffmpeg test pattern are covered by MockMDS tests | `devices/mock-mds/LIVENESS-EXTENSIONS.md` sections 2 and 5 |
 | A live face from a webcam passing liveness in the desktop client | **not run** | [../eval/team-self-test.md](../eval/team-self-test.md) (status of 2026-09-30) |
 | Onboarding a live face from the webcam, then face sign-in with it | **not run** | same |
@@ -225,12 +225,13 @@ for actions. The prompts appear on the client's screen; here you are operator an
 | Moment | Screen | Picture |
 |---|---|---|
 | Liveness window opens | title "Face verification", camera preview with a dashed oval, "Look directly at the camera.", "Attempt 1 of 3" | [d-r1-positioning.png](../ux/screenshots/desktop/d-r1-positioning.png) |
-| Passive check | "Checking face liveness..." with a busy indicator; nothing to do | [wireframe sheet](../ux/wireframes.svg), row 2 |
+| Passive check | "Checking face liveness..." with a busy indicator; nothing to do. Registration, face sign-in and onboarding always continue with actions after it (the shipped policy is `ALWAYS_ACTIVE`) | [wireframe sheet](../ux/wireframes.svg), row 2 |
 | Actions | for example "Please smile", "Please blink", "Please turn your head to the left", with an icon and "Step 1 of 2"; 5 s per action by default | [e2e-03-low-confidence-challenge.png](../ux/screenshots/desktop/e2e-03-low-confidence-challenge.png) |
-| After each action | "Action detected", then "Hold still" while the device takes the signed capture | wireframe sheet, rows 4 and 5 |
+| After each action | "Action detected"; after the last one "Look directly at the camera and hold still." until your face is frontal and neutral, then "Hold still" while the device takes the signed capture | wireframe sheet, rows 4 and 5 |
 | Pass | "Good, face captured successfully", green oval; the window closes after about 1 s and the capture screen shows your face | wireframe sheet, row 6 |
 | Not enough evidence of liveness | "We could not verify face liveness. Please try again." with a guidance line and Retry | [e2e-05-print-refused.png](../ux/screenshots/desktop/e2e-05-print-refused.png) |
 | Suspected attack | only "Face verification could not be completed. Please try again.", never the reason | [d-r7-pad-fail-retry.png](../ux/screenshots/desktop/d-r7-pad-fail-retry.png) |
+| Dim light | "We could not verify face liveness. Please try again." with "Improve lighting."; the first three dark tries of one capture do not use an attempt, the fourth does |
 | Third failure | recovery message with a lock icon, Close | [e2e-07-max-attempts-guidance.png](../ux/screenshots/desktop/e2e-07-max-attempts-guidance.png) |
 | Face sign-in by someone else | liveness passes, then "Face match not found" | [e2e-12-face-match-not-found.png](../ux/screenshots/desktop/e2e-12-face-match-not-found.png) |
 
@@ -245,7 +246,7 @@ Every state of both clients, side by side: [../ux/wireframes.svg](../ux/wirefram
 | "The face camera is not available" | MockMDS not running, or it lost the webcam: `bash scripts/mockmds-run.sh --status`, send the `curl` command again, select Retry |
 | Always "Face verification could not be completed" and the webcam light stays off | MockMDS still streams its stock still image: the `curl` command was not accepted |
 | One kind of action fails for you again and again | limit the actions to blink and smile, as in the team's recorded desktop runs: `curl -s -X PUT http://127.0.0.1:8080/admin/config -H 'Content-Type: application/json' -d '{"mosip.registration.liveness.active.challenge_types":"BLINK,SMILE"}'`, then Sync Data in the client |
-| Genuine attempts fail in dim light | face a window or a lamp: the synthetic dim-light clip is refused by the passive check in every attempt ([../eval/calibration-notes.md](../eval/calibration-notes.md) section 4.5) |
+| Genuine attempts fail in dim light | face a window or a lamp: the synthetic dim-light clip is refused by the passive check in every attempt (the client now asks for better lighting for the first three tries; real dim-room recordings are still missing) ([../eval/calibration-notes.md](../eval/calibration-notes.md) section 4.5) |
 | You want to see why an attempt failed | diagnostic mode: [../eval/team-self-test.md](../eval/team-self-test.md) section 2, item 3; reason lines: `grep LIVENESS-DIAG <run>/desktop/logs/registration.log` |
 
 The Android client can use the webcam too (the emulator's front camera is the PC webcam, `ARC_WEBCAM`; see

@@ -93,7 +93,7 @@ Both clients use this class, so retry rules are identical on desktop and Android
 |---|---|---|---|
 | Default | `mosip-onnx-default` | `liveness-onnx` `OnnxLivenessEngineProvider` / `OnnxLivenessEngines`: `DefaultLivenessEngine` with `OnnxFaceAnalyzer` (YuNet + Face Mesh), `MiniFasPassivePad`, `SFaceEmbedder` | Used by both clients |
 | Test engine | none | `DefaultLivenessEngine.builder(...)` with `ScriptedModels` | Core and client unit tests |
-| Vendor engine | any other ID | a jar with its own `LivenessEngineProvider` in `META-INF/services` | Supported by the contract; none written |
+| Vendor engine | any other ID | a jar with its own `LivenessEngineProvider` in `META-INF/services` | Supported by the contract on both clients (desktop registry and Android `EngineLoader.fromConfig` look the ID up with `ServiceLoader`; an unknown ID fails closed with `CONFIG_INVALID`); only a test provider exists, no vendor engine was run |
 
 A vendor engine must honour the session contract above, emit the audit events through the listener, and produce
 `LivenessUiState`s from the shared `MessageKeys`, so that the clients' screens and audit tables keep working.

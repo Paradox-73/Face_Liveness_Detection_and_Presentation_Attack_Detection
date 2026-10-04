@@ -14,9 +14,9 @@ what happens on pass and failure. The step-by-step sequence diagrams are in [seq
 | `exception_photo` | Resident with a biometric exception | stored as the exception photo | `OFF` | (80) |
 | `onboard_auth` | Operator or supervisor at onboarding | stored as the user's reference template | `ALWAYS_ACTIVE` | 95 |
 | `login_auth` | Operator or supervisor at sign-in | matched 1:1, not stored | `ALWAYS_ACTIVE` | 95 |
-| `packet_auth` | Operator confirming a packet | matched 1:1, stored as officer biometrics | `PASSIVE_THEN_ACTIVE` | 95 |
-| `exception_auth` | Supervisor reviewing an exception registration | matched 1:1, stored as supervisor biometrics | `PASSIVE_THEN_ACTIVE` | 95 |
-| `eod_auth` | Supervisor approving packets at end of day | matched 1:1 | `PASSIVE_THEN_ACTIVE` | 95 |
+| `packet_auth` | Operator confirming a packet | matched 1:1, stored as officer biometrics | `ALWAYS_ACTIVE` | 95 |
+| `exception_auth` | Supervisor reviewing an exception registration | matched 1:1, stored as supervisor biometrics | `ALWAYS_ACTIVE` | 95 |
+| `eod_auth` | Supervisor approving packets at end of day | matched 1:1 | `ALWAYS_ACTIVE` | 95 |
 
 `onboard_auth` matters for security: a spoofed onboarding face would become the reference that later face
 authentications are matched against.
@@ -29,7 +29,7 @@ PS04 steps 1-10 map to the code as follows.
 |---|---|---|
 | 1. Start face capture | `GenericBiometricsController.scan` opens `LivenessDialog` when `isLivenessEnforced(REGISTRATION)` | Flutter `BiometricsApi.invokeDiscoverSbi(field, "Face")` reaches `BiometricsDetailsApi`, which asks `FaceCaptureLivenessGate` and starts `LivenessCaptureActivity` (request code 6) |
 | 2. Receive frames from the L0/L1 device | `LivenessRun` opens SBI `STREAM` through `SbiFaceCaptureDevice` | `LivenessRunner` starts `CameraXFrameSource` (built-in L0 device) |
-| 3-4. Passive liveness and PAD, evaluate the score | `DefaultLivenessSession` on the `liveness-worker` thread | same class, same thread model |
+| 3-4. Passive liveness and PAD, evaluate the score | `DefaultLivenessSession` on the `liveness-worker` thread, driven by the core `LivenessSessionDriver` | same class, same driver, same thread model |
 | 5. Accept when the threshold is met | pass token, then the existing capture task; `LivenessGate` binds the signed capture | the built-in device signs the frame the session selected; `session.bind(...)` |
 | 6-8. Otherwise start a challenge, prompt, analyse frames | automatic; prompts drawn by `ChallengeScheduler` | same |
 | 9. Accept only after verification | `BioServiceImpl.captureModality` refuses a face without a valid, unused, bound pass (`REG-LIV-001..009`) | only `RESULT_OK` with a signed rCapture response continues to ARC's unchanged `Biometrics095Service.handleRCaptureResponse` checks |
@@ -42,12 +42,13 @@ PS04 steps 1-10 map to the code as follows.
 **After the maximum attempts** (`mosip.registration.liveness.registration.on_max_failure`):
 - `BLOCK` (shipped default): no face can be stored for this registration; the screen shows "Face capture could
   not be completed after 3 attempts. Please ask your supervisor to follow the centre's recovery process."
-- `SUPERVISOR_OVERRIDE` (MockSync demo profile): desktop shows a "Supervisor override" button for a supervisor
-  (never after a PAD, integrity or binding failure). The capture is stored with `LIVENESS_DECISION=OVERRIDE` and
+- `SUPERVISOR_OVERRIDE` (MockSync demo profile): desktop shows a "Supervisor override" button; it asks for another
+  supervisor's user ID and authenticates that person by face (valid 60 s), then checks the resident photo (one face,
+  passive PAD). It is never offered after a PAD, integrity or binding failure, in this or an earlier window. The capture is stored with `LIVENESS_DECISION=OVERRIDE` and
   audit LV16. Android treats it as `BLOCK`, because the built-in camera keeps no face after a failure (deviation,
   `docs/design/android-liveness.md` section 11.5).
-- The block survives closing and reopening the window: desktop `ExhaustedTransactions`, Android
-  `FaceCaptureLivenessGate` keep the used attempts per registration.
+- The block survives closing and reopening the window: desktop `AttemptHistory`, Android
+  `FaceCaptureLivenessGate` keep the counted attempts, the attack mark and the low-light count per registration.
 
 **Exception photo** (`exception_photo`, policy `OFF`): captured without liveness, and the capture gate refuses an
 exception-photo request that lists no biometric exception (`REG-LIV-013`), so this path cannot replace the

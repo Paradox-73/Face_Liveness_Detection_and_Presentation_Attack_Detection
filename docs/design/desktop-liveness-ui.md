@@ -12,14 +12,15 @@ All new classes are in `io.mosip.registration.controller.liveness`.
 
 | Class / file | Role |
 |---|---|
-| `LivenessPanel` + `fxml/LivenessPanel.fxml` + `liveness-panel.css` | The reusable panel (`fx:root` VBox): live preview (mirrored like a selfie) with an oval face guide, prompt banner (icon, 26 px text, guidance lines, busy indicator), progress bar, "Step i of k", "Attempt i of n", offline badge, diagnostic line, Retry / Cancel / Supervisor override buttons. It only draws. |
+| `LivenessPanel` + `fxml/LivenessPanel.fxml` + `liveness-panel.css` | The reusable panel (`fx:root` VBox): live preview (mirrored like a selfie) with an oval face guide, prompt banner (icon, 26 px text, guidance lines, busy indicator), and, for resident workflows when the resident's language differs from the operator's, a second prompt line in the resident's language (32 px bold, with its own text direction), progress bar, "Step i of k", "Attempt i of n", offline badge, diagnostic line, Retry / Cancel / Supervisor override buttons. It only draws. |
 | `LivenessViewModel` | Pure mapping from the engine's `LivenessUiState` to what the panel shows (texts resolved, which controls are visible, style class). No JavaFX, unit-tested. |
 | `LivenessTexts` | Resolves the shared `liveness.*` keys and the desktop `liveness.ui.*` labels from `labels_<lang>.properties`, with English and then the key as fallbacks; fills `{0}` placeholders; keeps French apostrophes. `withOverrides(config, lang)` first takes a synced replacement text `mosip.registration.liveness.guidance.<messageKey>.<lang>` (G4), with the core rule `LivenessUiStateMapper.resolveText` that the Android client uses too. |
 | `DiagnosticText` | The diagnostic lines of the panel when `diagnostic.enable=Y` (G5). Pure formatting, unit-tested. |
 | `LivenessModelImportDialog` | Supervisor window for the offline model import (B6), opened from the header menu item "Import liveness models". |
 | `LivenessIcons` | SVG path outlines for every `PromptIcon` (blink, smile, head turns, gaze, check, warning, error, camera off, lock). No image files. |
 | `FxLivenessListener` | `LivenessRunListener` that moves callbacks from the `liveness-worker` / `sbi-stream-reader` threads to the FX thread (`Platform.runLater`), in order. Preview frames are coalesced: a frame is decoded only when the previous one was drawn, so the screen never queues frames. |
-| `LivenessDialog` | One verification on screen: a modal window with the panel, driven by one `LivenessRun`. Callbacks `captureReady(context)`, `passed()`, `closedWithoutPass(lastOutcome)`. |
+| `LivenessDialog`, `LivenessDialogSizing` | One verification on screen: a modal window with the panel inside a scroll area, driven by one `LivenessRun`. `LivenessDialogSizing.fit` caps the window height at the visual bounds of the monitor that holds it (+16 px width when it scrolls) and moves it inside those bounds; terminal states scroll to Retry and Close. Callbacks `captureReady(context)`, `passed()`, `closedWithoutPass(lastOutcome)`. |
+| `SupervisorOverrideFlow`, `SupervisorFaceAuth` | The second-person override: prompt for another supervisor's user ID, checks (blank, no operator, the operator himself, role), then face authentication of that supervisor (section 7). |
 | `BaseController` (upstream, additions) | `livenessOrchestrator` bean, `isLivenessEnforced(workflow)`, `openLivenessDialog(...)`, `authenticateFaceWithLiveness(...)`, `faceAuthWorkflow(isPacketAuth, isReviewer)`, `isLivenessRefusal(exception)`; `captureAndValidateFace` puts the liveness context on its capture request. |
 
 ## 2. Flow of one verification
@@ -39,8 +40,9 @@ All new classes are in `io.mosip.registration.controller.liveness`.
    match it).
 6. When the session fails, the panel shows the failure text and guidance; Retry appears while the policy allows
    another attempt (`LivenessRun.retry()`). After the last attempt Cancel becomes Close; for resident workflows
-   with `on_max_failure=SUPERVISOR_OVERRIDE` (never after a suspected attack) a Supervisor override button
-   appears. Closing calls `closedWithoutPass(lastOutcome)`; authentication screens apply the lock rule when
+   with `on_max_failure=SUPERVISOR_OVERRIDE` (never after a suspected attack, in this or an earlier window) a
+   Supervisor override button appears; it asks for another supervisor's user ID and verifies that person's face before
+   the capture (section 7). Closing calls `closedWithoutPass(lastOutcome)`; authentication screens apply the lock rule when
    `lastOutcome.isLockRequired()` (`on_max_failure=BLOCK_AND_LOCK`): the login screen through its
    `validateInvalidLogin`, the other authentication screens through `BaseController.applyLivenessLock`, which
    counts one failed login with `LivenessAccountLock` and shows either the maximum-attempts message or, when the
@@ -62,7 +64,7 @@ lists the service-layer ones.
 | D16 | Operator packet authentication and reviewer, `AuthenticationController.validateFace` | `packet_auth`, `exception_auth` (reviewer) | `authenticateFaceWithLiveness` then the existing `executeFaceValidationTask`. The Stream button starts the liveness window instead of a plain stream. Reviewer window title: "Supervisor verification". |
 | D17 | End-of-day approval, `EODAuthenticationController.validateFace` | `eod_auth` | Same as D16; title "Supervisor verification". |
 | D13 | `BaseController.captureAndValidateFace` | from `faceAuthWorkflow(isPacketAuth, isReviewer)` | Sets `livenessContext` on the request. |
-| D21 | `labels_{en,fr,ar}`, `messages_{en,fr,ar}`, `RegistrationUIConstants` | | 68 label keys (49 for the panel, 19 for the model import window) and 2 alert messages in each language. |
+| D21 | `labels_{en,fr,ar}`, `messages_{en,fr,ar}`, `RegistrationUIConstants` | | 75 `liveness.*` label keys in each language (the panel and model import window keys, 6 override keys `liveness.override.{confirm,prompt,supervisor_id,same_user,auth_failed,auth_expired,not_allowed}` and `liveness.feedback.look_straight`) and 2 alert messages. English, French and Arabic; `liveness.retry.max_resident` uses a `MessageFormat` choice for the singular and plural forms (Arabic has the dual and the 3-10 forms). |
 | B6 | Header menu, `HeaderController.initialize` | - | One line: `LivenessModelImportDialog.addMenuItem(homeSelectionMenu, livenessModelImporter)`. |
 
 **One service-layer fix found during the screen tests:** `MosipDeviceSpecification_095_ProviderImpl.getRCaptureRequest`
@@ -93,7 +95,8 @@ stream when liveness is enforced (it would keep the device busy).
 - No scores and no buttons during the passive check; Retry only in a terminal state that allows it; step counter
   only in the challenge phase; attempt counter only when more than one attempt is allowed.
 - Every state has text, an icon and a colour; colours are checked at 4.5:1 or better against their background.
-- Prompt text 26 px bold, guidance and counters 16 px; buttons at least 44 px high.
+- Prompt text 26 px bold (the resident line 32 px), guidance and counters 16 px; buttons at least 44 px high.
+- The window never exceeds the monitor: content that does not fit scrolls vertically (measured without a window: 619 px at the start, 757 px at maximum attempts with the override, 788 px with the resident line); on a 1366x768 screen those states scroll. The real window has not been opened to confirm the frame size and scroll bar width.
 - Retry is the default button (Enter) and gets keyboard focus when it appears; Cancel is the cancel button
   (Escape); the prompt label carries its text as accessible text for screen readers.
 - Right-to-left: the window takes the scene orientation of the application language; the preview and the icons
@@ -134,8 +137,10 @@ module had no tests before, so `junit` was added with test scope):
 | Test | Covers |
 |---|---|
 | `LivenessBundleParityTest` | every `MessageKeys.all()` key and every `liveness.ui.*` label in `labels_en/fr/ar`; same `liveness.*` key set in the three bundles; same placeholders; alert messages with `#TYPE#` in `messages_en/fr/ar`; French and Arabic differ from English; bundles equal `docs/ux/message-catalogue.csv` |
-| `LivenessViewModelTest` | passive, challenge, feedback, liveness failure with guidance, PAD failure, max attempts with count, device error, success, French and Arabic resolution |
-| `LivenessTextsTest` | primary / fallback / key lookup, placeholders with apostrophes, null bundles, language code mapping, replacement texts per language (blank ignored, placeholders, unknown key) |
+| `LivenessViewModelTest` | resident language line (`residentLanguage`, `residentPrompt()`), passive, challenge, feedback, liveness failure with guidance, PAD failure, max attempts with count, device error, success, French and Arabic resolution |
+| `LivenessTextsTest` | primary / fallback / key lookup, placeholders with apostrophes, null bundles, language code mapping, replacement texts per language (blank ignored, placeholders, unknown key), plural choice forms in English, French and Arabic |
+| `LivenessDialogSizingTest` | window height and position against the monitor's visual bounds, scrolling, minimal moves |
+| `SupervisorOverrideFlowTest` | candidate checks: blank, no operator, the operator himself (case-insensitive), role |
 | `DiagnosticTextTest` | diagnostic lines with policy, engine, PAD score, frame rate, planarity, binding, flags and model hashes; missing parts; model versions from the record |
 | `LivenessModelImportDialogTest` | every import status has its text in English, French and Arabic; result texts fill the versions; model lines; only supervisors and administrators see the menu item |
 | `FxLivenessListenerTest` | callbacks only run on the UI executor, in order; detach drops queued and later callbacks; invalid preview frames ignored |
@@ -155,9 +160,12 @@ Screens and flows were checked against the real client, MockSync and MockMDS wit
 - **D3 (Streamer).** `Streamer` is not turned into a preview consumer; the liveness window draws the preview from
   the run's frames, and `Streamer` stays for modalities and workflows without liveness. It keeps only the
   end-of-stream loop fix.
-- **Supervisor override** is granted by the logged-in user when that user has the `REGISTRATION_SUPERVISOR` role;
-  there is no separate supervisor authentication step in the window yet. Other users see "This user is not a
-  supervisor. A supervisor must verify."
+- **Supervisor override** needs a second person. After the confirmation the window asks for the user ID of another
+  supervisor (`liveness.override.prompt`); the ID must differ from the logged-in operator's (`liveness.override.same_user`)
+  and belong to a user with the `REGISTRATION_SUPERVISOR` role (`liveness.override.not_allowed` otherwise). That
+  supervisor's face is verified (nested liveness window under `exception_auth` when enforced; `liveness.override.auth_failed`);
+  the approval counts for 60 s (`liveness.override.auth_expired`). Only face authentication is used for the approver.
+  The graphical walk-through of this flow has not been run.
 - **Config updated toast** (`liveness.config.updated`) has its text in all bundles but is not shown yet; the
   orchestrator audits configuration changes (`REG-EVT-LV15`).
 - **No bundle generator:** no script writes the language bundles from the catalogue; `docs/ux/message-catalogue.csv` is the

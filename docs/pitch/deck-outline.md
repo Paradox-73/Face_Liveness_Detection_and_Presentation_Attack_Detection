@@ -40,7 +40,7 @@ the claim.
 
 **On the slide**
 - Three columns with one screenshot each:
-  - Desktop resident challenge: `screenshots/desktop/e2e-03-low-confidence-challenge.png` ("Please blink", step 1
+  - Desktop resident challenge: `screenshots/desktop/e2e-03-low-confidence-challenge.png` ("Please smile", step 1
     of 2).
   - Android challenge: `screenshots/android/e2e-06-low-confidence-challenge.png` ("Please smile").
   - Desktop supervisor verification refusing a replay: `screenshots/desktop/e2e-09-eod-replay-refused.png`.
@@ -49,9 +49,12 @@ the claim.
   authentication, supervisor approval, operator onboarding."
 
 **Speaker notes**
-- Passive first: most live people pass in under a second of video without doing anything.
-- When the passive score is below the workflow's threshold (80 for residents, 95 for operators and supervisors), the
-  client asks for randomly chosen actions: blink, smile, turn, look. The user never picks the action.
+- Every workflow that matches a face (registration, sign-in, onboarding, packet, exception and end-of-day
+  approval) ships `ALWAYS_ACTIVE`: after a passive stage of 30 frames (2 s) the client asks for two randomly chosen
+  actions (blink, smile, turn, look). A live resident therefore does need to act; the median accepted attempt takes
+  9.7 s of stream. Passive first is one synced setting per workflow (`PASSIVE_THEN_ACTIVE`: actions only when the
+  passive score is below 80 for residents, 95 for operators and supervisors); it is not the default because
+  synthetic prints scored above the passive threshold. The user never picks the action.
 - A pass does not unlock the camera; it unlocks one signed capture from the device, which must show the same face
   within a time window (capture binding). The service layer refuses any face capture or face authentication that
   lacks such a pass, so no screen can skip it.
@@ -87,9 +90,10 @@ the claim.
   service gate -> packet (LIVENESS_* in the biometric record) + audit REG-EVT-LV01..17
 ```
 
-- Side table "which layer stops which attack" from `docs/test-report/README.md` 3.2 (shipped suite): injected still
+- Side table "which layer stops which attack" from `docs/test-report/README.md` 3.2 (suite of 2026-09-30): injected still
   → integrity; screen photo → passive PAD; print → challenges; screen replay → active PAD; looped clip → loop
-  detection; wrong clip → challenge check.
+  detection; wrong clip → challenge check. Exception: an adaptive screen replay (a clip of the right action for
+  each prompt) passes all layers in the synthetic suite.
 
 **Speaker notes**
 - Models: YuNet (face detection, MIT), Face Mesh (landmarks, Apache-2.0), two MiniFASNet models (PAD, Apache-2.0),
@@ -135,32 +139,41 @@ the claim.
 
 **On the slide**
 - Four large numbers:
-  - **2,224** unit and component tests, 0 failures (13 suites).
-  - **41 / 41** checks: scripted end-to-end run on the real desktop client.
-  - **58 / 58** checks: scripted end-to-end run on the real Android client.
-  - **39** automated liveness and attack scenarios, scored with ISO/IEC 30107-3 metrics.
-- Small table (per attempt, synthetic attacks):
+  - **2,542** tests passed on 2026-10-05 (verification run, 0 failures): about 1,361 come with the upstream MOSIP
+    code, about 1,180 are written by the team.
+  - **41 / 41** checks: scripted end-to-end run on the real desktop client (run at the earlier defaults, not yet
+    repeated at the current ones).
+  - **58 / 58** checks: scripted end-to-end run on the real Android client (same limit).
+  - **75** automated liveness and attack scenarios, 275 transactions, scored with ISO/IEC 30107-3 metrics.
+- Small table (synthetic attacks, per transaction, from `docs/eval/results/20261005-shipped/README.md`):
 
-| Configuration | Worst attack species | All attacks | Genuine rejected |
-|---|---|---|---|
-| before: passive first everywhere | 100% (print moved, looped clip) | 17.6% | 58.2% |
-| **shipped now** (challenges on registration, sign-in, onboarding; engine fixes) | 25% (adaptive replay) | **1.7%** | **29.4%** |
+| Configuration | Worst attack species | Genuine rejected (registration) |
+|---|---|---|
+| legacy: passive first everywhere | 100.0% (80/80, looped clip SYN-A8) | 21.4% (6/28), 35.7% (10/28) on the first attempt |
+| **shipped now** (challenges on every workflow, bundle 1.3.0) | **50.0% (4/8)**, adaptive screen replay SYN-A7, registration; every other species 0.0% | **14.3% (4/28)**, all from one synthetic dark clip |
 
 - Printed on the slide: "Synthetic attacks, three people from open clips: regression results, not an ISO/IEC
-  30107-3 evaluation. Volunteer evaluation next."
+  30107-3 evaluation. No real artefacts, real people or physical phone tested yet."
 
 **Speaker notes**
 - The end-to-end runs cover every PS04 flow on both clients: passive pass, challenges, attacks, maximum attempts,
   device disconnect, supervisor approval, configuration by sync, offline, a live but wrong person refused by the
   face match, audit rows and packet evidence decrypted on the server side.
-- The suite changed our defaults: passive first let synthetic prints through, so registration, sign-in and
-  onboarding now always ask for challenges (one synced key per workflow). All attacks fell from 17.6% to 1.7%;
-  cost about 3 seconds per capture (median 9.7 s instead of 6.6 s).
-- The same run found an engine defect (a left head turn read as a smile) that we fixed: genuine rejection fell from
-  58.2% to 29.4%, and 12 of the remaining 15 rejections come from one synthetic very dark clip.
-- What still passes: a replay that plays the right clip for each prompt, 4 of 16 attempts. That needs a stronger
-  model or device-side PAD.
-- Per-frame time is 21-23 ms median on a laptop, 38-45 ms at the 95th percentile: above our own 20 ms target.
+- The suite changed our defaults: passive first let synthetic prints through, so every workflow that matches a face
+  now always asks for challenges (one synced key per workflow). Legacy pooled attack APCER per transaction was
+  33.3% to 71.4% by workflow; at the shipped defaults every species is 0.0% except SYN-A7. The cost is about
+  3 seconds per capture (median accepted stream 9.7 s instead of 6.6 s, measured 2026-09-30).
+- Genuine rejection: registration 14.3% (4/28) per transaction, all four from one synthetic very dark clip
+  (`bf-s3-dim`), which still ends REJECT where the scenario expects ACCEPT; the clients now show a dim-light
+  guidance ending for it, not counted up to 3 times. Sign-in: 0.0% (0/12). The earlier figure of 29.4% was per
+  attempt (2026-09-30 data) and is historic.
+- What still passes: an adaptive screen replay, one that plays the right clip for each prompt: 4 of 8 transactions
+  (1 of 2 source artefacts). Thresholds do not separate it; it is the known limit of challenge-response and needs
+  device-side PAD or a stronger model. The pooled per-attempt figure 1.7% (4/238) is secondary and never the
+  headline.
+- Per-frame time, latency run at 1 thread on a shared laptop: p50 69.4 ms, p95 162.4 ms, above our own 20 ms
+  target. Android was measured only on an emulator; the phone measurement kit (`docs/test-report/android-performance.md`)
+  has not been run on a phone.
 
 ---
 
@@ -191,13 +204,15 @@ the claim.
 
 **On the slide**
 - Done: shared engine, desktop and Android integration, six workflows, audit and packet evidence, mock device and
-  mock server, automated attack suite, end-to-end runs on both clients.
+  mock server, automated attack suite, end-to-end runs on both clients, desktop and Android decisions compared on
+  one ONNX Runtime release (`docs/test-report/interoperability.md`).
 - Next (in order):
   1. Run the volunteer evaluation (12 people, 8 attack types, ISO/IEC 30107-3 method).
-  2. Android: vendor SBI face devices and L1; measurements on a physical low-end tablet, including the XNNPACK and
-     NNAPI accelerators already selectable.
+  2. Android: vendor SBI face devices and L1; run the measurement kit on a physical phone (CPU, XNNPACK, NNAPI;
+     code done, no phone run yet).
   3. Device-side PAD for L1 devices (challenge sent in the capture request), the answer to adaptive replays.
-  4. Offline model import on Android (built on desktop).
+  4. Offline model import: the Android import (signature, hashes, anti-rollback, kept previous bundle) is built and
+     unit tested; the Flutter screen that starts it is not built yet.
   5. Contribute the changes upstream as reviewable pull requests.
 - Team alias only; links to the repository and the video.
 
@@ -215,8 +230,8 @@ the claim.
 | A1 | Session state diagram | `docs/ux/flows.md` section 1 |
 | A2 | Configuration keys and defaults | `liveness/liveness-core/.../config/LivenessConfigKeys.java`, `docs/design/desktop-liveness-services.md` section 5 |
 | A3 | Audit events LV01-LV17 | `docs/design/desktop-liveness-services.md` section 6 |
-| A4 | Per-species results with confidence intervals | `docs/eval/results/20260930-engine-fixes/shipped/report.md` (before: `docs/eval/results/20260930/*/report.md`) |
-| A5 | Latency tables | `docs/test-report/README.md` section 5 |
+| A4 | Per-species results with confidence intervals | `docs/eval/results/20261005-shipped/report.md` (older: `docs/eval/results/20260930-engine-fixes/shipped/report.md`) |
+| A5 | Latency tables | `docs/test-report/README.md` section 5; `docs/eval/results/20261005-latency/report.md`; `docs/test-report/android-performance.md` |
 | A6 | Limitations and claims we do not make | `docs/test-report/README.md` section 6 |
 | A7 | Traceability summary | `docs/traceability.md` |
 | A9 | Technologies considered and why these | `docs/design/technology-evaluation.md` |

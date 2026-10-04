@@ -89,7 +89,7 @@ The `live` and `live-eod` scenarios use frame packs of real people: keep their o
 | Check | Result |
 |---|---|
 | Text + icon + colour for every state | yes (pictures above) |
-| Contrast | prompt text on banner: `#0B2E4F` on `#E8F1FA` 12.1:1, `#7A1712` on `#FCE8E6` 9.1:1, `#5B3B00` on `#FFF4DB` 9.3:1, `#14532D` on `#E6F4EA` 8.0:1; guidance `#1F2933` on the error banner 12.5:1; white on button `#005BAA` 6.8:1; offline badge white on `#5B4200` 9.4:1 (WCAG 2.1 relative-luminance formula) |
+| Contrast | prompt text on banner: `#0B2E4F` on `#E8F1FA` 12.1:1, `#7A1712` on `#FCE8E6` 9.1:1, `#5B3B00` on `#FFF4DB` 9.3:1, `#14532D` on `#E6F4EA` 8.0:1; guidance `#1F2933` on the error banner 12.5:1; white on button `#005BAA` 6.8:1; offline badge white on `#5B4200` 9.4:1 (WCAG 2.1 relative-luminance formula). The Android capture screen uses the same colour values (unit tests compare them with `liveness-panel.css` and check the contrast ratios) on its dark full screen |
 | Prompt size | 26 px bold; guidance, counters and buttons 16 px |
 | Keyboard | Retry is the default button (Enter) and takes focus when it appears; Escape = Cancel |
 | Screen reader | prompt label accessible text updated with every state; preview has an accessible description |

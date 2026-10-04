@@ -56,11 +56,13 @@ Every key: [configuration.md](configuration.md).
 | Packaging | `liveness-onnx-1.0.0-SNAPSHOT-models.jar` (the `models/` bundle on the class path) in `lib/` | `:livenessmanager:prepareLivenessModels` verifies the bundle with `ModelRegistry.verifyAll()` at build time and copies it to `assets/liveness/models/` |
 | Verification at load | `ModelRegistry`: RS256 signature of `manifest.json` against the built-in trust anchor, SHA-256 of every file, bundle version at least `model.min_version` | same class, same checks, on the APK assets |
 | On failure | Engine not created, audit LV14, every enforced face capture refused (fail closed) | same |
-| Update path | New client release through MOSIP's software upgrade (jar hashes listed in `MANIFEST.MF` and checked by `ClientSetupValidator` outside `environment=LOCAL`) | New APK |
-| Rollback protection | Raise `mosip.registration.liveness.model.min_version` by sync; an older bundle then refuses to load | same |
+| Update path | New client release through MOSIP's software upgrade (jar hashes listed in `MANIFEST.MF` and checked by `ClientSetupValidator` outside `environment=LOCAL`), or offline import of a signed bundle by a supervisor (`LivenessModelImporter`, import window) | New APK, or offline import of a signed bundle (`ModelBundleImporter`, [android-liveness.md](android-liveness.md) section 14) |
+| Rollback protection | Raise `mosip.registration.liveness.model.min_version` by sync (shipped default `1.3.0`); an older bundle then refuses to load; an import also raises a version floor kept in the store | same |
 
-Not done: an online test of a model upgrade through a MockSync upgrade endpoint (T-MI-06) and the offline
-USB import of a signed bundle (bonus B6). MockSync has no client-upgrade endpoint, and the desktop run layout uses
+The offline import of a signed bundle (bonus B6) exists on both clients: the desktop import window ran end to end on
+2026-09-30 (flow 65, at the bundle versions of that day; it needs a bundle of 1.3.1 or higher now), the Android importer is
+covered by unit tests only (no Flutter button, no phone run). Not done: an online test of a model upgrade through a
+MockSync upgrade endpoint (T-MI-06). MockSync has no client-upgrade endpoint, and the desktop run layout uses
 `environment=LOCAL`, which skips the jar hash check. The verification code that such an update would rely on
 (signature, hashes, minimum version, fail closed) is in place and unit-tested (`ModelRegistryTest`,
 `ModelSignerTest`).

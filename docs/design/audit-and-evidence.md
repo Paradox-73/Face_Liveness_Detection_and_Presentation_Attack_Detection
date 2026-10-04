@@ -19,7 +19,7 @@ Defined in `io.mosip.liveness.core.audit.AuditEventId`; payload built by `AuditP
 | REG-EVT-LV05 | LIVENESS_CHALLENGE_PASSED | action verified | `type`, `onsetMs`, `holdMs` |
 | REG-EVT-LV06 | LIVENESS_CHALLENGE_FAILED | wrong, early, not held or no action | `type`, `reason` |
 | REG-EVT-LV07 | LIVENESS_TIMEOUT | passive or challenge timeout | `phase` (session state) |
-| REG-EVT-LV08 | LIVENESS_PAD_ATTACK_SUSPECTED | PAD or integrity failure | `reason` (`PAD_SCORE`, `FROZEN`, `LOOP`, `PLANAR`, `FACE_SWITCH`, `DEVICE_PAD`, ...) |
+| REG-EVT-LV08 | LIVENESS_PAD_ATTACK_SUSPECTED | PAD or integrity failure (not written for a dim-light `LOW_LIGHT` ending) | `reason` (`PAD_SCORE`, `FROZEN`, `LOOP`, `PLANAR`, `FACE_SWITCH`, `DEVICE_PAD`, ...) |
 | REG-EVT-LV09 | LIVENESS_BINDING_FAILED | signed capture does not match the session, or a gate refusal | `similarityBucket`, `gapMs`, `challengeEchoOk`, `reason` |
 | REG-EVT-LV10 | LIVENESS_PASSED | session passed after binding | `method`, `totalMs` |
 | REG-EVT-LV11 | LIVENESS_MAX_RETRIES | last counted attempt failed (once per transaction) | `attempts`, `onMaxFailure` |
@@ -27,7 +27,7 @@ Defined in `io.mosip.liveness.core.audit.AuditEventId`; payload built by `AuditP
 | REG-EVT-LV13 | LIVENESS_ENGINE_ERROR | load or inference error | `errorCode` (`EngineErrorCode`), `errorClass` |
 | REG-EVT-LV14 | LIVENESS_MODEL_INTEGRITY_FAILED | signature, hash or version check failed | `modelId` |
 | REG-EVT-LV15 | LIVENESS_CONFIG_APPLIED | liveness keys changed since the last check, or a value was clamped | `changed` (key names) |
-| REG-EVT-LV16 | LIVENESS_OVERRIDE_USED | supervisor override of a resident failure | `supervisorId` |
+| REG-EVT-LV16 | LIVENESS_OVERRIDE_USED | supervisor override of a resident failure; desktop writes one per grant or refusal | `supervisorId`; desktop also `decision` (`GRANTED`, `REFUSED`), `reason`, `userId`, `faces`, `scoreBucket` |
 | REG-EVT-LV17 | LIVENESS_DIAGNOSTIC_MODE | diagnostic mode toggled | `userId` |
 
 - **Components:** desktop `REG-MOD-153` (`Components.REG_LIVENESS`), Android `REG-MOD-111` (`Components.LIVENESS`).

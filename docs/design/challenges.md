@@ -50,8 +50,9 @@ over the 14 allowed sequences of the default pool with k = 2, and over 68 sequen
 **Replay odds:** a fixed pre-recorded video answers the right prompts by chance with probability 1 / |allowed
 sequences| per attempt: 1/14 (7.1%) for the default pool with k = 2, 1/68 (1.5%) with k = 3. With `max_retries` = 3
 the chance over a whole transaction is at most 3/14 (21%) for k = 2. Other layers (random timing, onset rule,
-continuous PAD, planarity) cut this further; the measured result for an adaptive replay is in
-[iso-30107.md](iso-30107.md).
+continuous PAD) cut this further; planarity is not counted on, because it has no attack evidence and does not stop a
+screen that replays a real head turn. The measured result for an adaptive replay (the one attack that still passes)
+is in [iso-30107.md](iso-30107.md).
 
 ## 4. One challenge, step by step
 
@@ -60,7 +61,7 @@ sequenceDiagram
   participant S as Session (worker thread)
   participant UI as Screen
   S->>S: CHALLENGE_WAIT: random wait 400-1,500 ms
-  S->>S: wait for neutral face (yaw < 10, pitch < 12, eyes open) held 300 ms
+  S->>S: wait for neutral face (yaw < 10, pitch < 20, eyes open) held 300 ms
   S->>S: same-person check on that frame (SFace)
   S->>UI: LivenessUiState CHALLENGE "Please smile", step 1 of 2 (LV04)
   loop every analysed frame
@@ -87,6 +88,8 @@ Rules, all in `ChallengeObserver`:
   Spontaneous blinks are ignored (people blink every few seconds), and gaze is not checked during head movements.
 - **Neutral between prompts:** each prompt waits for the face to return to neutral, so one continuous motion
   cannot answer two prompts.
+- **Neutral pitch limit:** 20 degrees (`active.neutral_max_pitch_deg`, equal to `quality.max_pitch_deg`; it was 12, which left faces the quality gate admits stuck in `NEUTRAL_TIMEOUT`). Yaw stays 10 degrees.
+- **Several faces:** more than one face on 3 frames in a row during the active phase ends the session `QUALITY` / `MULTI_FACE`, not counted.
 - **Timeout:** `active.challenge_timeout_ms` per challenge (default 5,000 ms, range 2,000-15,000 ms; the upper
   end gives slow movers more time).
 
@@ -99,6 +102,7 @@ PS04 UI section 4 asks for real-time guidance. The session emits a new `Liveness
 | `CHALLENGE` | `liveness.challenge.<type>` | "Please blink" |
 | `CHALLENGE` (between prompts, face neutral; "Look directly at the camera." until it is) | `liveness.feedback.continue` | "Please continue" |
 | `ACTION_DETECTED` | `liveness.feedback.detected` | "Action detected" |
+| `HOLD_STILL` (after the last challenge, until a neutral frame is found; then capture ready, signed capture running) | `liveness.feedback.look_straight` | "Look directly at the camera and hold still." |
 | `HOLD_STILL` (capture ready, signed capture running) | `liveness.feedback.hold_still` | "Hold still" |
 | `SUCCESS` | `liveness.feedback.success` | "Good, face captured successfully" |
 

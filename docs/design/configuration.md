@@ -34,7 +34,7 @@ flowchart LR
 7. Resolved at every session start and every gate check.
 
 **Local override** (column "Local" below): "yes" means the key may be changed on the client machine (MOSIP
-`PermittedLocalConfig`); "no" means only the synced value is used. Rule: `LivenessConfigKeys.isLocalOverrideAllowed`.
+`PermittedLocalConfig`); "no" means only the synced value, or the shipped default, is used. Rule: `LivenessConfigKeys.isLocalOverrideAllowed`, applied by the desktop `LivenessConfig` and the Android `GlobalParamConfigSource`. The list is: `passive.threshold` and `pad.reject_threshold` (both clamped to their floors), `active.challenge_timeout_ms`, `stream.timeout_ms`, `max_retries`, `diagnostic.enable`, and the per-workflow `<workflow>.passive.threshold` and `<workflow>.max_retries`. Every other liveness key ignores a local value, so a local setting cannot switch off the challenges, shorten the pool or lower the binding similarity.
 
 ## 2. Master switch and engine
 
@@ -43,30 +43,33 @@ flowchart LR
 | `mosip.registration.liveness.enable` | Y/N | `Y` | | no | Master switch. `N` resolves every workflow to `OFF`. |
 | `mosip.registration.liveness.engine` | string | `mosip-onnx-default` | engine IDs found by `ServiceLoader` | no | Which `LivenessEngineProvider` builds the engine. |
 | `mosip.registration.liveness.engine.execution_provider` | `CPU` / `XNNPACK` / `NNAPI` | `CPU` | unknown value means `CPU` | no | ONNX Runtime back end of the default engine, read when the engine loads (restart needed). A back end the installed runtime lacks falls back to CPU. Android reads it (`livenessmanager/engine/AcceleratorCustomizer`); the desktop Windows runtime has only CPU and does not read it ([calibration notes](../eval/calibration-notes.md) 0.4). |
-| `mosip.registration.liveness.model.min_version` | semantic version | `1.0.0` | | no | Oldest model bundle version accepted; an older bundle fails to load (rollback protection, audit LV14). |
+| `mosip.registration.liveness.model.min_version` | semantic version | `1.3.0` | | no | Oldest model bundle version accepted; an older bundle fails to load (rollback protection, audit LV14). |
 
 ## 3. Policy per workflow
 
 | Key | Type | Default | Local | Meaning |
 |---|---|---|---|---|
-| `mosip.registration.liveness.policy.registration` | `OFF` / `PASSIVE_ONLY` / `PASSIVE_THEN_ACTIVE` / `ALWAYS_ACTIVE` | `ALWAYS_ACTIVE` | no | Resident face capture |
+| `mosip.registration.liveness.policy.registration` | `OFF` / `PASSIVE_ONLY` / `ALWAYS_ACTIVE` / `ALWAYS_ACTIVE` | `ALWAYS_ACTIVE` | no | Resident face capture |
 | `mosip.registration.liveness.policy.exception_photo` | same | `OFF` | no | Exception photo of a resident with a biometric exception |
 | `mosip.registration.liveness.policy.onboard_auth` | same | `ALWAYS_ACTIVE` | no | Operator / supervisor onboarding face |
 | `mosip.registration.liveness.policy.login_auth` | same | `ALWAYS_ACTIVE` | no | Face sign-in |
-| `mosip.registration.liveness.policy.packet_auth` | same | `PASSIVE_THEN_ACTIVE` | no | Operator packet authentication |
-| `mosip.registration.liveness.policy.exception_auth` | same | `PASSIVE_THEN_ACTIVE` | no | Supervisor review of an exception registration |
-| `mosip.registration.liveness.policy.eod_auth` | same | `PASSIVE_THEN_ACTIVE` | no | Supervisor end-of-day approval |
+| `mosip.registration.liveness.policy.packet_auth` | same | `ALWAYS_ACTIVE` | no | Operator packet authentication |
+| `mosip.registration.liveness.policy.exception_auth` | same | `ALWAYS_ACTIVE` | no | Supervisor review of an exception registration |
+| `mosip.registration.liveness.policy.eod_auth` | same | `ALWAYS_ACTIVE` | no | Supervisor end-of-day approval |
 
 Policy modes:
 - `OFF`: no liveness; the capture carries `LIVENESS_METHOD=NONE` and no `LIVENESS_*` evidence.
 - `PASSIVE_ONLY`: pass at the passive threshold, otherwise fail `BELOW_THRESHOLD`.
-- `PASSIVE_THEN_ACTIVE`: PS04 flow; challenges when the score is below the threshold.
+- `PASSIVE_THEN_ACTIVE`: PS04's literal flow; challenges when the score is below the threshold. No workflow ships with it; a server setting can select it per workflow.
 - `ALWAYS_ACTIVE`: passive PAD still runs and can reject, then challenges always.
 
-Why three workflows default to `ALWAYS_ACTIVE` (since 2026-09-30, proposal P1): the synthetic suite showed prints
-and screen replays that the passive model scores 82-99, above both passive thresholds. With challenges on
-registration, sign-in and onboarding the pooled APCER fell from 17.6% to 1.7% per attempt; the cost is about 3 s
-more per accepted capture (median 6.6 s to 9.7 s). Details: [decision-flow.md](decision-flow.md) section 5,
+Why every workflow except `exception_photo` defaults to `ALWAYS_ACTIVE` (registration, sign-in and onboarding since
+2026-09-30, proposal P1; the three supervisor and packet workflows `packet_auth`, `exception_auth` and `eod_auth` since
+2026-10-04): the synthetic suite showed prints and screen replays that the passive model scores 82-99, above both
+passive thresholds, so a passive-first supervisor workflow accepted them. In the 2026-09-30 suite challenges on
+registration, sign-in and onboarding cut the pooled APCER from 17.6% to 1.7% per attempt (a pooled figure; per species
+and per transaction the worst case is the adaptive screen replay, SYN-A7, accepted in 4 of 8 registration
+transactions in the 2026-10-05 run); the cost is about 3 s more per accepted capture (median 6.6 s to 9.7 s). Details: [decision-flow.md](decision-flow.md) section 5,
 [calibration notes](../eval/calibration-notes.md) section 0.
 
 ## 4. Passive stage
@@ -77,7 +80,7 @@ more per accepted capture (median 6.6 s to 9.7 s). Details: [decision-flow.md](d
 | `mosip.registration.liveness.<workflow>.passive.threshold` | int 0-100 | 95 for `onboard_auth`, `login_auth`, `packet_auth`, `exception_auth`, `eod_auth`; unset for others | 50-100 | yes | Per-workflow threshold |
 | `mosip.registration.liveness.pad.reject_threshold` | int 0-100 | 20 | 5-100, at most the passive threshold | yes | Score below which the face counts as a presentation attack and fails at once |
 | `mosip.registration.liveness.passive.min_frames` | int | 30 | 1-60 | no | Good frames the passive score is taken over (30 frames = 2 s at 15 fps, long enough for the loop detector). If `passive.timeout_ms` ends first, a session with at least 8 good frames (engine parameter `passive.timeout_min_frames`) decides on those |
-| `mosip.registration.liveness.passive.timeout_ms` | int ms | 4,000 | 1,000-60,000 | yes | Maximum time for acquisition plus the passive stage |
+| `mosip.registration.liveness.passive.timeout_ms` | int ms | 4,000 | 1,000-60,000 | no | Maximum time for acquisition plus the passive stage |
 
 ## 5. Active stage
 
@@ -86,7 +89,7 @@ more per accepted capture (median 6.6 s to 9.7 s). Details: [decision-flow.md](d
 | `mosip.registration.liveness.active.enable` | Y/N | `Y` | | no | Allow escalation to challenges (`ALWAYS_ACTIVE` ignores it) |
 | `mosip.registration.liveness.active.min_challenges` | int | 2 | 1-5 | no | Challenges per active stage |
 | `mosip.registration.liveness.<workflow>.min_challenges` | int | unset | 1-5 | no | Per-workflow count |
-| `mosip.registration.liveness.active.challenge_types` | CSV of `BLINK`, `SMILE`, `TURN_LEFT`, `TURN_RIGHT`, `LOOK_UP`, `LOOK_DOWN`, `GAZE_LEFT`, `GAZE_RIGHT` | `BLINK,SMILE,TURN_LEFT,TURN_RIGHT,LOOK_UP` | unknown names dropped; no valid name gives the default | yes | Challenge pool |
+| `mosip.registration.liveness.active.challenge_types` | CSV of `BLINK`, `SMILE`, `TURN_LEFT`, `TURN_RIGHT`, `LOOK_UP`, `LOOK_DOWN`, `GAZE_LEFT`, `GAZE_RIGHT` | `BLINK,SMILE,TURN_LEFT,TURN_RIGHT,LOOK_UP` | unknown names dropped; no valid name gives the default | no | Challenge pool |
 | `mosip.registration.liveness.active.challenge_timeout_ms` | int ms | 5,000 | 2,000-15,000 | yes | Time allowed per challenge |
 | `mosip.registration.liveness.active.min_onset_ms` | int ms | 200 | 0-2,000 | no | Reactions faster than this are refused (`ONSET_TOO_FAST`) |
 | `mosip.registration.liveness.active.hold_ms` | int ms | 300 | 0-3,000 | no | Time the action must be held |
@@ -120,7 +123,7 @@ more per accepted capture (median 6.6 s to 9.7 s). Details: [decision-flow.md](d
 
 | Key | Type | Default | Range | Local | Meaning |
 |---|---|---|---|---|---|
-| `mosip.registration.liveness.binding.min_similarity` | int 0-100 | 60 | 0-100 | yes | Minimum SFace similarity between the signed capture and the session face (also the same-person check during the session) |
+| `mosip.registration.liveness.binding.min_similarity` | int 0-100 | 60 | 0-100 | no | Minimum SFace similarity between the signed capture and the session face (also the same-person check during the session) |
 | `mosip.registration.liveness.binding.max_gap_ms` | int ms | 5,000 | 500-120,000 | no | Time allowed from the pass (resident) or device Ready (authentication) to the capture; the token lives this plus 10 s |
 
 ## 9. Diagnostics, metrics and texts
@@ -135,7 +138,7 @@ more per accepted capture (median 6.6 s to 9.7 s). Details: [decision-flow.md](d
 
 | Key | Client | Type | Default | Read by | Meaning |
 |---|---|---|---|---|---|
-| `mosip.registration.liveness.android.device` | Android | `BUILTIN` / `SBI` | `BUILTIN` | `DefaultLivenessService` | Face device: built-in camera as L0 device, or a vendor SBI app |
+| `mosip.registration.liveness.android.device` | Android | `BUILTIN` / `SBI` | `BUILTIN` | `FaceDeviceSelection` | Face device: built-in camera as L0 device, or a vendor SBI app. Blank or unknown values mean `BUILTIN` (a warning goes to Logcat). `SBI` without an installed app that answers `io.sbi.device` falls back to the built-in camera. With liveness off (`enable=N` or policy `OFF`) the built-in screen takes a plain photo (no evidence, no attempt counted) and an installed SBI app takes the upstream capture path |
 | `mosip.registration.liveness.android.block_emulator` | Android | Y/N | `N` (Y recommended in production) | `LivenessRuntime` | Refuse to run liveness on an emulator (`EMULATOR_BLOCKED`, audit LV12) |
 | `mosip.registration.android.offline_approval.enable` | Android | Y/N | `Y` | `approve_packet_ui.dart` | Supervisor approval without a network connection |
 | `mosip.registration.liveness.face_auth.match_threshold` | Android | int 0-100 | 40 (floor 20) | `EngineFaceVerifier` | 1:1 match threshold for face authentication on the tablet |
@@ -159,7 +162,7 @@ Details: [../api/face-match-sdk.md](../api/face-match-sdk.md).
 
 Values such as the head-turn angle (20 degrees), blink duration (80-500 ms) or the frozen-frame difference
 (0.5 grey levels) are `EngineParameter`s. They change only with a new signed model bundle (`engineParams` in
-`models/manifest.json`; bundle 1.0.1 sets `quality.min_sharpness=40`), never through sync, so a configuration change cannot weaken detection below what was
+`models/manifest.json`; bundle 1.3.0 sets `quality.min_sharpness=40` and `integrity.loop_window_frames=300`), never through sync, so a configuration change cannot weaken detection below what was
 tested. The full list with defaults is in `liveness/README.md`, "Tunable parameters".
 
 ## 13. Changing a key for a demo

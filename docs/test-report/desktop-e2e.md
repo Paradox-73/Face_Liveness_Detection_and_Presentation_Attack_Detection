@@ -14,6 +14,21 @@ finger and iris devices. The camera was replaced by frame packs (recorded frames
 - Two flows were run step by step with the same driver in interactive mode rather than by the script: first
   operator onboarding and supervisor override (section 3.2).
 
+**Status on 2026-10-05: this report describes the code and defaults of 2026-09-30.** The 41 checks ran with all
+six workflows (except the exception photo, which is off) set to `PASSIVE_THEN_ACTIVE`: a high passive score passed
+without challenges. Since then the shipped
+defaults changed: `registration`, `login_auth`, `onboard_auth` and the three supervisor workflows (`packet_auth`,
+`exception_auth`, `eod_auth`) are `ALWAYS_ACTIVE` (challenges on every capture), the retry count survives Cancel and
+reopened windows, an override needs a second supervisor's face check and a checked photo, the desktop run uses the
+shared session driver of `liveness-core`, and the model bundle is 1.3.0. The flow descriptions below for D1, D3, D5, D7
+and D11 (a pass "without challenges" or a passive pass) and the 41 of 41 result are therefore **not a result at the
+shipped defaults**. A re-run of `scripts/demo-desktop.sh` at the shipped defaults is pending: it needs a desktop
+window (the team has not run it since the change) and recordings of the enrolled face turning right and looking up
+(the enrolled pack `s3` has only main, blink, smile and turn-left; with the five-action pool and two challenges it can
+answer about 3 of 10 challenge pairs, so those flows would log "FOLLOW no pack for turn_right/look_up"). Flow 60 of the
+demo script was rewritten for the PS04 passive-first flow (it switches `policy.registration` to
+`PASSIVE_THEN_ACTIVE`, then back) and has not been run either.
+
 ## 1. Set-up
 
 | Part | What was used |
@@ -26,7 +41,7 @@ finger and iris devices. The camera was replaced by frame packs (recorded frames
 | Driver | `tools/mock-sync/e2e/DesktopFlowDriver.java` runs the client in its own JVM and executes `tools/mock-sync/e2e/flows/demo-desktop.flow`. It fires the client's own buttons (no operating-system input), so it works on a locked screen. Snapshots hide the camera preview, captured faces and HTML previews (`mask on`). |
 | Machine | Windows 11 laptop, 12 threads, 16 GB; other engineers' builds and an Android emulator ran at the same time. |
 
-Policies in force (shipped values): resident `registration` PASSIVE_THEN_ACTIVE, passive threshold 80; `login_auth`,
+Policies in force during the reference run (the shipped values of 2026-09-30, not today's): resident `registration` PASSIVE_THEN_ACTIVE, passive threshold 80; `login_auth`,
 `packet_auth`, `exception_auth`, `eod_auth` and `onboard_auth` PASSIVE_THEN_ACTIVE with passive threshold 95;
 `pad.reject_threshold` 20; 2 challenges; 3 attempts; on the last failure SUPERVISOR_OVERRIDE for residents and BLOCK
 for operators; `exception_photo` OFF.
@@ -34,7 +49,7 @@ for operators; `exception_photo` OFF.
 ## 2. How to reproduce
 
 ```bash
-. toolchain/env.sh                                   # or any JDK 11 with JavaFX and javac as JAVA11_HOME
+export JAVA_HOME="$JAVA11_HOME"                      # JDK 11 with JavaFX and javac (docs/install/README.md section 1)
 bash scripts/desktop-build.sh --mocksync             # once
 bash scripts/demo-desktop.sh --restore-golden        # about 10 minutes; results in run/demo/desktop-<time>/results.txt
 ```
@@ -81,7 +96,7 @@ paths are relative to `docs/`; `log` is `test-report/desktop-e2e/driver-summary.
 | Liveness audits of face login were lost: `AuditManagerSerivceImpl` read `SessionContext.map()` before login, when it is null (NullPointerException, 22 lost events in the log) | `clients/desktop/.../audit/AuditManagerSerivceImpl.java` | null check; test `AuditFactoryTest.auditBeforeLoginIsStored`; 0 lost events since |
 | `REG-EVT-LV11` was written twice per exhausted transaction: by the engine session and again by `LivenessRun` | `clients/desktop/.../service/bio/liveness/LivenessRun.java` | `LivenessRun` writes it only when the engine did not; test `LivenessOrchestratorTest.maxRetriesIsAuditedOnceWhenTheEngineReportsIt`; one LV11 per transaction since |
 | A liveness check started while the client rescanned its devices failed with "The face camera is not available" | `SbiFaceCaptureDevice.resolve` | waits up to 3 s for the running scan; `SbiFaceCaptureDeviceResolveTest` (4 tests) |
-| Closing and reopening the liveness window gave a fresh set of attempts | `LivenessOrchestrator` | used-up transactions are remembered per workflow and person (`ExhaustedTransactions`, `REG-LIV-014`); fixed earlier in this phase |
+| Closing and reopening the liveness window gave a fresh set of attempts | `LivenessOrchestrator` | used-up transactions are remembered per workflow and person (`ExhaustedTransactions` at the time of this run, now `AttemptHistory`; `REG-LIV-014`); fixed earlier in this phase |
 | Every manual sync ended with a "Registration Packet Status Reader: Failed" alert: MockSync answered the packet status query with an empty list | `tools/mock-sync/.../web/RegProcController.java` | one `RECEIVED` status per requested packet; `SyncEndpointsTest.packetStatusAnswersEveryRequestedPacket` |
 | L1 devices could never be trusted: MockMDS's FTM root expired in 2022 and the client refuses expired CAs (`KER-PCM-004`) | `devices/mock-mds/Biometric Devices` | root re-issued with the same key, valid to 2035 (`devices/mock-mds/scripts/renew-ftm-root.sh`); MockSync serves it under DEVICE and FTM; MockMDS tests 226/226 pass |
 | The client and demo needed the SFace SDK, the liveness jars, ONNX Runtime and MOSIP's mock SDK in `lib/` | `registration-services/pom.xml`, `scripts/desktop-build.sh`, MockSync config | runtime dependency on `face-match-sdk`; FACE keys in `mock-sync-defaults.properties`; the build copies `mock-sdk.jar` from `run/cache` |
@@ -89,16 +104,18 @@ paths are relative to `docs/`; `log` is `test-report/desktop-e2e/driver-summary.
 
 ## 5. Known issues and limits
 
-1. **The rigid-motion print passes the passive check under the shipped policy.** In run 1 `a-s2-print-affine` was
+1. **The rigid-motion print passed the passive check under the policy of 2026-09-30 (closed by the shipped defaults since).** In run 1 `a-s2-print-affine` was
    accepted as a resident face 2 s after Retry, without any challenge (04:12:03-04:12:05: "Checking face
    liveness", "Hold still", "Good, face captured successfully"). The evaluation measured a passive score of 90 for
    this pack; `docs/eval/calibration-notes.md` 3.2 lists four such synthetic attacks. With `policy.registration` set
    to ALWAYS_ACTIVE (part of evaluation proposal P1, which also covers `login_auth` and `onboard_auth`) the same
-   print is refused (D8). MockSync's defaults still ship PASSIVE_THEN_ACTIVE, because MockSync is shared with the Android
-   client and the change adds two challenges (about 7 s) to every capture and login; the decision is open.
+   print is refused (D8). MockSync's defaults shipped PASSIVE_THEN_ACTIVE at the time of the run; they now ship ALWAYS_ACTIVE for
+   registration, sign-in, onboarding and the three supervisor workflows (two challenges add about 7 s to a capture).
 2. **Supervisor override after a print.** In I2 the override accepted the face of a printed photo: its three
    failures were challenge timeouts, and the core allows an override after `ACTIVE`/`TIMEOUT` failures (never after
-   PAD, integrity or binding failures). The capture is marked `OVERRIDE` in the packet for review.
+   PAD, integrity or binding failures). The capture is marked `OVERRIDE` in the packet for review. Since then the
+   override needs a second supervisor (user ID and face check, valid 60 s) and the photo is checked for one face and a
+   passive PAD score; that flow has unit tests but was not run on a screen.
 3. **Spontaneous blinks at the prompt fail a blink challenge** (`ONSET_TOO_FAST`, engine proposal E2). Seen with
    pack `s1` in D11 (two of three attempts) and in earlier runs with `s1` as supervisor; the driver presses Retry
    like an operator would, and the retry passes.
@@ -129,6 +146,9 @@ paths are relative to `docs/`; `log` is `test-report/desktop-e2e/driver-summary.
 | same module, full suite | `mvn -o -pl registration-services test` | 818 run, 0 failures, 4 errors, 17 skipped. Errors: the two known expired-certificate tests (`ClientIntegrityValidatorTest`, `ManifestCreatorTest`, `docs/install/desktop.md` section 7) and `BioServiceTest` twice, because it binds port 4501, which the running MockMDS held. The suite rewrites `MANIFEST.MF` and creates `lib/`, `SCHEMA_0.5.json`, `newProcess.json`, `.UNKNOWN_JARS`; they were restored and deleted afterwards. |
 | `tools/mock-sync` | `mvn -o test` | 37 run, 0 failures |
 | `devices/mock-mds` (renewed FTM keys) | `mvn -o test` with Java 21 | 226 run, 0 failures |
+
+These counts are from 2026-09-30. Current counts per suite, with the commands a reader can run, are in
+[README.md](README.md) section 2 (desktop liveness tests on 2026-10-05: `registration-services` 150, `registration-client` 63, 0 failures).
 
 ## 7. Evidence files
 

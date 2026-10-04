@@ -67,7 +67,7 @@ R = resident, L = login, E = end of day).
 | Capture blocked for the registration after maximum attempts | — | [e2e-09-blocked-under-scan.png](screenshots/android/e2e-09-blocked-under-scan.png), [a-r3-resident-max-attempts.png](screenshots/android/a-r3-resident-max-attempts.png) |
 | No face in view (no attempt used) | [d-r12-no-face.png](screenshots/desktop/d-r12-no-face.png) | — |
 | Printed photo accepted under the shipped policy (known weakness, kept as evidence) | — | [e2e-14-print-accepted-shipped-policy.png](screenshots/android/e2e-14-print-accepted-shipped-policy.png) |
-| Supervisor override offered after the last resident attempt (policy `SUPERVISOR_OVERRIDE`, no suspected attack) | — | [capture-override-offered-diagnostics.png](screenshots/android/capture-override-offered-diagnostics.png) (run with `max_retries=1`, so the text reads "after 1 attempts"; diagnostic panel on) |
+| Supervisor override offered after the last resident attempt (policy `SUPERVISOR_OVERRIDE`, no suspected attack) | — | [capture-override-offered-diagnostics.png](screenshots/android/capture-override-offered-diagnostics.png) (run with `max_retries=1`; the picture was taken before the plural fix and reads "after 1 attempts", the app now reads "after 1 attempt"; diagnostic panel on) |
 | Supervisor override confirmation, supervisor user ID | — | [capture-override-supervisor-dialog.png](screenshots/android/capture-override-supervisor-dialog.png) |
 
 ## 5. Device errors
@@ -98,35 +98,48 @@ R = resident, L = login, E = end of day).
 | Resident positioning | present | missing | Android capture screen goes to checking at once with replay |
 | Device unavailable with its own wording | wrong text | not applicable | Desktop maps a refused stream to the "disconnected" message; fix in the services layer |
 | Offline badge | present | missing | Screen capture returns a stale frame in airplane mode; use `uiautomator` screenshot or a physical device |
-| Supervisor override (resident) | missing | present (text "after 1 attempts", see retakes) | Desktop: run section I2 of the desktop report with snapshots on |
+| Supervisor override (resident) | missing | present (text "after 1 attempts" from before the plural fix, see retakes) | Desktop: run section I2 of the desktop report with snapshots on |
 | Packet authentication by face | missing | present | Desktop driver section D3 has no snapshot step |
 | Arabic / Hindi capture screen on Android | missing | missing | Pictures exist only in the scratch folder of the module engineer; re-take with the masked replay |
 | Diagnostic mode (scores shown to a supervisor) | present: [e2e-13-diagnostic-mode.png](screenshots/desktop/e2e-13-diagnostic-mode.png) (not yet captioned in [desktop-liveness.md](desktop-liveness.md)) | present: [capture-override-offered-diagnostics.png](screenshots/android/capture-override-offered-diagnostics.png) | — |
 | Configuration updated notice (`liveness.config.updated`) | missing | missing | Text exists but no screen shows it yet |
 | Drawn wireframes | present | present | [wireframes.svg](wireframes.svg), both clients side by side, 14 states |
 
-### 7.1 Retakes still needed (2026-10-04)
+### 7.1 Retakes still needed (2026-10-05)
 
 | Picture | Problem | Retake |
 |---|---|---|
 | [d-r8-max-attempts.png](screenshots/desktop/d-r8-max-attempts.png) | Taken during attempt 3 while the positioning tip "Ensure your face is clearly visible." was shown, not after the attempt ended; captioned as what it shows | Run the driver's `static-pad` scenario again and snapshot after the third failure (lock icon, Close), or drop the file: [e2e-07-max-attempts-guidance.png](screenshots/desktop/e2e-07-max-attempts-guidance.png) already shows that state |
-| [e2e-03-low-confidence-challenge.png](screenshots/desktop/e2e-03-low-confidence-challenge.png) | Shows "Please smile" (challenges are random); earlier captions said "Please blink". Captions in this folder are fixed; [../pitch/deck-outline.md](../pitch/deck-outline.md) still says "Please blink" | No retake needed; fix the deck caption |
-| [capture-override-offered-diagnostics.png](screenshots/android/capture-override-offered-diagnostics.png), [capture-override-supervisor-dialog.png](screenshots/android/capture-override-supervisor-dialog.png) | Text reads "after 1 attempts" (run with `max_retries=1`; the message has no singular form) | Retake after the plural fix, or with the shipped 3 attempts |
+| [e2e-03-low-confidence-challenge.png](screenshots/desktop/e2e-03-low-confidence-challenge.png) | Shows "Please smile" (challenges are random); earlier captions said "Please blink". Captions in this folder are fixed; [../pitch/deck-outline.md](../pitch/deck-outline.md) is corrected separately | No retake needed; fix the deck caption |
+| [capture-override-offered-diagnostics.png](screenshots/android/capture-override-offered-diagnostics.png), [capture-override-supervisor-dialog.png](screenshots/android/capture-override-supervisor-dialog.png) | Text reads "after 1 attempts" (run with `max_retries=1`, before the plural fix: both clients now use a singular form, "after 1 attempt"; the Android resource has a plural form in all six languages, the desktop bundles in en, fr and ar) | Retake with the current build, or with the shipped 3 attempts |
 | Desktop `d-*` pictures | Preview shows the MockMDS stock photo with mirrored overlay text | Retake with the masked preview like the `e2e-*` pictures, for a consistent look |
+| New window and colours | The desktop window that scrolls and is capped at the monitor height, the second prompt line in the resident's language, the "Look directly at the camera and hold still" step, the supervisor override dialog with the second-person prompt and the Android capture screen in the shared status colours were never shown on a screen (no window was opened for these changes) | Masked runs on both clients |
 | States marked missing above | No picture | Masked runs as described in each row; the wireframe sheet stands in until then |
 
 ## 8. Consistency between the clients
 
-- Same message keys and English texts: all 46 desktop `liveness.*` label keys exist in the Android module's
-  `values/strings.xml` with the same text (checked on 2026-09-30, `../test-report/android-e2e.md` section 7).
+- Same message keys and English texts: the desktop bundles hold 75 `liveness.*` label keys per language (en, fr, ar;
+  the 2026-09-30 check covered 46 keys against the Android module's `values/strings.xml`, `../test-report/android-e2e.md`
+  section 7). The Android module has the engine keys in six languages; a unit test on each client fails when a key
+  of the engine's message list has no text.
+- Attempt counts use plural forms on both clients ("after 1 attempt", "after 3 attempts"): desktop with a choice
+  pattern in the en, fr and ar bundles, Android with a `plurals` resource in en, hi, kn, ta, fr and ar.
 - Same states and meanings: device error without using an attempt, "Step n of k" challenges, generic PAD message,
   "Attempt n of 3", maximum-attempts recovery text, "Supervisor verification" title, offline badge.
 - Supervisor override: both clients offer it after the last resident failure when the policy is
   `SUPERVISOR_OVERRIDE`, never after a suspected attack. Desktop asks for an OK in a "Supervisor verification"
-  confirmation and grants it to a signed-in user with the supervisor role
-  ([../design/desktop-liveness-ui.md](../design/desktop-liveness-ui.md)); Android asks for the supervisor's user ID
+  dialog, then asks for a different supervisor's user ID and that supervisor's face verification (the logged-in
+  operator cannot approve; the approval is valid 60 s)
+  ([../design/desktop-liveness-ui.md](../design/desktop-liveness-ui.md)); Android also asks for the supervisor's user ID
   and then the supervisor's own face verification ([../design/android-liveness.md](../design/android-liveness.md)
-  section 13.1). Status as of 2026-10-04.
+  section 13.1). Status as of 2026-10-05; neither flow was clicked through on a screen after the second-person change.
+- Shared look: both clients show the status line, icon and oval in the same colours (neutral, success, attention,
+  failure and guidance values of the desktop `liveness-panel.css`; Android tests compare them with the desktop file
+  and check the contrast ratios). Android still shows a dark full screen with the status banner on top.
+- Desktop window: a scroll area around the panel, height capped at the visible height of the monitor, so Retry and
+  Close stay reachable on 1366x768 screens (measured without opening a window: 619 px at start, 757 px at maximum
+  attempts with the override button; not yet seen on a screen). For resident workflows a second prompt line in the
+  resident's language (en, fr or ar, when it differs from the operator's) appears under the prompt.
 - Differences by design: the desktop dialog is a light 520 px window over the capture screen, Android a dark
   full screen (each follows its platform); the wrong-person text at sign-in differs ("Face match not found" on
   desktop, "The face does not match this user. Please try again." on Android). Side by side: [wireframes.svg](wireframes.svg).

@@ -1,7 +1,7 @@
-# 0003. Pin ONNX Runtime 1.20.0 on the desktop and 1.28.0 on Android
+# 0003. Pin ONNX Runtime 1.20.0 on the desktop and on Android
 
 - Status: Accepted
-- Date: 2026-09-28
+- Date: 2026-09-28; amended 2026-10-05 (Android moved from 1.28.0 to 1.20.0)
 
 ## Context
 
@@ -16,14 +16,24 @@ which this project must not replace. Measured on the team laptop (Windows 11):
 | 1.30.x | JVM crash inside `msvcp140.dll` |
 
 On Android, `onnxruntime-android` 1.29 and later merge `ai.onnxruntime.TelemetryInitializer` into the app manifest;
-1.28.0 declares no permission and no provider.
+earlier releases declare no permission and no provider.
+
+Until 2026-10-05 Android used 1.28.0, the newest release without the telemetry initializer. Two runtime releases
+meant that the same model and the same frame could, in principle, give different scores on the two clients, and
+the cross-client parity test (bonus B4) could not tell a client bug from a runtime difference.
 
 ## Decision
 
 - Desktop: `com.microsoft.onnxruntime:onnxruntime:1.20.0` (`registration-services/pom.xml`, property
   `onnxruntime.version`; `liveness-onnx` uses it as `provided` for tests).
-- Android: `com.microsoft.onnxruntime:onnxruntime-android:1.28.0` (`android/build.gradle`,
-  `onnxruntimeAndroidVersion`).
+- Android: `com.microsoft.onnxruntime:onnxruntime-android:1.20.0` (`android/build.gradle`,
+  `onnxruntimeAndroidVersion`), the same release as the desktop. Its native libraries are 16 KB page aligned
+  (arm64-v8a and x86_64 checked), and its arm64-v8a `libonnxruntime.so` is 16 MB against 27 MB for 1.28.0.
+- One release on both clients is checked by the parity test: `eval/interop/liveness-parity.json`, run by
+  `LivenessParityTest` in the desktop `registration-services` and in Android `livenessmanager`
+  ([../test-report/interoperability.md](../test-report/interoperability.md)). The Android unit tests run on the
+  build machine's JVM with the JVM package `onnxruntime:1.20.0`; `LivenessParityDeviceTest` runs the committed
+  cases on `onnxruntime-android` itself.
 - Telemetry off in code: `OrtEnvironment.setTelemetry(false)` once per process.
 - Android build guards: `:livenessmanager:verifyNoOnnxTelemetry` fails if any library manifest declares a telemetry
   initializer or ONNX Runtime asks for a permission; `OnnxRuntimeSupplyChainTest` checks the pinned version.
@@ -32,7 +42,10 @@ On Android, `onnxruntime-android` 1.29 and later merge `ai.onnxruntime.Telemetry
 
 ## Consequences
 
-- Both runtimes share the same Java API, so `liveness-onnx` is one code base.
+- Both clients use the same runtime release and Java API, so `liveness-onnx` is one code base and a score
+  difference between the clients points at the client code (decoder, configuration), not at the runtime.
+- Android also goes without the fixes of releases 1.21 to 1.28 until the desktop JRE moves; both pins are re-checked
+  together.
 - The desktop jar is 93 MB with natives for every platform; repackaging to win-x64 only (about 11.6 MB DLL) is not
   done yet.
 - Security fixes in newer ONNX Runtime releases are not picked up until the desktop client moves to a newer JRE;

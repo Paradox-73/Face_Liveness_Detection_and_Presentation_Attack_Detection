@@ -95,10 +95,12 @@ Every block in `docs/design/` rendered without errors this way on 2026-09-30 (Me
 
 | Area | State | Evidence |
 |---|---|---|
-| Engine (passive, active, integrity, binding, policy, audit) | Implemented, 264 core tests | `liveness/README.md` |
-| ONNX models and signed bundle | Implemented, 93 tests | `liveness/liveness-onnx/README.md` |
-| Desktop integration (resident, onboarding, login, packet, reviewer, EOD) | Implemented; 41 of 41 end-to-end checks | `docs/test-report/desktop-e2e.md` |
-| Android integration (resident, onboarding, sign-in, packet, approval) | Implemented; 58 of 58 end-to-end checks in the reference run | `docs/test-report/android-e2e.md` |
-| Online model update, offline bundle import | Not done | [online-offline.md](online-offline.md) section 3 |
+| Engine (passive, active, integrity, binding, policy, audit, shared session driver) | Implemented, 365 core tests (latest run 2026-10-05) | `liveness/README.md` |
+| ONNX models and signed bundle (version 1.3.0) | Implemented, 96 tests (2 benchmark tests skipped by the build option) | `liveness/liveness-onnx/README.md` |
+| Desktop integration (resident, onboarding, login, packet, reviewer, EOD) | Implemented; 41 of 41 end-to-end checks in the reference run of 2026-09-30, made at the earlier defaults and not re-run; no graphical run since the 2026-10-04 changes | `docs/test-report/desktop-e2e.md` |
+| Android integration (resident, onboarding, sign-in, packet, approval) | Implemented; 58 of 58 end-to-end checks in the reference run of 2026-09-30, made at the earlier defaults and not re-run at the current ones; no physical phone run | `docs/test-report/android-e2e.md` |
+| Offline model bundle import | Done on both clients (bonus B6): desktop import window (run on 2026-09-30), Android `ModelBundleImporter` (unit tests only, no Flutter button yet, no phone run). Online update through sync: not done | [online-offline.md](online-offline.md) section 3, [android-liveness.md](android-liveness.md) section 14 |
+| Desktop and Android give the same decision | Done (bonus B4): one ONNX Runtime 1.20.0 on both, parity replay 19 of 19 on desktop, 19 of 19 in Android unit tests, 6 of 6 on the emulator | [../test-report/interoperability.md](../test-report/interoperability.md) |
+| Android per-frame time and memory on a phone | Measurement kit written (bonus B7 and B8); phone run pending | [../test-report/android-performance.md](../test-report/android-performance.md) |
 | Live volunteer PAD evaluation | Protocol written, not run | [iso-30107.md](iso-30107.md) section 4 |
 | Per-frame latency target (p95 at most 20 ms) | Not met (desktop p95 38-45 ms) | [engine.md](engine.md) section 10 |

@@ -37,6 +37,7 @@ use them under those coordinates (`io.mosip.liveness:*:1.0.0-SNAPSHOT`).
 
 Build `c959af4-dirty` (commit `c959af4`, plus the uncommitted release scripts), made on 2026-09-30
 and used for the clean-install test below. Each new build has its own `SHA256SUMS.txt`.
+This build predates the changes of 2026-10-04 and 2026-10-05 (model bundle 1.3.0, challenges on every capture for the supervisor workflows, the shared session driver, ONNX Runtime 1.20.0 on Android, Android model import); no release has been built since, so the checksums and sizes below describe the old build.
 
 ```
 8f37bb4d691b46e92b1293c3f0399d25fb7e7fd68099493d74abfe106e5d44f7  mosip-liveness-desktop-client-c959af4-dirty-win-x64.zip
@@ -57,7 +58,7 @@ c2ebc8f31af630532e565d5f1d8b1379128342169a4db35640e75402afc8a0bb  liveness-core-
 
 | Part (`--only`) | Steps |
 |---|---|
-| `engine` | `mvn install` of `liveness/` with its tests (264 + 93 + 42), under the shared `liveness-build` lock, then copies the four jars |
+| `engine` | `mvn install` of `liveness/` with its tests (365 + 96 + 42 on 2026-10-05; 2 of the 96 are benchmark tests that `-Dliveness.benchmark.frames=0` skips), under the shared `liveness-build` lock, then copies the four jars |
 | `desktop` | `scripts/desktop-build.sh --mocksync --run-dir <staging>` (Maven build of `clients/desktop`, fresh Zulu JRE from the checked download, MOSIP mock SDK), then adds the start/stop and MockSync setup scripts, compiles `tools/mock-sync/scripts/MachineKeyTool.java` into `tools/machine-key-tool.jar`, licences and model sources |
 | `android` | `scripts/android-build.sh --release --abis <abi>` once per CPU type (`--android-abis`, default `arm64-v8a,x86_64`) |
 | `mocksync` | copies `tools/mock-sync` sources to a staging folder (the running MockSync keeps its own `target/` jar open), `mvn package` with tests on JDK 11, then the zip |
@@ -120,6 +121,9 @@ when a tag is pushed).
 
 ## Known limitations
 
+- Release builds of the Android client can now get their device certificate through the app's own provisioning step
+  (`scripts/android-liveness-device-cert.sh --csr`, [../install/android.md](../install/android.md) section 5.1); that was
+  checked on the emulator only, not on a physical phone.
 - The release APKs use upstream's server address (`https://api-internal.sandbox.xyz.net`) and the
   Android debug signing key. They cannot reach MockSync; the MockSync demo uses the debug APK
   (`docs/install/android.md`).

@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # Builds three sample model bundles from models/ so that the offline model update (import of a signed
 # bundle, signature and hash checks, refusal of older versions) can be tried without the team's private key.
 #

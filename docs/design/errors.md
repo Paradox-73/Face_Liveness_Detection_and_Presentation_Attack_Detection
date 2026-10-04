@@ -108,9 +108,9 @@ audit (LV09 with a reason code) carry the code.
 | `packet_auth` | `BLOCK` | `BLOCK_AND_LOCK` | Password authentication (MOSIP's existing option) |
 | `exception_auth`, `eod_auth` | `BLOCK` | `BLOCK_AND_LOCK` | Another supervisor, or password authentication |
 
-A used-up transaction is remembered in memory (desktop `ExhaustedTransactions`, Android
-`FaceCaptureLivenessGate`), so closing and reopening the screen does not give new attempts; this was found and
-fixed in the end-to-end runs.
+Counted failures, the suspected-attack mark and the uncounted low-light count are remembered in memory per workflow
+and person (desktop `AttemptHistory`, Android `FaceCaptureLivenessGate`), so closing and reopening the screen does not
+give new attempts; this was found and fixed in the end-to-end runs.
 
 ## 5. Evidence from the end-to-end runs
 

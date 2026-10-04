@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # Scripted end-to-end demo of the PS04 Android flows on the real Android Registration Client (ARC debug APK) on
 # the emulator, against MockSync as the MOSIP server, with the evaluation frame packs as the camera.
 #
@@ -33,6 +37,7 @@
 # Usage (Git Bash on Windows, or bash, from the repository root):
 #   scripts/demo-android.sh                         # every section
 #   scripts/demo-android.sh --sections "login resident"
+#   scripts/demo-android.sh --policy replay         # the policy the recorded packs fit (see below); default: shipped
 #   scripts/demo-android.sh --out DIR               # output folder (default $MOSIP_RUN_ROOT/demo/android-<time>)
 #   . scripts/demo-android.sh --out DIR             # only defines the functions, for running single steps
 #
@@ -80,6 +85,7 @@ PACK_LIST="s1-main s1-blink s1-smile s3-main s3-blink s3-smile s3n-main s3n-blin
   a-s2-identical a-s2-screen-replay a-s3-screen-replay"
 ALL_SECTIONS="login resident attacks override approval config offline latency"
 SECTIONS="$ALL_SECTIONS"
+POLICY_MODE=shipped
 OUT="$RUN_ROOT/demo/android-$(date +%Y%m%d-%H%M%S)"
 export ANDROID_SERIAL="emulator-$PORT"
 # Device paths such as /sdcard/... must reach adb unchanged (Git Bash would rewrite them).
@@ -89,6 +95,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --sections) SECTIONS="$2"; shift 2 ;;
     --out) OUT="$2"; shift 2 ;;
+    --policy) POLICY_MODE="$2"; shift 2 ;;
     -h|--help) awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "${BASH_SOURCE[0]}"; exit 0 ;;
     *) echo "unknown option $1 (see --help)" >&2; exit 2 ;;
   esac
@@ -658,6 +665,13 @@ DEMO_PROFILE="mosip.registration.liveness.policy.registration=PASSIVE_THEN_ACTIV
 mosip.registration.liveness.policy.login_auth=PASSIVE_THEN_ACTIVE
 mosip.registration.liveness.policy.onboard_auth=PASSIVE_THEN_ACTIVE
 mosip.registration.liveness.passive.min_frames=8"
+# --policy shipped (the default) runs every flow at the values MockSync ships: nothing is overridden for the run
+# (the replayed packs must then answer the challenges the shipped policy asks for, see "Replay profile").
+case "$POLICY_MODE" in
+  shipped) DEMO_PROFILE="" ;;
+  replay) ;;
+  *) echo "unknown --policy $POLICY_MODE (shipped or replay)" >&2; exit 2 ;;
+esac
 
 # Shipped value of a liveness key as MockSync serves it without the demo's overrides (read once at the start;
 # keys MockSync does not send get the engine default of LivenessConfigKeys).

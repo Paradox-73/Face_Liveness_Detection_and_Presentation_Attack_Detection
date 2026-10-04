@@ -5,7 +5,7 @@
   `liveness-onnx:models` (classifier jar holding the signed model bundle). Build and install:
   `mvn -f liveness/pom.xml install -Dliveness.benchmark.frames=0`.
 - **Runtime needs:** Java 11+ or Android API 28+; ONNX Runtime supplied by the client
-  (`com.microsoft.onnxruntime:onnxruntime:1.20.0` or `onnxruntime-android:1.28.0`).
+  (`com.microsoft.onnxruntime:onnxruntime:1.20.0` or `onnxruntime-android:1.20.0`, the same release on both clients).
 - **Authentication:** none; an in-process library. Trust comes from the signed model bundle
   (`ModelTrustAnchors`) and from the client's own device trust checks.
 - **Threading:** one engine per process, `open()` from any thread; each session is used by one thread only.
@@ -54,7 +54,7 @@ for (LivenessEngineProvider p : ServiceLoader.load(LivenessEngineProvider.class)
 }
 ```
 
-`engine.info()` returns `mosip-onnx-default@1.0.0` with the five models (ID, version, SHA-256) and all eight
+`engine.info()` returns `mosip-onnx-default@1.0.0` (the engine ID and version; the model bundle is 1.3.0) with the five models (ID, version, SHA-256) and all eight
 challenge types.
 
 ## 2. Run one attempt
@@ -108,6 +108,18 @@ LivenessListener listener = new LivenessListener() {
     @Override public void onResult(LivenessResult r)     { /* final result */ }
 };
 ```
+
+### 2.1 The shared session driver (what both clients use)
+
+The loop above is what `io.mosip.liveness.core.run.LivenessSessionDriver` does for the desktop and the Android client:
+attempts in one `LivenessTransaction`, the worker thread, retries, the `REG-EVT-LV11` maximum-attempt event, the capture
+hand-off and the errors before a session opens. A client builds it with `LivenessSessionDriver.builder(policy, subjectRef)`,
+supplying `.engine(...)`, `.device(...)`, `.audit(...)`, a `Listener` (`onUiState`, `onAttemptEnded(AttemptOutcome)`) and a
+`CaptureHandler`, and continues earlier windows with `.priorFailures(counted, suspectedAttack, lowLightRetries)`.
+`.trackLowLight(true)` turns on the dim-light ending (`QUALITY` / `LOW_LIGHT`, not counted, up to
+`passive.low_light_max_uncounted`, 3, then it counts); both clients and the scenario runner turn it on.
+`AttemptOutcome.isSuspectedAttack()` and `lowLightRetries()` are what a client stores for the next window. Full API:
+`liveness/README.md`, section on the session driver.
 
 ## 3. What comes back
 

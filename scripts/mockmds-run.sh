@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # Starts or stops MockMDS (devices/mock-mds) as the face, finger and iris device for the desktop Registration Client,
 # from a run folder outside the git tree, with the evaluation frame packs allowed as face frame sources.
 #

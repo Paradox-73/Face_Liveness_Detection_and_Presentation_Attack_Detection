@@ -36,21 +36,25 @@ the stream is already closed and the device is Ready), `passed()`, `closedWithou
 | `boolean isEnforced(Workflow)` | as above |
 | `LivenessPolicy policy(Workflow)` | resolved policy (thresholds, attempts, challenge pool) |
 | `LivenessEngineRegistry.Status engineStatus()` | loading, ready or failed (fail closed) |
-| `LivenessRun start(LivenessRequest, LivenessRunListener)` | a running transaction; `REG-LIV-016` if one is already running, `REG-LIV-014` if this person used up the attempts |
+| `LivenessRun start(LivenessRequest, LivenessRunListener)` | a running transaction; `REG-LIV-016` if one is already running, `REG-LIV-014` if this person used up the attempts (`AttemptHistory` keeps counted failures, the attack mark and the low-light count per workflow and person) |
 | `boolean isBlocked(Workflow, String subjectRef)` | attempts used up for this person and workflow |
 | `Optional<LivenessContext> pendingContext(Workflow, String subjectRef)` / `LivenessContext contextFor(Workflow, String subjectRef)` | the pass waiting for its capture (used by `SessionContext.validateFace` and `captureAndValidateFace`) |
 
 `LivenessRequest.builder(Workflow, String subjectRef)` with optional `.modality(...)` and `.device(FaceCaptureDevice)`
 (default: the discovered SBI face device).
 
-`LivenessRun`: `retry()`, `cancel()`, `grantOverride(String supervisorId)` (single-use context valid 60 s; only when
-`LivenessOutcome.isOverrideAllowed()`), `close()`, `lastOutcome()`, `policy()`.
+`LivenessRun`: `retry()`, `cancel()`, `requestOverride()` (only when `LivenessOutcome.isOverrideAllowed()`; refused after a
+suspected attack in this or an earlier window) returning an `OverrideRequest`, `OverrideRequest.grant(SupervisorApproval)`
+(single-use context; the approval must come from another user with the supervisor role and be at most 60 s old, else
+`OverrideRefusedException` and `REG-EVT-LV16` `decision=REFUSED`; the context expires 60 s after the supervisor's
+face match), `close()`, `lastOutcome()`, `policy()`. `SupervisorApproval.of(supervisorId, roles, authenticatedAt)`.
+The run delegates its attempt loop and worker thread to the core `LivenessSessionDriver`.
 
 `LivenessRunListener` (called on the `liveness-worker` or `sbi-stream-reader` thread; hand work to the FX thread):
 `onUiState(LivenessUiState)`, `onPreviewFrame(FaceFrame)`, `onCaptureReady(LivenessContext)`,
 `onSessionEnded(LivenessOutcome)`.
 
-`LivenessOutcome`: `isPassed()`, `failureReason()`, `errorCode()`, `attemptsUsed()`, `maxAttempts()`,
+`LivenessOutcome`: `isPassed()`, `failureReason()`, `errorCode()`, `attempt()` (the attempt that just ended), `attemptsUsed()`, `lowLightRetries()` and `isLowLightRetry()` (an uncounted dim-light ending), `maxAttempts()`,
 `isRetryAllowed()`, `isOverrideAllowed()`, `isLockRequired()`, `result()`.
 
 `LivenessContext` (on `MDMRequestDto.livenessContext`): `withPass(LivenessPassToken, subjectRef)` or

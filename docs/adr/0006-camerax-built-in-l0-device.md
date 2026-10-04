@@ -21,13 +21,15 @@ MOSIP's SBI specification defines L0 devices as ones where "trust is provided at
 - **Format:** JPEG 2000 inside an ISO/IEC 19794-5:2011 record (MOSIP `biometrics-util` and the JP2ForAndroid library
   ARC already ships), wrapped in an SBI 0.9.5 capture response with exactly ARC's `CaptureDto` fields, RS256 with the
   device certificate chain in `x5c`; session ID, frame SHA-256 and pass-token nonce in the signed header.
-- **Key:** Android Keystore (`AndroidKeystoreSigner`), imported once from a PKCS#12 issued by a DEVICE CA that ARC
-  syncs (MockSync's DEVICE CA in the demo, `scripts/android-liveness-device-cert.sh`); not exportable.
+- **Key:** Android Keystore (`AndroidKeystoreSigner`), not exportable. Debug builds import a PKCS#12 issued by a DEVICE CA that ARC
+  syncs (MockSync's DEVICE CA in the demo, `scripts/android-liveness-device-cert.sh`). Release builds can provision in the app: the
+  app writes a certificate request for the Keystore key and imports the issued chain (`scripts/android-liveness-device-cert.sh --csr`),
+  checked before use; run on the headless emulator only.
 - **Trust:** the capture goes through ARC's unchanged `Biometrics095Service.handleRCaptureResponse` checks
   (signature, `DEVICE` trust, time, transaction ID).
 - CameraX 1.4.2 is the newest line that builds with ARC's compileSdk 34 and AGP 8.3.2 (1.5 needs compileSdk 35).
-- `SbiIntentDevice` stays available (`mosip.registration.liveness.android.device=SBI`) for vendor apps, with
-  `no_stream_policy` deciding what happens without a stream.
+- `SbiIntentDevice` is wired in (`mosip.registration.liveness.android.device=SBI`, routed by `FaceDeviceSelection`) for vendor apps, with
+  `no_stream_policy` deciding what happens without a stream; it falls back to the built-in camera when no app answers `io.sbi.device`.
 
 ## Consequences
 

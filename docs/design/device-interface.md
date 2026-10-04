@@ -91,7 +91,7 @@ classDiagram
 |---|---|---|---|---|
 | `SbiFaceCaptureDevice` | `clients/desktop/.../service/bio/liveness/` | SBI `STREAM` through the RC's own `MosipDeviceSpecificationProvider` (0.9.5 or 1.0), read by `FaceStreamSession` | SBI `RCAPTURE` through the same provider; `SignedCaptureReader` extracts the ISO record, capture time, echoed challenge and device PAD block | Unit tests with `MockWebServer`; end to end with MockMDS L0 and L1 |
 | `BuiltInCameraL0Device` | `clients/android/android/livenessmanager/.../device/` | `CameraXFrameSource` (or `ReplayFrameSource` in debug builds) | Signs `CaptureRequest.sourceFrame()`: the frame the session selected. JPEG 2000 in an ISO/IEC 19794-5 record (`FaceIsoRecords`), SBI 0.9.5 capture JSON (`SbiCaptureCodec`), RS256 with the device certificate in `x5c`; session ID, frame SHA-256 and nonce in the signed header | Robolectric and instrumented tests; end to end on the emulator |
-| `SbiIntentDevice` | same | none: `openStream` fails with `NO_STREAM`, so `no_stream_policy` applies | ARC's existing intent chain (`io.sbi.device`) through a `Bridge` | Unit tests only |
+| `SbiIntentDevice` | same | none: `openStream` fails with `NO_STREAM`, so `no_stream_policy` applies (SBI 0.9.5 intents never stream) | ARC's existing intent chain (`io.sbi.device`) through a `Bridge` with `discover`, `canStream`, `openStream` and `capture`; wired in by `FaceDeviceSelection` and `BiometricsDetailsApi` (the discover step checks `<callbackId>.Info` with ARC's `handleDeviceInfoResponse` and sends `<app>.rCapture` built by ARC's `getRCaptureRequest`) | Unit tests only (Robolectric); no vendor SBI app has been run on a device or emulator |
 
 ### 2.1 Discovery and device choice
 
@@ -99,7 +99,7 @@ classDiagram
   (`MosipDeviceSpecificationFactory`, filled by the RC's own SBI port scan). If the registry is still empty right
   after start-up, it waits up to 3 s for the running scan instead of reporting "camera not available" (a problem
   found in the end-to-end run).
-- Android: `mosip.registration.liveness.android.device` = `BUILTIN` (default) or `SBI`.
+- Android: `mosip.registration.liveness.android.device` = `BUILTIN` (default) or `SBI`, read by `FaceDeviceSelection`. Blank or unknown means `BUILTIN`; `SBI` without an app that answers `io.sbi.device` falls back to the built-in camera (logged); with liveness off the built-in screen takes a photo without evidence and an installed SBI app takes the upstream capture path.
 - The RC's upstream discovery DTOs failed on unknown JSON fields; `@JsonIgnoreProperties(ignoreUnknown = true)` was
   added (desktop change D25) so a device that advertises `padCapability` does not break discovery.
 
@@ -120,9 +120,9 @@ and to the packet.
 2. Produce `FaceFrame`s in one of the `PixelFormat`s the client's `ImageDecoder` handles, upright or with the
    correct `rotationDegrees` and `mirrored` flag, with increasing `sequence` and `monotonicNanos`.
 3. Return a `SignedFaceCapture` whose signature the client's existing device trust check accepts.
-4. Plug it in where the client chooses the device: desktop `LivenessRequest.builder(...).device(adapter)` (else `LivenessOrchestrator` resolves the SBI face device), Android `LivenessCaptureActivity` (which builds `BuiltInCameraL0Device` today).
+4. Plug it in where the client chooses the device: desktop `LivenessRequest.builder(...).device(adapter)` (else `LivenessOrchestrator` resolves the SBI face device), Android `LivenessCaptureActivity` (which builds `BuiltInCameraL0Device` today; a vendor app that streams, `Bridge.canStream`, cannot yet run the full session there).
 
-For an SBI-compliant device, nothing needs to be written: the desktop adapter already speaks SBI 0.9.5 and 1.0.
+For an SBI-compliant device, nothing needs to be written: the desktop adapter speaks SBI 0.9.5 (run against MockMDS L0 and L1) and SBI 1.0 (implemented through the RC's own provider, untested: no 1.0 device or mock was run).
 
 ## 4. Mock device for development and tests
 

@@ -197,6 +197,11 @@ then be given the new values.
 5. Devices: `scripts/mockmds-run.sh` starts MockMDS on port 4501 with the evaluation frame packs
    (`run/frame-packs`) allowed as face sources. Operator onboarding asks for the biometrics in
    `mosip.registration.operator.onboarding.bioattributes` (MockSync override: ten fingers and face).
+6. Model bundle version: the shipped minimum is 1.3.0 (`mosip.registration.liveness.model.min_version`, served by
+   MockSync's `mock-sync-defaults.properties`), and the bundle in the engine jar is 1.3.0. A run folder built before
+   that change holds bundle 1.0.1, which the client refuses (`MODEL_VERSION`; liveness fails closed). Rebuild the
+   engine (`mvn -f liveness/pom.xml install`), rebuild the client, run `scripts/desktop-build.sh` again (it replaces only
+   `lib/` and keeps the database and machine keys), restart MockSync, then run Synchronize Data.
 
 ### 6.1 Scripted end-to-end demo
 
@@ -227,7 +232,9 @@ cd clients/desktop/registration
 mvn -B -pl registration-services test -Dgpg.skip
 ```
 
-- The active `unit-test` profile runs surefire 2.12.4 with JUnit 4. Write new
+- The active `unit-test` profile runs surefire 2.12.4 with JUnit 4. That version fails with a
+  `StringIndexOutOfBoundsException` when `-Dtest` lists several `Class#method` selections joined with `+`: select one
+  class or one method per run. Write new
   tests in this module with JUnit 4; JUnit 5 tests would not run.
 - Baseline on 2026-09-28 (with the build changes in 2.1): 751 run, 0 failures,
   2 errors, 17 skipped, 9 min 3 s. Maven reports BUILD FAILURE because of the

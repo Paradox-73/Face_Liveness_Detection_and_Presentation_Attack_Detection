@@ -50,7 +50,7 @@ flowchart TB
   end
   subgraph CORE["Shared engine (liveness/, Java 11, the same jar on both clients)"]
     API["liveness-core contract<br/>LivenessEngine, LivenessSession,<br/>FaceCaptureDevice, ConfigSource, AuditSink"]
-    ENG["liveness-core engine<br/>passive PAD, then active challenges;<br/>frame integrity, planarity, capture binding;<br/>PolicyResolver, audit events, metrics"]
+    ENG["liveness-core engine<br/>passive PAD, then active challenges;<br/>frame integrity, planarity, capture binding;<br/>PolicyResolver, audit events, metrics;<br/>LivenessSessionDriver (attempt loop, both clients)"]
     ONNX["liveness-onnx<br/>YuNet, Face Mesh, MiniFASNet x2, SFace<br/>ModelRegistry (signature check)"]
     SDK["face-match-sdk<br/>SFace IBioApiV2 (1:1 face match)"]
     API --> ENG --> ONNX
@@ -89,10 +89,10 @@ The engine contract packages never import the engine implementation packages; `A
 
 | Device | Transport | Adapter | Trust check on the capture | Status |
 |---|---|---|---|---|
-| Vendor SBI 0.9.5 or 1.0 face device on Windows | HTTP on 127.0.0.1:4501-4600 | `SbiFaceCaptureDevice` (desktop) | Existing RC check: JWT signature of the capture, certificate chained to a CA synced in the `DEVICE` domain (`MosipDeviceSpecificationHelper`) | Run end to end with MockMDS L0 and L1 (`docs/test-report/desktop-e2e.md`, D9) |
+| Vendor SBI 0.9.5 or 1.0 face device on Windows | HTTP on 127.0.0.1:4501-4600 | `SbiFaceCaptureDevice` (desktop) | Existing RC check: JWT signature of the capture, certificate chained to a CA synced in the `DEVICE` domain (`MosipDeviceSpecificationHelper`) | SBI 0.9.5: run end to end with MockMDS L0 and L1 (`docs/test-report/desktop-e2e.md`, D9). SBI 1.0: implemented through the RC's own provider, untested (no 1.0 device or mock was run) |
 | MockMDS (`devices/mock-mds`) | same | same | same; L1 signs the digital ID with the FTM key renewed to 2035 | Used for every desktop test |
 | Tablet camera | in-process CameraX | `BuiltInCameraL0Device` (Android) | Existing ARC check `Biometrics095Service.handleRCaptureResponse`: signature, `DEVICE` trust, time, transaction ID; key in the Android Keystore | Run end to end on the emulator (`docs/test-report/android-e2e.md`) |
-| Vendor SBI face app on Android | Android intents | `SbiIntentDevice` (Android) | Existing ARC checks | Unit tests only; the app has no preview stream, so `no_stream_policy` applies |
+| Vendor SBI face app on Android | Android intents | `SbiIntentDevice` (Android) | Existing ARC checks | Wired through `FaceDeviceSelection` and `BiometricsDetailsApi`; unit tests only (no vendor app run); the app has no preview stream, so `no_stream_policy` applies |
 
 Details of the adapters: [device-interface.md](device-interface.md). The SBI calls as the clients send them:
 [../api/sbi-used.md](../api/sbi-used.md).
@@ -109,7 +109,7 @@ flowchart TB
     RCJVM -- loopback HTTP --> MDSP
   end
   subgraph TAB["Android tablet"]
-    ARCAPP["ARC app: Flutter + livenessmanager<br/>onnxruntime-android 1.28.0, CameraX 1.4.2,<br/>assets/liveness/models"]
+    ARCAPP["ARC app: Flutter + livenessmanager<br/>onnxruntime-android 1.20.0, CameraX 1.4.2,<br/>assets/liveness/models"]
     ADB[("Room DB: global params, audit,<br/>user_biometric")]
     ARCAPP --- ADB
   end
@@ -144,15 +144,15 @@ flowchart TB
 
 | Folder | Content | Licence |
 |---|---|---|
-| `liveness/liveness-core` | Engine contract and default engine, no runtime dependencies, checked against Android API 28 | MIT |
-| `liveness/liveness-onnx` | ONNX Runtime adapters, signed model loader, engine factory `OnnxLivenessEngines` | MIT |
-| `liveness/face-match-sdk` | SFace `IBioApiV2` SDK for FACE matching | MIT |
+| `liveness/liveness-core` | Engine contract and default engine, no runtime dependencies, checked against Android API 28 | MPL-2.0 |
+| `liveness/liveness-onnx` | ONNX Runtime adapters, signed model loader, engine factory `OnnxLivenessEngines` | MPL-2.0 |
+| `liveness/face-match-sdk` | SFace `IBioApiV2` SDK for FACE matching | MPL-2.0 |
 | `models/` | Signed model bundle | per model, see `models/SOURCES.md` |
 | `clients/desktop` | Upstream `mosip/registration-client` plus the integration | MPL-2.0 |
-| `clients/android` | Upstream `mosip/android-registration-client` plus the `livenessmanager` module | MIT |
+| `clients/android` | Upstream `mosip/android-registration-client` plus the `livenessmanager` module | MIT (upstream files); project-added files MPL-2.0 |
 | `devices/mock-mds` | Upstream MockMDS extended with real frame sources, faults, L1 and PAD echo | MPL-2.0 |
-| `tools/mock-sync` | Local stand-in for the MOSIP server | MIT |
-| `tools/eval`, `eval/` | Scenario runner and ISO/IEC 30107-3-style metrics | MIT |
+| `tools/mock-sync` | Local stand-in for the MOSIP server | MPL-2.0 |
+| `tools/eval`, `eval/` | Scenario runner and ISO/IEC 30107-3-style metrics | MPL-2.0 |
 
 Why one repository and one shared engine: [ADR 0001](../adr/0001-monorepo.md) and
 [ADR 0002](../adr/0002-shared-engine.md).

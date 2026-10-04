@@ -284,6 +284,37 @@ If login fails:
 | Login fails and the MockSync log shows no request | `adb reverse` missing or MockSync down; app is offline and the user never logged in online | `adb reverse tcp:8080 tcp:8080`; start MockSync |
 | The app closes about 5 s after the sync result dialog | a sync step failed (`SystemNavigator.pop` in `lib/ui/login_page.dart`) | `adb logcat -s MasterDataServiceImpl` and the MockSync log |
 
+### 5.1 Give the built-in camera its device certificate (needed to store a face)
+
+The built-in camera signs each face capture with a key kept in the Android Keystore. The client's device trust check
+accepts the capture only when that key has a certificate issued by MockSync's DEVICE CA. Without the steps below
+liveness runs, but a resident face capture is refused by that check. Works on debug and release builds:
+
+1. Build and install the APK (debug or release, section 2 or 9).
+2. Start MockSync once, so `tools/mock-sync/work/keys/device-ca.p12` exists.
+3. With the phone or emulator on `adb` (needs `openssl` and `adb`; about 1-2 minutes on a busy emulator, `--timeout S`
+   waits longer):
+
+   ```bash
+   bash scripts/android-liveness-device-cert.sh --csr
+   # or, together with the login: bash scripts/android-mocksync-setup.sh --login --device-cert
+   ```
+
+   The script starts the app's provisioning step itself. The app creates its key in the Keystore if missing and
+   writes a certificate request; the script has MockSync's DEVICE CA issue the certificate and hands it back; the app
+   checks the certificate before it uses it (it must hold the app's own key, be valid now and chain to a CA). The
+   private key never leaves the phone. The script prints `provisioned: subject ... issuer CN=MockSync DEVICE CA`.
+4. If MockSync's keys were created again (a new DEVICE CA), run `bash scripts/android-liveness-device-cert.sh --csr --replace-ca`;
+   without `--replace-ca` the app refuses a certificate from a different CA than the one it already holds.
+5. The older path for debug builds only (no `--csr`, uses `adb run-as`) still works.
+
+The files the two sides exchange are in `Android/data/io.mosip.registration_client/files/liveness/` (`device.csr`,
+`device-chain.pem`, `status.txt`); the app deletes the request and the chain after it has accepted or refused them.
+Checked on 2026-10-05 on the headless emulator `arc_api34` only (status PROVISIONED, certificate chain of 2, replacing the
+certificate of a key that already existed); the case of a brand-new key and a release build on a physical phone are
+covered by unit tests only. The app cannot read the client's synced CA store, so the client's own DEVICE trust check
+still decides at capture time.
+
 ## 6. Changes to upstream files for this monorepo
 
 | File | Change | Reason |
@@ -421,3 +452,32 @@ login.
 
 Checked on 2026-09-30: see `docs/design/android-liveness.md` section 13.6 (signed release APK built, installed
 with `--app-id-suffix .release`, engine loaded, MockSync reached over `adb reverse`).
+
+## 10. Import a liveness model bundle (offline model update)
+
+New liveness models arrive as a signed bundle: `manifest.json`, `manifest.jws` and the model files, in a folder or
+a `.zip`. The app checks the signature against the key built into it, the SHA-256 of every model, and refuses a
+version below `mosip.registration.liveness.model.min_version` or not newer than the running bundle. Details:
+`docs/design/android-liveness.md` section 14.
+
+1. Copy the bundle to the tablet, into the app's import folder (create it if missing):
+
+   ```bash
+   adb shell mkdir -p /sdcard/Android/data/io.mosip.registration_client/files/liveness-models
+   adb push valid/. /sdcard/Android/data/io.mosip.registration_client/files/liveness-models/
+   ```
+
+   Without adb, copy the files there with a USB file transfer. Put one bundle only in the folder, or a single
+   `.zip`; the import reads the folder itself (or the `.zip` path given to it).
+2. Sign in to ARC as a supervisor (`REGISTRATION_SUPERVISOR` or `REGISTRATION_ADMIN`). Other users get
+   `NOT_ALLOWED`.
+3. Start the import. The Flutter call is `LivenessService().importModelBundle('')` (empty path: the import folder
+   above). No ARC screen has a button for it yet, so on a test build it is called from Flutter code.
+4. Read the result: `IMPORTED` with the new and previous version means the engine runs the new models at once.
+   `INVALID` (signature or hash), `TOO_OLD` (version) and `LOAD_FAILED` (models do not start) leave the running
+   models active. Logcat tag `Liveness` and the audit events `REG-EVT-LV13/14/15` record the outcome.
+5. Delete the copied files from the import folder; the app keeps its own copy in its private storage.
+
+Sample bundles for a trial (a valid, a tampered and an older one) come from
+`bash scripts/make-sample-model-bundles.sh --key PRIVATE.pem --out DIR`. They are signed by the key you pass, so a
+build only accepts them when that key's public half is one of the app's trust anchors.

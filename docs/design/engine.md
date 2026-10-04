@@ -63,13 +63,14 @@ stateDiagram-v2
   PASSIVE --> CAPTURE_READY: score >= threshold (LV02)
   PASSIVE --> CHALLENGE_WAIT: escalate (LV03)
   PASSIVE --> FAILED: PAD / BELOW_THRESHOLD / INTEGRITY
+  PASSIVE --> FAILED: dim face, PAD (QUALITY / LOW_LIGHT, not counted)
   CHALLENGE_WAIT --> CHALLENGE_OBSERVE: random wait, neutral face held 300 ms (LV04)
   CHALLENGE_WAIT --> FAILED: no neutral face (TIMEOUT)
   CHALLENGE_OBSERVE --> CHALLENGE_PASSED: action verified (LV05)
   CHALLENGE_OBSERVE --> FAILED: wrong / early / not held / timeout / PAD (LV06, LV07, LV08)
   CHALLENGE_PASSED --> CHALLENGE_WAIT: more challenges
-  CHALLENGE_PASSED --> CAPTURE_READY: final checks pass
-  CHALLENGE_PASSED --> FAILED: final PAD / planarity / identity fail
+  CHALLENGE_PASSED --> CAPTURE_READY: final checks pass and a neutral capture frame is found
+  CHALLENGE_PASSED --> FAILED: final PAD / planarity / identity fail, no neutral frame (NEUTRAL_TIMEOUT)
   CAPTURE_READY --> CAPTURING: captureStarted()
   CAPTURING --> BINDING: bind(BindingRequest)
   BINDING --> PASSED: all binding checks pass (LV10)
@@ -84,6 +85,9 @@ stateDiagram-v2
 - In every observing state: no frame for 2 s fails `DEVICE/STALLED`; an integrity violation fails at once; three
   analyses in a row slower than 500 ms fail `ENGINE/INFERENCE_TIMEOUT`; an adapter exception fails `ENGINE`
   (audit LV13, plus LV14 for model-integrity codes).
+- Dim light: a passive PAD failure on faces with a median grey level below `quality.low_light_brightness` (75) ends `FAILED(QUALITY, LOW_LIGHT)`, not counted and without `REG-EVT-LV08`, up to `passive.low_light_max_uncounted` (3) times per transaction (the caller passes the count with `SessionRequest.Builder.lowLightRetries`; the shared session driver does, with the count carried across windows); the next one counts as `PAD`. See [decision-flow.md](decision-flow.md) section 6.
+- After the last challenge the state stays `CHALLENGE_PASSED` and the screen asks "Look directly at the camera and hold still." until a frame is frontal (yaw 15, pitch 20 degrees at most), has open eyes and no smile or blink, held 300 ms; only such frames become `captureFrame()`. More than one face on 3 frames in a row during the active phase ends `QUALITY` / `MULTI_FACE`, not counted.
+- Loop detection compares each frame's 64-bit difference hash with the last 300 frames (`integrity.loop_window_frames`, signed in the bundle; a ring of 2,400 bytes per session): clips up to about 9.8 s at 30 fps repeated are caught. A loop longer than the window is not.
 - `close()` overwrites the frame the session kept for storage (callers copy `captureFrame()` first).
 
 Class: `DefaultLivenessSession` (package-private) behind `LivenessSession`. Tests: `SessionScenarioTest`,
@@ -158,11 +162,11 @@ Client-side token handling: [security-privacy.md](security-privacy.md), section 
 | `minifasnet-v2`, `minifasnet-v1se` | MiniFASNet (Minivision weights) | passive PAD ensemble | Apache-2.0 |
 | `sface` | SFace (OpenCV Zoo, 2021dec, fp16 weights) | same-person checks, capture binding, 1:1 match SDK | Apache-2.0 |
 
-- Bundle: `models/`, version 1.0.0, 25.7 MB, `manifest.json` with SHA-256 per file, detached RS256 signature
+- Bundle: `models/`, version 1.3.0, 25.7 MB, `manifest.json` with SHA-256 per file, detached RS256 signature
   `manifest.jws`. `ModelRegistry` verifies signature, hashes and `model.min_version` before any model is created;
   any failure stops the engine (fail closed, audit LV14).
-- Runtime: ONNX Runtime 1.20.0 on the desktop ([ADR 0003](../adr/0003-onnxruntime-1.20.0-pin.md)), 1.28.0 on
-  Android; telemetry off (`OrtEnvironment.setTelemetry(false)`); only `liveness-onnx`'s `runtime` package imports
+- Runtime: ONNX Runtime 1.20.0 on the desktop and on Android ([ADR 0003](../adr/0003-onnxruntime-1.20.0-pin.md));
+  cross-client parity checked by [../test-report/interoperability.md](../test-report/interoperability.md); telemetry off (`OrtEnvironment.setTelemetry(false)`); only `liveness-onnx`'s `runtime` package imports
   `ai.onnxruntime` (ArchUnit rule).
 - Engine thresholds that are not operator settings (`EngineParameter`, for example `active.turn_yaw_deg` 20) can
   be changed only through the signed `engineParams` of a new bundle, never through synced configuration.

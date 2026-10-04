@@ -48,7 +48,7 @@ The criteria come from PS04 and from facts checked in the two upstream clients b
 
 | Option | Desktop (Java 11, Zulu 11.0.8) | Android | Verdict |
 |---|---|---|---|
-| **ONNX Runtime Java 1.20.0** / `onnxruntime-android` 1.28.0 | Runs on the bundled JRE. ORT 1.21 fails to load and 1.30 crashes the JVM because the JRE ships an old Visual C++ runtime (measured) | Same Java API (`ai.onnxruntime`); 1.28.0 has no telemetry permissions, while 1.29 and later add a telemetry provider by default | **Chosen**: one engine code base on both clients, with versions pinned for those two reasons |
+| **ONNX Runtime Java 1.20.0** / `onnxruntime-android` 1.20.0 (1.28.0 until 2026-10-05) | Runs on the bundled JRE. ORT 1.21 fails to load and 1.30 crashes the JVM because the JRE ships an old Visual C++ runtime (measured) | Same Java API (`ai.onnxruntime`) and, since 2026-10-05, the same release on both clients; 1.29 and later add a telemetry provider by default | **Chosen**: one engine code base on both clients, with versions pinned for those two reasons |
 | OpenCV DNN (already on the desktop class path via `biometrics-util`) | OpenCV 4.5.3 lacks the YuNet API | would add a second native library | kept as a fallback only |
 | LiteRT (TensorFlow Lite) + MediaPipe Tasks | no desktop Java build | smaller native library | rejected: results would differ between the two clients |
 | GPU / NPU execution providers | the Windows ORT Java package has only the CPU provider (measured) | XNNPACK and NNAPI are in the Android package; NNAPI is deprecated from Android 15 | CPU by default; XNNPACK / NNAPI selectable by `engine.execution_provider` on Android, not yet measured on a device ([calibration notes](../eval/calibration-notes.md) 0.4) |
@@ -70,8 +70,11 @@ all open:
 
 Result with the shipped defaults (39 scenarios, 2026-09-30): pooled APCER 1.7% (4/238 attempts), BPCER 29.4%
 (15/51 attempts, 12 of them from one synthetic very dim pack). The one species still accepted is an adaptive screen
-replay that plays the matching clip for each prompt (SYN-A7, 4/16). These are technology regression results on
-synthetic attacks, not an ISO/IEC 30107-3 evaluation ([iso-30107.md](iso-30107.md)).
+replay that plays the matching clip for each prompt (SYN-A7, 4/16). In the re-run of 2026-10-05 (all workflows `ALWAYS_ACTIVE`,
+counted per transaction) SYN-A7 on `registration` is accepted in 50.0% (4/8) of transactions, every other species 0.0%, and
+BPCER on `registration` is 14.3% (4/28, all from the dim clip). These are technology regression results on
+synthetic attacks, not an ISO/IEC 30107-3 evaluation ([iso-30107.md](iso-30107.md)). Planarity has no attack evidence and
+cannot be relied on against a screen that replays a real head turn.
 
 Total model size: 25.7 MB for five models, signed as one bundle ([security-privacy.md](security-privacy.md)).
 

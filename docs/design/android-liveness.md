@@ -20,7 +20,7 @@ Package `io.mosip.registration.livenessmanager` (module folder `clients/android/
 | `di.LivenessModule` | Dagger module added to ARC's `AppComponent`. Provides the config source, the audit sink, the process-wide `LivenessRuntime` and the `LivenessService`; starts loading the models in the background when liveness is on. |
 | `LivenessRuntime` | Process-wide pieces shared by the service and the screen: config, audit and diagnostic sinks, image decoder, engine loader, device serial and device key. A debug launch of the screen from adb before ARC started uses a standalone runtime (shipped defaults, audits to Logcat). |
 | `LivenessCaptureRequest` / `LivenessCaptureResult` | What to verify (workflow, subject reference, language; debug builds also frame source and config overrides) and how it ended (decision, failure reason, reason codes, message key, attempts, retry / override / lock rules, pass-token nonce, signed capture, packet evidence). Both travel as `Intent` extras. |
-| `session.LivenessRunner` | One liveness transaction: the first session and its retries. Owns the single `liveness-worker` thread that makes every session call; moves frames from a latest-frame hand-off into the session and calls `tick()` at least every 100 ms; captures, signs and binds on `CAPTURE_READY`. |
+| `session.LivenessRunner` | One liveness transaction: the first session and its retries. It builds the core `LivenessSessionDriver` (shared with the desktop client), which owns the single `liveness-worker` thread that makes every session call, moves frames from a latest-frame hand-off into the session, calls `tick()` at least every 100 ms, counts attempts in one `LivenessTransaction` and writes `REG-EVT-LV11`. The runner keeps the Android parts: `FrameTimer` as the driver's frame-sink decorator, the capture, signing, decoding and binding of the built-in device in the driver's capture handler (a copy of the capture frame, wiped afterwards), and the mapping of each `AttemptOutcome` to a `LivenessCaptureResult`. |
 | `ui.LivenessCaptureActivity` | The native capture screen (section 3). Renders only the engine's `LivenessUiState`, so its behaviour matches the desktop screen. |
 | `ui.MessageResolver` | Message key to text: the module's string resource in the screen's language, replaced by a synced `mosip.registration.liveness.guidance.<key>.<lang>` text when one is configured (same rule as desktop). |
 | `ui.OvalGuideView` | Oval face guide with a progress arc; colour follows the state's severity. |
@@ -30,11 +30,14 @@ Package `io.mosip.registration.livenessmanager` (module folder `clients/android/
 | `device.FaceIsoRecords` | ISO/IEC 19794-5:2011 face record with a JPEG 2000 image, written with MOSIP `biometrics-util` and the JP2ForAndroid (OpenJPEG) library ARC already ships. |
 | `device.SbiCaptureCodec` | Writes and reads the SBI 0.9.5 `rCapture` response JSON (fields of ARC's `CaptureDto`, RS256 JWS with `x5c`). |
 | `device.DeviceSigner` / `AndroidKeystoreSigner` | Device key in the Android Keystore (section 5). |
-| `device.SbiIntentDevice` | Adapter for a vendor SBI face app reached through Android intents (ARC's current path); it has no preview stream, so the engine's `no_stream_policy` applies. |
+| `device.FaceDeviceSelection` | Reads `mosip.registration.liveness.android.device` (`BUILTIN` default, `SBI`; blank or unknown means `BUILTIN`, with a Logcat warning) and routes each face capture (section 4). |
+| `device.SbiIntentDevice` | Adapter for a vendor SBI face app reached through Android intents (ARC's SBI 0.9.5 path), wired through `FaceDeviceSelection` and `BiometricsDetailsApi`. Its `Bridge` has `discover`, `canStream`, `openStream` and `capture`; `discover(bridge, purpose)` parses the SBI 0.9.5 discover JSON (digital ID as base64 or JWS, skips errors and non-face entries, prefers `Ready`; `Not Registered` gives `NOT_READY`, none gives `NOT_FOUND`). The intents carry no preview frames, so `no_stream_policy` decides: `BLOCK` (default) fails the Flutter call and audits `R_CAPTURE_FAILED`, `CAPTURE_ONLY` stores the app's capture after ARC's checks with `LIVENESS_METHOD=CAPTURE_ONLY`. Only a Robolectric run exists; no vendor SBI app has been run on a device or emulator. |
+| `device.DeviceProvisioning`, `DeviceProvisioningActivity`, `DeviceProvisioningInitializer` | In-app device key provisioning that works on release builds (section 5). |
 | `image.AndroidImageDecoder` | `ImageDecoder` for Android: RGBA camera frames, JPEG/PNG through `BitmapFactory`, JPEG 2000 through JP2ForAndroid, to upright RGB888. |
 | `image.PixelOrientation` | Rotation, optional mirror flip and channel order in one pass; pure Java, tested on the JVM. |
-| `engine.EngineLoader` | Loads the engine once per process on a background thread (`preload()`, `await(ms)`); a model integrity failure is kept until restart (fail closed, `REG-EVT-LV14`). |
+| `engine.EngineLoader` | Loads the engine once per process on a background thread (`preload()`, `await(ms)`); a model integrity failure is kept until restart (fail closed, `REG-EVT-LV14`). `fromConfig(...)` picks the engine by `mosip.registration.liveness.engine`: blank or `mosip-onnx-default` gives the built-in Android ONNX engine (assets, accelerator, warm-up), any other ID is looked up with `ServiceLoader<LivenessEngineProvider>`; no provider with that ID gives `CONFIG_INVALID` (fails closed, retried). |
 | `engine.AssetModelSource` | `ModelSource` over `assets/liveness/models/` for the engine's `ModelRegistry`. |
+| `engine.ModelBundleImporter` / `engine.ModelBundleStore` | Offline import of a signed model bundle by a supervisor, and the store of imported bundles (section 14). |
 | `config.GlobalParamConfigSource` | `ConfigSource` over ARC's `GlobalParamRepository` (section 4). |
 | `config.OverlayConfigSource` | Debug-only overrides passed to the screen from adb. |
 | `audit.ArcAuditSink` | Writes `REG-EVT-LV01..17` through ARC's `AuditManagerService.auditWithArguments` on one background thread. |
@@ -47,7 +50,7 @@ Package `io.mosip.registration.livenessmanager` (module folder `clients/android/
 Changes outside the module (surgical, upstream style kept):
 
 - `android/settings.gradle`: `include ':livenessmanager'`.
-- `android/build.gradle`: versions (`livenessEngineVersion`, `onnxruntimeAndroidVersion = 1.28.0`,
+- `android/build.gradle`: versions (`livenessEngineVersion`, `onnxruntimeAndroidVersion = 1.20.0`,
   `cameraxVersion = 1.4.2`, `androidxTestRunnerVersion`), `mavenLocal()` limited to the group `io.mosip.liveness`,
   and the module added to the list of own modules that keep lint.
 - `android/app/build.gradle`: `implementation project(':livenessmanager')`; debug build type
@@ -94,6 +97,7 @@ model versions, session ID) and `isDeviceProvisioned()`. The ISO record and the 
   subject's left), oval guide with progress arc, title (supervisor title for approval workflows), prompt with
   icon, guidance lines, challenge step "Step n of m", progress bar, attempt dots, Retry, Cancel and
   "Open settings" (permission error only).
+- The prompt sits in a light status banner whose border, icon circle and text colours are the desktop panel's (`liveness-panel.css`: neutral, success, attention, failure), checked against the CSS file and for WCAG contrast in tests; the oval strokes use the desktop values and the Retry button is `#005BAA` with white text. The screen stays dark and full-screen, so the layout differs from the desktop dialog while texts and colours match. The positioning step and "Look directly at the camera and hold still" show a face-outline icon (`ic_liveness_face`), not the smiley. `liveness.retry.max_resident` is a plurals resource in all six languages. No screenshot of the new colours exists (no emulator run since the change).
 - A badge shows "Offline" when there is no network (liveness itself never needs the network), or
   "Replay (debug build)" for the replay source.
 - Text comes from the engine's message keys (`io.mosip.liveness.core.ui.MessageKeys`) through Android string
@@ -121,7 +125,7 @@ liveness off. Missing or malformed values never throw: the core `PolicyResolver`
 ranges and reports corrections (audit `REG-EVT-LV15`).
 
 Android-only keys: `mosip.registration.liveness.android.device` (`BUILTIN`, default, or `SBI`; a blank or unknown
-value means `BUILTIN` for face capture routing and for `LivenessService.isBuiltInCameraFaceDevice`),
+value means `BUILTIN` for face capture routing and for `LivenessService.isBuiltInCameraFaceDevice`; with liveness off (`enable=N` or policy `OFF`) the built-in screen takes a plain photo with no evidence and no attempt counted, and an installed SBI app takes ARC's upstream capture path),
 `mosip.registration.liveness.android.block_emulator` (default `N`) and
 `mosip.registration.android.offline_approval.enable`.
 
@@ -154,6 +158,18 @@ cannot be exported by the app.
   `scripts/android-liveness-device-cert.sh` issues such a certificate from MockSync's DEVICE CA and copies it in
   with `adb shell run-as` (debuggable builds only). In production the certificate comes from the device provider
   through MOSIP partner management.
+- **Provisioned in the app (release builds too)**: the app creates the device key in the Keystore and writes a
+  PKCS#10 request (`device.csr`) and `status.txt` to `Android/data/io.mosip.registration_client/files/liveness/`, which
+  `adb` can read and write on release builds. `DeviceProvisioningActivity` (exported, protected by
+  `android.permission.DUMP`, so only the adb shell or the system can start it) runs the step;
+  `scripts/android-liveness-device-cert.sh --csr` signs the request with MockSync's DEVICE CA and pushes
+  `device-chain.pem`. The chain is checked before use and again at the next capture: certificate key equals the
+  Keystore key (`KEY_MISMATCH`), may sign, valid now, each certificate issued by the next, issuers are CAs, the chain
+  ends in a self-signed CA; a chain from another CA is refused (`UNTRUSTED_CA`) unless the request says
+  `replace_ca=true` (`--replace-ca`). Only the certificate chain is replaced; the private key never leaves the
+  Keystore. Run on the headless emulator (debug APK) on 2026-10-05: status `PROVISIONED`, chain length 2, issuer
+  `MockSync DEVICE CA`, no `run-as`; the brand-new-key case is covered by unit tests only, and no release build was
+  captured on a physical phone. ARC's `DEVICE` trust check still decides at capture time.
 - **Not provisioned**: a self-signed key is created on first use. Liveness works, but ARC's DEVICE trust check
   rejects the capture, so a resident capture cannot be stored. `LivenessService.isBuiltInDeviceProvisioned()`
   lets the caller show this before starting.
@@ -170,6 +186,7 @@ hardware-backed L1 device would need a vendor SBI app (`SbiIntentDevice`).
 | `liveness-worker` (one per screen) | Every session call: open, frame delivery, `tick()`, capture, sign, bind, close. |
 | CameraX analysis thread / `liveness-replay` | Frame copies into the latest-frame hand-off. |
 | engine loader | Model verification and ONNX Runtime session creation, once per process. |
+| `liveness-model-import` | Offline model import: checks, copy, new engine build and self-test (section 14). |
 | audit writer | Audit rows in order, off the worker thread. |
 
 The session is only touched by its worker; `cancel()` is the one call made from another thread, as the core
@@ -180,7 +197,7 @@ it after signing.
 
 The engine jars are not committed. `scripts/android-build.sh` checks `~/.m2/repository/io/mosip/liveness/` for
 the version in `android/build.gradle` (`livenessEngineVersion`) and, when missing (or with
-`--install-engine`), runs `mvn -f liveness/pom.xml -pl liveness-core,liveness-onnx -am install -DskipTests`.
+`--install-engine`), runs `mvn -f liveness/pom.xml -pl liveness-core,liveness-onnx,face-match-sdk -am install -DskipTests`; `--test-only` runs the code generation, copies the Gradle wrapper from Flutter's cache when it is missing and then runs the unit tests of `clientmanager`, `livenessmanager` and `app`.
 A fresh clone therefore builds with one command: `scripts/android-build.sh` (plus `--test` for the unit tests,
 `--device-test` for the instrumented test).
 
@@ -190,7 +207,8 @@ A fresh clone therefore builds with one command: `scripts/android-build.sh` (plu
   when it loads them.
 - `:livenessmanager:verifyNoOnnxTelemetry` (runs before `preBuild`) reads the manifests of every Android library
   on the debug runtime class path and fails the build if one declares a `TelemetryInitializer` or if ONNX Runtime
-  asks for a permission. ONNX Runtime stays at 1.28.0: 1.29 and later add a telemetry initializer.
+  asks for a permission. ONNX Runtime is 1.20.0, the desktop client's version (ADR 0003); 1.29 and later would also add
+  a telemetry initializer.
   `OnnxRuntimeSupplyChainTest` also checks the pinned version and that the ONNX Runtime package has no telemetry
   initializer class.
 - ABI filters: debug APKs carry `arm64-v8a` and `x86_64` only (ONNX Runtime is about 30 MB per ABI). The release
@@ -206,17 +224,22 @@ A fresh clone therefore builds with one command: `scripts/android-build.sh` (plu
 | `AndroidImageDecoderTest`, `PixelOrientationTest` | Robolectric / JVM | RGBA camera frame turned upright, JPEG and PNG, mirror flip, JPEG 2000 signatures, corrupt data; rotation 0/90/180/270, channel order |
 | `FaceIsoRecordsTest`, `SbiCaptureCodecTest` | Robolectric | ISO record carries size and quality, malformed record rejected; signed payload has exactly ARC's `CaptureDto` fields, signature covers header and payload, the response parses with ARC's own DTOs |
 | `EngineLoaderTest` | Robolectric | loads once, integrity failure kept until restart, other failures retried, slow load reports not ready |
+| `EngineLoaderTest` (more rows) | Robolectric | `fromConfig`: blank or default ID gives the built-in engine, another ID goes through `ServiceLoader` (`FakeVendorEngineProvider`), an unknown ID fails closed with `CONFIG_INVALID` |
+| `SbiIntentDeviceTest`, `FaceDeviceSelectionTest` | Robolectric | discover JSON parsing and states, `no_stream_policy`; `android.device` routing and fallbacks |
+| `DeviceProvisioningTest` | Robolectric | CSR content, every chain check (`KEY_MISMATCH`, `NOT_FOR_SIGNING`, `NOT_VALID_NOW`, `NOT_ISSUED_BY_CA`, `NOT_A_CA`, `NO_CA_CERTIFICATE`, `UNTRUSTED_CA`), `replace_ca`, file cleanup |
+| `ModelBundleImporterTest` | Robolectric | offline model import (section 14) |
+| `LivenessParityDeviceTest`, `LivenessPerformanceTest` | instrumented (emulator or phone) | desktop-parity replay (6 committed cases; [../test-report/interoperability.md](../test-report/interoperability.md)); per-frame time and memory kit ([../test-report/android-performance.md](../test-report/android-performance.md)) |
 | `LivenessServiceTest` | Robolectric | policy from the synced configuration, capture intent round trip, safe defaults for adb extras, pass and failure results through the intent, missing result = cancelled |
 | `MessageResolverTest` | Robolectric | every engine message key has a string in all six languages with the same placeholders; synced guidance override; ARC language codes; Arabic is right-to-left |
 | `LivenessCaptureActivityTest` | Robolectric | the screen uses the request's language (Arabic text, right-to-left layout; English left-to-right); liveness off closes the screen with `CANCELLED` |
-| `OnnxRuntimeSupplyChainTest` | Robolectric | ONNX Runtime pinned to 1.28.0; no telemetry initializer class in the ONNX Runtime package (the Gradle task `verifyNoOnnxTelemetry` checks the library manifests) |
+| `OnnxRuntimeSupplyChainTest` | Robolectric | ONNX Runtime pinned to 1.20.0; no telemetry initializer class in the onnxruntime-android classes jar (the Gradle task `verifyNoOnnxTelemetry` checks the library manifests) |
 | `LivenessEngineReplayTest` | instrumented (emulator) | signed models verify from the APK assets; YuNet finds one face in the replay frame; the real engine rejects the replayed still (`FAIL_PAD`, reason `FROZEN`, `REG-EVT-LV11` once) |
 | `AndroidKeystoreSignerTest` | instrumented (emulator) | self-signed key before provisioning; a provisioned PKCS#12 (the format of `scripts/android-liveness-device-cert.sh`, throwaway test CA in `src/androidTest/assets/liveness-test/`) is imported into the Keystore, the files are deleted, signatures verify with the issued certificate |
 
 Commands (Git Bash, JDK 21):
 
 ```bash
-scripts/android-build.sh --test-only                     # unit tests: livenessmanager (53) and clientmanager
+scripts/android-build.sh --test-only                     # unit tests: clientmanager (1,186), livenessmanager (210), app (64)
 scripts/android-run-emulator.sh --headless               # boot, install, launch
 scripts/android-build.sh --test-only --device-test       # instrumented test on the emulator
 scripts/android-liveness-demo.sh --shots 6               # capture screen on replay frames, screenshots
@@ -313,7 +336,7 @@ tests run the panel in Arabic and check the right-to-left layout.
 
 ### 11.6 Tests
 
-- `flutter test test/liveness/`: 13 widget tests (panel availability, pass in the screen language, busy state,
+- `flutter test test/liveness/`: 26 widget tests (panel availability, pass in the screen language, busy state,
   engine and ARB messages, supervisor refusal, Arabic right-to-left, banner semantics).
 - `./gradlew :app:testDebugUnitTest`: `LivenessApiTest` (6), `FaceAuthFlowTest` (5),
   `FaceCaptureLivenessGateTest` (8), `LivenessCaptureLauncherTest` (6).
@@ -352,7 +375,7 @@ problems below; each is fixed in the code named.
 
 | Problem | Where | Fix |
 |---|---|---|
-| With any finger or iris marked as an exception, ARC asks for an exception photo through a vendor SBI face app. A tablet whose face device is the built-in camera had none, so the registration could not continue. | `BiometricsDetailsApi.startLivenessCapture` | When `mosip.registration.liveness.android.device` is `BUILTIN` (default), the exception photo also opens the capture screen, with workflow `exception_photo` and `LivenessCaptureRequest.photoWhenOff`. With the shipped policy `exception_photo=OFF` the screen runs `session.PhotoCaptureRunner`: it streams 1.5 s, signs the newest frame with the built-in device (same ISO record and SBI response as a liveness capture) and returns a pass marked `LIVENESS_NOT_REQUIRED`, without liveness evidence (as on desktop). A policy other than `OFF` runs the full liveness check. Attempts are counted under their own key (`FaceCaptureLivenessGate.exceptionPhotoField`). |
+| With any finger or iris marked as an exception, ARC asks for an exception photo through a vendor SBI face app. A tablet whose face device is the built-in camera had none, so the registration could not continue. | `BiometricsDetailsApi.startLivenessCapture` | When `mosip.registration.liveness.android.device` is `BUILTIN` (default), the exception photo also opens the capture screen, with workflow `exception_photo` and `LivenessCaptureRequest.photoWhenOff`. With the shipped policy `exception_photo=OFF` the screen runs `session.PhotoCaptureRunner` (also when liveness is off for a resident capture: `FaceDeviceSelection` routes `BUILTIN` with liveness off there, gate outcome `NOT_REQUIRED`, no attempt counted): it streams 1.5 s, signs the newest frame with the built-in device (same ISO record and SBI response as a liveness capture) and returns a pass marked `LIVENESS_NOT_REQUIRED`, without liveness evidence (as on desktop). A policy other than `OFF` runs the full liveness check. Attempts are counted under their own key (`FaceCaptureLivenessGate.exceptionPhotoField`). |
 | The Biometric Details step never enabled CONTINUE after a face capture from the built-in device: it reports quality 90, ARC's face threshold is 90, and the registration screen treated `quality <= threshold` as not good enough (operator onboarding accepts `quality >= threshold`). | `lib/ui/process_ui/widgets_mobile/biometric_capture_scan_block_portrait.dart` (`validateCaptureException`) | Upstream off-by-one: `<=` changed to `<`, the same rule as onboarding. |
 
 ### 12.2 Attempts across capture screens
@@ -360,8 +383,7 @@ problems below; each is fixed in the code named.
 Closing the capture screen and pressing Scan again started the screen at "Attempt 1 of 3" again, while the gate
 already counted the earlier failures; the last screen could therefore allow more attempts than
 `max_retries`. The gate now passes the attempts already used (`usedAttempts`) as
-`LivenessCaptureRequest.priorAttempts`; `LivenessRunner` numbers the sessions from there and gives its
-transaction only the remaining attempts, so the screen shows "Attempt 2 of 3", the third failure shows the
+`LivenessCaptureRequest.priorAttempts`; `LivenessRunner` numbers the sessions from there and passes them to the shared driver as prior failures (`priorFailures`), so the driver's one transaction continues the count and the screen shows "Attempt 2 of 3", the third failure shows the
 recovery message and writes `REG-EVT-LV11`, and a further Scan opens no screen.
 
 Since 2026-10-05 the next screen also receives two more values of the earlier screens of the same subject and
@@ -407,6 +429,7 @@ blank, `BUILTIN` and unknown values, false only for `SBI`). No camera or emulato
   continues where it was left (`switchBack`): restarting it from its first frame repeats frames, which the engine's
   loop check correctly reports as a replayed video. The replay folder is read when an attempt starts, so a test can
   change what the "camera" shows between attempts.
+- Follow mode answers every action of the pool (`ReplayPromptFollower.PACK_ACTIONS` covers every challenge type: blink, smile, turn left and right, look up and down, gaze left and right); pack names are matched without regard to case, with `_` or a space read as `-`, so `S3-Turn_Left` works, over pushed folders and APK asset packs. Every other prompt, including "Look directly at the camera and hold still", returns to `<prefix>-main` at once.
 - `masked` keeps the preview dark, so screenshots of the capture screen show no face.
 - Logcat lines for tests and measurements (no image data): `Screen state <phase> <message key>` on each new
   prompt, `Audit stored <event> <description>` for each stored audit, and `Liveness frame time <workflow>
@@ -425,12 +448,12 @@ It replaces the first bullet of section 11.5.
 
 ### 13.1 Supervisor override for residents (`on_max_failure=SUPERVISOR_OVERRIDE`)
 
-Same rule as the desktop client: after the resident's last attempt failed, a supervisor may accept the face; the
+Same rule as the desktop client: after the resident's last attempt failed, a second person with the supervisor role may accept the face; the
 packet then says `LIVENESS_DECISION=OVERRIDE` and audit `REG-EVT-LV16` names the supervisor. The engine's
 `LivenessTransaction` decides whether an override is possible (`LivenessCaptureResult.isOverrideAllowed()`): only
-for resident workflows, never after `PAD`, `INTEGRITY` or `BINDING` failures. Android adds one requirement the
-desktop client does not have: the supervisor must pass face authentication with liveness first, because the tablet
-has no signed-in supervisor session to rely on.
+for resident workflows, never after `PAD`, `INTEGRITY` or `BINDING` failures. The supervisor must pass face
+authentication with liveness first (the desktop client has the same rule: another user ID, face authentication, 60 s
+validity and a checked photo).
 
 | Step | Where | What happens |
 |---|---|---|
@@ -445,14 +468,15 @@ Pressing Scan again while the field is blocked and an override is still possible
 the override button, and runs no session. The capture screen re-checks the policy for both override modes and
 refuses them for authentication workflows or a policy other than `SUPERVISOR_OVERRIDE`.
 
-Deviation from desktop: the desktop client accepts the signed-in supervisor without a second face check and
-writes `REG-EVT-LV16` when the capture is stored; Android writes it when the override photo is signed (the
-screen that took it), so a photo that ARC's SBI checks then reject still has its `LV16` row.
+Difference from desktop: the desktop client checks the photo (exactly one face, passive PAD) before it stores it and
+writes one `REG-EVT-LV16` per grant or refusal; Android writes `LV16` when the override photo is signed (the screen
+that took it), so a photo that ARC's SBI checks then reject still has its `LV16` row, and it takes the override photo
+without a face-count or PAD check.
 
 ### 13.2 Anonymised metrics (G7, G8)
 
 `LivenessRuntime` owns one `LivenessMetrics` (the engine's collector) and passes it to the engine
-(`EngineLoader.onnx(..., metrics, ...)`), so every session of the process is counted: resident captures and
+(`EngineLoader.onnx(..., metrics, ...)`, which delegates to `fromConfig`), so every session of the process is counted: resident captures and
 face authentications.
 
 - After every attempt the capture screen calls `LivenessRuntime.publishMetrics(policy.isMetricsEnabled())`
@@ -499,9 +523,11 @@ Flutter banners, so a synced text replaces the bundled one everywhere. Checked b
 | Fallback | A provider missing from the ONNX Runtime build is skipped (`UNAVAILABLE`); a provider that rejects the options is skipped for that model (`REJECTED`); either way that model runs on the CPU. If the engine still fails to load (anything but a model integrity failure), `EngineLoader` loads it again on the CPU. A provider problem never switches liveness off. |
 | Status | Logcat `Liveness engine ready: ... execution <status>` and the diagnostic panel: `CPU`, `XNNPACK`, `XNNPACK (partly CPU)`, `CPU (NNAPI unavailable)`, `CPU (NNAPI rejected)`, `CPU (XNNPACK failed to load)`. |
 
-Measured: nothing yet. On the emulator every load reported `execution CPU` (the shipped value). XNNPACK and NNAPI
-were not run on a device; the selection and every fallback path are covered by `AcceleratorCustomizerTest`. A
-speed comparison needs a physical arm64 tablet (B7/B8 in `docs/traceability.md`).
+Measured: nothing on a phone yet. On the emulator every load reported `execution CPU` (the shipped value). XNNPACK and NNAPI
+were not run on a device; the selection and every fallback path are covered by `AcceleratorCustomizerTest`. The
+measurement kit (`scripts/android-perf.sh`, instrumented test `LivenessPerformanceTest`: CPU, XNNPACK and NNAPI by
+1, 2 and 4 threads, per-frame time and memory) is written and compiles, but the test APK was not built or installed and
+no phone or emulator run exists; the results table in [../test-report/android-performance.md](../test-report/android-performance.md) is empty. Whether the NNAPI provider loads in `onnxruntime-android` 1.20.0 is unverified (B7/B8 in `docs/traceability.md`).
 
 Model warm-up: `EngineLoader` runs the face detector and the PAD models once on a blank 640x480 frame after
 loading (100-500 ms on the emulator). Without it, the first frames of the first session after an app start took
@@ -555,3 +581,51 @@ puts every changed key back by value, because ARC keeps a synchronised value whe
 | Screen in override-photo mode (`liveness.override_supervisor`) | `Photo capture ended: PASS, reasons=[SUPERVISOR_OVERRIDE]`, `REG-EVT-LV16 {"supervisorId":"supervisor1"}`, `Capture screen result OK` |
 | Metrics file | `files/liveness/metrics.log` written; the demo's check found no user or registration ID in it (A-V14, A-V15 passed) |
 | Full `scripts/demo-android.sh` | Not completed. Run 1 (before the replay profile) passed 40 of 71 checks; the failures came from MockSync's changed shipped policy (above) and from the loaded host: the emulator's app and launcher hit ANRs (main thread waiting for the render thread, 37% kernel time, major page faults), so taps and text input were lost. The ARC-side override path (Scan, gate, supervisor face authentication, storage, packet) therefore ran only in unit tests (`SupervisorOverrideFlowTest`, `FaceCaptureLivenessGateTest`), not end to end. |
+
+## 14. Offline model update (bonus B6)
+
+A supervisor can replace the liveness models without an app update, from a signed bundle copied to the tablet
+(for example from a USB drive). Same checks, store layout and audits as the desktop client's
+`LivenessModelImporter`; the signature, hash and version checks are the engine's own `ModelRegistry`
+(`liveness-onnx`), not a second copy.
+
+| Class | Role |
+|---|---|
+| `engine.ModelBundleImporter` | Checks a bundle (folder or `.zip`), copies it into the store, verifies the copy, activates it and switches the engine; refuses and audits otherwise. Imports are serialised. |
+| `engine.ModelBundleStore` | `files/liveness/model-store/` in the app's private storage: one folder per imported bundle and `active.properties` (active folder, version, previous folder, version floor), replaced atomically. |
+| `engine.EngineLoader` | Loads the active imported bundle when there is one, else the APK bundle; minimum version is `model.min_version` or the store's floor, whichever is higher. `switchModels(source)` builds a new engine, self-tests it (ready, face detector and passive PAD on a blank frame) and only then swaps it in and closes the old one. |
+| app `LivenessApi.importModelBundle(path)` / `getModelBundle()` | Pigeon calls (`pigeon/liveness.dart`) for Flutter; the import runs on a background thread and answers on the main thread. An empty path reads `Android/data/<app>/files/liveness-models/`. |
+
+Checks, in order; the first failure stops the import and the running models stay active:
+
+1. the signed-in user holds `REGISTRATION_SUPERVISOR` or `REGISTRATION_ADMIN` (roles from ARC's `LoginService`);
+2. the configured engine is the built-in ONNX engine (a vendor engine manages its own models);
+3. `manifest.jws` verifies against the trust anchors built into the engine (RS256);
+4. the bundle version is at least `model.min_version` and newer than the running bundle and the store's floor
+   (anti-rollback: the floor is the highest version ever activated, so an older signed bundle is refused);
+5. every model file in the manifest has the size and SHA-256 the manifest states;
+6. the copy in the store verifies again (that copy is what the engine loads);
+7. a new engine built from the store copy passes the self-test; the pointer is then switched. If the build or the
+   self-test fails, the pointer goes back to the bundle that ran before and the new folder is deleted.
+
+The store keeps the active bundle and the one before it; older imported folders are deleted after a successful
+switch. A `.zip` is extracted to the app's cache first, refusing absolute paths, `..`, more than 64 entries or more
+than 512 MB.
+
+Audits (through `ArcAuditSink`, user ID added by ARC): `REG-EVT-LV14` for a signature, hash or version refusal,
+`REG-EVT-LV13` when the verified models cannot start, `REG-EVT-LV15` with `model.bundle=<name>:<old>-><new>` after
+a switch. Results: `IMPORTED`, `NOT_ALLOWED`, `NOT_SUPPORTED`, `NOT_FOUND`, `INVALID`, `TOO_OLD`, `LOAD_FAILED`.
+
+Tests: `ModelBundleImporterTest` (livenessmanager, Robolectric) builds its bundles the way
+`scripts/make-sample-model-bundles.sh` does (the model files of `models/`, manifest re-signed with a key generated
+at run time, one byte of `MiniFASNetV2.onnx` changed at offset 4096 for the tampered bundle) and covers: valid
+bundle activates (also from a `.zip`); tampered file refused; bundle signed by another key refused; older version
+and same version refused, also after a newer import; failed self-test leaves the old bundle active; officer
+refused; the previous bundle is kept; `EngineLoader.switchModels` keeps the running engine when the new one is
+not ready. The engine switch itself is scripted there, because ONNX Runtime for Android does not run in a JVM unit
+test.
+
+Not done: no run on a physical phone or an emulator (the engine switch is scripted in the unit tests); no Flutter screen calls `importModelBundle` yet (the desktop client has its import window); a
+supervisor button, for example in the device settings tab, is the next step. The import does not check whether a
+capture screen is open (the desktop client refuses with `BUSY` during a capture); the import is started from
+Flutter, so ARC's main screen is in front and no capture screen is open.

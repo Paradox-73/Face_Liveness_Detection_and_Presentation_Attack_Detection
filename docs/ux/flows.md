@@ -19,16 +19,21 @@ stateDiagram-v2
     [*] --> Checking: window opens\n"Checking face liveness..."
     Checking --> Positioning: face not in the oval\n"Look directly at the camera." / "No face detected..."
     Positioning --> Checking: face found
-    Checking --> Challenge: passive result inconclusive\n(policy PASSIVE_THEN_ACTIVE)
+    Checking --> Challenge: passive stage done, then challenges\n(registration, sign-in, onboarding and all supervisor workflows: ALWAYS_ACTIVE)
     Challenge --> ActionDetected: "Action detected"
     ActionDetected --> Challenge: next challenge (step i of k)
-    ActionDetected --> HoldStill: last challenge done
-    Checking --> HoldStill: passive pass
+    ActionDetected --> HoldStill: last challenge done\n"Look directly at the camera and hold still." until a frame passes the pose and quality check
+    Checking --> HoldStill: passive pass (only where the policy is not ALWAYS_ACTIVE)
     HoldStill --> Verifying: signed capture (rCapture)\nbound to the session
     Verifying --> Success: "Good, face captured successfully"
     Success --> [*]: window closes after 0.9 s
     Checking --> Failed: below threshold / timeout\n"We could not verify face liveness..." + tips
     Challenge --> Failed: challenge timeout / wrong action
+    HoldStill --> Failed: no neutral frame in time (counted)
+    Checking --> LowLight: dim face, passive check failed\nnot counted, up to 3 times: "Improve lighting."
+    LowLight --> Checking: Retry
+    Checking --> MultiFace: more than one face in 3 frames in a row\nnot counted
+    MultiFace --> Checking: Retry
     Checking --> FailedPad: PAD, integrity, binding\n"Face verification could not be completed..."
     Verifying --> FailedPad
     Checking --> DeviceError: camera unavailable,\ndisconnected, frames invalid
@@ -110,7 +115,7 @@ flowchart TD
     R -- yes --> RT[Retry button, keyboard focus, Enter] --> S[New session, attempt i+1]
     R -- no --> M{Workflow}
     M -- resident --> O{on_max_failure = SUPERVISOR_OVERRIDE\nand not a suspected attack?}
-    O -- yes --> OV[Supervisor override button\nconfirm, supervisor role checked] --> C[Capture with OVERRIDE evidence]
+    O -- yes --> OV[Supervisor override button\nconfirm, another supervisor's user ID,\nthat supervisor's face check (60 s)] --> C[Capture with OVERRIDE evidence]
     O -- no --> RS["Face capture could not be completed after n attempts.\nPlease ask your supervisor to follow the centre's recovery process."]
     M -- login / auth --> LK["Face verification could not be completed. Maximum attempts reached.\nUse another sign-in method or contact your supervisor."]
     LK --> IL[BLOCK_AND_LOCK: invalid-login count]

@@ -150,7 +150,7 @@ The session's `tick()` checks the timers, so the worker calls it at least every 
 | Thread | Desktop | Android |
 |---|---|---|
 | Frame reader | `sbi-stream-reader` (one per stream) | CameraX analysis executor, or `liveness-replay` |
-| Session owner | `liveness-worker` (one per `LivenessRun`) | `liveness-worker` (one per capture screen) |
+| Session owner | `liveness-worker`, owned by the core `LivenessSessionDriver` that each `LivenessRun` builds (one per run) | `liveness-worker`, owned by the same driver that each `LivenessRunner` builds (one per capture screen) |
 | Screen | JavaFX thread, reached through `Platform.runLater` in `FxLivenessListener` (preview frames coalesced) | Main thread through a `Handler` |
 | Audit writer | `liveness-audit` | ARC audit writer thread |
 | Model loading | `liveness-engine-loader`, once at start-up | `EngineLoader`, once per process |

@@ -37,7 +37,8 @@ Rules that keep the upstream history readable:
 
 - One commit can change the engine and both clients together; one CI checkout builds everything.
 - Upstream licences stay with their folders (MPL-2.0 for the desktop client and MockMDS, MIT for Android); the new
-  code is MIT (`LICENSE`, `NOTICE`).
+  code is MPL-2.0 (`LICENSE`, `NOTICE`), the licence MOSIP uses. The problem statement, FAQ and submission guidelines
+  set no licence; the team chose MPL-2.0.
 - Contributing a change back to MOSIP needs a patch extracted per folder (`git format-patch <import commit>..
   -- clients/desktop`). This is a manual step.
 - The repository is large: the Android build folder and upstream assets are big, and 25.7 MB of model files are in

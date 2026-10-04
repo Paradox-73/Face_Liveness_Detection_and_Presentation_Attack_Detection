@@ -15,7 +15,9 @@ All new classes are in `io.mosip.registration.service.bio.liveness` unless state
 | Class | Role |
 |---|---|
 | `LivenessOrchestrator` | Entry point for the screens. `isEnforced(workflow)`, `start(request, listener)`, `pendingContext(workflow, subject)`, `contextFor(workflow, subject)`, `engineStatus()`, `engineInfo()`, `config()` (for the replacement texts). One run at a time. |
-| `LivenessRun` | One liveness transaction for one person: the first session and its retries. Owns the `liveness-worker` thread. `retry()`, `cancel()`, `grantOverride(supervisorId)`, `close()`. |
+| `LivenessRun` | One liveness transaction for one person: the first session and its retries. Builds the core `LivenessSessionDriver` (shared with Android), which owns the `liveness-worker` thread, the attempt loop and the audit events; `LivenessRun` adds the desktop parts: pass token store, preview copies, diagnostic tap, the override and the earlier failures from `AttemptHistory`. `retry()`, `cancel()`, `requestOverride()` (returns an `OverrideRequest` whose `grant(SupervisorApproval)` returns the capture context), `close()`. |
+| `AttemptHistory` | Per workflow and person, in memory: counted failures, the suspected-attack mark and the uncounted low-light count of the earlier windows (section 2.3). |
+| `SupervisorApproval`, `OverrideRefusedException`, `OverridePhotoCheck` | The second person's authentication result, the refusal of an override, and the check of the override photo (section 2.3). |
 | `LivenessRunListener` | Callbacks to the screen: `onUiState`, `onPreviewFrame`, `onCaptureReady`, `onSessionEnded`. Called on liveness threads. |
 | `LivenessRequest`, `LivenessOutcome` | What to verify (workflow, subject reference, optional device) and how a session ended (pass or failure reason, attempts, retry / override / lock rules). |
 | `LivenessGate` | The service-layer checks: capture gate in `BioServiceImpl.captureModality`, authentication gate in `AuthenticationServiceImpl.authValidator`. |
@@ -79,9 +81,21 @@ the context through the static login code.
   failures use an attempt; device, engine, quality and cancellation failures do not.
 - `LivenessOutcome.isRetryAllowed()` says whether `run.retry()` may be called.
 - After the last attempt `REG-EVT-LV11` is written and `on_max_failure` applies:
-  - `SUPERVISOR_OVERRIDE` (resident workflows only, never after a suspected attack):
-    `run.grantOverride(supervisorId)` returns a single-use context (valid 60 s). The capture is stored with
-    `LIVENESS_DECISION=OVERRIDE` and `REG-EVT-LV16`.
+  - `SUPERVISOR_OVERRIDE` (resident workflows only; refused after any PAD, integrity or binding failure in this or an
+    earlier window, and low-light results do not unlock it): the dialog asks for another supervisor's user
+    ID (`SupervisorOverrideFlow.checkCandidate` refuses a blank ID, no logged-in operator, the operator himself
+    (case-insensitive) and users without `REGISTRATION_SUPERVISOR`), then `SupervisorFaceAuth` authenticates that
+    person by face (a nested liveness window under `exception_auth` when it is enforced, then the same capture and
+    `authValidator` path as the reviewer step; the face is not added to the packet). `run.requestOverride()` returns
+    an `OverrideRequest`; `grant(SupervisorApproval)` re-checks the role, the second person and that the
+    authentication is at most 60 s old (`OVERRIDE_VALIDITY_MS`), otherwise it throws `OverrideRefusedException` and
+    `REG-EVT-LV16` records `decision=REFUSED`. The returned context is single use and expires 60 s after the
+    supervisor's match. `OverridePhotoCheck` then checks the resident photo with the engine's face analyser and passive
+    PAD: not exactly one face fails `BINDING` (`CAPTURE_NO_FACE` / `CAPTURE_MULTI_FACE`), a PAD score below
+    `pad.reject_threshold` fails `PAD` (`CAPTURE_PAD_SCORE`), an engine without a single-image check or an error fails
+    `BINDING` / `ENGINE_ERROR` (closed). The capture is stored with `LIVENESS_DECISION=OVERRIDE`; one `REG-EVT-LV16` is
+    written per grant or refusal with `decision`, `reason`, `userId` (the operator), `supervisorId`, `faces` and
+    `scoreBucket` only. Only face authentication is supported for the approver, not password or fingerprint.
   - `BLOCK_AND_LOCK` (authentication workflows): `LivenessOutcome.isLockRequired()`; the used-up transaction
     counts as one failed login under the client's rule `mosip.registration.invalid_login_count` /
     `invalid_login_time`. The login screen calls its own `validateInvalidLogin`; the authentications inside a
@@ -96,10 +110,18 @@ the context through the static login code.
   offered after the last resident attempt, never in authentication workflows, and the capture is stored with
   `LIVENESS_DECISION=OVERRIDE` plus `REG-EVT-LV16`; `BLOCK_AND_LOCK` asks for the lock after the last attempt
   only.
-- A used-up transaction is remembered per workflow and person (`ExhaustedTransactions`, in memory): a new run for
-  the same registration ID or user ID is refused with `REG-LIV-014` for `exhaustedBlockMinutes` (residents: until
-  the registration is abandoned; operators: the client's invalid-login lock time). Without this, closing the
-  liveness window and opening it again gave a fresh set of attempts (found in the end-to-end run).
+- Counted failures are remembered per workflow and person in `AttemptHistory` (in memory), together with the
+  suspected-attack mark and the uncounted low-light count: "fail twice, Cancel, open again" continues at the third
+  attempt, and a PAD, integrity or binding failure keeps the override closed for later windows. A transaction that used
+  up its attempts blocks a new run for the same registration ID or user ID with `REG-LIV-014` for
+  `exhaustedBlockMinutes` (residents: until the registration is abandoned; operators: the client's invalid-login lock
+  time). A pass clears the entry. The orchestrator passes the history to `LivenessRun`, which gives it to the driver as
+  `priorFailures(counted, attack, lowLight)`. Without this, closing the liveness window and opening it again gave a
+  fresh set of attempts (found in the end-to-end run).
+- Low light: `trackLowLight(true)` is on. A passive PAD failure on a dim face ends `QUALITY` / `LOW_LIGHT` ("Improve
+  lighting."), not counted, up to 3 times per capture across windows (`LivenessOrchestrator.lowLightRetries(workflow,
+  subjectRef)`, `LivenessOutcome.isLowLightRetry()`); the 4th counts as `PAD`. Dim-light results write no `REG-EVT-LV08`
+  and never unlock the override; a counted failure or a pass resets the count.
 
 ## 3. Threading
 
@@ -175,10 +197,10 @@ floors and ranges, and reports each correction; the orchestrator audits correcti
 | Key (prefix `mosip.registration.liveness.`) | Default | Read by |
 |---|---|---|
 | `enable` | `Y` | gate, orchestrator, engine preload |
-| `policy.<workflow>` | core `LivenessConfigKeys.defaultPolicyMode(workflow)`: `ALWAYS_ACTIVE` for `registration`, `onboard_auth`, `login_auth`; `PASSIVE_THEN_ACTIVE` for the other authentication workflows; `exception_photo`: `OFF` | gate, orchestrator |
+| `policy.<workflow>` | core `LivenessConfigKeys.defaultPolicyMode(workflow)`: `ALWAYS_ACTIVE` for every workflow except `exception_photo`: `OFF` | gate, orchestrator |
 | `engine` | `mosip-onnx-default` | engine registry |
 | `engine.execution_provider` | `CPU` | not read on desktop: `LivenessEngineRegistry` builds the engine with `OnnxLivenessEngines.builder` and the default runtime options, and the Windows x64 ONNX Runtime 1.20.0 package offers only the CPU provider ([calibration notes](../eval/calibration-notes.md) 0.4) |
-| `model.min_version` | `1.0.0` | engine registry, model import |
+| `model.min_version` | `1.3.0` | engine registry, model import |
 | `model.store_dir` (desktop only) | `liveness-models` in the client's working folder | engine registry, model import |
 | `guidance.<messageKey>.<lang>` | unset (bundle text) | liveness window (`LivenessTexts.withOverrides`) |
 | `passive.threshold`, `pad.reject_threshold`, `passive.min_frames`, `passive.timeout_ms` | 80 / 20 / 30 / 4000 | session |
@@ -334,7 +356,7 @@ closed.
 
 ## 11. Tests
 
-JUnit 4 in `registration-services/src/test/java/io/mosip/registration/service/bio/liveness/` (106 tests):
+JUnit 4 in `registration-services/src/test/java/io/mosip/registration/service/bio/liveness/` (150 tests on 2026-10-05, run with the `desktop-liveness` patterns of the CI file):
 
 | Test | Covers |
 |---|---|
@@ -364,5 +386,5 @@ Diagnostic mode, replacement texts and the model import have their own flow,
 set to a folder holding a `tampered`, a `v1.1.0` and a `v1.0.0-old` bundle signed with the development key). On
 2026-09-30 it passed 15 of 15 checks: the replaced "Checking" text and the diagnostic lines on screen, `LV17` in
 the audit table, the tampered bundle refused, 1.1.0 imported and running (`LV15`), 1.0.0 refused by the rollback
-check (`LV14` rows), and a face login on the imported models. Screenshots:
+check (`LV14` rows), and a face login on the imported models. That run used the bundle 1.0.1 defaults. Since then `model.min_version` is 1.3.0, so the flow's `v1.1.0` bundle would be refused as too old; it needs a signed bundle of 1.3.1 or higher, and the flow has not been re-run. Screenshots:
 `docs/ux/screenshots/desktop/e2e-13-diagnostic-mode.png` to `e2e-16-model-import-rollback-refused.png`.

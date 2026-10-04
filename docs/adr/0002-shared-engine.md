@@ -24,14 +24,15 @@ All liveness logic lives in one Java library, `liveness/liveness-core`, used unc
   (desktop `onnxruntime`, Android `onnxruntime-android`), both with the same `ai.onnxruntime` API.
 - Screens render only `LivenessUiState` with message keys from `MessageKeys`, so both clients show the same texts
   for the same states.
-- The engine is behind an SPI (`LivenessEngineProvider`) so a vendor engine can replace it.
+- The engine is behind an SPI (`LivenessEngineProvider`) so a vendor engine can replace it. Both clients load it by `mosip.registration.liveness.engine` through `ServiceLoader` (Android: `EngineLoader.fromConfig`; the default ID `mosip-onnx-default` uses the built-in engine).
+- The attempt loop, worker thread, audit of the maximum-attempt event and the hand-off of the capture are one shared class, `LivenessSessionDriver` in `liveness-core`; each client supplies its device, engine, audit sink and capture handler.
 
 ## Consequences
 
 - The same session state machine, thresholds, retry rules (`LivenessTransaction`), audit IDs and payloads
   (`AuditPayloadBuilder`) and packet evidence keys (`PacketEvidenceKeys`) run on both clients. The end-to-end
   reports show the same messages and states (`docs/test-report/android-e2e.md` section 7).
-- The engine is testable on a plain JVM with scripted models and synthetic faces (264 deterministic tests).
+- The engine is testable on a plain JVM with scripted models and synthetic faces (365 deterministic tests in `liveness-core`, run 2026-10-05).
 - Android consumes the engine from the local Maven repository, built from this repository by
   `scripts/android-build.sh`; the build must run Maven before Gradle.
 - Java 8+ language features that D8 desugars are allowed, but main code avoids Java 9+ collection factories to
