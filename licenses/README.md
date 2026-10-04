@@ -8,7 +8,7 @@ own code is MIT (`../LICENSE`); attributions are in `../NOTICE`; the review with
 |---|---|---|
 | `Apache-2.0.txt` | Apache License 2.0 | MediaPipe Face Mesh V2 model and canonical-face data, MiniFASNetV2 / V1SE models, SFace model, AndroidX CameraX 1.4.2, and in `mock-sync.jar`: Spring Boot / Framework, Tomcat embed, Jackson, springdoc-openapi, Swagger, SnakeYAML, Commons Lang 3, log4j-api / log4j-to-slf4j, jakarta.validation-api, JNA (Apache-2.0 option) |
 | `MIT-YuNet.txt` | MIT, "Copyright (c) 2020 Shiqi Yu" | YuNet face detector model |
-| `MIT-onnxruntime.txt` | MIT, "Copyright (c) Microsoft Corporation" | ONNX Runtime Java 1.20.0 and ONNX Runtime Android 1.28.0. The native libraries bundled in those artefacts come with Microsoft's `ThirdPartyNotices.txt`, which is inside the jar and AAR |
+| `MIT-onnxruntime.txt` | MIT, "Copyright (c) Microsoft Corporation" | ONNX Runtime Java 1.20.0 and ONNX Runtime Android 1.20.0. The native libraries bundled in those artefacts come with Microsoft's `ThirdPartyNotices.txt`, which is inside the jar and AAR |
 | `MIT-TSS.MSR.txt` | MIT, "Copyright (c) Microsoft Corporation" | Microsoft TSS.Java 0.3.0 (in `mock-sync.jar`) |
 | `MIT-BouncyCastle.txt` | Bouncy Castle licence (MIT text), "Copyright (c) 2000-2021 The Legion of the Bouncy Castle Inc." | bcprov, bcpkix, bcutil 1.70 (in `mock-sync.jar`) |
 | `MPL-2.0.txt` | Mozilla Public License 2.0 | the imported MOSIP desktop client and MockMDS (their own copies: `clients/desktop/LICENSE`, `devices/mock-mds/LICENSE`); MOSIP reference data in `tools/mock-sync/data/upstream/`; MOSIP `kernel-biometrics-api` and `biometrics-util` |

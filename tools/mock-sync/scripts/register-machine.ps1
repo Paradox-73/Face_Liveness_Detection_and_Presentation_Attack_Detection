@@ -1,3 +1,7 @@
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # Register a desktop Registration Client machine in a running MockSync.
 #
 # usage: .\scripts\register-machine.ps1 -ClientDir <client dir> [-LibDir <client jar dir>] [-AdminUrl http://127.0.0.1:8080]

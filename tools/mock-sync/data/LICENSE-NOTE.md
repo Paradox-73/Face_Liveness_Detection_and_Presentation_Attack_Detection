@@ -1,6 +1,6 @@
 # Licence of the data files
 
-MockSync's code (`tools/mock-sync/src`, `scripts`) is MIT, like the rest of `tools/`.
+MockSync's code (`tools/mock-sync/src`, `scripts`) is MPL-2.0, like the rest of the code written for this project.
 The files below are copied or converted from MOSIP repositories and keep their upstream licence,
 the **Mozilla Public License 2.0** (MPL-2.0, <https://mozilla.org/MPL/2.0/>).
 The licence was checked with the GitHub licence API on 2026-09-28 (`spdx_id: MPL-2.0` for both repositories).
@@ -14,5 +14,5 @@ The licence was checked with the GitHub licence API on 2026-09-28 (`spdx_id: MPL
 `SOURCES.json` records the SHA-256 of every downloaded source file.
 Run `python scripts/fetch-data.py` to download the same commits again and regenerate these files.
 
-MockSync's own data files (`users.json`, `mock-sync-defaults.properties`) are MIT.
+MockSync's own data files (`users.json`, `mock-sync-defaults.properties`) are MPL-2.0.
 The passwords in `users.json` are synthetic test values for a local mock server.

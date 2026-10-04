@@ -4,7 +4,7 @@ A MOSIP biometric SDK (`io.mosip.kernel.biometrics.spi.IBioApiV2`, SDK API versi
 It uses the SFace embedding model and the YuNet detector from the signed liveness model bundle (`models/`), so
 the Registration Clients get a real 1:1 / 1:N face matcher and a real face quality score instead of MOSIP's mock
 SDK. It handles FACE only: finger and iris stay with the mock SDK or a vendor SDK, because MOSIP selects one SDK
-per modality. Licence: MIT.
+per modality. Licence: MPL-2.0.
 
 | Class | Role |
 |---|---|

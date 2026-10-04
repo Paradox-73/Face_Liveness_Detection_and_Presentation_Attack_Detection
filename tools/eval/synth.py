@@ -1,3 +1,7 @@
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Image transforms that turn bona fide frames into synthetic presentation-attack frames.
 
 Every function takes and returns an RGB ``numpy.uint8`` array of shape (height, width, 3) and is

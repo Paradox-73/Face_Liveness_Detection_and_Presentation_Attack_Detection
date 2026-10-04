@@ -21,7 +21,7 @@
 
 | Component | Version | Scope | Licence (as declared) | OSI-approved | Note |
 |---|---|---|---|---|---|
-| `io.mosip.liveness:liveness-core`, `liveness-onnx`, `face-match-sdk` | 1.0.0-SNAPSHOT | this project | MIT | yes | |
+| `io.mosip.liveness:liveness-core`, `liveness-onnx`, `face-match-sdk` | 1.0.0-SNAPSHOT | this project | MPL-2.0 | yes | |
 | `com.microsoft.onnxruntime:onnxruntime` | 1.20.0 | provided (shipped by the desktop client) | MIT | yes | jar contains `ThirdPartyNotices.txt` for the native libraries it bundles |
 | `io.mosip.kernel:kernel-biometrics-api` | 1.2.0.2 | provided (already in the desktop client) | MPL-2.0 | yes | not redistributed by this project |
 | `javax.xml.bind:jaxb-api` | 2.3.1 | provided (already in the desktop client) | CDDL-1.1 or GPL-2.0 with Classpath Exception | **GPL-2.0 option: yes; CDDL-1.1: no** (only CDDL-1.0 is OSI-approved) | **Flag:** not redistributed by this project; the dual licence allows the OSI-approved GPL-2.0 + Classpath Exception option |
@@ -63,9 +63,9 @@ Sources, commits and hashes: `models/SOURCES.md`.
 
 | Component | Version | Licence | OSI-approved |
 |---|---|---|---|
-| `com.microsoft.onnxruntime:onnxruntime-android` | 1.28.0 | MIT | yes |
+| `com.microsoft.onnxruntime:onnxruntime-android` | 1.20.0 | MIT | yes |
 | `androidx.camera:camera-core`, `camera-camera2`, `camera-lifecycle`, `camera-view` | 1.4.2 | Apache-2.0 | yes |
-| `io.mosip.liveness:*` (this project) | 1.0.0-SNAPSHOT | MIT | yes |
+| `io.mosip.liveness:*` (this project) | 1.0.0-SNAPSHOT | MPL-2.0 | yes |
 
 Existing ARC dependencies the module also uses (licensed by upstream ARC): JP2ForAndroid 1.0.4 (BSD-2-Clause,
 with OpenJPEG, BSD-2-Clause), MOSIP `biometrics-util` 1.3.0 (MPL-2.0), Dagger 2.41 (Apache-2.0), AndroidX
@@ -73,7 +73,7 @@ AppCompat / Material / ConstraintLayout (Apache-2.0).
 
 ### 3.3 Desktop additions (`clients/desktop/registration/registration-services/pom.xml`)
 
-`liveness-core`, `liveness-onnx`, `liveness-onnx:models`, `face-match-sdk` (MIT) and `onnxruntime` 1.20.0 (MIT).
+`liveness-core`, `liveness-onnx`, `liveness-onnx:models`, `face-match-sdk` (MPL-2.0, this project) and `onnxruntime` 1.20.0 (MIT).
 Everything else the desktop client ships is upstream MOSIP's choice.
 
 ## 4. Test and build tools (not shipped)

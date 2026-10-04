@@ -1,7 +1,7 @@
 # liveness-onnx: ONNX Runtime adapters for the liveness core
 
 Java 11 library that implements the model contracts of `liveness-core` with ONNX Runtime (ORT). The same jar runs
-on the desktop registration client and on the Android registration client. Licence: MIT.
+on the desktop registration client and on the Android registration client. Licence: MPL-2.0.
 
 | Core contract | Implementation | Models |
 |---|---|---|
@@ -23,10 +23,11 @@ The model files, their licences, hashes, input and output shapes, and exact prep
 - **ORT scope:** ORT is a `provided` dependency. Each client adds its own:
   - Desktop: `com.microsoft.onnxruntime:onnxruntime:1.20.0`. Newer versions fail on the Zulu 11.0.8 JRE the
     desktop client ships (1.21 gives `UnsatisfiedLinkError`, 1.30 crashes in `msvcp140.dll`).
-  - Android: `com.microsoft.onnxruntime:onnxruntime-android:1.28.0`. Versions 1.29 and later add a telemetry
-    provider and the `INTERNET` permission.
+  - Android: `com.microsoft.onnxruntime:onnxruntime-android:1.20.0`, the same release as the desktop, so both
+    clients run the models on one runtime version (docs/test-report/interoperability.md). Versions 1.29 and later
+    would also add a telemetry provider and the `INTERNET` permission.
   - Both expose the same `ai.onnxruntime` API. The main sources also compile unchanged against the
-    `onnxruntime-android` 1.28.0 `classes.jar`.
+    `onnxruntime-android` 1.20.0 `classes.jar`.
   - Only `io.mosip.liveness.onnx.runtime` touches `ai.onnxruntime` (checked by `ArchitectureTest`).
 - **Telemetry:** switched off with `OrtEnvironment.setTelemetry(false)` when the first model loads.
 - **Javadoc:** every public element has Javadoc; the compiler runs with `-Xlint:all -Xdoclint:all/protected`

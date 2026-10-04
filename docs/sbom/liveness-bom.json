@@ -65,8 +65,8 @@
       "licenses" : [
         {
           "license" : {
-            "id" : "MIT",
-            "url" : "https://opensource.org/license/mit/"
+            "id" : "MPL-2.0",
+            "url" : "https://www.mozilla.org/MPL/2.0/"
           }
         }
       ],
@@ -104,8 +104,8 @@
       "licenses" : [
         {
           "license" : {
-            "id" : "MIT",
-            "url" : "https://opensource.org/license/mit/"
+            "id" : "MPL-2.0",
+            "url" : "https://www.mozilla.org/MPL/2.0/"
           }
         }
       ],
@@ -127,8 +127,8 @@
       "licenses" : [
         {
           "license" : {
-            "id" : "MIT",
-            "url" : "https://opensource.org/license/mit/"
+            "id" : "MPL-2.0",
+            "url" : "https://www.mozilla.org/MPL/2.0/"
           }
         }
       ],

@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 Team Badmosip
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 /* Face liveness panel (fxml/LivenessPanel.fxml). Colours keep a contrast of at least 4.5:1 against their
    background (WCAG 2.1 AA); every state also has a text and an icon, so colour is never the only signal. */
 

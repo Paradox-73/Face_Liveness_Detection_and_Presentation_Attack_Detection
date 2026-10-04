@@ -1,3 +1,7 @@
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Checks the committed scenario suite (eval/scenarios) against the frame-pack manifests (eval/packs).
 
 These are static checks of the YAML files; the scenario runner itself is tested by its own Maven build.

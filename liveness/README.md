@@ -1,7 +1,7 @@
 # liveness: shared face liveness engine
 
 Java 11 library used by both MOSIP registration clients (desktop JavaFX client and Android client) for face
-liveness and presentation attack detection (PAD). Licence: MIT.
+liveness and presentation attack detection (PAD). Licence: MPL-2.0.
 
 | Module | Contents | Status |
 |---|---|---|

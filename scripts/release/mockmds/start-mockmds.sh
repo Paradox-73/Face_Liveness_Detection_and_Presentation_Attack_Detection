@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # Starts MockMDS (face, finger and iris SBI 0.9.5 device simulator) in the foreground.
 # It listens on 127.0.0.1, first free port from 4501. Ctrl+C stops it.
 # Settings: application.properties in this folder (face frame source, faults, certification level).

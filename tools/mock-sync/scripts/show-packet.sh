@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # Show the face liveness evidence of a registration packet the desktop client uploaded to MockSync:
 # LIVENESS_* entries of every face record (resident, officer, supervisor), the liveness fields of
 # packet_meta_info.json and the REG-EVT-LV* rows of audit.json. MockSync decrypts the packet with the machine's

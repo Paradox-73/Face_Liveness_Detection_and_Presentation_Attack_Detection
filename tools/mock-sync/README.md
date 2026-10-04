@@ -7,7 +7,7 @@ laptop without MOSIP's hosted test environment (Collab).
 - **Desktop client:** HTTPS on `https://localhost:8443` (the client only accepts HTTPS).
 - **Android client (debug build):** plain HTTP on `http://127.0.0.1:8080` (with `adb reverse tcp:8080 tcp:8080`).
 - **Stack:** Java 11, Spring Boot 2.7, one executable jar (`target/mock-sync.jar`).
-- **Licence:** MIT for the code; the reference data keeps its MPL-2.0 licence (`data/LICENSE-NOTE.md`).
+- **Licence:** MPL-2.0 for the code; the reference data keeps its MPL-2.0 licence (`data/LICENSE-NOTE.md`).
 
 Checked result on 2026-09-28 (Windows 11, TPM 2.0 laptop, desktop client built from `clients/desktop` with
 `-Pmocksync`): first login, all six initial-sync steps, restart and second login reach the operator home screen.

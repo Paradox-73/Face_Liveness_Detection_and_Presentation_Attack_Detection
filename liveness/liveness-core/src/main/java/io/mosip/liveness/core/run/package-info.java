@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 Team Badmosip
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 /**
  * The attempt loop both registration clients run around a liveness session: {@link
  * io.mosip.liveness.core.run.LivenessSessionDriver} opens the sessions of one transaction, moves stream frames into

@@ -1,8 +1,8 @@
 Face liveness and PAD for MOSIP Registration Clients
 Copyright (c) 2026 Team Badmosip
 
-The code written for this project (liveness/, tools/, scripts/, eval/, docs/, and the new files in
-clients/android/android/livenessmanager/) is licensed under the MIT License (LICENSE).
+Code written for this project is licensed under the Mozilla Public License 2.0 (LICENSE); the upstream folders keep their
+licences (listed below).
 
 This repository contains source code imported from MOSIP projects:
 
@@ -37,7 +37,7 @@ Sources, commits, hashes and use caveats: models/SOURCES.md.
 
 Third-party libraries added by this project:
 
-- ONNX Runtime (com.microsoft.onnxruntime:onnxruntime 1.20.0, onnxruntime-android 1.28.0),
+- ONNX Runtime (com.microsoft.onnxruntime:onnxruntime 1.20.0, onnxruntime-android 1.20.0),
   Copyright (c) Microsoft Corporation, MIT License (licenses/MIT-onnxruntime.txt). The native libraries in these
   artefacts are covered by Microsoft's ThirdPartyNotices.txt, shipped inside the jar and the AAR.
 - AndroidX CameraX 1.4.2 (camera-core, camera-camera2, camera-lifecycle, camera-view), The Android Open Source

@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # Re-issues the MockMDS FTM root certificate (CN=RootCAFTM) with the SAME key pair and a new validity period, then
 # puts the new root into every certificate chain that ends in it.
 #

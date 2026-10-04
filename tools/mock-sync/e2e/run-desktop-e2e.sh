@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # Test T-SYNC-03: first login and initial sync of the real desktop Registration Client against a running MockSync.
 #
 # usage: e2e/run-desktop-e2e.sh <client-run-dir> <out-dir> [userId] [password] [seconds]
