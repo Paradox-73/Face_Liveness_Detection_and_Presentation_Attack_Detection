@@ -1,7 +1,7 @@
 package io.mosip.liveness.core;
 
 /**
- * States of one liveness session (design section 4.5).
+ * States of one liveness session (docs/design/engine.md section 3).
  *
  * <p>A session moves forward only. {@link #PASSED}, {@link #FAILED} and {@link #CANCELLED} are terminal; the
  * reason for a failure is carried separately as a {@link FailureReason}. Retrying means opening a new session.
@@ -26,7 +26,11 @@ public enum SessionState {
     /** The prompt is shown and the requested action is being observed; PAD keeps running. */
     CHALLENGE_OBSERVE,
 
-    /** The action was detected; "Action detected" is shown briefly before the next step. */
+    /**
+     * The action was detected; "Action detected" is shown briefly before the next step. After the last challenge the
+     * session stays here while "Look directly at the camera and hold still" waits for a neutral, frontal face that
+     * gives the stored frame.
+     */
     CHALLENGE_PASSED,
 
     /** Liveness is satisfied; a single-use pass token exists and the caller may start the signed capture. */

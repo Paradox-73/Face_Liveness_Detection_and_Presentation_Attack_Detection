@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Draws the challenge sequence of a session (design section 4.7).
+ * Draws the challenge sequence of a session (docs/design/challenges.md section 3).
  *
  * <p>Package-private on purpose: no API lets a client, an operator or the person choose a challenge
  * (T-CORE-CH-01). Rules:

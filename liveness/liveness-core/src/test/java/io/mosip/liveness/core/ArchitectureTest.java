@@ -43,10 +43,10 @@ class ArchitectureTest {
         slices().matching("io.mosip.liveness.core.(*)..").should().beFreeOfCycles().check(core);
     }
 
-    /** The engine, stream and policy implementations must obey the same platform rules as the API. */
+    /** The engine, stream, policy and driver implementations must obey the same platform rules as the API. */
     @Test
     void implementationPackagesArePlatformNeutral() {
-        noClasses().that().resideInAnyPackage("..core.engine..", "..core.stream..", "..core.policy..")
+        noClasses().that().resideInAnyPackage("..core.engine..", "..core.stream..", "..core.policy..", "..core.run..")
                 .should().dependOnClassesThat().resideInAnyPackage("javafx..", "android..", "androidx..", "java.awt..",
                         "javax.imageio..", "java.net..")
                 .check(core);
@@ -57,7 +57,16 @@ class ArchitectureTest {
     void contractPackagesDoNotDependOnImplementations() {
         noClasses().that().resideInAnyPackage("io.mosip.liveness.core", "..core.api..", "..core.config..",
                 "..core.audit..", "..core.ui..", "..core.vision..", "..core.device..", "..core.image..")
-                .should().dependOnClassesThat().resideInAnyPackage("..core.engine..", "..core.stream..", "..core.policy..")
+                .should().dependOnClassesThat()
+                .resideInAnyPackage("..core.engine..", "..core.stream..", "..core.policy..", "..core.run..")
+                .check(core);
+    }
+
+    /** The engine never depends on the session driver that runs it, so the driver stays an optional layer. */
+    @Test
+    void engineDoesNotDependOnTheDriver() {
+        noClasses().that().resideInAnyPackage("..core.engine..", "..core.stream..", "..core.policy..")
+                .should().dependOnClassesThat().resideInAPackage("..core.run..")
                 .check(core);
     }
 

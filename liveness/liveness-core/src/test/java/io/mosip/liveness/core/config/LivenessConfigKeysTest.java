@@ -5,6 +5,7 @@ import io.mosip.liveness.core.Workflow;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,7 @@ class LivenessConfigKeysTest {
         assertEquals("60", d.get("mosip.registration.liveness.binding.min_similarity"));
         assertEquals("5000", d.get("mosip.registration.liveness.binding.max_gap_ms"));
         assertEquals("BLOCK", d.get("mosip.registration.liveness.no_stream_policy"));
-        assertEquals("1.0.0", d.get("mosip.registration.liveness.model.min_version"));
+        assertEquals("1.3.0", d.get("mosip.registration.liveness.model.min_version"));
         assertEquals("N", d.get("mosip.registration.liveness.diagnostic.enable"));
         assertEquals("Y", d.get("mosip.registration.liveness.metrics.enable"));
         assertEquals("L0,L1", d.get("mosip.registration.mds.allowed_certifications"));
@@ -67,17 +68,26 @@ class LivenessConfigKeysTest {
         assertEquals(LivenessConfigKeys.globalKeys().size() + Workflow.values().length + 5, d.size());
     }
 
-    /** Proposal P1 of the calibration notes: resident capture and operator sign-in always run challenges. */
+    /** Proposal P1 of the calibration notes: every workflow that checks liveness always runs challenges. */
     private static String expectedPolicy(Workflow w) {
-        switch (w) {
-            case EXCEPTION_PHOTO:
-                return "OFF";
-            case REGISTRATION:
-            case ONBOARD_AUTH:
-            case LOGIN_AUTH:
-                return "ALWAYS_ACTIVE";
-            default:
-                return "PASSIVE_THEN_ACTIVE";
+        return w == Workflow.EXCEPTION_PHOTO ? "OFF" : "ALWAYS_ACTIVE";
+    }
+
+    /**
+     * The supervisor workflows must never accept a face on the passive score alone: a synthetic print scored 99
+     * passively, above the authentication threshold of 95.
+     */
+    @Test
+    void supervisorWorkflowsDefaultToAlwaysActive() {
+        Map<String, String> d = LivenessConfigKeys.defaultValues();
+        for (Workflow w : new Workflow[] {Workflow.PACKET_AUTH, Workflow.EXCEPTION_AUTH, Workflow.EOD_AUTH}) {
+            assertEquals(PolicyMode.ALWAYS_ACTIVE, LivenessConfigKeys.defaultPolicyMode(w), w.id());
+            assertEquals("ALWAYS_ACTIVE", d.get(LivenessConfigKeys.policyKey(w)), w.id());
+            assertEquals(PolicyMode.ALWAYS_ACTIVE, LivenessPolicy.defaults(w).mode(), w.id());
+        }
+        for (Workflow w : Workflow.values()) {
+            PolicyMode expected = w == Workflow.EXCEPTION_PHOTO ? PolicyMode.OFF : PolicyMode.ALWAYS_ACTIVE;
+            assertEquals(expected, LivenessConfigKeys.defaultPolicyMode(w), w.id());
         }
     }
 
@@ -127,8 +137,47 @@ class LivenessConfigKeysTest {
                     LivenessConfigKeys.workflowKey(w, LivenessConfigKeys.WORKFLOW_PASSIVE_THRESHOLD_SUFFIX)));
         }
         assertTrue(LivenessConfigKeys.isLocalOverrideAllowed(LivenessConfigKeys.PASSIVE_THRESHOLD));
-        assertTrue(LivenessConfigKeys.isLocalOverrideAllowed(LivenessConfigKeys.ACTIVE_CHALLENGE_TYPES));
         assertTrue(LivenessConfigKeys.isLocalOverrideAllowed(LivenessConfigKeys.DIAGNOSTIC_ENABLE));
+    }
+
+    @Test
+    void localOverrideOfBindingMinSimilarityRejected() {
+        assertFalse(LivenessConfigKeys.isLocalOverrideAllowed(LivenessConfigKeys.BINDING_MIN_SIMILARITY));
+        assertFalse(LivenessConfigKeys.localOverrideAllowedKeys().contains(LivenessConfigKeys.BINDING_MIN_SIMILARITY));
+    }
+
+    @Test
+    void localOverrideOfChallengeTypesRejected() {
+        assertFalse(LivenessConfigKeys.isLocalOverrideAllowed(LivenessConfigKeys.ACTIVE_CHALLENGE_TYPES));
+        assertFalse(LivenessConfigKeys.localOverrideAllowedKeys().contains(LivenessConfigKeys.ACTIVE_CHALLENGE_TYPES));
+    }
+
+    @Test
+    void localOverrideOfPassiveTimeoutRejected() {
+        assertFalse(LivenessConfigKeys.isLocalOverrideAllowed(LivenessConfigKeys.PASSIVE_TIMEOUT_MS));
+        assertFalse(LivenessConfigKeys.localOverrideAllowedKeys().contains(LivenessConfigKeys.PASSIVE_TIMEOUT_MS));
+    }
+
+    @Test
+    void localOverrideAllowListIsExactlyTheFlooredAndHarmlessKeys() {
+        Set<String> expected = new java.util.HashSet<>(Arrays.asList(LivenessConfigKeys.PASSIVE_THRESHOLD,
+                LivenessConfigKeys.PAD_REJECT_THRESHOLD, LivenessConfigKeys.ACTIVE_CHALLENGE_TIMEOUT_MS,
+                LivenessConfigKeys.STREAM_TIMEOUT_MS, LivenessConfigKeys.MAX_RETRIES,
+                LivenessConfigKeys.DIAGNOSTIC_ENABLE));
+        for (Workflow w : Workflow.values()) {
+            expected.add(LivenessConfigKeys.workflowKey(w, LivenessConfigKeys.WORKFLOW_PASSIVE_THRESHOLD_SUFFIX));
+            expected.add(LivenessConfigKeys.workflowKey(w, LivenessConfigKeys.WORKFLOW_MAX_RETRIES_SUFFIX));
+        }
+        assertEquals(expected, LivenessConfigKeys.localOverrideAllowedKeys());
+    }
+
+    @Test
+    void localOverrideRejectedKeysStillHaveSyncedDefaults() {
+        Map<String, String> d = LivenessConfigKeys.defaultValues();
+        assertEquals("60", d.get(LivenessConfigKeys.BINDING_MIN_SIMILARITY));
+        assertEquals("4000", d.get(LivenessConfigKeys.PASSIVE_TIMEOUT_MS));
+        assertTrue(LivenessConfigKeys.globalKeys().contains(LivenessConfigKeys.ACTIVE_CHALLENGE_TYPES),
+                "the server still sets the pool through sync");
     }
 
     @Test

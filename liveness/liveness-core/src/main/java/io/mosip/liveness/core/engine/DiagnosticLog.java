@@ -11,10 +11,11 @@ import java.util.Collection;
 import java.util.Objects;
 
 /**
- * Writes one diagnostic record per session state change when {@code diagnostic.enable=Y} (design section 4.17):
- * session identifier, state, PAD score, integrity flags, planarity residual, binding similarity, frame rate and
- * model versions. It never writes images, embeddings, user identifiers or registration identifiers: the record
- * type has no field for them. A failing sink is ignored so diagnostics can never break a session.
+ * Writes one diagnostic record per session state change when {@code diagnostic.enable=Y}
+ * (docs/design/audit-and-evidence.md section 3): session identifier, state, PAD score, integrity flags, planarity
+ * residual, binding similarity, frame rate and model versions. It never writes images, embeddings, user identifiers or
+ * registration identifiers: the record type has no field for them. A failing sink is ignored so diagnostics can never
+ * break a session.
  */
 public final class DiagnosticLog {
 

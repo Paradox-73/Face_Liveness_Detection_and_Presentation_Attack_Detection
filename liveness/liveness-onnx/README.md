@@ -55,7 +55,8 @@ Dependencies between sub-packages have no cycles (checked by `ArchitectureTest`)
 // Desktop: the bundle is in liveness-onnx-<version>-models.jar on the class path.
 // Android: ModelSource reading assets/models/.
 ModelRegistry registry = ModelRegistry.builder(ModelSources.classpath(getClass().getClassLoader()))
-        .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION).orElse("1.0.0"))
+        .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION)
+                .orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION))
         .open();                                   // checks manifest.jws and the minimum version
 try (OnnxModelSet models = OnnxModelSet.load(registry, OnnxRuntimeOptions.defaults())) {
     FaceObservation obs = models.faceAnalyzer().analyze(image, previousSubjectBox);  // hint may be null
@@ -89,7 +90,8 @@ and returns an `OnnxLivenessEngine` (a `DefaultLivenessEngine` with `OnnxFaceAna
 ```java
 OnnxLivenessEngine engine = OnnxLivenessEngines
         .builder(ModelSources.classpath(getClass().getClassLoader()))   // Android: ModelSource over assets
-        .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION).orElse("1.0.0"))
+        .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION)
+                .orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION))
         .imageDecoder(clientImageDecoder)
         .build();                         // blocking (about 1-2 s): not on the UI thread
 LivenessSession session = engine.open(request, listener);
@@ -113,6 +115,10 @@ engine.close();                           // at shutdown, after the last session
   - `manifest.json`: per model, the id, file, version, SHA-256, size, licence, source and params;
   - `manifest.jws`: a detached RS256 JWS over the exact manifest bytes;
   - `model-signing-dev.pub.pem`.
+- **Bundle version:** 1.3.0, re-signed on 2026-10-04 to add the signed engine parameter
+  `integrity.loop_window_frames=300` (next to `quality.min_sharpness=40`). The default `model.min_version`
+  (`LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION` and MockSync's `mock-sync-defaults.properties`) is also 1.3.0,
+  so bundles signed earlier with the development key (1.0.0, 1.0.1, 1.1.0) are refused as rollbacks.
 - **Load sequence (`ModelRegistry`):**
   1. Read `manifest.json` and `manifest.jws`.
   2. Verify the JWS against the trust anchors. Only `RS256` is accepted, `crit` is refused, and keys must have at
@@ -234,31 +240,33 @@ mvn -f liveness/pom.xml -pl liveness-onnx test -Djacoco.skip=true -Dtest=Perform
   - A second intra-op thread did not help on this machine for these small models.
   - These numbers need a quiet machine. While other builds ran, the same test measured p50 104 ms and p95 291 ms
     per frame (JaCoCo on).
-  - The plan's desktop target (p95 of 20 ms or less including decode) is **not met** when every model runs on every
-    frame: p95 is 25-31 ms here.
-  - The engine should apply the frame-skipping plan (research note section 5). Estimates from the stage times
+  - The desktop target (p95 of 20 ms or less including decode, test T-PERF-01 in `docs/traceability.md`) is **not
+    met** when every model runs on every frame: p95 is 25-31 ms here.
+  - The engine should skip models on some frames. Estimates from the stage times
     above (Zulu 11.0.8, 1 thread), not measurements:
     - PAD on every third frame: about 19-20 ms per frame on average.
     - Also skipping Face Mesh in the passive phase, with `OnnxModelSet.detectorOnlyAnalyzer()`: about 10 ms per
       frame.
 
-## Deviations from the plan, and open points
+## Design choices and open points
 
-- **Trust anchor location:** the plan says the bundle's public key is "built into the core". It is built into
-  `liveness-onnx` (`ModelTrustAnchors`), because the core has no crypto code and this task may not change it.
+- **Trust anchor location:** the bundle's public key is built into `liveness-onnx` (`ModelTrustAnchors`), not
+  into `liveness-core`, because the core has no crypto code.
   - Suggested core change: none required. The engine passes a configured key to `ModelRegistry.Builder`.
-- **Signer location:** the plan names `tools/model-signer`; the signer is `io.mosip.liveness.onnx.tools.ModelSigner`
-  in this module.
+- **Signer location:** the signer is `io.mosip.liveness.onnx.tools.ModelSigner` in this module, not a separate
+  `tools/model-signer` folder.
 - **Model conversions:** Face Mesh and SFace ship with weights stored as float16 (`models/tools/fp16_weights.py`).
   - Face Mesh outputs are identical to the original's. SFace embeddings have cosine 0.999998 or more to the
     original's.
   - This keeps the bundle at 24.5 MiB (target about 25 MB) instead of 45.2 MiB with the original files.
   - The published int8 SFace was about 8 times slower on x86, so it was not used.
-- **MiniFASNet score on the MockMDS image:** 0.548, not the 0.72 of the research note. The note cut the crop at the
-  image border; the upstream training crop shifts it instead. Both variants give class 1 (live).
+- **MiniFASNet score on the MockMDS image:** 0.548, not the 0.72 of the research notes of 2026-09-26. Those
+  notes cut the crop at the image border; the upstream training crop shifts it instead. Both variants give
+  class 1 (live).
   - As a score of 55, the MockMDS frame lies between the default `pad.reject_threshold` (20) and both passive
-    thresholds (80 for resident workflows, 95 for authentication). Under the plan's passive-to-active flow
-    (section 4.6) it would therefore go on to active challenges; the frozen-frame check should stop it anyway.
+    thresholds (80 for resident workflows, 95 for authentication). Under the passive-to-active flow
+    (`docs/design/decision-flow.md`) it would therefore go on to active challenges; the frozen-frame check should
+    stop it anyway.
 - **`FaceEmbedder` output:** embeddings are scaled to unit length, and the embedding model id is `sface@<version>`,
   so embeddings from different model versions are never compared.
 - **`smileScore`:** not set. There is no blendshape model in the bundle, so SMILE uses `mouthWidthRatio`.

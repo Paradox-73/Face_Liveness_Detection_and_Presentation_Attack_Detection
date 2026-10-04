@@ -14,10 +14,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class UiContractTest {
 
     @Test
-    void messageCatalogueHasFortyUniqueKeys() {
+    void messageCatalogueHasFortyOneUniqueKeys() {
         List<String> all = MessageKeys.all();
-        assertEquals(40, all.size());
-        assertEquals(40, new HashSet<>(all).size());
+        assertEquals(41, all.size());
+        assertEquals(41, new HashSet<>(all).size());
         for (String key : all) {
             assertTrue(key.matches("liveness\\.[a-z]+\\.[a-z_]+"), key);
         }

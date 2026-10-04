@@ -1,7 +1,8 @@
 package io.mosip.liveness.core.audit;
 
 /**
- * Attribute names used in liveness audit payloads, so both clients write identical JSON (design section 4.17).
+ * Attribute names used in liveness audit payloads, so both clients write identical JSON
+ * (docs/design/audit-and-evidence.md section 1).
  *
  * <p>Values are short strings. Scores appear only as 10-point buckets ({@link #bucket(int)}), never raw.
  */

@@ -76,7 +76,10 @@ class ChallengeSchedulerTest {
                 ChallengeScheduler.eligible(all, MESH_FEATURES, EnumSet.of(ChallengeType.SMILE), 30, 80));
     }
 
-    /** Chi-squared test over the 14 allowed sequences of the default pool with k = 2 (design section 4.7). */
+    /**
+     * Chi-squared test over the 14 allowed sequences of the default pool with k = 2
+     * (docs/design/challenges.md section 3).
+     */
     @Test
     void drawsAreUniformOverTheAllowedSequences() {
         ChallengeScheduler s = new ChallengeScheduler(new SeededRandom(2026));

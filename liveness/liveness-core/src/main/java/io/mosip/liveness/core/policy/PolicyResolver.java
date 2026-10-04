@@ -18,7 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Reads the configuration keys of design section 4.16 and resolves the {@link LivenessPolicy} of a workflow.
+ * Reads the configuration keys of docs/design/configuration.md and resolves the {@link LivenessPolicy} of a workflow.
  *
  * <p>Rules:
  * <ul>

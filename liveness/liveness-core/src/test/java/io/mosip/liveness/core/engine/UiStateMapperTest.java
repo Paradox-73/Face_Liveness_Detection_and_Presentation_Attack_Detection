@@ -172,11 +172,80 @@ class UiStateMapperTest {
     void guidanceKeysForEveryQualityCode() {
         for (ReasonCode c : EnumSet.of(ReasonCode.NO_FACE, ReasonCode.MULTI_FACE, ReasonCode.FACE_TOO_SMALL,
                 ReasonCode.FACE_OUT_OF_AREA, ReasonCode.OFF_POSE, ReasonCode.TOO_DARK, ReasonCode.TOO_BRIGHT,
-                ReasonCode.BLURRY, ReasonCode.POOR_QUALITY)) {
+                ReasonCode.BLURRY, ReasonCode.POOR_QUALITY, ReasonCode.LOW_LIGHT)) {
             assertTrue(MessageKeys.all().contains(LivenessUiStateMapper.guidanceKeyFor(c)), c.name());
             assertTrue(MessageKeys.all().contains(LivenessUiStateMapper.messageKeyFor(c)), c.name());
         }
         assertEquals(MessageKeys.ERROR_POOR_QUALITY, LivenessUiStateMapper.messageKeyFor(ReasonCode.POOR_QUALITY));
+        assertEquals(MessageKeys.GUIDE_LIGHTING, LivenessUiStateMapper.guidanceKeyFor(ReasonCode.LOW_LIGHT));
+    }
+
+    /** A passive PAD failure in low light that the engine ended uncounted: liveness message, lighting first. */
+    @Test
+    void lowLightRetryShowsLivenessMessageWithLightingGuidance() {
+        LivenessUiStateMapper m = new LivenessUiStateMapper(REG, 1);
+        LivenessUiState s = m.forResult(failed(Workflow.REGISTRATION, 1, FailureReason.QUALITY, ReasonCode.LOW_LIGHT),
+                NONE);
+        assertEquals(UiPhase.FAILED, s.phase());
+        assertEquals(MessageKeys.FAIL_LIVENESS, s.messageKey());
+        assertEquals(Arrays.asList(MessageKeys.GUIDE_LIGHTING, MessageKeys.RETRY_AVAILABLE), s.guidanceKeys());
+        assertTrue(s.isRetryAvailable());
+        assertEquals(MessageKeys.FAIL_LIVENESS, LivenessUiStateMapper.failureMessageKey(FailureReason.QUALITY,
+                EnumSet.of(ReasonCode.LOW_LIGHT), null));
+        // Lighting stays first when the attempt also saw other quality problems.
+        LivenessUiState mixed = m.forResult(failed(Workflow.REGISTRATION, 1, FailureReason.QUALITY,
+                ReasonCode.LOW_LIGHT), Arrays.asList(ReasonCode.OFF_POSE));
+        assertEquals(Arrays.asList(MessageKeys.GUIDE_LIGHTING, MessageKeys.GUIDE_LOOK_CAMERA,
+                MessageKeys.RETRY_AVAILABLE), mixed.guidanceKeys());
+    }
+
+    /** Not counted, so the last attempt still offers Retry and never the maximum-attempts screen. */
+    @Test
+    void lowLightRetryOnTheLastAttemptKeepsRetry() {
+        LivenessPolicy p = REG.toBuilder().onMaxFailure(OnMaxFailure.SUPERVISOR_OVERRIDE).build();
+        LivenessUiState s = new LivenessUiStateMapper(p, 3).forResult(failed(Workflow.REGISTRATION, 3,
+                FailureReason.QUALITY, ReasonCode.LOW_LIGHT), NONE);
+        assertEquals(UiPhase.FAILED, s.phase());
+        assertTrue(s.isRetryAvailable());
+        assertFalse(s.isOverrideAvailable());
+    }
+
+    /** The PAD failure that counts after the low-light allowance shows the generic attack message as before. */
+    @Test
+    void padFailureAfterTheLowLightAllowanceShowsTheGenericMessage() {
+        LivenessUiState s = new LivenessUiStateMapper(REG, 1).forResult(failed(Workflow.REGISTRATION, 1,
+                FailureReason.PAD, ReasonCode.PAD_SCORE), Arrays.asList(ReasonCode.TOO_DARK));
+        assertEquals(MessageKeys.FAIL_PAD, s.messageKey());
+        assertEquals(Arrays.asList(MessageKeys.RETRY_AVAILABLE), s.guidanceKeys());
+    }
+
+    /** After the last challenge: "Look directly at the camera and hold still", with guidance for a bad frame. */
+    @Test
+    void lookStraightStateAfterTheChallenges() {
+        LivenessUiStateMapper m = new LivenessUiStateMapper(REG, 1);
+        LivenessUiState s = m.lookStraight(null);
+        assertEquals(UiPhase.HOLD_STILL, s.phase());
+        assertEquals(MessageKeys.FEEDBACK_LOOK_STRAIGHT, s.messageKey());
+        assertEquals(PromptIcon.FACE_OVAL, s.promptIcon());
+        assertTrue(s.guidanceKeys().isEmpty());
+        assertFalse(s.phase().isTerminal());
+        assertEquals(Collections.singletonList(MessageKeys.GUIDE_LOOK_CAMERA), m.lookStraight(ReasonCode.OFF_POSE)
+                .guidanceKeys());
+        assertEquals(Collections.singletonList(MessageKeys.GUIDE_LIGHTING), m.lookStraight(ReasonCode.TOO_DARK)
+                .guidanceKeys());
+        assertTrue(MessageKeys.all().contains(MessageKeys.FEEDBACK_LOOK_STRAIGHT));
+    }
+
+    /** Two faces during the challenges end as a quality failure: multiple-faces message, Retry, not counted. */
+    @Test
+    void multipleFacesDuringChallengesShowTheMultipleFacesMessage() {
+        LivenessUiStateMapper m = new LivenessUiStateMapper(REG, 3);
+        LivenessUiState s = m.forResult(failed(Workflow.REGISTRATION, 3, FailureReason.QUALITY, ReasonCode.MULTI_FACE),
+                Collections.singletonList(ReasonCode.MULTI_FACE));
+        assertEquals(UiPhase.FAILED, s.phase());
+        assertEquals(MessageKeys.ERROR_MULTIPLE_FACES, s.messageKey());
+        assertEquals(Arrays.asList(MessageKeys.GUIDE_FACE_VISIBLE, MessageKeys.RETRY_AVAILABLE), s.guidanceKeys());
+        assertTrue(s.isRetryAvailable());
     }
 
     /** T-CORE-UI-09: a synced guidance key replaces the bundle text for one language. */

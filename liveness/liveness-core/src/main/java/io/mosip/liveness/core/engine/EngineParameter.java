@@ -3,12 +3,12 @@ package io.mosip.liveness.core.engine;
 /**
  * A tunable detection parameter of the default engine, with its default and allowed range.
  *
- * <p>These are not operator settings: design section 4.7 keeps detection thresholds in the signed
+ * <p>These are not operator settings: docs/design/configuration.md section 12 keeps detection thresholds in the signed
  * {@code engineParams} of the model bundle, so a machine's configuration cannot weaken them. The
  * {@link #key()} is the name used in that file. Operator settings (thresholds, timeouts, challenge pool) live in
  * {@link io.mosip.liveness.core.config.LivenessPolicy}. Angles are degrees, times milliseconds, brightness grey
  * levels 0-255, ratios plain numbers. Defaults marked "to calibrate" are starting values until measured on the
- * development split (design section 10.6).
+ * development split (docs/eval/calibration-notes.md).
  */
 public enum EngineParameter {
 
@@ -24,6 +24,16 @@ public enum EngineParameter {
     MAX_ROLL_DEG("quality.max_roll_deg", 25, 0, 90, false),
     /** Darkest accepted mean grey level of the face. */
     MIN_BRIGHTNESS("quality.min_brightness", 50, 0, 255, false),
+    /**
+     * Mean grey level of the passive frames below which a passive PAD failure is treated as a lighting problem:
+     * the session ends with {@code LOW_LIGHT} ("Improve lighting"), not counted, up to
+     * {@code passive.low_light_max_uncounted} times in a row. Lies above {@code quality.min_brightness}, the
+     * TOO_DARK floor; a value at or below that floor turns the rule off. Calibrated on 2026-10-04 with the
+     * analyser's face brightness on run/frame-packs: the synthetic dim genuine packs s3-dim-* measure 66.5-69.5, every
+     * attack pack 82.1 or more (m-stream-static 82.1, a-s2-* 108-143, a-s3-* 145-162), so 75 leaves about 6 grey
+     * levels on each side. The dim packs are darkened recordings; recheck on real dim-room recordings.
+     */
+    LOW_LIGHT_BRIGHTNESS("quality.low_light_brightness", 75, 0, 255, false),
     /** Brightest accepted mean grey level of the face. */
     MAX_BRIGHTNESS("quality.max_brightness", 225, 0, 255, false),
     /**
@@ -39,7 +49,7 @@ public enum EngineParameter {
 
     /**
      * Fraction of scores dropped at each end before averaging the per-frame PAD scores. 0.5 (the default) is
-     * the median of design section 4.6; lower values give a trimmed mean.
+     * the median of docs/design/decision-flow.md section 1; lower values give a trimmed mean.
      */
     PASSIVE_TRIM_FRACTION("passive.trim_fraction", 0.5, 0, 0.5, false),
     /**
@@ -48,6 +58,12 @@ public enum EngineParameter {
      * {@code PASSIVE_TIMEOUT}; the old default of {@code passive.min_frames} was 8.
      */
     PASSIVE_TIMEOUT_MIN_FRAMES("passive.timeout_min_frames", 8, 1, 300, true),
+    /**
+     * Passive PAD failures in low light ({@code quality.low_light_brightness}) that end uncounted before the next
+     * one counts as a PAD failure again; the count restarts after a counted failure. Bounds the extra attempts that
+     * darkening the scene can buy. 0 turns the rule off.
+     */
+    LOW_LIGHT_MAX_UNCOUNTED("passive.low_light_max_uncounted", 3, 0, 10, true),
     /** Embeddings averaged into the session reference face (same-person and binding checks). */
     REFERENCE_FRAMES("identity.reference_frames", 3, 1, 10, true),
 
@@ -61,8 +77,15 @@ public enum EngineParameter {
     NEUTRAL_HOLD_MS("active.neutral_hold_ms", 300, 0, 3_000, true),
     /** Largest absolute yaw of a neutral face. */
     NEUTRAL_MAX_YAW_DEG("active.neutral_max_yaw_deg", 10, 1, 45, false),
-    /** Largest absolute pitch of a neutral face. */
-    NEUTRAL_MAX_PITCH_DEG("active.neutral_max_pitch_deg", 12, 1, 45, false),
+    /**
+     * Largest absolute pitch of a neutral face. Equal to {@code quality.max_pitch_deg} (20): a face the quality gate
+     * admits is not refused as "not neutral" for its pitch alone, which made a camera mounted above or below eye
+     * level (12-20 degrees) end every attempt in {@code NEUTRAL_TIMEOUT}. Look-up and look-down are measured from the
+     * neutral pitch, so a tilted neutral face still needs the full {@code active.look_pitch_deg} movement. The yaw
+     * limit stays tighter than the gate because head turns are measured from it and the identity reference prefers
+     * frontal faces.
+     */
+    NEUTRAL_MAX_PITCH_DEG("active.neutral_max_pitch_deg", 20, 1, 45, false),
     /** How long "Action detected" is shown after a challenge. */
     PASSED_DISPLAY_MS("active.passed_display_ms", 600, 0, 5_000, true),
 
@@ -101,6 +124,11 @@ public enum EngineParameter {
     GAZE_THRESHOLD("active.gaze_threshold", 0.35, 0.05, 1, false),
     /** Frames in a row a non-requested action must show before it fails the challenge. */
     CONTRARY_MIN_FRAMES("active.contrary_min_frames", 2, 1, 10, true),
+    /**
+     * Analysed frames in a row with more than one face that end the challenges with {@code MULTI_FACE} (not counted,
+     * "More than one face detected"). A single frame is not enough, so a passing detector glitch does not end it.
+     */
+    ACTIVE_MULTI_FACE_FRAMES("active.multi_face_frames", 3, 1, 30, true),
     /** During challenges, PAD runs on every n-th analysed frame. */
     ACTIVE_PAD_STRIDE("active.pad_stride", 2, 1, 10, true),
     /**
@@ -119,8 +147,13 @@ public enum EngineParameter {
      * frames count as identical; to calibrate on the target cameras.
      */
     FROZEN_MEAN_ABS_DIFF("integrity.frozen_mean_abs_diff", 0.5, 0, 50, false),
-    /** Frames searched for a repeated fingerprint sequence (design: 30). */
-    LOOP_WINDOW_FRAMES("integrity.loop_window_frames", 30, 8, 600, true),
+    /**
+     * Frames searched for a repeated fingerprint sequence. A loop is found once its period plus
+     * {@code integrity.loop_match_frames} fits in the window, so 300 catches replayed clips of up to 294 frames
+     * (9.8 s at 30 fps, 19.6 s at 15 fps). Cost at 300, measured on 2026-10-04: 2,400 bytes of hashes per session
+     * and at most about 25 microseconds of search per frame.
+     */
+    LOOP_WINDOW_FRAMES("integrity.loop_window_frames", 300, 8, 600, true),
     /** Consecutive frames that must repeat an earlier sequence to count as a loop. */
     LOOP_MATCH_FRAMES("integrity.loop_match_frames", 6, 3, 60, true),
     /** Largest Hamming distance between two 64-bit difference hashes that still counts as the same image. */

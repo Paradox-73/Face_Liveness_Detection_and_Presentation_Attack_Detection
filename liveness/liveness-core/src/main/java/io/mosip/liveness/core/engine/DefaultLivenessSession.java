@@ -32,6 +32,7 @@ import io.mosip.liveness.core.vision.FaceObservation;
 import io.mosip.liveness.core.vision.FacePoint;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
@@ -41,7 +42,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * The liveness session state machine of design section 4.5, driven by stream frames and clock ticks.
+ * The liveness session state machine of docs/design/engine.md section 3, driven by stream frames and clock ticks.
  *
  * <p>Confined to one owning thread (the thread that calls {@link #start()}); {@link #sessionId()},
  * {@link #state()} and {@link #cancel()} are safe from any thread. Every step is deterministic given the
@@ -71,6 +72,7 @@ final class DefaultLivenessSession implements LivenessSession {
     private final FrameRateMeter analysisRate = new FrameRateMeter();
     private final AtomicBoolean cancelRequested = new AtomicBoolean();
     private final Set<ReasonCode> qualityProblems = new LinkedHashSet<>();
+    private final List<Double> passiveBrightness = new ArrayList<>();
     private final Set<ReasonCode> flags = EnumSet.noneOf(ReasonCode.class);
 
     private volatile SessionState state = SessionState.IDLE;
@@ -90,6 +92,7 @@ final class DefaultLivenessSession implements LivenessSession {
     private int goodFrames;
     private int slowInferences;
     private int activeFrames;
+    private int multiFaceRun;
     private double lastIed = Double.NaN;
     private ReasonCode lastProblem;
     private DetectedFace lastFace;
@@ -455,18 +458,28 @@ final class DefaultLivenessSession implements LivenessSession {
             if (!tracker.update(a.frame.monotonicNanos(), face.box(), analysisRate.meanIntervalMs())) {
                 // A different face may have taken over: start collecting again.
                 passiveScores.clear();
+                passiveBrightness.clear();
                 consecutiveGood = 0;
                 flags.add(ReasonCode.TRACKING_LOST);
             }
             lastFace = face;
             consecutiveGood++;
             passiveScores.add(engine.pad().score(a.image, face.box()).liveProbability());
+            if (face.quality().isPresent()) {
+                passiveBrightness.add(face.quality().get().brightness());
+            }
             FaceSignals s = FaceSignals.of(face);
             lastIed = s.interEyeDistance;
-            if (goodFrames++ % 2 == 0 && isFrontal(s, params.get(EngineParameter.NEUTRAL_MAX_YAW_DEG))) {
-                identity.addReference(a.image, face.box());
+            boolean sampled = goodFrames++ % 2 == 0;
+            if (isFrontal(s, params.get(EngineParameter.NEUTRAL_MAX_YAW_DEG))) {
+                if (sampled) {
+                    identity.addReference(a.image, face.box());
+                }
+            } else {
+                // Admitted by the quality gate but outside the neutral window: kept in case no frame is neutral.
+                identity.offerFallback(a.image, face.box(), Math.max(Math.abs(s.yaw), Math.abs(s.pitch)));
             }
-            offerCandidate(a, face, s);
+            offerCandidate(a, face, s, isStorable(s));
         } else {
             consecutiveGood = 0;
             lastProblem = problem;
@@ -480,6 +493,7 @@ final class DefaultLivenessSession implements LivenessSession {
             transition(SessionState.PASSIVE);
         }
         if (passiveScores.count() >= policy.passiveMinFrames()) {
+            identity.completeReference();
             decidePassive();
         } else {
             reporter.ui(ui.checking((double) passiveScores.count() / policy.passiveMinFrames(), problem));
@@ -510,9 +524,29 @@ final class DefaultLivenessSession implements LivenessSession {
             startActive(eligible, now);
         } else if (d.failureReason == FailureReason.ENGINE) {
             failEngine(EngineErrorCode.UNSUPPORTED, null);
+        } else if (d.failureReason == FailureReason.PAD && isLowLightRetry()) {
+            // Not an attack verdict on this evidence: the face is lit too weakly for the PAD models. Not counted.
+            fail(FailureReason.QUALITY, ReasonCode.LOW_LIGHT);
         } else {
             fail(d.failureReason, d.reason);
         }
+    }
+
+    /**
+     * Tells whether a passive PAD failure ends uncounted for low light: the caller tracks low-light results, fewer
+     * than {@code passive.low_light_max_uncounted} came since its last counted failure, and the median brightness of
+     * the scored faces is below {@code quality.low_light_brightness}.
+     */
+    private boolean isLowLightRetry() {
+        int used = request.lowLightRetries();
+        if (used < 0 || used >= params.getInt(EngineParameter.LOW_LIGHT_MAX_UNCOUNTED) || passiveBrightness.isEmpty()) {
+            return false;
+        }
+        List<Double> sorted = new ArrayList<>(passiveBrightness);
+        Collections.sort(sorted);
+        int n = sorted.size();
+        double median = n % 2 == 1 ? sorted.get(n / 2) : (sorted.get(n / 2 - 1) + sorted.get(n / 2)) / 2;
+        return median < params.get(EngineParameter.LOW_LIGHT_BRIGHTNESS);
     }
 
     private void startActive(List<ChallengeType> eligible, long now) {
@@ -531,6 +565,17 @@ final class DefaultLivenessSession implements LivenessSession {
 
     private void onActiveFrame(Analysed a) throws EngineException {
         long nanos = a.frame.monotonicNanos();
+        if (a.observation.faceCount() > 1) {
+            lastProblem = ReasonCode.MULTI_FACE;
+            qualityProblems.add(ReasonCode.MULTI_FACE);
+            if (++multiFaceRun >= params.getInt(EngineParameter.ACTIVE_MULTI_FACE_FRAMES)) {
+                // A second person in view: "More than one face detected", not counted, instead of a timeout.
+                fail(FailureReason.QUALITY, ReasonCode.MULTI_FACE);
+                return;
+            }
+        } else {
+            multiFaceRun = 0;
+        }
         DetectedFace face = a.observation.faceCount() == 1 ? a.observation.faces().get(0) : null;
         FaceSignals s = null;
         List<FacePoint> points = Collections.emptyList();
@@ -544,14 +589,16 @@ final class DefaultLivenessSession implements LivenessSession {
             if (scoreActivePad(a.image, face, s, nanos)) {
                 return;
             }
-            if (a.problem == null) {
-                offerCandidate(a, face, s);
-            }
-        } else if (a.observation.faceCount() > 1) {
-            lastProblem = ReasonCode.MULTI_FACE;
-            qualityProblems.add(ReasonCode.MULTI_FACE);
         }
-        onActiveEvent(active.onFrame(nanos, s, points), a, face, nanos);
+        ActiveStage.Event event = active.onFrame(nanos, s, points, a.problem == null);
+        if (face != null && active.isCapturePoseFrame()) {
+            // Only the capture pose after the last challenge gives the stored frame, never a challenge frame.
+            offerCandidate(a, face, s, true);
+        }
+        if (active.isWaitingForCapturePose()) {
+            reporter.ui(ui.lookStraight(a.problem));
+        }
+        onActiveEvent(event, a, face, nanos);
     }
 
     /**
@@ -623,7 +670,14 @@ final class DefaultLivenessSession implements LivenessSession {
                 reporter.ui(ui.challengeWaiting(active.index(), active.count(), false));
                 break;
             case ALL_DONE:
-                finishActive();
+                finishChallenges(nanos);
+                break;
+            case CAPTURE_POSE_READY:
+                finishCapturePose();
+                break;
+            case CAPTURE_POSE_TIMEOUT:
+                reporter.audit(audit.timeout(state));
+                fail(FailureReason.TIMEOUT, ReasonCode.NEUTRAL_TIMEOUT);
                 break;
             case FAILED:
                 challengeFailed();
@@ -670,8 +724,11 @@ final class DefaultLivenessSession implements LivenessSession {
         fail(o.failureReason(), o.reason());
     }
 
-    /** Final checks after the last challenge (design section 4.6). */
-    private void finishActive() throws EngineException {
+    /**
+     * Final checks after the last challenge (docs/design/decision-flow.md section 2), then the wait for the capture
+     * pose: "Look directly at the camera and hold still" until a neutral, frontal face gives the stored frame.
+     */
+    private void finishChallenges(long nanos) {
         activeEndNanos = clock.monotonicNanos();
         activePadScore = activeAll.count() > 0 ? activeAll.score() : passiveScore;
         if (activePadScore < policy.padRejectThreshold()) {
@@ -688,6 +745,14 @@ final class DefaultLivenessSession implements LivenessSession {
                 }
             }
         }
+        candidate = null;
+        active.startCapturePose(nanos);
+        reporter.ui(ui.lookStraight(null));
+    }
+
+    /** The capture pose was held: checks that the chosen frame shows the reference person and issues the token. */
+    private void finishCapturePose() throws EngineException {
+        activeEndNanos = clock.monotonicNanos();
         if (identity.hasReference() && candidate != null) {
             int sim = identity.similarity(candidate.image, candidate.face.box());
             if (sim >= 0 && sim < policy.bindingMinSimilarity()) {
@@ -698,12 +763,27 @@ final class DefaultLivenessSession implements LivenessSession {
         enterCaptureReady();
     }
 
-    private void offerCandidate(Analysed a, DetectedFace face, FaceSignals s) {
+    /**
+     * Keeps the frame to store: a storable face (eyes open, no smile) beats any other, then the most frontal one.
+     */
+    private void offerCandidate(Analysed a, DetectedFace face, FaceSignals s, boolean storable) {
         double angle = s.hasPose() ? s.maxPoseAngle() : 0;
         boolean frontal = angle <= params.get(EngineParameter.CAPTURE_FRONTAL_MAX_DEG);
-        if (candidate == null || frontal || (!candidate.frontal && angle <= candidate.angle)) {
-            candidate = new CaptureCandidate(a.frame, a.image, face, angle, frontal);
+        boolean better = candidate == null || (storable && !candidate.storable)
+                || (storable == candidate.storable && (frontal || (!candidate.frontal && angle <= candidate.angle)));
+        if (better) {
+            candidate = new CaptureCandidate(a.frame, a.image, face, angle, frontal, storable);
         }
+    }
+
+    /**
+     * Tells whether a passive frame is preferred for storage: eyes open (no blink caught mid-way) and no smile when
+     * the analyser gives a smile probability. Without a neutral baseline the mouth ratio cannot tell a smile; no
+     * action has been asked for yet in the passive phase.
+     */
+    private boolean isStorable(FaceSignals s) {
+        return (Double.isNaN(s.ear) || s.ear >= params.get(EngineParameter.EYES_OPEN_MIN_EAR))
+                && (Double.isNaN(s.smileScore) || s.smileScore < params.get(EngineParameter.SMILE_SCORE_THRESHOLD));
     }
 
     private static boolean isFrontal(FaceSignals s, double maxDeg) {
@@ -1003,13 +1083,16 @@ final class DefaultLivenessSession implements LivenessSession {
         final DetectedFace face;
         final double angle;
         final boolean frontal;
+        final boolean storable;
 
-        CaptureCandidate(FaceFrame frame, ImageBuffer image, DetectedFace face, double angle, boolean frontal) {
+        CaptureCandidate(FaceFrame frame, ImageBuffer image, DetectedFace face, double angle, boolean frontal,
+                boolean storable) {
             this.frame = frame;
             this.image = image;
             this.face = face;
             this.angle = angle;
             this.frontal = frontal;
+            this.storable = storable;
         }
     }
 }

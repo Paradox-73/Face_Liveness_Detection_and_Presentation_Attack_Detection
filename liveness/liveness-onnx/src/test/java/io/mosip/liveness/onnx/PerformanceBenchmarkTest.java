@@ -27,8 +27,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Per-frame latency at 640x480 on the machine running the build (T-PERF). Prints p50, p95 and maximum per
  * stage and asserts nothing about time, because shared build machines vary widely (other builds running at the
- * same time multiplied p95 by ten in one run). The plan's target is p95 of at most 20 ms per frame including
- * JPEG decoding on a desktop. {@code -Dliveness.benchmark.frames=0} skips the benchmark.
+ * same time multiplied p95 by ten in one run). The target (T-PERF-01 in docs/traceability.md) is p95 of at most 20 ms
+ * per frame including JPEG decoding on a desktop. {@code -Dliveness.benchmark.frames=0} skips the benchmark.
  *
  * <p>Frames: the MockMDS stream image resized to 640x480 and JPEG-encoded once; each iteration decodes it with
  * ImageIO (as the desktop client does), runs the face analyser (YuNet at 320 px, Face Mesh, quality) and the

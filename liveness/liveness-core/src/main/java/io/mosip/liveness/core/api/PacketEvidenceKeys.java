@@ -9,7 +9,8 @@ import java.util.Map;
 
 /**
  * Keys and values of the liveness evidence stored in the CBEFF BIR {@code others} map of the face record
- * (design section 4.18), identical on both clients. It applies to resident, officer and supervisor faces.
+ * (docs/design/audit-and-evidence.md section 2), identical on both clients. It applies to resident, officer and
+ * supervisor faces.
  */
 public final class PacketEvidenceKeys {
 

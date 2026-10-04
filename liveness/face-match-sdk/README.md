@@ -198,7 +198,7 @@ with_lock liveness-build mvn -f liveness/pom.xml -pl face-match-sdk verify
 - The compile step fails on an Android API 28 violation (animal-sniffer). Only `imageio` may use `java.awt` and
   `javax.imageio`.
 
-## Differences from the plan
+## Design choices
 
 - `kernel-biometrics-api` is 1.2.0.2, not 1.2.0.1: it is the version the desktop client really uses
   (`mosip.biometric.util.version` in `clients/desktop/registration/pom.xml`). `kernel-biosdk-provider` is 1.2.0.1

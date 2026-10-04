@@ -1,7 +1,7 @@
 package io.mosip.liveness.core.ui;
 
 /**
- * The screen state a client shows (design section 11.1). Both clients render the same phases with the same
+ * The screen state a client shows (docs/ux/README.md). Both clients render the same phases with the same
  * layout: oval guide in the centre, prompt banner on top, step indicator and attempt counter at the bottom.
  */
 public enum UiPhase {

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Every user-facing liveness message key (design section 11.2). The same keys exist in the desktop resource
+ * Every user-facing liveness message key (docs/ux/message-catalogue.csv). The same keys exist in the desktop resource
  * bundles and the Android ARB files; the single source of the texts is {@code docs/ux/message-catalogue.csv}.
  *
  * <p>Argument placeholders use {@code {0}}, {@code {1}} as in {@link java.text.MessageFormat}. A synced key
@@ -42,6 +42,11 @@ public final class MessageKeys {
     public static final String FEEDBACK_DETECTED = "liveness.feedback.detected";
     /** "Hold still" */
     public static final String FEEDBACK_HOLD_STILL = "liveness.feedback.hold_still";
+    /**
+     * "Look directly at the camera and hold still." After the last challenge, until a neutral, frontal face gives the
+     * frame that is stored (PS04 section 10 wording: "Look directly at the camera." and "Hold still").
+     */
+    public static final String FEEDBACK_LOOK_STRAIGHT = "liveness.feedback.look_straight";
     /** "Good, face captured successfully" */
     public static final String FEEDBACK_SUCCESS = "liveness.feedback.success";
 
@@ -108,7 +113,7 @@ public final class MessageKeys {
             STATUS_CHECKING,
             CHALLENGE_BLINK, CHALLENGE_SMILE, CHALLENGE_TURN_LEFT, CHALLENGE_TURN_RIGHT, CHALLENGE_LOOK_UP,
             CHALLENGE_LOOK_DOWN, CHALLENGE_GAZE_LEFT, CHALLENGE_GAZE_RIGHT,
-            FEEDBACK_CONTINUE, FEEDBACK_DETECTED, FEEDBACK_HOLD_STILL, FEEDBACK_SUCCESS,
+            FEEDBACK_CONTINUE, FEEDBACK_DETECTED, FEEDBACK_HOLD_STILL, FEEDBACK_LOOK_STRAIGHT, FEEDBACK_SUCCESS,
             FAIL_LIVENESS, FAIL_PAD,
             GUIDE_LOOK_CAMERA, GUIDE_FACE_VISIBLE, GUIDE_LIGHTING, GUIDE_IN_AREA, GUIDE_FOLLOW_ACTION,
             RETRY_AVAILABLE, RETRY_MAX_RESIDENT, RETRY_MAX_AUTH, OVERRIDE_CONFIRM,
@@ -123,7 +128,7 @@ public final class MessageKeys {
     /**
      * Lists every message key, for bundle-completeness checks.
      *
-     * @return an unmodifiable list of the 40 keys
+     * @return an unmodifiable list of the 41 keys
      */
     public static List<String> all() {
         return ALL;

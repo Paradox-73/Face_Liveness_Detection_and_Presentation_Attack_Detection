@@ -6,7 +6,7 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * Proof that a session passed liveness, issued once in {@code CAPTURE_READY} (design section 4.10).
+ * Proof that a session passed liveness, issued once in {@code CAPTURE_READY} (docs/design/engine.md section 7).
  *
  * <p>The token is single-use (the client's token store marks it used) and expires at
  * {@code issuedAt + binding.max_gap_ms + capture timeout}; in authentication flows the window starts when the

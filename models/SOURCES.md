@@ -14,7 +14,11 @@ This folder is the signed model bundle used by `liveness/liveness-onnx` on both 
   Apache-2.0) are OSI-approved; the caveats below concern training data and intended use, not the licences.
 - `tools/fp16_weights.py`: the script that produced the two `*_fp16w.onnx` files.
 
-Bundle version 1.0.0. Total size of the five model files: 25,671,839 bytes (24.5 MiB).
+Bundle version 1.3.0, signed on 2026-10-04. It is above every version signed earlier with the development key
+(1.0.0, 1.0.1 and 1.1.0) and above the 1.2.0 that the tampered sample bundle claims without a valid signature.
+The default `model.min_version` is 1.3.0, so a client at the defaults refuses all of those older bundles. The signed `engineParams` set `quality.min_sharpness` to 40 and
+`integrity.loop_window_frames` to 300 (loops of up to 294 frames are found; see
+`liveness/liveness-core/.../EngineParameter.java`). Total size of the five model files: 25,671,839 bytes (24.5 MiB).
 
 Licences and sources were checked on 2026-09-28 in each source repository (LICENSE file at the commit named
 below). SHA-256 values were computed on the downloaded files. For the LFS-stored OpenCV Zoo files they also match
@@ -124,7 +128,7 @@ the LFS pointer at that commit.
   | Ensemble mean | — | 0.548 | argmax class 1 (live) |
   | V2, divided by 255 | [0.000, 0.007, 0.993] | 0.007 | attack |
 
-  - The research note measured 0.72 for this image; it cut the crop at the image edge (as the yakhyo sample does)
+  - The research notes of 2026-09-26 measured 0.72 for this image; it cut the crop at the image edge (as the yakhyo sample does)
     instead of shifting it as upstream does. With the cut crop our Python reference also gives 0.70.
 - **Known weakness:** a vendor benchmark (axonlab.ai, updated 2026-04-22) reports high attack acceptance for 2-D
   attacks. The engine therefore adds active challenges, frame-integrity and planarity checks, and does not rely on

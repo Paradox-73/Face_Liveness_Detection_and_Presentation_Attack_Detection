@@ -9,7 +9,7 @@ package io.mosip.liveness.core.device;
  *
  * <p>Two calls are separate on purpose: {@link #openStream} gives unsigned preview frames for liveness, and
  * {@link #capture} gives the one signed image that goes into the packet. The session binds the two
- * (stream-to-capture binding, design section 4.10).
+ * (stream-to-capture binding, docs/design/engine.md section 7).
  */
 public interface FaceCaptureDevice {
 

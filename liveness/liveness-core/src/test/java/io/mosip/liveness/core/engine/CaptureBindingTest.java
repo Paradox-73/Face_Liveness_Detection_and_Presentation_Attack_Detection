@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** T-CORE-BND-01..03: stream-to-capture binding (design section 4.10). */
+/** T-CORE-BND-01..03: stream-to-capture binding (docs/design/engine.md section 7). */
 class CaptureBindingTest {
 
     private static final LivenessPolicy REG = TestPolicies.passiveFirst(Workflow.REGISTRATION);
@@ -254,5 +254,78 @@ class CaptureBindingTest {
         assertTrue(v.isPassed());
         assertFalse(v.similarity().isPresent());
         assertFalse(h.result().bindingSimilarity().isPresent());
+    }
+
+    /**
+     * With an embedder configured, a session that built no reference face (no passive frame had landmarks) must not
+     * skip the face check: binding fails instead of accepting a capture of an unknown face.
+     */
+    @Test
+    void noReferenceWithEmbedderFailsBinding() {
+        SessionHarness h = new SessionHarness(REG).start();
+        h.runPassive(TestFaces.neutral().noLandmarks());
+        assertEquals(SessionState.CAPTURE_READY, h.state());
+        BindingVerdict v = h.captureAndBind();
+        assertFalse(v.isPassed());
+        assertEquals(FailureReason.BINDING, v.failureReason().get());
+        assertTrue(v.reasonCodes().contains(ReasonCode.SIMILARITY_LOW), v.reasonCodes().toString());
+        assertFalse(v.similarity().isPresent());
+        assertEquals(SessionState.FAILED, h.state());
+        assertEquals(FailureReason.BINDING, h.result().failureReason().get());
+        assertEquals(MessageKeys.FAIL_PAD, h.listener.lastUi().messageKey());
+        assertFalse(h.listener.lastUi().isOverrideAvailable());
+    }
+
+    /** Without an embedder there is no reference to miss: the session binds without a similarity, as before. */
+    @Test
+    void noReferenceWithoutEmbedderBindsWithoutSimilarity() {
+        SessionHarness h = new SessionHarness(REG);
+        h.useEmbedder = false;
+        h.start();
+        h.runPassive(TestFaces.neutral().yaw(15).pitch(20));
+        assertEquals(SessionState.CAPTURE_READY, h.state());
+        BindingVerdict v = h.captureAndBind();
+        assertTrue(v.isPassed(), v.toString());
+        assertFalse(v.similarity().isPresent());
+    }
+
+    /** A capture face without landmarks cannot be compared; with an embedder that fails binding too. */
+    @Test
+    void captureWithoutLandmarksFailsBindingWithEmbedder() {
+        SessionHarness h = ready(REG, false);
+        LivenessPassToken t = start(h);
+        h.analyzer.faces(TestFaces.neutral().noLandmarks().build());
+        BindingVerdict v = h.session.bind(h.bindingRequest(t).build());
+        assertEquals(FailureReason.BINDING, v.failureReason().get());
+        assertTrue(v.reasonCodes().contains(ReasonCode.SIMILARITY_LOW), v.reasonCodes().toString());
+    }
+
+    /**
+     * Every passive frame is admitted by the quality gate (yaw 15 = {@code quality.max_yaw_deg}, pitch 20 = the
+     * pitch limit) but none is inside the 10-degree neutral window: the reference comes from the most frontal of
+     * them, so binding still compares the captured face.
+     */
+    @Test
+    void referenceFromFrontalFramesWithinQualityGate() {
+        SessionHarness same = new SessionHarness(REG).start();
+        same.runPassive(TestFaces.neutral().yaw(15).pitch(20));
+        assertEquals(SessionState.CAPTURE_READY, same.state());
+        int referenceEmbeddings = same.embedder.calls;
+        assertEquals(same.params.getInt(EngineParameter.REFERENCE_FRAMES), referenceEmbeddings,
+                "the reference is built once, from identity.reference_frames frames");
+        BindingVerdict v = same.captureAndBind();
+        assertTrue(v.isPassed(), v.toString());
+        assertEquals(100, v.similarity().getAsInt());
+        assertEquals(100, same.result().bindingSimilarity().getAsInt());
+
+        SessionHarness swapped = new SessionHarness(REG).start();
+        swapped.runPassive(TestFaces.neutral().yaw(-15).pitch(-20));
+        assertEquals(SessionState.CAPTURE_READY, swapped.state());
+        LivenessPassToken t = start(swapped);
+        swapped.embedder.next = ScriptedModels.PERSON_B;
+        BindingVerdict other = bind(swapped, swapped.bindingRequest(t).build());
+        assertEquals(FailureReason.BINDING, other.failureReason().get());
+        assertTrue(other.reasonCodes().contains(ReasonCode.SIMILARITY_LOW));
+        assertEquals(11, other.similarity().getAsInt());
     }
 }

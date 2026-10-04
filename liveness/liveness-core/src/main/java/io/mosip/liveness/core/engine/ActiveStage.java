@@ -13,7 +13,9 @@ import java.util.List;
 
 /**
  * Runs the drawn challenge sequence: random wait and neutral face before each prompt, observation of the action,
- * "Action detected" display, and planarity data on head turns (design sections 4.5 and 4.7).
+ * "Action detected" display, and planarity data on head turns (design sections 4.5 and 4.7). After the last
+ * challenge, {@link #startCapturePose(long)} waits for a neutral, frontal face held still, so the stored frame never
+ * shows a challenge expression or a turned head.
  *
  * <p>The session drives it with frames and clock ticks and reacts to the returned {@link Event}s. Between
  * {@link Event#NEUTRAL_READY} and {@link #prompt(long)} the session runs its same-person check on the neutral
@@ -34,10 +36,14 @@ final class ActiveStage {
         /** The display after the last challenge ended. */
         ALL_DONE,
         /** The current challenge failed, or no neutral face came in time. */
-        FAILED
+        FAILED,
+        /** After the last challenge, a neutral, frontal face has been held for {@code active.neutral_hold_ms}. */
+        CAPTURE_POSE_READY,
+        /** After the last challenge, no neutral, frontal face was held within {@code challenge_timeout_ms}. */
+        CAPTURE_POSE_TIMEOUT
     }
 
-    private enum Phase { WAIT, OBSERVE, PASSED, DONE, FAILED }
+    private enum Phase { WAIT, OBSERVE, PASSED, POSE, DONE, FAILED }
 
     private final List<ChallengeType> sequence;
     private final List<ChallengeType> detectable;
@@ -45,6 +51,7 @@ final class ActiveStage {
     private final EngineParameters params;
     private final RandomSource random;
     private final NeutralBaseline neutral = new NeutralBaseline();
+    private final ActionLevels levels;
     private final List<ChallengeRecord> records = new ArrayList<>();
     private final List<Double> planarityResiduals = new ArrayList<>();
 
@@ -60,6 +67,9 @@ final class ActiveStage {
     private double maxTurnDeg;
     private long passedUntilNanos;
     private long totalChallengeMs;
+    private long poseSinceNanos = -1;
+    private long poseDeadlineNanos;
+    private boolean poseNeutral;
 
     ActiveStage(List<ChallengeType> sequence, List<ChallengeType> detectable, LivenessPolicy policy,
             EngineParameters params, RandomSource random, long nowNanos) {
@@ -68,6 +78,7 @@ final class ActiveStage {
         this.policy = policy;
         this.params = params;
         this.random = random;
+        this.levels = new ActionLevels(params);
         startWait(nowNanos);
     }
 
@@ -92,6 +103,20 @@ final class ActiveStage {
      * @return what changed
      */
     Event onFrame(long nanos, FaceSignals s, List<FacePoint> points) {
+        return onFrame(nanos, s, points, true);
+    }
+
+    /**
+     * Processes one analysed frame.
+     *
+     * @param nanos  frame time
+     * @param s      measures of the subject's face, or {@code null} without a single face
+     * @param points rigid landmarks of the face (possibly empty)
+     * @param good   whether the frame passed the acquisition quality gate (used for the capture pose)
+     * @return what changed
+     */
+    Event onFrame(long nanos, FaceSignals s, List<FacePoint> points, boolean good) {
+        poseNeutral = false;
         Event timed = onTime(nanos);
         if (timed != Event.NONE) {
             return timed;
@@ -101,6 +126,8 @@ final class ActiveStage {
                 return waitFrame(nanos, s, points);
             case OBSERVE:
                 return observeFrame(nanos, s, points);
+            case POSE:
+                return poseFrame(nanos, s, good);
             default:
                 return Event.NONE;
         }
@@ -131,6 +158,12 @@ final class ActiveStage {
                     }
                     phase = Phase.DONE;
                     return Event.ALL_DONE;
+                }
+                return Event.NONE;
+            case POSE:
+                if (nanos > poseDeadlineNanos) {
+                    phase = Phase.FAILED;
+                    return Event.CAPTURE_POSE_TIMEOUT;
                 }
                 return Event.NONE;
             default:
@@ -169,6 +202,57 @@ final class ActiveStage {
             return false;
         }
         return Double.isNaN(s.ear) || s.ear >= params.get(EngineParameter.EYES_OPEN_MIN_EAR);
+    }
+
+    /**
+     * After the last challenge: waits for the capture pose, a face that {@link #isCaptureNeutral} accepts on
+     * consecutive frames that pass the quality gate, for {@code active.neutral_hold_ms}, within
+     * {@code challenge_timeout_ms}.
+     *
+     * @param nanos current time
+     */
+    void startCapturePose(long nanos) {
+        phase = Phase.POSE;
+        poseSinceNanos = -1;
+        poseNeutral = false;
+        poseDeadlineNanos = nanos + policy.challengeTimeoutMs() * 1_000_000L;
+    }
+
+    private Event poseFrame(long nanos, FaceSignals s, boolean good) {
+        if (!good || !isCaptureNeutral(s)) {
+            poseSinceNanos = -1;
+            return Event.NONE;
+        }
+        poseNeutral = true;
+        if (poseSinceNanos < 0) {
+            poseSinceNanos = nanos;
+        }
+        if (nanos - poseSinceNanos >= params.getLong(EngineParameter.NEUTRAL_HOLD_MS) * 1_000_000L) {
+            phase = Phase.DONE;
+            return Event.CAPTURE_POSE_READY;
+        }
+        return Event.NONE;
+    }
+
+    /**
+     * Tells whether a face may be stored after the challenges: eyes open, and neither a smile nor a blink at or above
+     * {@code active.onset_fraction} of its trigger compared with the neutral face before the last prompt. The head
+     * pose limits are those of the quality gate, which the caller checks. A measure the analyser does not give is not
+     * checked.
+     *
+     * @param s measures of the face, or {@code null} without a single face
+     * @return {@code true} if the face is neutral enough to store
+     */
+    boolean isCaptureNeutral(FaceSignals s) {
+        if (s == null) {
+            return false;
+        }
+        if (!Double.isNaN(s.ear) && s.ear < params.get(EngineParameter.EYES_OPEN_MIN_EAR)) {
+            return false;
+        }
+        double onset = params.get(EngineParameter.ONSET_FRACTION);
+        return !(levels.level(ChallengeType.BLINK, s, neutral) >= onset)
+                && !(levels.level(ChallengeType.SMILE, s, neutral) >= onset);
     }
 
     /**
@@ -260,6 +344,24 @@ final class ActiveStage {
 
     boolean isNeutralNow() {
         return phase == Phase.WAIT && neutralSinceNanos >= 0;
+    }
+
+    /**
+     * Tells whether the wait for the capture pose runs.
+     *
+     * @return {@code true} between {@link #startCapturePose(long)} and its ready or timeout event
+     */
+    boolean isWaitingForCapturePose() {
+        return phase == Phase.POSE;
+    }
+
+    /**
+     * Tells whether the last frame showed the capture pose (neutral, frontal, through the quality gate).
+     *
+     * @return {@code true} if that frame may be stored
+     */
+    boolean isCapturePoseFrame() {
+        return poseNeutral;
     }
 
     int index() {

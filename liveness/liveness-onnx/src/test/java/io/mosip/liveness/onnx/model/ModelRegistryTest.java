@@ -4,6 +4,7 @@ import io.mosip.liveness.core.EngineErrorCode;
 import io.mosip.liveness.core.EngineException;
 import io.mosip.liveness.core.api.ModelInfo;
 import io.mosip.liveness.core.api.ModelSource;
+import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.onnx.TestSupport;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -79,9 +80,9 @@ class ModelRegistryTest {
 
     @Test
     void validBundleLoadsVerifiedBytes() throws Exception {
-        ModelRegistry r = open(bundle("1.0.0"));
+        ModelRegistry r = open(bundle("1.3.0"));
         assertEquals("test-bundle", r.bundleName());
-        assertEquals("1.0.0", r.bundleVersion());
+        assertEquals("1.3.0", r.bundleVersion());
         assertArrayEquals("model-b-bytes".getBytes(StandardCharsets.US_ASCII), r.load("b"));
         List<ModelInfo> infos = r.models();
         assertEquals(2, infos.size());
@@ -93,7 +94,7 @@ class ModelRegistryTest {
 
     @Test
     void tamperedModelFailsClosed() throws Exception {
-        Map<String, byte[]> files = bundle("1.0.0");
+        Map<String, byte[]> files = bundle("1.3.0");
         files.put("a.onnx", "model-A".getBytes(StandardCharsets.US_ASCII));
         assertEquals(EngineErrorCode.MODEL_INTEGRITY, failure(files));
         files.put("a.onnx", "model-a-longer".getBytes(StandardCharsets.US_ASCII));
@@ -103,31 +104,31 @@ class ModelRegistryTest {
 
     @Test
     void tamperedManifestFailsClosed() throws Exception {
-        Map<String, byte[]> files = bundle("1.0.0");
+        Map<String, byte[]> files = bundle("1.3.0");
         String json = new String(files.get(ModelRegistry.MANIFEST_FILE), StandardCharsets.UTF_8);
-        files.put(ModelRegistry.MANIFEST_FILE, json.replace("\"1.0.0\"", "\"9.0.0\"").getBytes(StandardCharsets.UTF_8));
+        files.put(ModelRegistry.MANIFEST_FILE, json.replace("\"1.3.0\"", "\"9.0.0\"").getBytes(StandardCharsets.UTF_8));
         assertEquals(EngineErrorCode.MODEL_INTEGRITY, failure(files));
     }
 
     @Test
     void missingOrForeignSignatureFailsClosed() throws Exception {
-        Map<String, byte[]> files = bundle("1.0.0");
+        Map<String, byte[]> files = bundle("1.3.0");
         files.remove(ModelRegistry.SIGNATURE_FILE);
         assertEquals(EngineErrorCode.MODEL_MISSING, failure(files));
 
-        Map<String, byte[]> foreign = bundle("1.0.0");
+        Map<String, byte[]> foreign = bundle("1.3.0");
         byte[] json = foreign.get(ModelRegistry.MANIFEST_FILE);
         foreign.put(ModelRegistry.SIGNATURE_FILE, ManifestSignature.sign(json, other.getPrivate(), other.getPublic())
                 .getBytes(StandardCharsets.US_ASCII));
         assertEquals(EngineErrorCode.MODEL_INTEGRITY, failure(foreign));
         // The built-in development key does not accept a bundle signed by another key either.
         assertEquals(EngineErrorCode.MODEL_INTEGRITY, assertThrows(EngineException.class,
-                () -> ModelRegistry.open(source(bundle("1.0.0")))).getErrorCode());
+                () -> ModelRegistry.open(source(bundle("1.3.0")))).getErrorCode());
     }
 
     @Test
     void unsignedOrWeakJwsVariantsAreRejected() throws Exception {
-        Map<String, byte[]> files = bundle("1.0.0");
+        Map<String, byte[]> files = bundle("1.3.0");
         String jws = new String(files.get(ModelRegistry.SIGNATURE_FILE), StandardCharsets.US_ASCII);
         String[] parts = jws.split("\\.", -1);
         String none = b64("{\"alg\":\"none\"}") + ".." + parts[2];
@@ -155,8 +156,18 @@ class ModelRegistryTest {
     }
 
     @Test
+    void bundlesSignedBeforeTheDefaultMinimumAreBlocked() throws Exception {
+        assertEquals("1.3.0", LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION);
+        for (String old : Arrays.asList("1.0.0", "1.0.1", "1.1.0", "1.2.0")) {
+            assertEquals(EngineErrorCode.MODEL_VERSION, failure(bundle(old)), old);
+        }
+        open(bundle("1.3.0")).verifyAll();
+        open(bundle("1.3.1")).verifyAll();
+    }
+
+    @Test
     void missingModelsAndUnsafePathsFail() throws Exception {
-        Map<String, byte[]> files = bundle("1.0.0");
+        Map<String, byte[]> files = bundle("1.3.0");
         files.remove("sub/b.onnx");
         ModelRegistry r = open(files);
         assertEquals(EngineErrorCode.MODEL_MISSING, assertThrows(EngineException.class, () -> r.load("b")).getErrorCode());

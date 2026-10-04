@@ -20,10 +20,10 @@ import io.mosip.liveness.core.device.DeviceErrorCode;
 import java.util.Objects;
 
 /**
- * Builds the payload of each liveness audit event (design section 4.17), so both clients write the same
- * attributes. Payloads carry decisions, 10-point score buckets, reason codes, challenge types, timings, device
- * certification and engine or model versions; never images, embeddings, raw scores or nonces (only a SHA-256
- * prefix of a nonce).
+ * Builds the payload of each liveness audit event (docs/design/audit-and-evidence.md section 1), so both clients write
+ * the same attributes. Payloads carry decisions, 10-point score buckets, reason codes, challenge types, timings, device
+ * certification and engine or model versions; never images, embeddings, raw scores or nonces (only a SHA-256 prefix of
+ * a nonce).
  */
 public final class AuditPayloadBuilder {
 

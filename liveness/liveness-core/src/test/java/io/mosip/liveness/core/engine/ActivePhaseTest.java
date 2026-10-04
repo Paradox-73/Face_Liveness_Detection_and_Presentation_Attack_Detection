@@ -41,7 +41,8 @@ class ActivePhaseTest {
     void movingAwayFromNeutralRestartsTheHold() {
         SessionHarness h = SessionScenarioTest.escalated(REG);
         for (int i = 0; i < 60 && h.state() == SessionState.CHALLENGE_WAIT; i++) {
-            h.frame(i % 5 == 4 ? TestFaces.neutral().pitch(20) : TestFaces.neutral());
+            // Pitch 25 lies beyond the neutral limit (20 degrees, equal to the quality gate's pitch limit).
+            h.frame(i % 5 == 4 ? TestFaces.neutral().pitch(25) : TestFaces.neutral());
         }
         assertEquals(SessionState.CHALLENGE_WAIT, h.state(), "four neutral frames (150 ms) never reach the 300 ms hold");
         assertNotNull(h.awaitPrompt());
@@ -49,15 +50,20 @@ class ActivePhaseTest {
     }
 
     @Test
-    void secondFaceDuringChallengesStopsProgressAndIsRemembered() {
+    void secondFaceDuringChallengesStopsProgressAndEndsTheAttempt() {
         SessionHarness h = SessionScenarioTest.escalated(REG);
         ChallengeType t = h.awaitPrompt();
-        for (int i = 0; i < 20; i++) {
+        h.frames(8, TestFaces.neutral());
+        for (int i = 0; i < 2; i++) {
             h.frameWith(TestFaces.acting(t).build(), TestFaces.neutral().shiftX(200).build());
         }
         assertEquals(SessionState.CHALLENGE_OBSERVE, h.state(), "no single face, no progress");
-        h.frames(110, TestFaces.neutral());
-        assertEquals(FailureReason.TIMEOUT, h.result().failureReason().get());
+        h.frameWith(TestFaces.acting(t).build(), TestFaces.neutral().shiftX(200).build());
+        // The third frame in a row with two faces ends the attempt (not counted) instead of running to the timeout.
+        assertEquals(FailureReason.QUALITY, h.result().failureReason().get());
+        assertTrue(h.result().reasonCodes().contains(ReasonCode.MULTI_FACE));
+        assertEquals(ChallengeOutcome.CANCELLED, h.result().challenges().get(0).outcome(),
+                "an action shown with a second face in view never passes");
     }
 
     @Test

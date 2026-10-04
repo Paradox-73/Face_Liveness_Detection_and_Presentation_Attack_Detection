@@ -21,7 +21,8 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Stream-to-capture binding (design section 4.10): checks that the signed capture belongs to the live session.
+ * Stream-to-capture binding (docs/design/engine.md section 7): checks that the signed capture belongs to the live
+ * session.
  *
  * <ol>
  *   <li>a pass token is presented, unused, equal to the one this session issued and not expired;</li>
@@ -34,6 +35,9 @@ import java.util.Set;
  *   <li>the captured image has exactly one face, similar enough to the session reference, and its passive PAD
  *       score is not below {@code pad.reject_threshold}.</li>
  * </ol>
+ * When an identity embedder is configured, a similarity that cannot be computed (the session built no reference,
+ * or the captured face has no landmarks) fails as {@link ReasonCode#SIMILARITY_LOW}: the face check fails closed
+ * instead of being skipped. Without an embedder no similarity is checked.
  * All checks run so the verdict lists every problem. Image checks are skipped when no liveness check ran
  * (policy {@code OFF} or {@code CAPTURE_ONLY}). A device PAD failure or a low capture PAD score fails with
  * {@link FailureReason#PAD}; any other problem with {@link FailureReason#BINDING}.
@@ -154,6 +158,9 @@ final class CaptureBinder {
             if (similarity < policy.bindingMinSimilarity()) {
                 bindingCodes.add(ReasonCode.SIMILARITY_LOW);
             }
+        } else if (identity.isEnabled()) {
+            // An embedder is configured but no similarity exists: the capture cannot be shown to be the same face.
+            bindingCodes.add(ReasonCode.SIMILARITY_LOW);
         }
         scores[1] = pad.score(image, face.box()).score100();
         if (scores[1] < policy.padRejectThreshold()) {

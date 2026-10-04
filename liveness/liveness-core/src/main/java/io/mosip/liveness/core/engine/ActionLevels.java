@@ -4,9 +4,9 @@ import io.mosip.liveness.core.ChallengeType;
 
 /**
  * Converts face measures into an action level per challenge type: 0 at the neutral face, 1 at the trigger
- * (design section 4.7), {@code NaN} when the measure is missing. Signs follow the subject's own left and right:
- * yaw grows when the subject turns to their own left, pitch when they look up, horizontal gaze towards their own
- * left. A mirrored preview does not change these values, because the analyser reports subject-relative angles.
+ * (docs/design/challenges.md section 4), {@code NaN} when the measure is missing. Signs follow the subject's own left
+ * and right: yaw grows when the subject turns to their own left, pitch when they look up, horizontal gaze towards their
+ * own left. A mirrored preview does not change these values, because the analyser reports subject-relative angles.
  */
 final class ActionLevels {
 

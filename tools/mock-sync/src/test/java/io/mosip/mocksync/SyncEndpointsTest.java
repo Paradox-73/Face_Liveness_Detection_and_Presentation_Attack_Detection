@@ -208,6 +208,26 @@ class SyncEndpointsTest {
 	}
 
 	@Test
+	void permittedLocalConfigOffersOnlyKeysTheCoreAllowsLocally() throws Exception {
+		MockHttpServletResponse response = mvc.perform(get("/v1/syncdata/v2/clientsettings").param("keyindex", keyIndex))
+				.andReturn().getResponse();
+		@SuppressWarnings("unchecked")
+		List<Map<String, Object>> dataToSync = (List<Map<String, Object>>) response(response).get("dataToSync");
+		Map<String, String> byName = dataToSync.stream().collect(Collectors.toMap(e -> (String) e.get("entityName"),
+				e -> new String(decrypt((String) e.get("data")), StandardCharsets.UTF_8), (a, b) -> a));
+		List<Object> names = list(byName.get("PermittedLocalConfig")).stream().map(p -> p.get("name"))
+				.collect(Collectors.toList());
+
+		assertFalse(names.contains("mosip.registration.liveness.active.challenge_types"));
+		assertFalse(names.contains("mosip.registration.liveness.passive.timeout_ms"));
+		assertFalse(names.contains("mosip.registration.liveness.binding.min_similarity"));
+		assertTrue(names.contains("mosip.registration.liveness.max_retries"));
+		assertTrue(names.contains("mosip.registration.liveness.diagnostic.enable"));
+		assertTrue(names.contains("mosip.registration.liveness.passive.threshold"));
+		assertTrue(names.contains("mosip.registration.liveness.active.challenge_timeout_ms"));
+	}
+
+	@Test
 	void latestIdSchemaCarriesSchemaAndProcessSpecs() throws Exception {
 		MockHttpServletResponse response = mvc.perform(get("/v1/syncdata/latestidschema").param("schemaVersion", "0"))
 				.andReturn().getResponse();

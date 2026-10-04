@@ -30,6 +30,12 @@ public enum ReasonCode {
     BLURRY,
     /** Generic poor quality when no more specific code applies. */
     POOR_QUALITY,
+    /**
+     * Passive PAD failed on a face lit below {@code quality.low_light_brightness} (but above the TOO_DARK floor):
+     * the session ends as {@code FailureReason.QUALITY}, not counted, with "Improve lighting", at most
+     * {@code passive.low_light_max_uncounted} times in a row; the passive score stays in the result.
+     */
+    LOW_LIGHT,
 
     // ---- Passive decision ----
 

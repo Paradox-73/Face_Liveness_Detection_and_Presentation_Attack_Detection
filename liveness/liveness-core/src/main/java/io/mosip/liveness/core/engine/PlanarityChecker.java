@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Planarity check on a head turn (design section 4.8, after Wang et al., ICB 2013).
+ * Planarity check on a head turn (docs/design/engine.md section 6, after Wang et al., ICB 2013).
  *
  * <p>The rigid landmarks of the neutral face are mapped onto the turned face with the best plane-to-plane
  * mapping (a homography when at least 8 points are available, an affine map for the five detector landmarks).

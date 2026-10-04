@@ -9,7 +9,7 @@ import io.mosip.liveness.core.stream.FrameRateMeter;
 import java.util.Arrays;
 
 /**
- * Frame integrity checks that catch what passive PAD misses (design section 4.8):
+ * Frame integrity checks that catch what passive PAD misses (docs/design/engine.md section 6):
  * <ul>
  *   <li>{@code TIMESTAMP_REGRESSION}: a sequence number or timestamp that does not increase;</li>
  *   <li>{@code INVALID_FRAMES}: the source's frame rate (from sequence numbers, so frames dropped on the way

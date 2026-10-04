@@ -44,14 +44,14 @@ class ModelSignerTest {
         Path bundle = dir.resolve("bundle");
         Files.createDirectories(bundle);
         Files.write(bundle.resolve("m.onnx"), new byte[] {1, 2, 3, 4});
-        ModelManifest draft = ModelManifest.of("b", "1.0.0", Collections.singletonList(ModelEntry.of("m", "m.onnx", "1",
+        ModelManifest draft = ModelManifest.of("b", "1.3.0", Collections.singletonList(ModelEntry.of("m", "m.onnx", "1",
                 Hex.sha256(new byte[1]), 1, "MIT", "test", Collections.<String, String>emptyMap())));
         Files.write(bundle.resolve(ModelRegistry.MANIFEST_FILE), draft.toJson().getBytes(StandardCharsets.UTF_8));
 
         assertEquals(0, run("update", "--bundle", bundle.toString()));
         assertEquals(0, run("sign", "--bundle", bundle.toString(), "--private", priv));
         assertEquals(0, run("verify", "--bundle", bundle.toString(), "--public", pub), err.toString());
-        assertTrue(out.toString().contains("OK b 1.0.0"));
+        assertTrue(out.toString().contains("OK b 1.3.0"));
         assertEquals(1, run("verify", "--bundle", bundle.toString()), "the built-in key must not accept this bundle");
         assertEquals(1, run("verify", "--bundle", bundle.toString(), "--public", pub, "--min-version", "2.0.0"));
 
@@ -88,7 +88,7 @@ class ModelSignerTest {
     void repositoryBundleVerifiesFromTheCommandLine() {
         String models = System.getProperty("liveness.models.dir", "../../models");
         assertEquals(0, run("verify", "--bundle", models), err.toString());
-        assertTrue(out.toString().contains("OK mosip-liveness-models 1.0.1"));
+        assertTrue(out.toString().contains("OK mosip-liveness-models 1.3.0"));
         assertTrue(out.toString().contains("minifasnet-v2@2.7_80x80"));
     }
 }

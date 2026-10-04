@@ -19,7 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * {@link #deliverNext(FrameSink, long)} in a loop and passes each frame (and finally the end or error of the
  * stream) to the session. When the worker is slower than the stream, the <b>oldest</b> waiting frame is dropped,
  * so the session always analyses recent frames and memory stays bounded. With capacity 1
- * ({@link #latestOnly()}) this is the single-slot hand-off of design section 4.9.
+ * ({@link #latestOnly()}) this is the single-slot hand-off of docs/design/streaming.md section 1.
  *
  * <p>Typical worker loop:
  * <pre>{@code

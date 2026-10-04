@@ -8,8 +8,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Anonymised liveness metrics (design section 4.17, G7/G8): counters and timers kept in memory by the engine and
- * shared by its sessions. Recorded only when {@code metrics.enable=Y}.
+ * Anonymised liveness metrics (docs/design/audit-and-evidence.md section 4, G7/G8): counters and timers kept in memory
+ * by the engine and shared by its sessions. Recorded only when {@code metrics.enable=Y}.
  *
  * <p>Metric names are fixed strings plus enum names ({@code liveness.failures.PAD}); they never contain user
  * IDs, registration IDs, device serial numbers or session identifiers (test T-CORE-MET-02). Clients may export a

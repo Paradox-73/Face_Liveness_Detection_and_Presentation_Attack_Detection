@@ -35,7 +35,8 @@ import java.util.Set;
  * // Desktop: bundle from liveness-onnx-<version>-models.jar on the class path.
  * OnnxLivenessEngine engine = OnnxLivenessEngines
  *         .builder(ModelSources.classpath(getClass().getClassLoader()))
- *         .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION).orElse("1.0.0"))
+ *         .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION)
+ *                 .orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION))
  *         .imageDecoder(clientImageDecoder)   // the client's ImageIO or BitmapFactory decoder
  *         .build();                           // loads 5 models (about 1-2 s); call it off the UI thread
  * LivenessSession session = engine.open(request, listener);

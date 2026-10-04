@@ -4,7 +4,7 @@ import io.mosip.liveness.core.RandomSource;
 
 import java.util.Random;
 
-/** Seeded random source; exists only in test code (design section 4.20). */
+/** Seeded random source; exists only in test code (docs/design/challenges.md section 2). */
 final class SeededRandom implements RandomSource {
 
     private final Random random;

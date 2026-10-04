@@ -152,6 +152,110 @@ class IntegrityAndPlanarityTest {
         assertEquals(14, frame, "found once 6 frames repeat the run 8 frames earlier");
     }
 
+    /**
+     * Replays a clip of {@code period} distinct frames over and over and returns the number of frames fed until
+     * the checker reported something, or the limit.
+     */
+    private int framesUntilLoop(int period) {
+        FrameIntegrityChecker c = checker();
+        List<byte[]> clip = new ArrayList<>();
+        for (int i = 0; i < period; i++) {
+            clip.add(noise());
+        }
+        ReasonCode r = null;
+        int frame = 0;
+        while (r == null && frame < 4 * period + 20) {
+            r = feed(c, clip.get(frame % clip.size()).clone());
+            frame++;
+        }
+        assertEquals(ReasonCode.LOOP, r, "period " + period);
+        return frame;
+    }
+
+    @Test
+    void loopPeriod25FramesFlagged() {
+        assertEquals(25 + 6, framesUntilLoop(25), "found once 6 frames repeat the run 25 frames earlier");
+        assertEquals(26 + 6, framesUntilLoop(26));
+        assertEquals(30 + 6, framesUntilLoop(30));
+    }
+
+    @Test
+    void loopPeriod45FramesFlagged() {
+        assertEquals(45 + 6, framesUntilLoop(45), "a 3 s clip at 15 fps");
+    }
+
+    @Test
+    void loopPeriod120FramesFlagged() {
+        assertEquals(120 + 6, framesUntilLoop(120), "an 8 s clip at 15 fps or a 4 s clip at 30 fps");
+        assertEquals(240 + 6, framesUntilLoop(240), "an 8 s clip at 30 fps");
+    }
+
+    @Test
+    void loopWindowDefaultCoversEightSecondsAtThirtyFps() {
+        int window = EngineParameters.defaults().getInt(EngineParameter.LOOP_WINDOW_FRAMES);
+        int match = EngineParameters.defaults().getInt(EngineParameter.LOOP_MATCH_FRAMES);
+        assertTrue(window >= 150 && window <= 300, "window " + window);
+        assertTrue(window - match >= 240, "longest period found: " + (window - match));
+    }
+
+    /**
+     * A textured scene with a bright disc on a random walk and sensor noise: every frame differs from all earlier
+     * ones, and consecutive frames differ enough that a replay of any part of it is found.
+     */
+    private List<byte[]> movingScene(int frames) {
+        List<byte[]> out = new ArrayList<>();
+        double cx = 32;
+        double cy = 24;
+        double vx = 1.5;
+        double vy = 1;
+        for (int t = 0; t < frames; t++) {
+            vx = Math.max(-2.5, Math.min(2.5, vx + random.nextGaussian() * 0.6));
+            vy = Math.max(-2.5, Math.min(2.5, vy + random.nextGaussian() * 0.6));
+            cx += vx;
+            cy += vy;
+            if (cx < 8 || cx > 56) {
+                vx = -vx;
+                cx = Math.max(8, Math.min(56, cx));
+            }
+            if (cy < 8 || cy > 40) {
+                vy = -vy;
+                cy = Math.max(8, Math.min(40, cy));
+            }
+            byte[] px = new byte[64 * 48];
+            for (int y = 0; y < 48; y++) {
+                for (int x = 0; x < 64; x++) {
+                    double d2 = (x - cx) * (x - cx) + (y - cy) * (y - cy);
+                    int v = 40 + ((x / 8 + y / 8) % 2) * 50 + (d2 < 64 ? 130 : 0) + random.nextInt(9) - 4;
+                    px[y * 64 + x] = (byte) Math.max(0, Math.min(255, v));
+                }
+            }
+            out.add(px);
+        }
+        return out;
+    }
+
+    @Test
+    void longGenuineStreamNotFlagged() {
+        FrameIntegrityChecker c = checker();
+        List<byte[]> scene = movingScene(600);
+        for (int i = 0; i < scene.size(); i++) {
+            assertNull(feed(c, scene.get(i).clone()), "frame " + i);
+        }
+        FrameIntegrityChecker noise = checker();
+        for (int i = 0; i < 600; i++) {
+            assertNull(feed(noise, noise()), "noise frame " + i);
+        }
+        // The same scene is not too smooth to be checked: replaying its last 150 frames is a loop.
+        ReasonCode r = null;
+        int replayed = 0;
+        while (r == null && replayed < 150) {
+            r = feed(c, scene.get(450 + replayed).clone());
+            replayed++;
+        }
+        assertEquals(ReasonCode.LOOP, r);
+        assertEquals(6, replayed);
+    }
+
     @Test
     void stillPersonWithSensorNoiseIsNeitherFrozenNorLooped() {
         FrameIntegrityChecker c = checker();

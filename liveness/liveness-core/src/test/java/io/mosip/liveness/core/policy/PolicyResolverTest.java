@@ -95,7 +95,7 @@ class PolicyResolverTest {
         cfg.put(LivenessConfigKeys.ACTIVE_ENABLE, "no");
         assertEquals(PolicyMode.ALWAYS_ACTIVE, resolve(Workflow.LOGIN_AUTH).policy().mode());
         PolicyResolution packet = resolve(Workflow.PACKET_AUTH);
-        assertEquals(PolicyMode.PASSIVE_THEN_ACTIVE, packet.policy().mode());
+        assertEquals(PolicyMode.ALWAYS_ACTIVE, packet.policy().mode(), "an invalid value falls back to the default");
         assertEquals(ConfigIssue.Kind.INVALID, packet.issues().get(0).kind());
         assertFalse(packet.policy().isActiveEnabled());
         assertEquals(PolicyMode.OFF, resolve(Workflow.EXCEPTION_PHOTO).policy().mode());
@@ -168,7 +168,7 @@ class PolicyResolverTest {
         cfg.put(LivenessConfigKeys.DIAGNOSTIC_ENABLE, "maybe");
         PolicyResolution bad = resolve(Workflow.REGISTRATION);
         assertEquals(NoStreamPolicy.BLOCK, bad.policy().noStreamPolicy());
-        assertEquals("1.0.0", bad.policy().modelMinVersion());
+        assertEquals("1.3.0", bad.policy().modelMinVersion());
         assertFalse(bad.policy().isDiagnosticEnabled());
         assertEquals(4, bad.issues().size(), bad.issues().toString());
     }

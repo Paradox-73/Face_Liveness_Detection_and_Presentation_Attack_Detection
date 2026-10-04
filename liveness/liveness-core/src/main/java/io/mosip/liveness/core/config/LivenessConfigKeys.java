@@ -13,7 +13,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Every liveness configuration key, with its default and allowed range (design section 4.16).
+ * Every liveness configuration key, with its default and allowed range (docs/design/configuration.md).
  *
  * <p>The same key names are used by the desktop and Android clients and served by the MOSIP config sync. Keys
  * avoid the substrings {@code kernel}, {@code mosip.primary}, {@code mosip.biometric.sdk} and {@code languages},
@@ -198,7 +198,7 @@ public final class LivenessConfigKeys {
     /** Minimum model bundle version (semantic version); blocks rollback. */
     public static final String MODEL_MIN_VERSION = PREFIX + "model.min_version";
     /** Default of {@link #MODEL_MIN_VERSION}. */
-    public static final String DEFAULT_MODEL_MIN_VERSION = "1.0.0";
+    public static final String DEFAULT_MODEL_MIN_VERSION = "1.3.0";
 
     /** Diagnostic log lines and supervisor overlay, {@code Y}/{@code N}. */
     public static final String DIAGNOSTIC_ENABLE = PREFIX + "diagnostic.enable";
@@ -296,26 +296,19 @@ public final class LivenessConfigKeys {
     /**
      * Returns the default policy mode of a workflow.
      *
-     * <p>Resident registration and the two workflows that admit an operator into the client (onboarding and
-     * login) always run the challenges: the scenario suite showed synthetic prints and screen replays that the
-     * passive model scores 82-99, above both passive thresholds (calibration notes, proposal P1). The supervisor
-     * workflows keep the passive-first policy with the authentication threshold of 95.
+     * <p>Every workflow that checks liveness always runs the challenges. The scenario suite showed synthetic prints
+     * and screen replays that the passive model scores 82-99, above both passive thresholds (80 and 95;
+     * calibration notes, proposal P1), so a passive-first policy would accept them with no challenge. This holds
+     * for resident registration, operator onboarding and login, and the supervisor workflows ({@code packet_auth},
+     * {@code exception_auth}, {@code eod_auth}) alike. The exception photo is the only workflow without a
+     * liveness check.
      *
      * @param workflow the workflow
-     * @return {@code OFF} for {@code exception_photo}; {@code ALWAYS_ACTIVE} for {@code registration},
-     *         {@code onboard_auth} and {@code login_auth}; {@code PASSIVE_THEN_ACTIVE} for all others
+     * @return {@code OFF} for {@code exception_photo}; {@code ALWAYS_ACTIVE} for every other workflow
      */
     public static PolicyMode defaultPolicyMode(Workflow workflow) {
-        switch (workflow) {
-            case EXCEPTION_PHOTO:
-                return PolicyMode.OFF;
-            case REGISTRATION:
-            case ONBOARD_AUTH:
-            case LOGIN_AUTH:
-                return PolicyMode.ALWAYS_ACTIVE;
-            default:
-                return PolicyMode.PASSIVE_THEN_ACTIVE;
-        }
+        Objects.requireNonNull(workflow, "workflow");
+        return workflow == Workflow.EXCEPTION_PHOTO ? PolicyMode.OFF : PolicyMode.ALWAYS_ACTIVE;
     }
 
     /**
@@ -404,9 +397,13 @@ public final class LivenessConfigKeys {
     }
 
     /**
-     * Tells whether a key may be overridden on the client machine ({@code PermittedLocalConfig}). Allowed:
-     * thresholds (within floors), timeouts, the challenge pool, attempt limits and the diagnostic switch. Never:
-     * {@code enable}, {@code policy.*}, {@code engine}, {@code model.min_version}, {@code on_max_failure}.
+     * Tells whether a key may be overridden on the client machine ({@code PermittedLocalConfig}). Allowed: the
+     * PAD thresholds (within floors), the challenge and stream timeouts, attempt limits and the diagnostic switch.
+     * Never: {@code enable}, {@code policy.*}, {@code engine}, {@code model.min_version}, {@code on_max_failure},
+     * and the keys that would weaken a check with no floor: {@code binding.min_similarity} (any value down to 0
+     * would accept a different face), {@code active.challenge_types} (a pool of the easiest challenge only) and
+     * {@code passive.timeout_ms} (a short limit lets the passive decision rest on as few as
+     * {@code passive.timeout_min_frames} frames). The server can still change all of them through sync.
      *
      * @param key full configuration key
      * @return {@code true} if a local override is permitted
@@ -426,8 +423,7 @@ public final class LivenessConfigKeys {
 
     private static Set<String> buildLocalOverrideAllowed() {
         Set<String> s = new LinkedHashSet<>(Arrays.asList(PASSIVE_THRESHOLD, PAD_REJECT_THRESHOLD,
-                BINDING_MIN_SIMILARITY, PASSIVE_TIMEOUT_MS, ACTIVE_CHALLENGE_TIMEOUT_MS, STREAM_TIMEOUT_MS,
-                ACTIVE_CHALLENGE_TYPES, MAX_RETRIES, DIAGNOSTIC_ENABLE));
+                ACTIVE_CHALLENGE_TIMEOUT_MS, STREAM_TIMEOUT_MS, MAX_RETRIES, DIAGNOSTIC_ENABLE));
         for (Workflow w : Workflow.values()) {
             s.add(workflowKey(w, WORKFLOW_PASSIVE_THRESHOLD_SUFFIX));
             s.add(workflowKey(w, WORKFLOW_MAX_RETRIES_SUFFIX));

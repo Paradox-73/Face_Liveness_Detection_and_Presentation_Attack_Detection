@@ -7,6 +7,7 @@ import io.mosip.liveness.core.api.LivenessEngine;
 import io.mosip.liveness.core.api.LivenessEngineProvider;
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.engine.EngineParameter;
 import io.mosip.liveness.onnx.model.ModelSources;
 import org.junit.jupiter.api.Test;
 
@@ -37,12 +38,16 @@ class OnnxLivenessEngineProviderTest {
 
     @Test
     void createsAReadyEngineFromTheContext() throws Exception {
-        LivenessEngine engine = new OnnxLivenessEngineProvider().create(context("1.0.0"));
+        LivenessEngine engine = new OnnxLivenessEngineProvider().create(context("1.3.0"));
         try {
             assertInstanceOf(OnnxLivenessEngine.class, engine);
             assertTrue(engine.isReady());
             assertEquals("mosip-onnx-default@1.0.0", engine.info().tag());
             assertEquals(5, engine.info().models().size());
+            // Signed engineParams of the repository bundle: the long loop window and the analyser's sharpness scale.
+            OnnxLivenessEngine onnx = (OnnxLivenessEngine) engine;
+            assertEquals(300, onnx.parameters().getInt(EngineParameter.LOOP_WINDOW_FRAMES));
+            assertEquals(40, onnx.parameters().get(EngineParameter.MIN_SHARPNESS), 0);
         } finally {
             engine.close();
         }
@@ -52,7 +57,7 @@ class OnnxLivenessEngineProviderTest {
     @Test
     void appliesTheConfiguredMinimumBundleVersion() {
         EngineException tooOld = assertThrows(EngineException.class,
-                () -> new OnnxLivenessEngineProvider().create(context("1.1.0")));
+                () -> new OnnxLivenessEngineProvider().create(context("1.4.0")));
         assertEquals(EngineErrorCode.MODEL_VERSION, tooOld.getErrorCode());
         EngineException invalid = assertThrows(EngineException.class,
                 () -> new OnnxLivenessEngineProvider().create(context("one")));

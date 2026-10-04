@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,8 +60,16 @@ public class ClientSettingsBuilder {
 			{ "ReasonList", "rsnCatCode,langCode", "ReasonCategory", "code,langCode" },
 			{ "MachineSpecification", "machineTypeCode", "MachineType", "code" } };
 
-	private static final Set<String> LOCALLY_EDITABLE_SUFFIXES = Set.of("threshold", "timeout_ms",
-			"challenge_types", "max_retries", "diagnostic.enable");
+	/**
+	 * The liveness keys a client machine may override locally, the same list as the core's allow-list
+	 * ({@code LivenessConfigKeys.isLocalOverrideAllowed}): the PAD thresholds, the challenge and stream timeouts,
+	 * attempt limits (global and per workflow) and the diagnostic switch. {@code active.challenge_types},
+	 * {@code passive.timeout_ms} and {@code binding.min_similarity} are server-only: a local value could shrink the
+	 * challenge pool, shorten the passive check or accept a different face.
+	 */
+	private static final Pattern LOCALLY_EDITABLE = Pattern.compile("mosip\\.registration\\.liveness\\.(?:"
+			+ "(?:[a-z_]+\\.)?(?:passive\\.threshold|max_retries)|pad\\.reject_threshold"
+			+ "|active\\.challenge_timeout_ms|stream\\.timeout_ms|diagnostic\\.enable)");
 
 	private final ReferenceData data;
 	private final ConfigService config;
@@ -180,7 +189,7 @@ public class ClientSettingsBuilder {
 					|| key.endsWith("model.min_version")) {
 				continue;
 			}
-			if (LOCALLY_EDITABLE_SUFFIXES.stream().anyMatch(key::endsWith)) {
+			if (LOCALLY_EDITABLE.matcher(key).matches()) {
 				Map<String, Object> row = new LinkedHashMap<>();
 				row.put("code", key);
 				row.put("name", key);

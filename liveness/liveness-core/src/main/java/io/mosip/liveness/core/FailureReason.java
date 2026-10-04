@@ -1,7 +1,8 @@
 package io.mosip.liveness.core;
 
 /**
- * Why a session ended in {@link SessionState#FAILED} or {@link SessionState#CANCELLED} (design section 4.5).
+ * Why a session ended in {@link SessionState#FAILED} or {@link SessionState#CANCELLED}
+ * (docs/design/engine.md section 3).
  *
  * <p>Each reason fixes three things a client needs without further logic: the coarse {@link Decision},
  * whether the attempt counts towards {@code max_retries}, and whether a supervisor override may follow it.

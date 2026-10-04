@@ -50,6 +50,8 @@ final class SessionHarness {
     boolean useEmbedder = true;
     long seed = 42;
     int attempt = 1;
+    /** Low-light results before this session; negative leaves the request's default (not tracked). */
+    int lowLightRetries = -1;
     int frameIntervalMs = 50;
     DefaultLivenessEngine engine;
     LivenessSession session;
@@ -75,8 +77,12 @@ final class SessionHarness {
         engine = DefaultLivenessEngine.builder(engineInfo()).faceAnalyzer(analyzer).passivePad(pad)
                 .faceEmbedder(useEmbedder ? embedder : null).imageDecoder(new ScriptedModels.Decoder())
                 .parameters(params).metrics(metrics).build();
-        SessionRequest request = SessionRequest.builder(policy, SUBJECT, device).attempt(attempt).clock(clock)
-                .random(new SeededRandom(seed)).diagnosticSink(diagnostics::add).build();
+        SessionRequest.Builder rb = SessionRequest.builder(policy, SUBJECT, device).attempt(attempt).clock(clock)
+                .random(new SeededRandom(seed)).diagnosticSink(diagnostics::add);
+        if (lowLightRetries >= 0) {
+            rb.lowLightRetries(lowLightRetries);
+        }
+        SessionRequest request = rb.build();
         try {
             session = engine.open(request, listener);
         } catch (EngineException e) {
@@ -115,6 +121,11 @@ final class SessionHarness {
         for (int i = 0; i < n && !state().isTerminal(); i++) {
             frame(face);
         }
+    }
+
+    /** Returns the sequence number of the last frame sent. */
+    long lastSequence() {
+        return sequence - 1;
     }
 
     byte[] noise() {

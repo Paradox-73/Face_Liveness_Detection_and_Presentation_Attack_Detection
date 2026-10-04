@@ -33,13 +33,15 @@ liveness and presentation attack detection (PAD). Licence: MIT.
 | `...core.vision` | Model adapter contract: `FaceAnalyzer` -> `FaceObservation` / `DetectedFace` (box, 5 landmarks, optional 478-point mesh, head pose, eye aspect ratio per eye, mouth ratio, gaze, quality), `PassivePad` -> `PadScore`, `FaceEmbedder` -> `FaceEmbedding` |
 | `...core.config` | `LivenessConfigKeys` (every key, default, floor and range), `LivenessPolicy` (typed per-workflow policy), `PolicyMode`, `OnMaxFailure`, `NoStreamPolicy`, `ConfigSource` |
 | `...core.audit` | `AuditEventId` (`REG-EVT-LV01..17`), `LivenessAuditEvent` (payload serialised to identical JSON on both clients), `AuditAttributes`, `AuditSink`, `DiagnosticRecord`, `DiagnosticSink` |
-| `...core.ui` | `LivenessUiState` (what both clients render), `UiPhase`, `Severity`, `PromptIcon`, `MessageKeys` (the 40 message keys) |
+| `...core.ui` | `LivenessUiState` (what both clients render), `UiPhase`, `Severity`, `PromptIcon`, `MessageKeys` (the 41 message keys) |
 | `...core.engine` | The default engine. Public: `DefaultLivenessEngine` (builds sessions from injected model adapters), `EngineParameters` / `EngineParameter` (detection thresholds), `LivenessTransaction` (retry counting), `LivenessUiStateMapper`, `AuditPayloadBuilder`, `LivenessMetrics`, `DiagnosticLog`. Package-private: the session state machine and every algorithm (`QualityGate`, `PassivePadAggregator`, `DecisionPolicy`, `ChallengeScheduler`, `ChallengeObserver`, `FrameIntegrityChecker`, `PlanarityChecker`, `IdentityTracker`, `CaptureBinder`) |
 | `...core.stream` | `MjpegFrameReader` (SBI MJPEG stream to frames), `FrameHandOff` (bounded reader-to-worker hand-off that drops the oldest frame), `FrameRateMeter` |
 | `...core.policy` | `PolicyResolver` (configuration keys to `LivenessPolicy`, with defaults, per-workflow overrides, floors and fallbacks), `PolicyResolution`, `ConfigIssue` |
+| `...core.run` | `LivenessSessionDriver` (the attempt loop both clients share: transaction and attempt counting, opening and closing sessions, frame pumping, the capture hand-off, retry, cancel and close), `AttemptOutcome`, `CaptureHandOff` |
 
 The contract packages (root, `api`, `config`, `audit`, `ui`, `vision`, `device`, `image`) never depend on
-`engine`, `stream` or `policy`, so a vendor engine can replace the default one; `ArchitectureTest` checks this.
+`engine`, `stream`, `policy` or `run`, so a vendor engine can replace the default one; the engine, stream and
+policy packages never depend on `run`. `ArchitectureTest` checks both.
 
 ## How a client uses it
 
@@ -61,8 +63,62 @@ The contract packages (root, `api`, `config`, `audit`, `ui`, `vision`, `device`,
 6. Decode the face image of the capture and call `session.bind(BindingRequest.from(capture, image, token))`.
 7. Read `session.result()`; write `PacketEvidenceKeys.of(result)` into the BIR `others` map;
    `tx.record(result)` decides between Retry, the supervisor override and the lock; `session.close()`.
+   Offer the override only when `tx.isOverrideAllowed()` is true: once any session of the transaction failed for
+   PAD, integrity or binding (`tx.isSuspectedAttack()`), it stays false, whatever the later sessions return.
 
 Callers never choose challenges: the session draws them with `RandomSource.secure()`.
+
+### The shared session driver (`io.mosip.liveness.core.run`)
+
+Steps 2 to 7 are the same on both clients, so `LivenessSessionDriver` runs them once for both (audit Fix 20, core
+part, 2026-10-04). Before it, the desktop `LivenessRun` and the Android `LivenessRunner` each had their own copy
+of this loop, and the two copies counted retries differently. Moving both clients onto the driver is separate work
+for each client; until then they keep their own loops.
+
+```java
+LivenessSessionDriver driver = LivenessSessionDriver.builder(policy, subjectRef)
+        .engine(() -> engines.await(30_000))        // may block while the models load
+        .device(() -> faceDevice)                   // looked up once, before the first session
+        .audit(auditSink).listener(listener)        // onUiState, onAttemptEnded(AttemptOutcome)
+        .captureHandler(handOff -> { /* take the signed capture, then handOff.bind(...) */ })
+        .priorFailures(countedSoFar, attackSoFar, lowLightSoFar) // continue an earlier screen for the subject
+        .trackLowLight(true)                        // optional; turns on the engine's low-light ending
+        .listenerExecutor(uiThread::post)           // optional; default: on the worker
+        .build();
+driver.start();      // later: driver.retry(), driver.cancel(), driver.close()
+```
+
+- **Attempts.** One `LivenessTransaction` per driver. `priorFailures(n, attack)` continues the counted failures and
+  the suspected-attack mark of earlier screens (`new LivenessTransaction(policy, n, attack)`; `n` must leave one
+  attempt). `priorFailures(n, attack, lowLight)` also continues the uncounted low-light results of earlier screens
+  (`new LivenessTransaction(policy, n, attack, lowLight)`; `lowLight` from 0 to
+  `LivenessTransaction.maxPriorLowLightRetries()`, the upper bound 10 of `passive.low_light_max_uncounted`, else
+  `IllegalArgumentException`); the two-argument form carries 0. Device, engine, quality and cancellation failures,
+  and attempts that could not open a session, never use an attempt. After the last attempt `REG-EVT-LV11` is
+  written once: by the engine, or by the driver for an engine that did not write it.
+- **Outcome.** `AttemptOutcome` carries the result (if a session opened), the decision and failure reason, the
+  device or engine error code, the attempt number, attempts used, and whether Retry, the supervisor override
+  (`LivenessTransaction.isOverrideAllowed()`) or the lock applies. It also carries the suspected-attack mark the
+  client keeps for the next screen, and `lowLightRetries()`, the transaction's low-light count after the attempt
+  (0 after a counted failure), which the client keeps with the counted failures and passes back through
+  `priorFailures(n, attack, lowLight)` when it reopens the window. A pass also carries the attached capture and
+  the token nonce.
+- **Errors before a session.** Engine error: `FAILED` with `liveness.error.engine` and LV13; a model integrity
+  error offers no retry. Device error: `DEVICE_ERROR` with the message key for the code and LV12;
+  `EMULATOR_BLOCKED` shows the lock icon and offers no retry.
+- **Capture.** At `CAPTURE_READY` the driver stops moving frames and calls the `CaptureHandler` on the worker with
+  a `CaptureHandOff`. The client binds at once (Android: `captureFrame()`, sign it, `bind`) or later from another
+  thread (desktop gate: `bind(request, timeoutMs)` is moved to the worker). The driver keeps calling `tick()`
+  until the session ends, so an unused token still expires. `releaseDeviceBeforeCapture(ms)` closes the stream
+  and waits for device Ready first, for SBI devices that are Busy while they stream.
+- **Hooks.** `executor` (one thread, owned and shut down by the driver), `listenerExecutor`, `clock`,
+  `diagnosticSink`, `frameSinkDecorator` (for example frame timing), `previewListener` (a private copy of every
+  frame), `trackLowLight` (passes `LivenessTransaction.lowLightRetries()` to each session, the first one included,
+  so a count carried by `priorFailures(n, attack, lowLight)` reaches the engine; off by default),
+  `errorReporter` (listener or handler exceptions, for the client log).
+- **Cancel and close.** `cancel()` ends the running attempt as `CANCELLED`, also while it is still opening.
+  `close()` is idempotent: it cancels the running attempt, reports it without a retry, closes the stream and
+  stops the worker; a bind after close fails with `TimeoutException`.
 
 ### Creating the default engine (`liveness-onnx`)
 
@@ -74,7 +130,8 @@ Face Mesh), `MiniFasPassivePad` and `SFaceEmbedder`, plus the native sessions it
 // Direct use (desktop: bundle from liveness-onnx-1.0.0-SNAPSHOT-models.jar on the class path).
 OnnxLivenessEngine engine = OnnxLivenessEngines
         .builder(ModelSources.classpath(getClass().getClassLoader()))   // Android: a ModelSource over assets/models/
-        .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION).orElse("1.0.0"))
+        .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION)
+                .orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION))
         .imageDecoder(clientImageDecoder)                              // the client's ImageDecoder
         .build();                                                      // blocking, about 1-2 s: not on the UI thread
 LivenessSession session = engine.open(request, listener);
@@ -94,7 +151,8 @@ for (LivenessEngineProvider p : ServiceLoader.load(LivenessEngineProvider.class)
 
 - **Parameters:** shipped defaults, then the manifest's signed `engineParams`, then
   `Builder.parameterOverrides(map)` (calibration and tests only). Bad signed values fail with `MODEL_INTEGRITY`,
-  bad overrides with `CONFIG_INVALID`. The current bundle has no `engineParams`, so the defaults apply.
+  bad overrides with `CONFIG_INVALID`. The current bundle (1.3.0) signs `quality.min_sharpness=40` and
+  `integrity.loop_window_frames=300`; every other parameter keeps its default.
 - **Errors:** `MODEL_MISSING`, `MODEL_INTEGRITY` or `MODEL_VERSION` (bundle rejected; the client audits
   `REG-EVT-LV14` with the workflow that needed the engine), `MODEL_LOAD` (ONNX Runtime missing or a model does
   not load), `CONFIG_INVALID` (bad `model.min_version` or override).
@@ -125,7 +183,7 @@ The engine runs on top of three injected model adapters (`FaceAnalyzer`, `Passiv
 and the client's `ImageDecoder`. `liveness-onnx` supplies the adapters; tests supply scripted ones. Every step
 uses the session `Clock` and `RandomSource`, so a session is fully repeatable in tests.
 
-### Session state machine (design section 4.5)
+### Session state machine ([docs/design/engine.md](../docs/design/engine.md), section 3)
 
 | State | What happens | Leaves when |
 |---|---|---|
@@ -133,9 +191,9 @@ uses the session `Clock` and `RandomSource`, so a session is fully repeatable in
 | `OPENING` | waits for the first decodable frame | first frame; no frame in 3 s: `FAILED(DEVICE, FIRST_FRAME_TIMEOUT)` |
 | `ACQUIRING` | quality gate on every frame; PAD scored on good frames | 5 good frames in a row; `passive.timeout_ms` from the first frame: `FAILED(QUALITY)` with `PASSIVE_TIMEOUT` and the last problem (`NO_FACE`, `MULTI_FACE`, ...) |
 | `PASSIVE` | collects `passive.min_frames` PAD scores (the acquisition frames count) | decision below; same timeout |
-| `CHALLENGE_WAIT` | random wait U(400,1500) ms, then a neutral face held 300 ms; same-person check on that frame | prompt; no neutral face within the wait + `challenge_timeout_ms`: `FAILED(TIMEOUT, NEUTRAL_TIMEOUT)` |
-| `CHALLENGE_OBSERVE` | prompt shown (LV04 with a SHA-256 prefix of a fresh nonce); action detection; PAD every 2nd frame | pass: LV05; failure: LV06 (and LV07 for a timeout) |
-| `CHALLENGE_PASSED` | "Action detected" for 600 ms | next challenge, or the final checks |
+| `CHALLENGE_WAIT` | random wait U(400,1500) ms, then a neutral face held 300 ms; same-person check on that frame | prompt; no neutral face within the wait + `challenge_timeout_ms`: `FAILED(TIMEOUT, NEUTRAL_TIMEOUT)`; more than one face on 3 frames in a row: `FAILED(QUALITY, MULTI_FACE)` (not counted) |
+| `CHALLENGE_OBSERVE` | prompt shown (LV04 with a SHA-256 prefix of a fresh nonce); action detection; PAD every 2nd frame | pass: LV05; failure: LV06 (and LV07 for a timeout); more than one face on 3 frames in a row: `FAILED(QUALITY, MULTI_FACE)` (not counted) |
+| `CHALLENGE_PASSED` | "Action detected" for 600 ms; after the last challenge and its final checks, "Look directly at the camera and hold still" (`liveness.feedback.look_straight`) until the capture pose is held 300 ms | next challenge; capture pose held: `CAPTURE_READY`; no capture pose within `challenge_timeout_ms`: `FAILED(TIMEOUT, NEUTRAL_TIMEOUT)` (LV07, phase `CHALLENGE_PASSED`) |
 | `CAPTURE_READY` | pass token issued; frames are ignored | `captureStarted()`; `captureFailed()` or token expiry: `FAILED(DEVICE)` |
 | `CAPTURING` / `BINDING` | waits for `bind()`, then runs the capture binder | `PASSED` (LV10) or `FAILED(BINDING or PAD)` (LV09, plus LV08 for PAD) |
 
@@ -160,6 +218,20 @@ owning thread (at once when called on it); `close()` cancels and overwrites the 
   `BELOW_THRESHOLD`; `PASSIVE_THEN_ACTIVE` passes at the threshold, else escalates (LV03 `BELOW_THRESHOLD`) when
   `active.enable=Y` and at least one challenge can run on this stream, else `BELOW_THRESHOLD`; `ALWAYS_ACTIVE`
   always escalates (LV03 `POLICY`). A passive pass writes LV02.
+- **Low light** (audit section 3.3): when the passive decision fails `PAD` and the median grey level of the scored
+  faces is below `quality.low_light_brightness` (75, above the `TOO_DARK` floor of 50), the session ends as
+  `FAILED(QUALITY, LOW_LIGHT)` instead: not counted, no LV08, "We could not verify face liveness. Please try
+  again." with "Improve lighting." first. The passive score stays in the result. This needs the caller to pass
+  `SessionRequest.Builder.lowLightRetries(n)`, the uncounted low-light results since the transaction's last
+  counted failure (`LivenessTransaction.lowLightRetries()`, which can start from an earlier window's count, see
+  the driver section); at `passive.low_light_max_uncounted` (3) the next
+  low-light PAD failure counts as `PAD` with the generic message again, and the allowance restarts after it. A
+  caller that does not pass the number (default `LOW_LIGHT_NOT_TRACKED`) keeps every PAD failure counted. A
+  cancel, device error or other uncounted result does not restart the allowance. PAD failures in normal light,
+  PAD drops during the challenges and capture PAD failures are unchanged.
+- **Stored frame of a passive pass**: the frame kept for `captureFrame()` prefers open eyes (eye aspect ratio at
+  least `active.eyes_open_min_ear`) and no smile (when the analyser gives a smile probability), then the most
+  frontal pose.
 
 ### Active stage (section 4.7)
 
@@ -181,9 +253,18 @@ owning thread (at once when called on it); `close()` cancels and overwrites the 
   `TIMEOUT`, or `NOT_HELD` when the action reached its trigger but was never held.
 - **Continuous PAD**: every 2nd analysed frame; the median of the last `passive.min_frames` scores below the
   reject threshold fails `PAD` at once.
+- **Multiple faces**: more than one face on `active.multi_face_frames` (3) analysed frames in a row anywhere in the
+  active phase ends the session as `FAILED(QUALITY, MULTI_FACE)`, not counted, with "More than one face detected"
+  and "Ensure your face is clearly visible." (before: the frames were skipped and the challenge ran to its
+  timeout). Like Cancel, this gives no extra counted attempt to an attacker; the retry limit is unchanged.
 - **Final checks** after the last challenge: median PAD over the whole active phase at least the reject
-  threshold; every head turn's planarity residual at least the minimum; the chosen capture frame is still the
-  reference person.
+  threshold; every head turn's planarity residual at least the minimum.
+- **Capture pose** (appendix A.1 task 5): then "Look directly at the camera and hold still" until a face passes the
+  quality gate (so yaw and pitch within its limits) with eyes open, and with neither a smile nor half-closed eyes
+  at or above `active.onset_fraction` of the trigger compared with the neutral face before the last prompt, held
+  for `active.neutral_hold_ms`. Only these frames can become `captureFrame()` (the most frontal of them), so the
+  stored photo never shows a challenge expression or a turned head; frames of the challenges themselves are never
+  kept. Continuous PAD keeps running. The chosen frame must still be the reference person; then `CAPTURE_READY`.
 
 ### Frame integrity and planarity (section 4.8)
 
@@ -198,9 +279,11 @@ owning thread (at once when called on it); `close()` cancels and overwrites the 
   intervals on slower streams). A broken track restarts score collection in the passive phase; during challenges
   it triggers a same-person check (`FACE_SWITCH` when similarity drops below `binding.min_similarity`), or fails
   `TRACKING_LOST` when there is no embedder.
-- `IdentityTracker`: the reference is the mean unit embedding of 3 neutral passive frames; similarity is
-  `round(100 * max(0, cosine))`. It is checked before each prompt, after a broken track, at the final check and
-  on the signed capture.
+- `IdentityTracker`: the reference is the mean unit embedding of 3 neutral passive frames (yaw and pitch within
+  `active.neutral_max_yaw_deg`, 10 degrees). When no good passive frame falls inside that window (for example a
+  person who keeps the head at yaw 15 or pitch 20, which the quality gate admits), the reference is built at the
+  passive decision from the 3 most frontal good frames instead. Similarity is `round(100 * max(0, cosine))`. It
+  is checked before each prompt, after a broken track, at the final check and on the signed capture.
 - `PlanarityChecker`: on each head turn, the rigid landmarks of the last neutral frame are mapped onto the most
   turned frame with a least-squares homography (31 Face Mesh points) or an affine map (the 5 detector points).
   Residual RMS divided by the inter-eye distance below `planarity.min_residual` fails `PLANAR`. On the synthetic
@@ -215,15 +298,19 @@ token nonce for `padCapability` devices; capture time within
 `[start - 2 s, start + binding.max_gap_ms + capture timeout]`, where start is the pass for resident workflows and
 the capture start (after device Ready) for authentication workflows; no device PAD FAIL; exactly one face in the
 captured image; similarity at least `binding.min_similarity`; capture PAD score at least the reject threshold.
-Device PAD or capture PAD failures fail as `PAD`, everything else as `BINDING`. Image checks are skipped for
-policy `OFF` and `CAPTURE_ONLY`.
+When a face embedder is configured, a similarity that cannot be computed (no reference face, or no landmarks on
+the captured face) fails as `BINDING` / `SIMILARITY_LOW` instead of skipping the face check; without an
+embedder no similarity is checked. Device PAD or capture PAD failures fail as `PAD`, everything else as
+`BINDING`. Image checks are skipped for policy `OFF` and `CAPTURE_ONLY`.
 
 ### UI, audit, metrics and diagnostics
 
 - `LivenessUiStateMapper` implements the section 11.2 rules: PAD, integrity and binding failures show
   `liveness.fail.pad`; below-threshold, challenge and timeout failures show `liveness.fail.liveness` plus guidance
   from the quality problems seen; the last counted attempt shows `liveness.retry.max_resident` (with the override
-  flag only for `SUPERVISOR_OVERRIDE` and a non-attack failure) or `liveness.retry.max_auth`.
+  flag only for `SUPERVISOR_OVERRIDE` and a non-attack last failure; the mapper sees one session, so clients
+  also require `LivenessTransaction.isOverrideAllowed()`, which covers every session of the transaction) or
+  `liveness.retry.max_auth`.
   `resolveText` applies a synced `guidance.<messageKey>.<lang>` text before the bundle text.
   **Convention:** when Retry is offered, `liveness.retry.available` appears as a guidance key and clients format
   it with the state's `attempt` and `maxAttempts`.
@@ -249,7 +336,10 @@ it read. It makes exactly one terminal call: `END_OF_STREAM` at end of stream (n
 ## Tunable parameters
 
 Operator settings are the section 4.16 keys, resolved by `PolicyResolver`: per-workflow key, else global key,
-else the workflow default. Out-of-range numbers are clamped (floors: passive threshold 50, reject threshold 5)
+else the workflow default. The default policy mode is `ALWAYS_ACTIVE` for every workflow except
+`exception_photo` (`OFF`): the supervisor workflows (`packet_auth`, `exception_auth`, `eod_auth`) challenge on
+every capture like registration and operator sign-in, because synthetic prints reached passive scores of 99,
+above the authentication threshold of 95. Out-of-range numbers are clamped (floors: passive threshold 50, reject threshold 5)
 and reported for LV15; unparsable values fall back to the default and are reported as diagnostics; `enable=N`
 turns every workflow `OFF`; the reject threshold never exceeds the passive threshold. Ranges applied:
 `passive.min_frames` 1-60, `passive.timeout_ms` 1,000-60,000, `min_challenges` 1-5, `challenge_timeout_ms`
@@ -266,11 +356,14 @@ rejected). Defaults:
 | `acquire.consecutive_frames` | 5 | good frames in a row that end acquisition |
 | `quality.min_face_confidence` / `max_pitch_deg` / `max_roll_deg` | 0.5 / 20 / 25 | acquisition gate |
 | `quality.min_brightness` / `max_brightness` / `min_sharpness` | 50 / 225 / 10 | acquisition gate (sharpness to calibrate per analyser) |
+| `quality.low_light_brightness` | 75 | median face grey level below which a passive PAD failure is a lighting problem (2026-10-04, `run/frame-packs` through the analyser: synthetic dim genuine packs `s3-dim-*` 66.5-69.5; every attack pack 82.1 or more; real dim-room recordings still to be measured) |
+| `passive.low_light_max_uncounted` | 3 | uncounted low-light results before the next one counts; 0 turns the rule off |
 | `quality.out_of_area_tolerance` | 0.1 | share of the box allowed outside the image |
 | `passive.trim_fraction` | 0.5 | 0.5 = median; lower = trimmed mean |
 | `identity.reference_frames` | 3 | embeddings in the reference face |
 | `active.delay_min_ms` / `delay_max_ms` | 400 / 1,500 | random wait before a prompt |
-| `active.neutral_hold_ms` / `neutral_max_yaw_deg` / `neutral_max_pitch_deg` | 300 / 10 / 12 | neutral face before a prompt |
+| `active.neutral_hold_ms` / `neutral_max_yaw_deg` / `neutral_max_pitch_deg` | 300 / 10 / 20 | neutral face before a prompt (and hold time of the capture pose); the pitch limit equals `quality.max_pitch_deg` since 2026-10-04 (was 12, which ended faces at 12-20 degrees of pitch, admitted by the gate, in `NEUTRAL_TIMEOUT`) |
+| `active.multi_face_frames` | 3 | frames in a row with more than one face that end the active phase |
 | `active.passed_display_ms` | 600 | "Action detected" time |
 | `active.turn_yaw_deg` / `look_pitch_deg` | 20 / 15 | head-turn and look triggers |
 | `active.onset_fraction` | 0.5 | share of the trigger that starts the onset run |
@@ -283,7 +376,7 @@ rejected). Defaults:
 | `active.pad_stride` | 2 | PAD on every n-th frame during challenges |
 | `active.head_turn_min_fps` | 5 | analysed fps from which a head turn is required |
 | `integrity.frozen_mean_abs_diff` | 0.5 | identical-frame limit in grey levels (to calibrate) |
-| `integrity.loop_window_frames` / `loop_match_frames` / `loop_hash_max_distance` / `loop_min_motion_bits` | 30 / 6 / 3 / 12 | loop detection |
+| `integrity.loop_window_frames` / `loop_match_frames` / `loop_hash_max_distance` / `loop_min_motion_bits` | 300 / 6 / 3 / 12 | loop detection: replayed clips of up to 294 frames (9.8 s at 30 fps); the bundle also sets 300 in its signed `engineParams` |
 | `integrity.tracking_min_iou` / `tracking_max_gap_ms` | 0.3 / 500 | face tracking |
 | `integrity.fps_window_ms` / `fps_tolerance` / `max_corrupt_frames` | 2,000 / 0.1 / 10 | frame-rate and decode checks |
 | `device.no_frame_timeout_ms` / `first_frame_timeout_ms` | 2,000 / 3,000 | stream watchdogs |
@@ -294,11 +387,17 @@ rejected). Defaults:
 ## Tests
 
 JUnit 5, deterministic: a manual clock, a seeded random source (test code only), scripted model outputs and
-synthetic faces from a small 3-D head model (no face images). 264 tests; JaCoCo line coverage of
-`liveness-core` 93.2% (branches 79.3%). They cover the design's test groups T-CORE-SM (state machine), DEC
+synthetic faces from a small 3-D head model (no face images). 351 tests on 2026-10-04 (after the session driver
+was added); JaCoCo line coverage of `liveness-core` 92.4% (branches 79.9%), of the driver package `run` 82.7%
+(branches 74.0%). They cover the design's test groups T-CORE-SM (state machine), DEC
 (decision table), CH (draw rules and uniformity), ACT (detectors, including the sign convention), INT, PLN, Q,
 MJ, POL, UI, TX, MET, AUD and BND, plus end-to-end scenarios (bona fide passive pass, escalation and correct
 actions, wrong action, timeout, flat-photo head turn, frozen stream, maximum retries).
+`LivenessSessionDriverTest` (T-CORE-RUN, 23 tests) drives the session driver with a fake device that streams on its
+own thread and a scripted engine: pass (bound in the hand-off and later from another thread), retry, cancel
+(running and while the engine loads), device and engine errors that never count, exhaustion with prior failures
+(LV11 exactly once), override refused after an attack on this or an earlier screen, the lock, close, the device
+Ready wait and the hooks.
 
 ## Build
 
@@ -309,8 +408,8 @@ mvn -f liveness/pom.xml -pl liveness-core verify   # the core only
 mvn -f liveness/pom.xml -pl face-match-sdk verify  # the face match SDK only (uses the installed core and onnx jars)
 ```
 
-- Test counts on the last full run: core 264, onnx 93 (2 skipped: the latency benchmark when
-  `-Dliveness.benchmark.frames=0`), face-match-sdk 42.
+- Test counts on the last full run (2026-10-04, `install -Dliveness.benchmark.frames=0`): core 351, onnx 96
+  (2 skipped: the latency benchmark when `-Dliveness.benchmark.frames=0`), face-match-sdk 42.
 
 - Needs a full JDK 11 or newer and Maven 3.9. With JDK 12 or newer, `--release 11` keeps the Java 11 API.
 - Output: `liveness-core/target/liveness-core-1.0.0-SNAPSHOT.jar`; coverage report in
@@ -328,7 +427,9 @@ mvn -f liveness/pom.xml -pl face-match-sdk verify  # the face match SDK only (us
 - `LivenessSession` adds `start()`, `tick()`, `captureStarted()`, `captureFailed()` and `captureFrame()`, and
   takes the capture as one `BindingRequest`; the design's `bind(...)` had four parameters.
 - `FailureReason.BINDING` does not allow a supervisor override (the design names only PAD and integrity
-  failures).
+  failures), and `LivenessTransaction` refuses the override after any PAD, integrity or binding failure in the
+  transaction, not only when that failure was the last one: otherwise an attacker could let the last attempt
+  time out and earn the override.
 - The `YUV420` frame format of the design is `PixelFormat.NV21`, a specific YUV 4:2:0 layout.
 
 Engine behaviour that differs from, or makes precise, the design:

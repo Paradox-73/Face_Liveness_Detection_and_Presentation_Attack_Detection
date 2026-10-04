@@ -3,7 +3,7 @@ package io.mosip.liveness.core.engine;
 import java.util.Arrays;
 
 /**
- * Combines per-frame passive PAD live probabilities into one 0-100 score (design section 4.6):
+ * Combines per-frame passive PAD live probabilities into one 0-100 score (docs/design/decision-flow.md section 1):
  * {@code S = round(100 * median(p_f))} over the most recent frames. A trim fraction below 0.5 gives a trimmed
  * mean instead (drop that share of the lowest and highest values, average the rest).
  */

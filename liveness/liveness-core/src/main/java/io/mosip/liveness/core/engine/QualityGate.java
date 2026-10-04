@@ -8,8 +8,8 @@ import io.mosip.liveness.core.vision.FaceObservation;
 import io.mosip.liveness.core.vision.FaceQuality;
 
 /**
- * Acquisition quality gate (design section 4.5, state {@code ACQUIRING}): exactly one face, inside the image,
- * large enough, frontal enough, lit and sharp. Each failed check has a reason code, which the UI mapper turns
+ * Acquisition quality gate (docs/design/engine.md section 3, state {@code ACQUIRING}): exactly one face, inside the
+ * image, large enough, frontal enough, lit and sharp. Each failed check has a reason code, which the UI mapper turns
  * into a guidance message. A measure the analyser does not provide is not checked.
  */
 final class QualityGate {

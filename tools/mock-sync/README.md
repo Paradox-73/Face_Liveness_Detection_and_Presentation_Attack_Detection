@@ -161,7 +161,8 @@ Where the served config comes from (lowest to highest precedence):
    does not delete them;
 2. mosip-config `registration-default.properties` (as `registrationConfiguration`) and
    `application-default.properties` (as `globalConfiguration`);
-3. `data/mock-sync-defaults.properties`: all `mosip.registration.liveness.*` keys with the plan's defaults, plus
+3. `data/mock-sync-defaults.properties`: all `mosip.registration.liveness.*` keys with the defaults listed in
+   `docs/design/configuration.md`, plus
    `mosip.min-languages.count=1`;
 4. admin overrides.
 

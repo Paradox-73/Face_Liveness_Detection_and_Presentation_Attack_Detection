@@ -8,7 +8,7 @@ import io.mosip.liveness.core.device.FrameSink;
 import java.util.Optional;
 
 /**
- * One liveness attempt for one person: the state machine of design section 4.5.
+ * One liveness attempt for one person: the state machine of docs/design/engine.md section 3.
  *
  * <p><b>Threading.</b> A session is confined to one owning thread (the client's liveness worker). Every method
  * must be called from that thread, except {@link #sessionId()}, {@link #state()} and {@link #cancel()}, which
@@ -81,7 +81,7 @@ public interface LivenessSession extends FrameSink, AutoCloseable {
     void captureFailed(DeviceError error);
 
     /**
-     * Checks the signed capture against the live session (stream-to-capture binding, design section 4.10):
+     * Checks the signed capture against the live session (stream-to-capture binding, docs/design/engine.md section 7):
      * token valid, unused and bound to this session, workflow, subject and device; challenge echoed when
      * requested; exactly one face; similarity to the session face; time window; PAD on the captured image; no
      * device PAD failure. Moves {@code CAPTURING -> BINDING -> PASSED} or {@code FAILED(BINDING | PAD)}. The

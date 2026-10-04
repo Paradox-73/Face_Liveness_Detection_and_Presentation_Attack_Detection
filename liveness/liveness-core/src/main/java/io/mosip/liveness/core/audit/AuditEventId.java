@@ -3,7 +3,8 @@ package io.mosip.liveness.core.audit;
 import java.util.Optional;
 
 /**
- * Liveness audit events, with the same identifiers on the desktop and Android clients (design section 4.17).
+ * Liveness audit events, with the same identifiers on the desktop and Android clients
+ * (docs/design/audit-and-evidence.md section 1).
  *
  * <p>Identifiers contain {@code REG-EVT}, so the desktop audit service replaces the reference ID with the
  * registration ID during a registration. The {@code LV} infix keeps them clear of the Android client's

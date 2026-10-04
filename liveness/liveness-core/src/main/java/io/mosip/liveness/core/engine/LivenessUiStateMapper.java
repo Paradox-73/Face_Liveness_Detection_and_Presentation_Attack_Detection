@@ -25,7 +25,7 @@ import java.util.Set;
 
 /**
  * Turns session progress and results into the {@link LivenessUiState}s both clients render, using the message
- * keys of design section 11.2. The texts themselves live in the clients' bundles
+ * keys of docs/ux/message-catalogue.csv. The texts themselves live in the clients' bundles
  * ({@code docs/ux/message-catalogue.csv}).
  *
  * <p>Rules for failures (section 11.2):
@@ -36,6 +36,8 @@ import java.util.Set;
  *       chosen from the quality problems seen during the attempt;</li>
  *   <li>quality failures show the no-face, multiple-faces or poor-quality message; device and engine failures
  *       their own messages;</li>
+ *   <li>a passive PAD failure in low light that the engine ended uncounted ({@link ReasonCode#LOW_LIGHT}) shows
+ *       {@link MessageKeys#FAIL_LIVENESS} with {@link MessageKeys#GUIDE_LIGHTING} first, not the attack message;</li>
  *   <li>a counted failure on the last attempt shows the maximum-attempts message of the workflow type, with the
  *       supervisor override offered only when the workflow is configured for it and the failure was not a
  *       suspected attack.</li>
@@ -162,6 +164,22 @@ public final class LivenessUiStateMapper {
     }
 
     /**
+     * Returns "Look directly at the camera and hold still." shown after the last challenge until a neutral, frontal
+     * face gives the frame that is stored.
+     *
+     * @param problem the quality problem of the last frame, or {@code null}
+     * @return the state
+     */
+    public LivenessUiState lookStraight(ReasonCode problem) {
+        LivenessUiState.Builder b = state(UiPhase.HOLD_STILL, MessageKeys.FEEDBACK_LOOK_STRAIGHT)
+                .promptIcon(PromptIcon.FACE_OVAL).progress(0.9);
+        if (problem != null) {
+            b.guidance(guidanceKeyFor(problem));
+        }
+        return b.build();
+    }
+
+    /**
      * Returns the state while the capture is checked against the session.
      *
      * @return the state
@@ -239,6 +257,9 @@ public final class LivenessUiStateMapper {
             case BINDING:
                 return MessageKeys.FAIL_PAD;
             case QUALITY:
+                if (codes.contains(ReasonCode.LOW_LIGHT)) {
+                    return MessageKeys.FAIL_LIVENESS;
+                }
                 if (codes.contains(ReasonCode.NO_FACE)) {
                     return MessageKeys.ERROR_NO_FACE;
                 }
@@ -292,6 +313,9 @@ public final class LivenessUiStateMapper {
         } else if (r == FailureReason.ACTIVE) {
             keys.add(MessageKeys.GUIDE_FOLLOW_ACTION);
         } else if (r == FailureReason.BELOW_THRESHOLD || r == FailureReason.QUALITY) {
+            if (codes.contains(ReasonCode.LOW_LIGHT)) {
+                keys.add(MessageKeys.GUIDE_LIGHTING);
+            }
             for (ReasonCode q : qualityProblems) {
                 keys.add(guidanceKeyFor(q));
             }
@@ -337,6 +361,7 @@ public final class LivenessUiStateMapper {
                 return MessageKeys.GUIDE_LOOK_CAMERA;
             case TOO_DARK:
             case TOO_BRIGHT:
+            case LOW_LIGHT:
                 return MessageKeys.GUIDE_LIGHTING;
             case MULTI_FACE:
             case FACE_TOO_SMALL:
@@ -350,7 +375,7 @@ public final class LivenessUiStateMapper {
     /**
      * Returns the text to show for a message: the synced replacement
      * {@code mosip.registration.liveness.guidance.<messageKey>.<lang>} when set and not blank, otherwise the
-     * bundle text (design section 4.16, test T-CORE-UI-09).
+     * bundle text (docs/design/configuration.md section 9, test T-CORE-UI-09).
      *
      * @param config     configuration source
      * @param messageKey message key

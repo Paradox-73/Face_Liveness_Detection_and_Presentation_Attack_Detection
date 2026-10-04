@@ -18,10 +18,14 @@ import java.util.Objects;
  */
 public final class SessionRequest {
 
+    /** Value of {@link #lowLightRetries()} when the caller does not track low-light results. */
+    public static final int LOW_LIGHT_NOT_TRACKED = -1;
+
     private final LivenessPolicy policy;
     private final String subjectRef;
     private final DeviceDescriptor device;
     private final int attempt;
+    private final int lowLightRetries;
     private final Clock clock;
     private final RandomSource random;
     private final DiagnosticSink diagnosticSink;
@@ -31,6 +35,7 @@ public final class SessionRequest {
         this.subjectRef = b.subjectRef;
         this.device = b.device;
         this.attempt = b.attempt;
+        this.lowLightRetries = b.lowLightRetries;
         this.clock = b.clock;
         this.random = b.random;
         this.diagnosticSink = b.diagnosticSink;
@@ -94,6 +99,20 @@ public final class SessionRequest {
     }
 
     /**
+     * Returns how many sessions of the caller's transaction ended uncounted for low light
+     * ({@link LivenessResult#isLowLightRetry()}) since its last counted failure.
+     *
+     * <p>A passive PAD failure in low light ends uncounted only while this number is below the engine's
+     * {@code passive.low_light_max_uncounted}; with {@link #LOW_LIGHT_NOT_TRACKED} it always counts, as any PAD
+     * failure, so a caller that does not track these results never gives unlimited attempts.
+     *
+     * @return 0 or more, or {@link #LOW_LIGHT_NOT_TRACKED}
+     */
+    public int lowLightRetries() {
+        return lowLightRetries;
+    }
+
+    /**
      * Returns the clock the session uses for every timeout.
      *
      * @return the clock
@@ -133,6 +152,7 @@ public final class SessionRequest {
         private final String subjectRef;
         private final DeviceDescriptor device;
         private int attempt = 1;
+        private int lowLightRetries = LOW_LIGHT_NOT_TRACKED;
         private Clock clock = Clock.system();
         private RandomSource random;
         private DiagnosticSink diagnosticSink = DiagnosticSink.noop();
@@ -154,6 +174,23 @@ public final class SessionRequest {
          */
         public Builder attempt(int attempt) {
             this.attempt = attempt;
+            return this;
+        }
+
+        /**
+         * Sets the number of results of this transaction that ended uncounted for low light since its last counted
+         * failure ({@code LivenessTransaction.lowLightRetries()} in the engine package). Default
+         * {@link #LOW_LIGHT_NOT_TRACKED}: every PAD failure counts.
+         *
+         * @param lowLightRetries 0 or more
+         * @return this builder
+         * @throws IllegalArgumentException if the value is negative
+         */
+        public Builder lowLightRetries(int lowLightRetries) {
+            if (lowLightRetries < 0) {
+                throw new IllegalArgumentException("lowLightRetries must not be negative");
+            }
+            this.lowLightRetries = lowLightRetries;
             return this;
         }
 

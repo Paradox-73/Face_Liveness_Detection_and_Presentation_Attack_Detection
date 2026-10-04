@@ -3,7 +3,7 @@ package io.mosip.liveness.core.engine;
 import io.mosip.liveness.core.vision.FaceBox;
 
 /**
- * Follows the subject's face from frame to frame (design section 4.8, "tracking"): consecutive boxes must
+ * Follows the subject's face from frame to frame (docs/design/engine.md section 6, "tracking"): consecutive boxes must
  * overlap (intersection over union at least {@code integrity.tracking_min_iou}) and must not be further apart in
  * time than {@code integrity.tracking_max_gap_ms}, raised to 2.5 frame intervals on slow streams (at 3 fps one
  * missed detection already makes a 667 ms gap). A broken track means the face may have been swapped.

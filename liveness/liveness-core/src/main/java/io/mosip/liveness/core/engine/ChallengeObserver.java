@@ -9,7 +9,8 @@ import io.mosip.liveness.core.config.LivenessPolicy;
 import java.util.List;
 
 /**
- * Watches one prompted challenge and decides whether the requested action was performed (design section 4.7).
+ * Watches one prompted challenge and decides whether the requested action was performed (docs/design/challenges.md
+ * section 4).
  *
  * <p>Rules, in the order they are applied to each frame:
  * <ol>

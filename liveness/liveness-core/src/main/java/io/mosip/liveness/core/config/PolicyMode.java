@@ -7,7 +7,7 @@ import java.util.Optional;
  * How liveness is enforced for a workflow ({@code mosip.registration.liveness.policy.<workflow>}).
  *
  * <p>Passive detection always runs first when liveness is on. The modes differ in what happens next
- * (design section 4.6).
+ * (docs/design/decision-flow.md section 5).
  */
 public enum PolicyMode {
 

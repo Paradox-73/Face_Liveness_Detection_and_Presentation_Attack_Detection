@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "bundle": "mosip-liveness-models",
-  "version": "1.0.1",
+  "version": "1.3.0",
   "models": [
     {
       "id": "yunet",
@@ -54,5 +54,5 @@
       "params": {}
     }
   ],
-  "engineParams": {"quality.min_sharpness": "40"}
+  "engineParams": {"quality.min_sharpness": "40", "integrity.loop_window_frames": "300"}
 }

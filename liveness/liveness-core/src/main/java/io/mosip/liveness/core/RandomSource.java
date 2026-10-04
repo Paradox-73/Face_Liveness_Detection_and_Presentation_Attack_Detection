@@ -6,7 +6,7 @@ import java.security.SecureRandom;
  * Source of randomness for challenge draws, prompt delays, session identifiers and nonces.
  *
  * <p>Production code must use {@link #secure()}. A seeded implementation exists only in test code and in the
- * headless scenario runner; no configuration key can select it (design section 4.20).
+ * headless scenario runner; no configuration key can select it (docs/design/challenges.md section 2).
  */
 public interface RandomSource {
 

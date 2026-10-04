@@ -13,8 +13,8 @@ import java.util.Objects;
  * <p><b>Ownership of the pixel array.</b> For speed the array is not copied: the factory takes ownership of
  * the array it is given and {@link #bytes()} / {@link #ints()} return that same array. Producers must not reuse
  * the array after creating the buffer, and consumers must only read it, except that the owner of a session may
- * overwrite it with zeros when the session ends ({@link #wipe()}; design section 4.20). {@link #toString()}
- * never prints pixel data.
+ * overwrite it with zeros when the session ends ({@link #wipe()}; docs/design/security-privacy.md section 4).
+ * {@link #toString()} never prints pixel data.
  */
 public final class ImageBuffer {
 

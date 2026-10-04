@@ -7,7 +7,7 @@ import io.mosip.liveness.core.config.LivenessPolicy;
 import io.mosip.liveness.core.config.PolicyMode;
 
 /**
- * The passive-to-active decision of design section 4.6, as a pure function (table-tested at threshold - 1,
+ * The passive-to-active decision of docs/design/decision-flow.md, as a pure function (table-tested at threshold - 1,
  * threshold and threshold + 1).
  *
  * <pre>

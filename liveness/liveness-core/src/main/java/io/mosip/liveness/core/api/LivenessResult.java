@@ -142,6 +142,17 @@ public final class LivenessResult {
     }
 
     /**
+     * Tells whether the session ended uncounted because passive PAD failed in low light
+     * ({@link ReasonCode#LOW_LIGHT}). Callers that track retries pass the number of such results since the last
+     * counted failure to {@link SessionRequest.Builder#lowLightRetries(int)}.
+     *
+     * @return {@code true} for a {@link FailureReason#QUALITY} result with {@link ReasonCode#LOW_LIGHT}
+     */
+    public boolean isLowLightRetry() {
+        return failureReason == FailureReason.QUALITY && reasonCodes.contains(ReasonCode.LOW_LIGHT);
+    }
+
+    /**
      * Returns which checks decided the session.
      *
      * @return the method
