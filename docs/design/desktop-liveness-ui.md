@@ -49,9 +49,12 @@ All new classes are in `io.mosip.registration.controller.liveness`.
 The window always closes its run (`LivenessRun.close()`), which stops the stream and the worker. Auto-logout is
 turned off while the window is open and back on when it closes.
 
-## 3. Screens (plan section 4.12)
+## 3. Screens
 
-| Plan | Screen / class | Workflow | Change |
+The change IDs number the desktop edit points; [desktop-liveness-services.md](desktop-liveness-services.md) section 8
+lists the service-layer ones.
+
+| Change | Screen / class | Workflow | Change |
 |---|---|---|---|
 | D4, D5, D6 | Resident face and exception photo, `GenericBiometricsController.scan` / `rCapture` | `registration`, `exception_photo` | FACE with liveness enforced: no parallel stream + capture any more; the liveness window runs first and `rCaptureTaskService()` starts only from `captureReady`. `rCapture` sets the context (pass, or `withoutPass` when not enforced). On a gate refusal the capture task fails and the face is never stored; while the window is open the generic "unable to scan" alert is suppressed because the window shows the failure. |
 | D18 | Operator onboarding, `BiometricsController.scan` / `rCapture` | `onboard_auth` | Same pattern for the face modality. |
@@ -67,7 +70,7 @@ sent `"previousHash": null`; MockMDS 1.3.1 (and SBI 0.9.5, which lists the field
 (`IllegalArgumentException: previousHash is required`), so no face could be captured at all. The request now sends
 an empty `previousHash` (first capture of a transaction).
 
-**Device busy (plan section 4.4):** SBI devices are Busy while they stream. For authentication workflows the
+**Device busy:** SBI devices are Busy while they stream. For authentication workflows the
 service run closes the stream at capture ready and waits for Ready (at most 1.5 s) before `captureReady` reaches
 the screen, so `captureModalityForAuth` finds a Ready device. The screens no longer start a plain `Streamer`
 stream when liveness is enforced (it would keep the device busy).
@@ -82,7 +85,7 @@ stream when liveness is enforced (it would keep the device busy).
 | screen capture task (JavaFX `Service`) | the existing capture; the gate forwards the bind to the worker |
 | `liveness-online-check` | one `ServiceDelegateUtil.isNetworkAvailable()` call for the offline badge |
 
-## 5. UX rules applied (plan section 11)
+## 5. UX rules applied ([../ux/README.md](../ux/README.md))
 
 - PS04 wording for status, prompts, feedback and failure messages; a suspected attack (PAD, integrity, binding)
   only ever shows the generic "Face verification could not be completed. Please try again." (the engine picks the
@@ -142,9 +145,9 @@ Run: `mvn -B test -Djacoco.skip=true` in `registration-client`.
 Screens and flows were checked against the real client, MockSync and MockMDS with
 `docs/ux/capture/LivenessScreensDriver.java` (see [../ux/desktop-liveness.md](../ux/desktop-liveness.md)).
 
-## 7. Deviations from the plan
+## 7. Design decisions and open items
 
-- **Window instead of inline panel.** The plan embeds the panel in each screen's FXML (`GenericBiometricFXML`,
+- **Window instead of inline panel.** The panel is not embedded in each screen's FXML (`GenericBiometricFXML`,
   `RegistrationLogin`, `OperatorAuthentication`, `Authentication`). The panel is hosted in one modal window
   (`LivenessDialog`) for all six screens instead: the upstream FXML stays unchanged, the preview is large enough
   for challenges in every screen (the login and authentication panes are 350-450 px wide), and behaviour is
@@ -157,7 +160,7 @@ Screens and flows were checked against the real client, MockSync and MockMDS wit
   supervisor. A supervisor must verify."
 - **Config updated toast** (`liveness.config.updated`) has its text in all bundles but is not shown yet; the
   orchestrator audits configuration changes (`REG-EVT-LV15`).
-- **Generator:** `scripts/gen_i18n.py` from plan section 11.3 is not written; `docs/ux/message-catalogue.csv` is the
+- **No bundle generator:** no script writes the language bundles from the catalogue; `docs/ux/message-catalogue.csv` is the
   catalogue and `LivenessBundleParityTest` fails the build when a bundle and the catalogue differ.
 
 ## 8. Known limits

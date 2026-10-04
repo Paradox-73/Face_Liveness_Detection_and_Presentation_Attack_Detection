@@ -1,0 +1,1403 @@
+# Reference run of the desktop end-to-end driver, 2026-09-30 (cited by docs/test-report/desktop-e2e.md).
+# Checked for publication on 2026-10-04: passwords were masked as ******** by the driver during the run;
+# the only user IDs are the demo accounts officer1 and supervisor1 (docs/test-data.md); no home-folder path,
+# key or other credential appears, so nothing was removed. Lines below this note are unchanged.
+04:49:01 > include 00-start.flow
+04:49:01 > label start: MockMDS face device reset to L0, no fault; client started
+04:49:01 ==== start: MockMDS face device reset to L0, no fault; client started
+04:49:01 > set OFFICER officer1
+04:49:01 > set OFFICER_PASSWORD ********
+04:49:01 > set OFFICER_FACE s3
+04:49:01 > set SUPERVISOR supervisor1
+04:49:01 > set SUPERVISOR_PASSWORD ********
+04:49:01 > set SUPERVISOR_FACE s3
+04:49:01 > set LEFT_EXCEPTION sleep 1
+04:49:01 > set MOCKSYNC http://127.0.0.1:8080
+04:49:01 > mask on
+04:49:01 > mds /admin/fault {"type":"Face","fault":"NONE"}
+04:49:01   MDS /admin/fault -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:49:01 > mds /admin/certification {"type":"Face","certification":"L0"}
+04:49:01   MDS /admin/certification -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:49:01 > source s3-main
+04:49:01   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:49:01 > start
+04:49:01 > wait-login 300
+04:50:04 > snap login-screen
+04:50:05 SNAPSHOT 001-login-screen.png
+04:50:05 SNAPSHOT 002-login-screen.png
+04:50:05 > include 10-login.flow
+04:50:05 > label login: officer1 password then face with liveness
+04:50:05 ==== login: officer1 password then face with liveness
+04:50:05 > set USER officer1
+04:50:05 > set PASSWORD ********
+04:50:05 > set OPERATOR s3
+04:50:05 > include lib/face-login.flow
+04:50:05 > if-node #homeImgView click #homeImgView
+04:50:05   skipped, #homeImgView not shown
+04:50:05 > sleep 1500
+04:50:06 > if-node #confirm click #confirm
+04:50:06   skipped, #confirm not shown
+04:50:06 > if-node #homeImgView menu Logout
+04:50:06   skipped, #homeImgView not shown
+04:50:06 > wait-node #userId 60
+04:50:06 > source s3-main
+04:50:06   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:50:06 > follow s3
+04:50:06 > login officer1 ********
+04:50:07 > expect-live 120
+04:50:09 RESULT PASS live face passed on attempt 1
+04:50:09 > wait Operational Tasks 90
+04:50:10 > follow off
+04:50:10 > snap home-officer1
+04:50:10 SNAPSHOT 003-home-officer1.png
+04:50:10 SNAPSHOT 004-home-officer1.png
+04:50:10 > section 20-registration-passive.flow
+04:50:10 > label registration 1: device disconnect and recovery, then passive pass, packet authentication
+04:50:10 ==== registration 1: device disconnect and recovery, then passive pass, packet authentication
+04:50:10 > set RESIDENT_NAME Asha Resident
+04:50:10 > include lib/registration-start.flow
+04:50:10 > click #homeImgView
+04:50:10   clicked ImageView#homeImgView
+04:50:11 > sleep 1500
+04:50:12 > if-node #confirm click #confirm
+04:50:12   skipped, #confirm not shown
+04:50:12 > click #NEW
+04:50:12   clicked GridPane#NEW
+04:50:12 > check #eng true
+04:50:12 > click #submit
+04:50:12   fired Button#submit 'SUBMIT'
+04:50:12 > check #consent true
+04:50:14 > click #preferredLangeng
+04:50:14   fired Button#preferredLangeng 'English'
+04:50:14 > click #next
+04:50:14   fired Button#next 'CONTINUE'
+04:50:14 > fill #fullNameeng Asha Resident
+04:50:14 > fill #dateOfBirthddTextField 15
+04:50:14 > fill #dateOfBirthmmTextField 06
+04:50:14 > fill #dateOfBirthyyyyTextField 1990
+04:50:14 > click #genderMLE
+04:50:14   fired Button#genderMLE 'Male'
+04:50:14 > click #residenceStatusNFR
+04:50:14   fired Button#residenceStatusNFR 'Non-Foreigner'
+04:50:14 > fill #addressLine1eng 12 Main Street
+04:50:15 > fill #addressLine2eng Block A
+04:50:15 > fill #addressLine3eng Near Park
+04:50:15 > select #region 0
+04:50:15   selected GenericDto(code=RSK, name=Rabat Sale Kenitra, langCode=eng)
+04:50:15 > sleep 600
+04:50:15 > select #province 0
+04:50:15   selected GenericDto(code=KTA, name=Kenitra, langCode=eng)
+04:50:15 > sleep 600
+04:50:16 > select #city 0
+04:50:16   selected GenericDto(code=KNT, name=Kenitra, langCode=eng)
+04:50:16 > sleep 600
+04:50:17 > select #zone 0
+04:50:17   selected GenericDto(code=BNMR, name=Ben Mansour, langCode=eng)
+04:50:17 > sleep 600
+04:50:17 > select #postalCode 0
+04:50:18   selected GenericDto(code=14022, name=14022, langCode=eng)
+04:50:18 > fill #phoneeng 9876543210
+04:50:18 > fill #emaileng demo.resident@example.org
+04:50:18 > sleep 500
+04:50:18 > click #next
+04:50:18   fired Button#next 'CONTINUE'
+04:50:18 > select #proofOfAddress 0
+04:50:18   selected io.mosip.registration.dto.mastersync.DocumentCategoryDto@15044919
+04:50:18 > click #proofOfAddressbutton
+04:50:18   fired Button#proofOfAddressbutton 'Scan'
+04:50:18 > click #captureBtn
+04:50:18   fired Button#captureBtn 'Capture'
+04:50:19 > sleep 1500
+04:50:19 ALERT Success | Document Captured Successfully | X
+04:50:19 SNAPSHOT 005-alert.png
+04:50:20 > click #saveBtn 20
+04:50:20   fired Button#saveBtn 'Save'
+04:50:20 > sleep 1500
+04:50:22 > select #proofOfIdentity 0
+04:50:22   selected io.mosip.registration.dto.mastersync.DocumentCategoryDto@7c641218
+04:50:22 > click #proofOfIdentitybutton
+04:50:22   fired Button#proofOfIdentitybutton 'Scan'
+04:50:22 > click #captureBtn
+04:50:22   fired Button#captureBtn 'Capture'
+04:50:22 > sleep 1500
+04:50:22 ALERT Success | Document Captured Successfully | X
+04:50:22 SNAPSHOT 006-alert.png
+04:50:24 > click #saveBtn 20
+04:50:24   fired Button#saveBtn 'Save'
+04:50:24 > sleep 1500
+04:50:25 > click #next
+04:50:25   fired Button#next 'CONTINUE'
+04:50:25 > wait-node #individualBiometricsFACEButton 30
+04:50:25 > click #individualBiometricsFINGERPRINT_SLAB_LEFTButton
+04:50:25   fired Button#individualBiometricsFINGERPRINT_SLAB_LEFTButton ''
+04:50:26 > sleep 800
+04:50:26 > sleep 1
+04:50:26 > click #individualBiometricsScanBtn
+04:50:26   fired Button#individualBiometricsScanBtn 'Scan'
+04:50:27 > sleep 3500
+04:50:28 ALERT Success | Biometrics Captured Successfully | X
+04:50:28 SNAPSHOT 007-alert.png
+04:50:30 > click #individualBiometricsFINGERPRINT_SLAB_RIGHTButton
+04:50:30   fired Button#individualBiometricsFINGERPRINT_SLAB_RIGHTButton ''
+04:50:30 > sleep 800
+04:50:31 > click #individualBiometricsScanBtn
+04:50:31   fired Button#individualBiometricsScanBtn 'Scan'
+04:50:31 > sleep 3500
+04:50:31 ALERT Success | Biometrics Captured Successfully | X
+04:50:31 SNAPSHOT 008-alert.png
+04:50:35 > click #individualBiometricsFINGERPRINT_SLAB_THUMBSButton
+04:50:35   fired Button#individualBiometricsFINGERPRINT_SLAB_THUMBSButton ''
+04:50:35 > sleep 800
+04:50:36 > click #individualBiometricsScanBtn
+04:50:36   fired Button#individualBiometricsScanBtn 'Scan'
+04:50:36 > sleep 3500
+04:50:36 ALERT Success | Biometrics Captured Successfully | X
+04:50:36 SNAPSHOT 009-alert.png
+04:50:39 > if-node #individualBiometricsIRIS_DOUBLEButton click #individualBiometricsIRIS_DOUBLEButton
+04:50:39   fired Button#individualBiometricsIRIS_DOUBLEButton ''
+04:50:39 > sleep 800
+04:50:40 > click #individualBiometricsScanBtn
+04:50:40   fired Button#individualBiometricsScanBtn 'Scan'
+04:50:40 > sleep 3500
+04:50:40 ALERT Success | Biometrics Captured Successfully | X
+04:50:40 SNAPSHOT 010-alert.png
+04:50:44 > click #individualBiometricsFACEButton
+04:50:44   fired Button#individualBiometricsFACEButton ''
+04:50:44 > sleep 1000
+04:50:45 > source s2-main
+04:50:45   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s2-main","fps":15.0,"loop":true,"fr
+04:50:45 > mds /admin/fault {"type":"Face","fault":"DISCONNECT","afterFrames":6}
+04:50:45   MDS /admin/fault -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s2-main","fps":15.0,"loop":true,"fr
+04:50:45 > click #individualBiometricsScanBtn
+04:50:45   fired Button#individualBiometricsScanBtn 'Scan'
+04:50:45 > expect disconnected 60
+04:50:46 RESULT PASS text disconnected 60
+04:50:46 > snap device-disconnected
+04:50:46 SNAPSHOT 011-device-disconnected.png
+04:50:46 SNAPSHOT 012-device-disconnected.png
+04:50:46 SNAPSHOT 013-device-disconnected.png
+04:50:46 > mds /admin/fault {"type":"Face","fault":"NONE"}
+04:50:46   MDS /admin/fault -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s2-main","fps":15.0,"loop":true,"fr
+04:50:46 > click #retryButton
+04:50:46   fired Button#retryButton 'Retry'
+04:50:46 > expect Good, face captured successfully 60
+04:50:47 RESULT PASS text Good, face captured successfully 60
+04:50:47 > sleep 3000
+04:50:47 ALERT Success | Biometrics Captured Successfully | X
+04:50:47 SNAPSHOT 014-alert.png
+04:50:50 > snap resident-face-passive
+04:50:50 SNAPSHOT 015-resident-face-passive.png
+04:50:50 SNAPSHOT 016-resident-face-passive.png
+04:50:50 > set PASSWORD ********
+04:50:50 > set OPERATOR s3
+04:50:50 > include lib/registration-finish.flow
+04:50:50 > click #next
+04:50:50   fired Button#next 'CONTINUE'
+04:50:50 > wait-node #PREVIEW 30
+04:50:50 > sleep 2000
+04:50:52 > snap preview
+04:50:52 SNAPSHOT 017-preview.png
+04:50:52 SNAPSHOT 018-preview.png
+04:50:52 > click #next
+04:50:52   fired Button#next 'CONTINUE'
+04:50:53 > wait-node #password 30
+04:50:53 > fill #password ********
+04:50:53 > source s3-main
+04:50:53   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:50:53 > follow s3
+04:50:53 > click #authenticate
+04:50:53   fired Button#authenticate 'Authenticate'
+04:50:53 > wait-node #faceScanButton 30
+04:50:53 > click #faceScanButton
+04:50:53   fired Button#faceScanButton 'Scan'
+04:50:53 > expect-live 120
+04:50:54 RESULT PASS live face passed on attempt 1
+04:50:54 > follow off
+04:50:54 > sleep 4000
+04:50:54 ALERT Success | Biometrics Captured Successfully | X
+04:50:54 SNAPSHOT 019-alert.png
+04:50:58 > if-node #username include reviewer-auth.flow
+04:50:58   skipped, #username not shown
+04:50:58 > expect Registration Acknowledgement 60
+04:50:58 RESULT PASS text Registration Acknowledgement 60
+04:50:58 > sql SELECT ID, CLIENT_STATUS_CODE, CR_DTIMES FROM REG.REGISTRATION ORDER BY CR_DTIMES DESC FETCH FIRST 1 ROWS ONLY
+04:50:58   ROW ID=10001100010000420260929232013 | CLIENT_STATUS_CODE=REGISTERED | CR_DTIMES=2026-09-29 23:20:55.6861557
+04:50:58   rows=1
+04:50:58 > section 30-registration-active.flow
+04:50:58 > label registration 2: low passive score, active challenges; finger exception, reviewer authentication
+04:50:58 ==== registration 2: low passive score, active challenges; finger exception, reviewer authentication
+04:50:58 > set RESIDENT_NAME Bilal Resident
+04:50:58 > set LEFT_EXCEPTION click #leftLittle
+04:50:58 > include lib/registration-start.flow
+04:50:58 > click #homeImgView
+04:50:58   clicked ImageView#homeImgView
+04:50:59 > sleep 1500
+04:51 > if-node #confirm click #confirm
+04:51   skipped, #confirm not shown
+04:51 > click #NEW
+04:51   clicked GridPane#NEW
+04:51 > check #eng true
+04:51 > click #submit
+04:51   fired Button#submit 'SUBMIT'
+04:51 > check #consent true
+04:51:01 > click #preferredLangeng
+04:51:01   fired Button#preferredLangeng 'English'
+04:51:01 > click #next
+04:51:01   fired Button#next 'CONTINUE'
+04:51:01 > fill #fullNameeng Bilal Resident
+04:51:01 > fill #dateOfBirthddTextField 15
+04:51:01 > fill #dateOfBirthmmTextField 06
+04:51:01 > fill #dateOfBirthyyyyTextField 1990
+04:51:01 > click #genderMLE
+04:51:01   fired Button#genderMLE 'Male'
+04:51:01 > click #residenceStatusNFR
+04:51:01   fired Button#residenceStatusNFR 'Non-Foreigner'
+04:51:02 > fill #addressLine1eng 12 Main Street
+04:51:02 > fill #addressLine2eng Block A
+04:51:02 > fill #addressLine3eng Near Park
+04:51:02 > select #region 0
+04:51:02   selected GenericDto(code=RSK, name=Rabat Sale Kenitra, langCode=eng)
+04:51:02 > sleep 600
+04:51:02 > select #province 0
+04:51:03   selected GenericDto(code=KTA, name=Kenitra, langCode=eng)
+04:51:03 > sleep 600
+04:51:03 > select #city 0
+04:51:03   selected GenericDto(code=KNT, name=Kenitra, langCode=eng)
+04:51:03 > sleep 600
+04:51:04 > select #zone 0
+04:51:04   selected GenericDto(code=BNMR, name=Ben Mansour, langCode=eng)
+04:51:04 > sleep 600
+04:51:04 > select #postalCode 0
+04:51:05   selected GenericDto(code=14022, name=14022, langCode=eng)
+04:51:05 > fill #phoneeng 9876543210
+04:51:05 > fill #emaileng demo.resident@example.org
+04:51:05 > sleep 500
+04:51:05 > click #next
+04:51:05   fired Button#next 'CONTINUE'
+04:51:05 > select #proofOfAddress 0
+04:51:05   selected io.mosip.registration.dto.mastersync.DocumentCategoryDto@12bd4763
+04:51:05 > click #proofOfAddressbutton
+04:51:05   fired Button#proofOfAddressbutton 'Scan'
+04:51:05 > click #captureBtn
+04:51:05   fired Button#captureBtn 'Capture'
+04:51:06 > sleep 1500
+04:51:06 ALERT Success | Document Captured Successfully | X
+04:51:06 SNAPSHOT 020-alert.png
+04:51:07 > click #saveBtn 20
+04:51:07   fired Button#saveBtn 'Save'
+04:51:07 > sleep 1500
+04:51:09 > select #proofOfIdentity 0
+04:51:09   selected io.mosip.registration.dto.mastersync.DocumentCategoryDto@50cc98d7
+04:51:09 > click #proofOfIdentitybutton
+04:51:09   fired Button#proofOfIdentitybutton 'Scan'
+04:51:09 > click #captureBtn
+04:51:09   fired Button#captureBtn 'Capture'
+04:51:09 ALERT Success | Document Captured Successfully | X
+04:51:09 SNAPSHOT 021-alert.png
+04:51:09 > sleep 1500
+04:51:11 > click #saveBtn 20
+04:51:11   fired Button#saveBtn 'Save'
+04:51:11 > sleep 1500
+04:51:12 > click #next
+04:51:12   fired Button#next 'CONTINUE'
+04:51:12 > wait-node #individualBiometricsFACEButton 30
+04:51:12 > click #individualBiometricsFINGERPRINT_SLAB_LEFTButton
+04:51:12   fired Button#individualBiometricsFINGERPRINT_SLAB_LEFTButton ''
+04:51:13 > sleep 800
+04:51:13 > click #leftLittle
+04:51:13   clicked ImageView#leftLittle
+04:51:13 > click #individualBiometricsScanBtn
+04:51:13   fired Button#individualBiometricsScanBtn 'Scan'
+04:51:14 > sleep 3500
+04:51:14 ALERT Success | Biometrics Captured Successfully | X
+04:51:14 SNAPSHOT 022-alert.png
+04:51:17 > click #individualBiometricsFINGERPRINT_SLAB_RIGHTButton
+04:51:17   fired Button#individualBiometricsFINGERPRINT_SLAB_RIGHTButton ''
+04:51:17 > sleep 800
+04:51:18 > click #individualBiometricsScanBtn
+04:51:18   fired Button#individualBiometricsScanBtn 'Scan'
+04:51:18 > sleep 3500
+04:51:18 ALERT Success | Biometrics Captured Successfully | X
+04:51:18 SNAPSHOT 023-alert.png
+04:51:22 > click #individualBiometricsFINGERPRINT_SLAB_THUMBSButton
+04:51:22   fired Button#individualBiometricsFINGERPRINT_SLAB_THUMBSButton ''
+04:51:22 > sleep 800
+04:51:23 > click #individualBiometricsScanBtn
+04:51:23   fired Button#individualBiometricsScanBtn 'Scan'
+04:51:23 > sleep 3500
+04:51:23 ALERT Success | Biometrics Captured Successfully | X
+04:51:23 SNAPSHOT 024-alert.png
+04:51:26 > if-node #individualBiometricsIRIS_DOUBLEButton click #individualBiometricsIRIS_DOUBLEButton
+04:51:26   fired Button#individualBiometricsIRIS_DOUBLEButton ''
+04:51:26 > sleep 800
+04:51:27 > click #individualBiometricsScanBtn
+04:51:27   fired Button#individualBiometricsScanBtn 'Scan'
+04:51:27 > sleep 3500
+04:51:27 ALERT Success | Biometrics Captured Successfully | X
+04:51:28 SNAPSHOT 025-alert.png
+04:51:31 > click #individualBiometricsFACEButton
+04:51:31   fired Button#individualBiometricsFACEButton ''
+04:51:31 > sleep 1000
+04:51:32 > set LEFT_EXCEPTION sleep 1
+04:51:32 > source s3n-main
+04:51:32   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3n-main","fps":15.0,"loop":true,"f
+04:51:32 > follow s3n
+04:51:32 > click #individualBiometricsScanBtn
+04:51:32   fired Button#individualBiometricsScanBtn 'Scan'
+04:51:32 > expect Please (blink|smile) 60
+04:51:34 RESULT PASS text Please (blink|smile) 60
+04:51:34 > snap resident-challenge
+04:51:34 SNAPSHOT 026-resident-challenge.png
+04:51:34 SNAPSHOT 027-resident-challenge.png
+04:51:34 SNAPSHOT 028-resident-challenge.png
+04:51:34 > expect-live 120
+04:51:35   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3n-smile","fps":15.0,"loop":true,"
+04:51:36   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3n-main","fps":15.0,"loop":true,"f
+04:51:39   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3n-blink","fps":15.0,"loop":true,"
+04:51:40   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3n-main","fps":15.0,"loop":true,"f
+04:51:41 RESULT PASS live face passed on attempt 1
+04:51:41 > follow off
+04:51:41 > sleep 3000
+04:51:41 ALERT Success | Biometrics Captured Successfully | X
+04:51:41 SNAPSHOT 029-alert.png
+04:51:44 > if-node #individualBiometricsEXCEPTION_PHOTOButton click #individualBiometricsEXCEPTION_PHOTOButton
+04:51:44   fired Button#individualBiometricsEXCEPTION_PHOTOButton ''
+04:51:44 > sleep 1000
+04:51:45 > source m-stream-static
+04:51:45   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\m-stream-static","fps":15.0,"loop":
+04:51:45 > click #individualBiometricsScanBtn
+04:51:45   fired Button#individualBiometricsScanBtn 'Scan'
+04:51:45 > sleep 6000
+04:51:45 ALERT Success | Biometrics Captured Successfully | X
+04:51:45 SNAPSHOT 030-alert.png
+04:51:51 > snap exception-photo
+04:51:51 SNAPSHOT 031-exception-photo.png
+04:51:51 SNAPSHOT 032-exception-photo.png
+04:51:51 > set PASSWORD ********
+04:51:51 > set OPERATOR s3
+04:51:51 > include lib/registration-finish.flow
+04:51:51 > click #next
+04:51:51   fired Button#next 'CONTINUE'
+04:51:51 > wait-node #PREVIEW 30
+04:51:52 > sleep 2000
+04:51:54 > snap preview
+04:51:54 SNAPSHOT 033-preview.png
+04:51:54 SNAPSHOT 034-preview.png
+04:51:54 > click #next
+04:51:54   fired Button#next 'CONTINUE'
+04:51:54 > wait-node #password 30
+04:51:54 > fill #password ********
+04:51:54 > source s3-main
+04:51:54   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:51:54 > follow s3
+04:51:54 > click #authenticate
+04:51:54   fired Button#authenticate 'Authenticate'
+04:51:54 > wait-node #faceScanButton 30
+04:51:54 > click #faceScanButton
+04:51:54   fired Button#faceScanButton 'Scan'
+04:51:55 > expect-live 120
+04:51:56 RESULT PASS live face passed on attempt 1
+04:51:56 > follow off
+04:51:56 > sleep 4000
+04:51:56 ALERT Success | Biometrics Captured Successfully | X
+04:51:56 SNAPSHOT 035-alert.png
+04:52 > if-node #username include reviewer-auth.flow
+04:52 > fill #username supervisor1
+04:52 > fill #password ********
+04:52 > source s3-main
+04:52   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:52 > follow s3
+04:52 > click #authenticate
+04:52   fired Button#authenticate 'Authenticate'
+04:52 > wait-node #faceScanButton 30
+04:52 > snap reviewer-auth
+04:52 SNAPSHOT 036-reviewer-auth.png
+04:52 SNAPSHOT 037-reviewer-auth.png
+04:52 > click #faceScanButton
+04:52 STATE [New Registration | Reviewer Authentication using Photo | supervisor1 | Bring your face near the camera | Scan | Attempts | _ | Consent | Demographic Details | Document Upload | Biometric Details | Preview | Authentication | Authenticate | Test Officer One | Center A Ben Mansour (10001) | batcomputer] [Starting Registration Client : Success. | Started to validate the build setup... Bui
+04:52   fired Button#faceScanButton 'Scan'
+04:52:01 > expect-live 120
+04:52:02 RESULT PASS live face passed on attempt 1
+04:52:02 > follow off
+04:52:02 > sleep 4000
+04:52:02 ALERT Success | Biometrics Captured Successfully | X
+04:52:02 SNAPSHOT 038-alert.png
+04:52:06 > expect Registration Acknowledgement 60
+04:52:06 RESULT PASS text Registration Acknowledgement 60
+04:52:06 > sql SELECT ID, CLIENT_STATUS_CODE, CR_DTIMES FROM REG.REGISTRATION ORDER BY CR_DTIMES DESC FETCH FIRST 1 ROWS ONLY
+04:52:06   ROW ID=10001100010000520260929232100 | CLIENT_STATUS_CODE=REGISTERED | CR_DTIMES=2026-09-29 23:22:02.7317949
+04:52:06   rows=1
+04:52:06 > section 40-registration-attacks.flow
+04:52:06 > label registration 3: print, injected still stream and screen replay refused; maximum attempts, recovery guidance
+04:52:06 ==== registration 3: print, injected still stream and screen replay refused; maximum attempts, recovery guidance
+04:52:06 > set RESIDENT_NAME Chen Attacker
+04:52:06 > include lib/registration-start.flow
+04:52:06 > click #homeImgView
+04:52:06   clicked ImageView#homeImgView
+04:52:06 > sleep 1500
+04:52:07 > if-node #confirm click #confirm
+04:52:07   skipped, #confirm not shown
+04:52:07 > click #NEW
+04:52:07   clicked GridPane#NEW
+04:52:07 > check #eng true
+04:52:07 > click #submit
+04:52:07   fired Button#submit 'SUBMIT'
+04:52:08 > check #consent true
+04:52:08 > click #preferredLangeng
+04:52:08   fired Button#preferredLangeng 'English'
+04:52:08 > click #next
+04:52:08   fired Button#next 'CONTINUE'
+04:52:08 > fill #fullNameeng Chen Attacker
+04:52:08 > fill #dateOfBirthddTextField 15
+04:52:08 > fill #dateOfBirthmmTextField 06
+04:52:08 > fill #dateOfBirthyyyyTextField 1990
+04:52:08 > click #genderMLE
+04:52:08   fired Button#genderMLE 'Male'
+04:52:08 > click #residenceStatusNFR
+04:52:08   fired Button#residenceStatusNFR 'Non-Foreigner'
+04:52:09 > fill #addressLine1eng 12 Main Street
+04:52:09 > fill #addressLine2eng Block A
+04:52:09 > fill #addressLine3eng Near Park
+04:52:09 > select #region 0
+04:52:09   selected GenericDto(code=RSK, name=Rabat Sale Kenitra, langCode=eng)
+04:52:09 > sleep 600
+04:52:09 > select #province 0
+04:52:10   selected GenericDto(code=KTA, name=Kenitra, langCode=eng)
+04:52:10 > sleep 600
+04:52:10 > select #city 0
+04:52:10   selected GenericDto(code=KNT, name=Kenitra, langCode=eng)
+04:52:10 > sleep 600
+04:52:11 > select #zone 0
+04:52:11   selected GenericDto(code=BNMR, name=Ben Mansour, langCode=eng)
+04:52:11 > sleep 600
+04:52:12 > select #postalCode 0
+04:52:12   selected GenericDto(code=14022, name=14022, langCode=eng)
+04:52:12 > fill #phoneeng 9876543210
+04:52:12 > fill #emaileng demo.resident@example.org
+04:52:12 > sleep 500
+04:52:12 > click #next
+04:52:12   fired Button#next 'CONTINUE'
+04:52:12 > select #proofOfAddress 0
+04:52:12   selected io.mosip.registration.dto.mastersync.DocumentCategoryDto@75bb8e2e
+04:52:12 > click #proofOfAddressbutton
+04:52:12   fired Button#proofOfAddressbutton 'Scan'
+04:52:13 > click #captureBtn
+04:52:13   fired Button#captureBtn 'Capture'
+04:52:13 > sleep 1500
+04:52:13 ALERT Success | Document Captured Successfully | X
+04:52:13 SNAPSHOT 039-alert.png
+04:52:14 > click #saveBtn 20
+04:52:14   fired Button#saveBtn 'Save'
+04:52:14 > sleep 1500
+04:52:16 > select #proofOfIdentity 0
+04:52:16   selected io.mosip.registration.dto.mastersync.DocumentCategoryDto@2844a1d5
+04:52:16 > click #proofOfIdentitybutton
+04:52:16   fired Button#proofOfIdentitybutton 'Scan'
+04:52:16 > click #captureBtn
+04:52:16   fired Button#captureBtn 'Capture'
+04:52:16 ALERT Success | Document Captured Successfully | X
+04:52:16 > sleep 1500
+04:52:16 SNAPSHOT 040-alert.png
+04:52:18 > click #saveBtn 20
+04:52:18   fired Button#saveBtn 'Save'
+04:52:18 > sleep 1500
+04:52:19 > click #next
+04:52:19   fired Button#next 'CONTINUE'
+04:52:19 > wait-node #individualBiometricsFACEButton 30
+04:52:19 > click #individualBiometricsFINGERPRINT_SLAB_LEFTButton
+04:52:19   fired Button#individualBiometricsFINGERPRINT_SLAB_LEFTButton ''
+04:52:20 > sleep 800
+04:52:20 > sleep 1
+04:52:20 > click #individualBiometricsScanBtn
+04:52:20   fired Button#individualBiometricsScanBtn 'Scan'
+04:52:21 > sleep 3500
+04:52:21 ALERT Success | Biometrics Captured Successfully | X
+04:52:21 SNAPSHOT 041-alert.png
+04:52:24 > click #individualBiometricsFINGERPRINT_SLAB_RIGHTButton
+04:52:24   fired Button#individualBiometricsFINGERPRINT_SLAB_RIGHTButton ''
+04:52:24 > sleep 800
+04:52:25 > click #individualBiometricsScanBtn
+04:52:25   fired Button#individualBiometricsScanBtn 'Scan'
+04:52:25 > sleep 3500
+04:52:26 ALERT Success | Biometrics Captured Successfully | X
+04:52:26 SNAPSHOT 042-alert.png
+04:52:29 > click #individualBiometricsFINGERPRINT_SLAB_THUMBSButton
+04:52:29   fired Button#individualBiometricsFINGERPRINT_SLAB_THUMBSButton ''
+04:52:29 > sleep 800
+04:52:30 > click #individualBiometricsScanBtn
+04:52:30   fired Button#individualBiometricsScanBtn 'Scan'
+04:52:30 > sleep 3500
+04:52:30 ALERT Success | Biometrics Captured Successfully | X
+04:52:30 SNAPSHOT 043-alert.png
+04:52:33 > if-node #individualBiometricsIRIS_DOUBLEButton click #individualBiometricsIRIS_DOUBLEButton
+04:52:33   fired Button#individualBiometricsIRIS_DOUBLEButton ''
+04:52:33 > sleep 800
+04:52:34 > click #individualBiometricsScanBtn
+04:52:34   fired Button#individualBiometricsScanBtn 'Scan'
+04:52:34 > sleep 3500
+04:52:35 ALERT Success | Biometrics Captured Successfully | X
+04:52:35 SNAPSHOT 044-alert.png
+04:52:38 > click #individualBiometricsFACEButton
+04:52:38   fired Button#individualBiometricsFACEButton ''
+04:52:38 > sleep 1000
+04:52:39 > source a-s2-print-still
+04:52:39   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\a-s2-print-still","fps":15.0,"loop"
+04:52:39 > click #individualBiometricsScanBtn
+04:52:39   fired Button#individualBiometricsScanBtn 'Scan'
+04:52:39 > expect (Face verification could not be completed|We could not verify face liveness) 60
+04:52:46 RESULT PASS text (Face verification could not be completed|We could not verify face liveness) 60
+04:52:46 > snap attack-print-still
+04:52:46 SNAPSHOT 045-attack-print-still.png
+04:52:46 SNAPSHOT 046-attack-print-still.png
+04:52:46 SNAPSHOT 047-attack-print-still.png
+04:52:46 > source a-s2-identical
+04:52:46   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\a-s2-identical","fps":15.0,"loop":t
+04:52:46 > click #retryButton
+04:52:46   fired Button#retryButton 'Retry'
+04:52:46 > sleep 1500
+04:52:48 > expect (Face verification could not be completed|We could not verify face liveness) 60
+04:52:48 RESULT PASS text (Face verification could not be completed|We could not verify face liveness) 60
+04:52:48 > snap attack-injected-still
+04:52:48 SNAPSHOT 048-attack-injected-still.png
+04:52:48 SNAPSHOT 049-attack-injected-still.png
+04:52:48 SNAPSHOT 050-attack-injected-still.png
+04:52:48 > source a-s2-screen-replay
+04:52:48   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\a-s2-screen-replay","fps":15.0,"loo
+04:52:48 > click #retryButton
+04:52:48   fired Button#retryButton 'Retry'
+04:52:48 > sleep 1500
+04:52:49 > expect after 3 attempts 60
+04:52:49 RESULT PASS text after 3 attempts 60
+04:52:49 > snap attack-max-attempts
+04:52:50 SNAPSHOT 051-attack-max-attempts.png
+04:52:50 SNAPSHOT 052-attack-max-attempts.png
+04:52:50 SNAPSHOT 053-attack-max-attempts.png
+04:52:50 > sql SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID IN ('REG-EVT-LV03','REG-EVT-LV06','REG-EVT-LV08','REG-EVT-LV09','REG-EVT-LV11') ORDER BY LOG_DTIMES DESC FETCH FIRST 8 ROWS ONLY
+04:52:50   ROW EVENT_ID=REG-EVT-LV11 | LOG_DESC={"workflow":"registration","sessionId":"f710c03c00509f881f96be62f697a3c2","attempts":"3","onMaxFailure":"SUPERVISOR_OVERRIDE"}
+04:52:50   ROW EVENT_ID=REG-EVT-LV08 | LOG_DESC={"workflow":"registration","sessionId":"f710c03c00509f881f96be62f697a3c2","reason":"PAD_SCORE"}
+04:52:50   ROW EVENT_ID=REG-EVT-LV08 | LOG_DESC={"workflow":"registration","sessionId":"42d2e57e11782bfa13baf2929a27a383","reason":"FROZEN"}
+04:52:50   ROW EVENT_ID=REG-EVT-LV06 | LOG_DESC={"workflow":"registration","sessionId":"9a69587226a156b69d7b8eae60172522","type":"BLINK","reason":"CHALLENGE_TIMEOUT"}
+04:52:50   ROW EVENT_ID=REG-EVT-LV03 | LOG_DESC={"workflow":"registration","sessionId":"9a69587226a156b69d7b8eae60172522","scoreBucket":"70-79","reason":"BELOW_THRESHOLD"}
+04:52:50   ROW EVENT_ID=REG-EVT-LV03 | LOG_DESC={"workflow":"registration","sessionId":"f2bfc93f5552bf822eea793b67b9487f","scoreBucket":"70-79","reason":"BELOW_THRESHOLD"}
+04:52:50   ROW EVENT_ID=REG-EVT-LV03 | LOG_DESC={"workflow":"onboard_auth","sessionId":"b5007c518ca223b661cdbe12f640dae3","scoreBucket":"90-100","reason":"POLICY"}
+04:52:50   ROW EVENT_ID=REG-EVT-LV08 | LOG_DESC={"workflow":"eod_auth","sessionId":"b2b65f8ffa4972d96e88eccc0b0cc54f","reason":"PAD_SCORE"}
+04:52:50   rows=8
+04:52:50 > click #cancelButton
+04:52:50   fired Button#cancelButton 'Close'
+04:52:50 > sleep 2000
+04:52:52 > click #homeImgView
+04:52:52   clicked ImageView#homeImgView
+04:52:52 > sleep 1500
+04:52:53 > if-node #confirm click #confirm
+04:52:53   fired Button#confirm 'Confirm'
+04:52:54 > sleep 2000
+04:52:56 > section 50-eod-supervisor.flow
+04:52:56 > label end of day: supervisor login, EOD approval with supervisor face, upload
+04:52:56 ==== end of day: supervisor login, EOD approval with supervisor face, upload
+04:52:56 > set USER supervisor1
+04:52:56 > set PASSWORD ********
+04:52:56 > set OPERATOR s3
+04:52:56 > include lib/face-login.flow
+04:52:56 > if-node #homeImgView click #homeImgView
+04:52:56   clicked ImageView#homeImgView
+04:52:56 > sleep 1500
+04:52:57 > if-node #confirm click #confirm
+04:52:57   skipped, #confirm not shown
+04:52:57 > if-node #homeImgView menu Logout
+04:52:57   menu item Logout
+04:52:57 > wait-node #userId 60
+04:52:57 > source s3-main
+04:52:57   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:52:57 > follow s3
+04:52:57 > login supervisor1 ********
+04:52:58 > expect-live 120
+04:53 RESULT PASS live face passed on attempt 1
+04:53 > wait Operational Tasks 90
+04:53 > follow off
+04:53 > snap home-supervisor1
+04:53 SNAPSHOT 054-home-supervisor1.png
+04:53 SNAPSHOT 055-home-supervisor1.png
+04:53 SNAPSHOT 056-home-supervisor1.png
+04:53 > set ATTACK a-s2-screen-replay
+04:53 > include lib/eod-approve.flow
+04:53 > mark
+04:53 > click #homeImgView
+04:53 STATE [Face verification | Good, face captured successfully | Attempt 1 of 3 | Cancel] [Operational Tasks | Last Sync - on | Wednesday 30 Sep 04:49 AM | Synchronize Data | Download Pre-Registration Data | Last Downloaded - on Wednesday 30 Sep 03:43 AM | Update Operator Biometrics | Application Upload | Center Remap sync | Check Updates | Registration Tasks | New Registration | Update UIN | L
+04:53   clicked ImageView#homeImgView
+04:53 > sleep 2000
+04:53 STATE [Operational Tasks | Last Sync - on | Wednesday 30 Sep 04:49 AM | Synchronize Data | Download Pre-Registration Data | Last Downloaded - on Wednesday 30 Sep 03:43 AM | Update Operator Biometrics | Application Upload | Center Remap sync | Check Updates | Registration Tasks | New Registration | Update UIN | Lost UIN | Biometric correction | End of Day Processes | 2 Applications | Pending 
+04:53:02 > click #eodApprovalPane
+04:53:02   clicked GridPane#eodApprovalPane
+04:53:02 > sleep 4000
+04:53:06 > snap eod-pending
+04:53:06 SNAPSHOT 057-eod-pending.png
+04:53:06 SNAPSHOT 058-eod-pending.png
+04:53:06 > each-row #table click text=Approve
+04:53:06   row 1
+04:53:06   fired ToggleButton#approvalBtn 'Approve'
+04:53:07   row 0
+04:53:07   fired ToggleButton#approvalBtn 'Approve'
+04:53:07 > sleep 1500
+04:53:08 > click text=Authenticate
+04:53:08   fired ToggleButton#authenticateBtn 'Authenticate'
+04:53:08 > sleep 3000
+04:53:11 > fill #username supervisor1
+04:53:11 > fill #password ********
+04:53:11 > click #submitbtn
+04:53:11   fired Button#submitbtn 'Submit'
+04:53:12 > wait-node #faceScanBtn 30
+04:53:12 > snap eod-auth-face
+04:53:12 SNAPSHOT 059-eod-auth-face.png
+04:53:12 SNAPSHOT 060-eod-auth-face.png
+04:53:12 SNAPSHOT 061-eod-auth-face.png
+04:53:12 > source a-s2-screen-replay
+04:53:12   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\a-s2-screen-replay","fps":15.0,"loo
+04:53:12 > click #faceScanBtn
+04:53:12   fired Button#faceScanBtn 'Scan'
+04:53:12 > expect (Face verification could not be completed|We could not verify face liveness) 60
+04:53:13 RESULT PASS text (Face verification could not be completed|We could not verify face liveness) 60
+04:53:13 > snap eod-attack-refused
+04:53:13 SNAPSHOT 062-eod-attack-refused.png
+04:53:13 SNAPSHOT 063-eod-attack-refused.png
+04:53:13 SNAPSHOT 064-eod-attack-refused.png
+04:53:13 SNAPSHOT 065-eod-attack-refused.png
+04:53:13 > source s3-main
+04:53:13   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:53:13 > follow s3
+04:53:13 > click #retryButton
+04:53:13   fired Button#retryButton 'Retry'
+04:53:13 > expect-live 120
+04:53:14 RESULT PASS live face passed on attempt 1
+04:53:14 > follow off
+04:53:14 > expect-alert Authentication successful 30
+04:53:14 ALERT Success | Biometrics Captured Successfully | X
+04:53:14 SNAPSHOT 066-alert.png
+04:53:14 RESULT PASS alert Authentication successful 30
+04:53:14 > sleep 3000
+04:53:15 ALERT Success | Authentication successful. | X
+04:53:15 SNAPSHOT 067-alert.png
+04:53:17 > snap eod-approved
+04:53:17 SNAPSHOT 068-eod-approved.png
+04:53:17 SNAPSHOT 069-eod-approved.png
+04:53:17 > include lib/upload.flow
+04:53:17 > click #homeImgView
+04:53:17   clicked ImageView#homeImgView
+04:53:18 > sleep 2000
+04:53:20 > click #uploadPacketPane
+04:53:20   clicked GridPane#uploadPacketPane
+04:53:20 > sleep 4000
+04:53:24 > snap upload-list
+04:53:24 SNAPSHOT 070-upload-list.png
+04:53:24 SNAPSHOT 071-upload-list.png
+04:53:24 > check #selectAllCheckBox true
+04:53:24 > click #uploadBtn
+04:53:24   fired Button#uploadBtn 'Upload'
+04:53:24 > sleep 12000
+04:53:36 > snap upload-done
+04:53:36 SNAPSHOT 072-upload-done.png
+04:53:36 SNAPSHOT 073-upload-done.png
+04:53:36 SNAPSHOT 074-upload-done.png
+04:53:36 > sql SELECT ID, CLIENT_STATUS_CODE, SERVER_STATUS_CODE, FILE_UPLOAD_STATUS FROM REG.REGISTRATION ORDER BY CR_DTIMES DESC FETCH FIRST 5 ROWS ONLY
+04:53:36   ROW ID=10001100010000520260929232100 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=Packet has reached Packet Receiver | FILE_UPLOAD_STATUS=S
+04:53:36   ROW ID=10001100010000420260929232013 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=Packet has reached Packet Receiver | FILE_UPLOAD_STATUS=S
+04:53:36   ROW ID=10001100010000320260929213659 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=Packet has reached Packet Receiver | FILE_UPLOAD_STATUS=S
+04:53:36   ROW ID=10001100010000220260929210239 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=Packet has reached Packet Receiver | FILE_UPLOAD_STATUS=S
+04:53:36   ROW ID=10001100010000120260929204719 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=Packet has reached Packet Receiver | FILE_UPLOAD_STATUS=S
+04:53:36   rows=5
+04:53:36 > expect-no-rows SELECT ID FROM REG.REGISTRATION WHERE CLIENT_STATUS_CODE = 'APPROVED'
+04:53:36   rows=0
+04:53:36 RESULT PASS sql no rows: SELECT ID FROM REG.REGISTRATION WHERE CLIENT_STATUS_CODE = 'APPROVED'
+04:53:36 > section 60-config-sync.flow
+04:53:36 > label config by sync: policy.registration ALWAYS_ACTIVE, synchronise
+04:53:36 ==== config by sync: policy.registration ALWAYS_ACTIVE, synchronise
+04:53:36 > sql SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration'
+04:53:36   ROW NAME=mosip.registration.liveness.policy.registration | VAL=PASSIVE_THEN_ACTIVE
+04:53:36   rows=1
+04:53:36 > http PUT http://127.0.0.1:8080/admin/config {"mosip.registration.liveness.policy.registration":"ALWAYS_ACTIVE"}
+04:53:36   HTTP PUT http://127.0.0.1:8080/admin/config -> 200 {"mosip.registration.liveness.active.challenge_types":"BLINK,SMILE","mosip.registration.liveness.policy.registration":"ALWAYS_ACTIVE","mosip.registration.operat
+04:53:36 > click #homeImgView
+04:53:36   clicked ImageView#homeImgView
+04:53:36 > sleep 1500
+04:53:38 > click #syncDataPane
+04:53:38   clicked GridPane#syncDataPane
+04:53:38 > sleep 20000
+04:53:41 ALERT Success | Sync successful | X
+04:53:41 SNAPSHOT 075-alert.png
+04:53:58 > expect-sql 1 SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'ALWAYS_ACTIVE'
+04:53:58   ROW NAME=mosip.registration.liveness.policy.registration | VAL=ALWAYS_ACTIVE
+04:53:58   rows=1
+04:53:58 RESULT PASS sql rows>=1: SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'ALWAYS_ACTIVE'
+04:53:58 > label config by sync: rigid-motion print now refused, live resident answers the challenges
+04:53:58 ==== config by sync: rigid-motion print now refused, live resident answers the challenges
+04:53:58 > set RESIDENT_NAME Esi Resident
+04:53:58 > include lib/registration-start.flow
+04:53:58 > click #homeImgView
+04:53:58   clicked ImageView#homeImgView
+04:53:58 > sleep 1500
+04:54 > if-node #confirm click #confirm
+04:54   skipped, #confirm not shown
+04:54 > click #NEW
+04:54   clicked GridPane#NEW
+04:54 > check #eng true
+04:54 > click #submit
+04:54   fired Button#submit 'SUBMIT'
+04:54 > check #consent true
+04:54 STATE [Files | Status | 10001100010000420260929232013 | PUSHED | 10001100010000520260929232100 | PUSHED] [New Registration | English | I have read and accept terms and conditions to share my PII * | Notification Langauge * | عربي | English | français | Consent | Demographic Details | Document Upload | Biometric Details | Preview | Authentication | CONTINUE | Test Supervisor One | Center
+04:54 > click #preferredLangeng
+04:54   fired Button#preferredLangeng 'English'
+04:54:01 > click #next
+04:54:01   fired Button#next 'CONTINUE'
+04:54:01 > fill #fullNameeng Esi Resident
+04:54:01 > fill #dateOfBirthddTextField 15
+04:54:01 > fill #dateOfBirthmmTextField 06
+04:54:01 > fill #dateOfBirthyyyyTextField 1990
+04:54:01 > click #genderMLE
+04:54:01   fired Button#genderMLE 'Male'
+04:54:01 > click #residenceStatusNFR
+04:54:01   fired Button#residenceStatusNFR 'Non-Foreigner'
+04:54:01 > fill #addressLine1eng 12 Main Street
+04:54:01 > fill #addressLine2eng Block A
+04:54:01 > fill #addressLine3eng Near Park
+04:54:01 > select #region 0
+04:54:01   selected GenericDto(code=RSK, name=Rabat Sale Kenitra, langCode=eng)
+04:54:01 > sleep 600
+04:54:02 > select #province 0
+04:54:02   selected GenericDto(code=KTA, name=Kenitra, langCode=eng)
+04:54:02 > sleep 600
+04:54:03 > select #city 0
+04:54:03   selected GenericDto(code=KNT, name=Kenitra, langCode=eng)
+04:54:03 > sleep 600
+04:54:03 > select #zone 0
+04:54:03   selected GenericDto(code=BNMR, name=Ben Mansour, langCode=eng)
+04:54:03 > sleep 600
+04:54:04 > select #postalCode 0
+04:54:04   selected GenericDto(code=14022, name=14022, langCode=eng)
+04:54:04 > fill #phoneeng 9876543210
+04:54:04 > fill #emaileng demo.resident@example.org
+04:54:04 > sleep 500
+04:54:05 > click #next
+04:54:05   fired Button#next 'CONTINUE'
+04:54:05 > select #proofOfAddress 0
+04:54:05   selected io.mosip.registration.dto.mastersync.DocumentCategoryDto@57fab428
+04:54:05 > click #proofOfAddressbutton
+04:54:05   fired Button#proofOfAddressbutton 'Scan'
+04:54:05 > click #captureBtn
+04:54:05   fired Button#captureBtn 'Capture'
+04:54:05 > sleep 1500
+04:54:05 ALERT Success | Document Captured Successfully | X
+04:54:05 SNAPSHOT 076-alert.png
+04:54:07 > click #saveBtn 20
+04:54:07   fired Button#saveBtn 'Save'
+04:54:07 > sleep 1500
+04:54:08 > select #proofOfIdentity 0
+04:54:08   selected io.mosip.registration.dto.mastersync.DocumentCategoryDto@7b5878b9
+04:54:08 > click #proofOfIdentitybutton
+04:54:08   fired Button#proofOfIdentitybutton 'Scan'
+04:54:08 > click #captureBtn
+04:54:08   fired Button#captureBtn 'Capture'
+04:54:09 > sleep 1500
+04:54:09 ALERT Success | Document Captured Successfully | X
+04:54:09 SNAPSHOT 077-alert.png
+04:54:10 > click #saveBtn 20
+04:54:10   fired Button#saveBtn 'Save'
+04:54:10 > sleep 1500
+04:54:12 > click #next
+04:54:12   fired Button#next 'CONTINUE'
+04:54:12 > wait-node #individualBiometricsFACEButton 30
+04:54:12 > click #individualBiometricsFINGERPRINT_SLAB_LEFTButton
+04:54:12   fired Button#individualBiometricsFINGERPRINT_SLAB_LEFTButton ''
+04:54:12 > sleep 800
+04:54:13 > sleep 1
+04:54:13 > click #individualBiometricsScanBtn
+04:54:13   fired Button#individualBiometricsScanBtn 'Scan'
+04:54:13 > sleep 3500
+04:54:13 ALERT Success | Biometrics Captured Successfully | X
+04:54:13 SNAPSHOT 078-alert.png
+04:54:17 > click #individualBiometricsFINGERPRINT_SLAB_RIGHTButton
+04:54:17   fired Button#individualBiometricsFINGERPRINT_SLAB_RIGHTButton ''
+04:54:17 > sleep 800
+04:54:17 > click #individualBiometricsScanBtn
+04:54:17   fired Button#individualBiometricsScanBtn 'Scan'
+04:54:18 > sleep 3500
+04:54:18 ALERT Success | Biometrics Captured Successfully | X
+04:54:18 SNAPSHOT 079-alert.png
+04:54:21 > click #individualBiometricsFINGERPRINT_SLAB_THUMBSButton
+04:54:21   fired Button#individualBiometricsFINGERPRINT_SLAB_THUMBSButton ''
+04:54:21 > sleep 800
+04:54:22 > click #individualBiometricsScanBtn
+04:54:22   fired Button#individualBiometricsScanBtn 'Scan'
+04:54:22 > sleep 3500
+04:54:23 ALERT Success | Biometrics Captured Successfully | X
+04:54:23 SNAPSHOT 080-alert.png
+04:54:26 > if-node #individualBiometricsIRIS_DOUBLEButton click #individualBiometricsIRIS_DOUBLEButton
+04:54:26   fired Button#individualBiometricsIRIS_DOUBLEButton ''
+04:54:26 > sleep 800
+04:54:27 > click #individualBiometricsScanBtn
+04:54:27   fired Button#individualBiometricsScanBtn 'Scan'
+04:54:27 > sleep 3500
+04:54:27 ALERT Success | Biometrics Captured Successfully | X
+04:54:27 SNAPSHOT 081-alert.png
+04:54:30 > click #individualBiometricsFACEButton
+04:54:30   fired Button#individualBiometricsFACEButton ''
+04:54:31 > sleep 1000
+04:54:32 > source a-s2-print-affine
+04:54:32   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\a-s2-print-affine","fps":15.0,"loop
+04:54:32 > click #individualBiometricsScanBtn
+04:54:32   fired Button#individualBiometricsScanBtn 'Scan'
+04:54:32 > expect Please (blink|smile) 30
+04:54:33 RESULT PASS text Please (blink|smile) 30
+04:54:33 > expect (Face verification could not be completed|We could not verify face liveness) 60
+04:54:38 RESULT PASS text (Face verification could not be completed|We could not verify face liveness) 60
+04:54:38 > snap config-print-refused
+04:54:38 SNAPSHOT 082-config-print-refused.png
+04:54:38 SNAPSHOT 083-config-print-refused.png
+04:54:38 SNAPSHOT 084-config-print-refused.png
+04:54:38 SNAPSHOT 085-config-print-refused.png
+04:54:38 > source s3-main
+04:54:38   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:54:38 > follow s3
+04:54:38 > click #retryButton
+04:54:38   fired Button#retryButton 'Retry'
+04:54:39 > expect-live 120
+04:54:41   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-blink","fps":15.0,"loop":true,"f
+04:54:42   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:54:45   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-smile","fps":15.0,"loop":true,"f
+04:54:46   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:54:47 ALERT Success | Biometrics Captured Successfully | X
+04:54:47 SNAPSHOT 086-alert.png
+04:54:47 RESULT PASS live face passed on attempt 1
+04:54:47 > follow off
+04:54:47 > expect-sql 1 SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV15' AND LOG_DESC LIKE '%policy.registration%'
+04:54:47   ROW EVENT_ID=REG-EVT-LV15 | LOG_DESC={"workflow":"registration","sessionId":"","changed":"mosip.registration.liveness.policy.registration"}
+04:54:47   rows=1
+04:54:47 RESULT PASS sql rows>=1: SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV15' AND LOG_DESC LIKE '%policy.registration%'
+04:54:47 > sleep 3000
+04:54:50 > snap config-resident-active
+04:54:50 SNAPSHOT 087-config-resident-active.png
+04:54:50 SNAPSHOT 088-config-resident-active.png
+04:54:50 SNAPSHOT 089-config-resident-active.png
+04:54:50 > set PASSWORD ********
+04:54:50 > set OPERATOR s3
+04:54:50 > include lib/registration-finish.flow
+04:54:50 > click #next
+04:54:50   fired Button#next 'CONTINUE'
+04:54:50 > wait-node #PREVIEW 30
+04:54:51 > sleep 2000
+04:54:53 > snap preview
+04:54:53 SNAPSHOT 090-preview.png
+04:54:53 SNAPSHOT 091-preview.png
+04:54:53 SNAPSHOT 092-preview.png
+04:54:53 > click #next
+04:54:53   fired Button#next 'CONTINUE'
+04:54:53 > wait-node #password 30
+04:54:53 > fill #password ********
+04:54:53 > source s3-main
+04:54:53   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:54:53 > follow s3
+04:54:53 > click #authenticate
+04:54:53   fired Button#authenticate 'Authenticate'
+04:54:53 > wait-node #faceScanButton 30
+04:54:53 > click #faceScanButton
+04:54:53   fired Button#faceScanButton 'Scan'
+04:54:54 > expect-live 120
+04:54:55 RESULT PASS live face passed on attempt 1
+04:54:55 > follow off
+04:54:55 > sleep 4000
+04:54:55 ALERT Success | Biometrics Captured Successfully | X
+04:54:55 SNAPSHOT 093-alert.png
+04:54:59 > if-node #username include reviewer-auth.flow
+04:54:59   skipped, #username not shown
+04:54:59 > expect Registration Acknowledgement 60
+04:54:59 RESULT PASS text Registration Acknowledgement 60
+04:54:59 > sql SELECT ID, CLIENT_STATUS_CODE, CR_DTIMES FROM REG.REGISTRATION ORDER BY CR_DTIMES DESC FETCH FIRST 1 ROWS ONLY
+04:54:59   ROW ID=10001100010000720260929232400 | CLIENT_STATUS_CODE=REGISTERED | CR_DTIMES=2026-09-29 23:24:55.7393896
+04:54:59   rows=1
+04:54:59 > label config by sync: key removed, synchronised back
+04:54:59 ==== config by sync: key removed, synchronised back
+04:54:59 > http DELETE http://127.0.0.1:8080/admin/config/mosip.registration.liveness.policy.registration
+04:54:59   HTTP DELETE http://127.0.0.1:8080/admin/config/mosip.registration.liveness.policy.registration -> 204 
+04:54:59 > click #homeImgView
+04:54:59   clicked ImageView#homeImgView
+04:54:59 > sleep 1500
+04:55 > click #syncDataPane
+04:55   clicked GridPane#syncDataPane
+04:55 > sleep 20000
+04:55:03 ALERT Success | Sync successful | X
+04:55:03 SNAPSHOT 094-alert.png
+04:55:20 > expect-sql 1 SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'PASSIVE_THEN_ACTIVE'
+04:55:20   ROW NAME=mosip.registration.liveness.policy.registration | VAL=PASSIVE_THEN_ACTIVE
+04:55:20   rows=1
+04:55:20 RESULT PASS sql rows>=1: SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'PASSIVE_THEN_ACTIVE'
+04:55:20 > section 70-device-l1.flow
+04:55:20 > label L1 device: FTM-signed device, rescan, operator face capture with liveness
+04:55:20 ==== L1 device: FTM-signed device, rescan, operator face capture with liveness
+04:55:20 > mds /admin/certification {"type":"Face","certification":"L1"}
+04:55:20   MDS /admin/certification -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:55:20 > click #settingsIconHBox
+04:55:20   clicked ImageView
+04:55:21 > sleep 2500
+04:55:23 > click text=Device Settings
+04:55:23   clicked HBox
+04:55:23 > sleep 3000
+04:55:26 > click text=Scan Now
+04:55:26   fired Button 'Scan Now'
+04:55:26 > sleep 3000
+04:55:29 > click #homeImgView 90
+04:56:07   clicked ImageView#homeImgView
+04:56:08 > sleep 2000
+04:56:10 > click #updateOperatorBiometricsPane
+04:56:10   clicked GridPane#updateOperatorBiometricsPane
+04:56:10 > sleep 3000
+04:56:13 > source s3-main
+04:56:13   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:56:13 > follow s3
+04:56:13 > click #FACE
+04:56:13   clicked VBox#FACE
+04:56:13 > sleep 800
+04:56:14 > click #scanBtn
+04:56:14   fired Button#scanBtn 'Scan'
+04:56:14 > expect-live 90
+04:56:15 RESULT PASS live face passed on attempt 1
+04:56:15 > follow off
+04:56:15 > snap l1-device-face
+04:56:15 SNAPSHOT 095-l1-device-face.png
+04:56:15 SNAPSHOT 096-l1-device-face.png
+04:56:15 SNAPSHOT 097-l1-device-face.png
+04:56:15 SNAPSHOT 098-l1-device-face.png
+04:56:15 SNAPSHOT 099-l1-device-face.png
+04:56:15 > expect-sql 1 SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV01' AND LOG_DESC LIKE '%"certification":"L1"%'
+04:56:15 ALERT Success | Biometrics Captured Successfully | X
+04:56:15   ROW EVENT_ID=REG-EVT-LV01 | LOG_DESC={"workflow":"onboard_auth","sessionId":"942a4c04c6e08c2bf5ba5c8eb1f9dcd3","attempt":"1","deviceSerial":"2345678901","certification":"L1","engine":"mosip-onnx-default@1.0.0"}
+04:56:15   ROW EVENT_ID=REG-EVT-LV01 | LOG_DESC={"workflow":"onboard_auth","sessionId":"0d49d00055bae4bf7d1345000471c906","attempt":"1","deviceSerial":"2345678901","certification":"L1","engine":"mosip-onnx-default@1.0.0"}
+04:56:15   rows=2
+04:56:15 RESULT PASS sql rows>=1: SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV01' AND LOG_DESC LIKE '%"certification":"L1"%'
+04:56:15 > mds /admin/certification {"type":"Face","certification":"L0"}
+04:56:15   MDS /admin/certification -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:56:15 > click #homeImgView
+04:56:15 SNAPSHOT 100-alert.png
+04:56:15   clicked ImageView#homeImgView
+04:56:15 > sleep 1500
+04:56:17 > if-node #confirm click #confirm
+04:56:17   fired Button#confirm 'Confirm'
+04:56:17 > sleep 1500
+04:56:18 > click #settingsIconHBox
+04:56:18   clicked ImageView
+04:56:18 > sleep 2500
+04:56:21 > click text=Device Settings
+04:56:21   clicked HBox
+04:56:21 > sleep 3000
+04:56:24 > click text=Scan Now
+04:56:24   fired Button 'Scan Now'
+04:56:24 > sleep 3000
+04:56:27 > click #homeImgView 90
+04:57:05   clicked ImageView#homeImgView
+04:57:05 > sleep 2000
+04:57:07 > section 80-offline.flow
+04:57:07 > label offline: network cut; login, registration and EOD run locally
+04:57:07 ==== offline: network cut; login, registration and EOD run locally
+04:57:07 > network off
+04:57:07   network cut (server calls fail)
+04:57:07 > set USER officer1
+04:57:07 > set PASSWORD ********
+04:57:07 > set OPERATOR s3
+04:57:07 > include lib/face-login.flow
+04:57:07 > if-node #homeImgView click #homeImgView
+04:57:07   clicked ImageView#homeImgView
+04:57:07 > sleep 1500
+04:57:09 > if-node #confirm click #confirm
+04:57:09   skipped, #confirm not shown
+04:57:09 > if-node #homeImgView menu Logout
+04:57:09   menu item Logout
+04:57:09 > wait-node #userId 60
+04:57:09 > source s3-main
+04:57:09   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:57:09 > follow s3
+04:57:09 > login officer1 ********
+04:57:13 > expect-live 120
+04:57:15 RESULT PASS live face passed on attempt 1
+04:57:15 > wait Operational Tasks 90
+04:57:15 > follow off
+04:57:15 > snap home-officer1
+04:57:15 SNAPSHOT 101-home-officer1.png
+04:57:15 SNAPSHOT 102-home-officer1.png
+04:57:15 SNAPSHOT 103-home-officer1.png
+04:57:15 SNAPSHOT 104-home-officer1.png
+04:57:15 > set RESIDENT_NAME Dara Offline
+04:57:15 > include lib/registration-start.flow
+04:57:15 > click #homeImgView
+04:57:15   clicked ImageView#homeImgView
+04:57:15 > sleep 1500
+04:57:17 > if-node #confirm click #confirm
+04:57:17   skipped, #confirm not shown
+04:57:17 > click #NEW
+04:57:17   clicked GridPane#NEW
+04:57:17 > check #eng true
+04:57:17 > click #submit
+04:57:17   fired Button#submit 'SUBMIT'
+04:57:17 > check #consent true
+04:57:17 > click #preferredLangeng
+04:57:17   fired Button#preferredLangeng 'English'
+04:57:17 > click #next
+04:57:17   fired Button#next 'CONTINUE'
+04:57:18 > fill #fullNameeng Dara Offline
+04:57:18 > fill #dateOfBirthddTextField 15
+04:57:18 > fill #dateOfBirthmmTextField 06
+04:57:18 > fill #dateOfBirthyyyyTextField 1990
+04:57:18 > click #genderMLE
+04:57:18   fired Button#genderMLE 'Male'
+04:57:18 > click #residenceStatusNFR
+04:57:18   fired Button#residenceStatusNFR 'Non-Foreigner'
+04:57:18 > fill #addressLine1eng 12 Main Street
+04:57:18 > fill #addressLine2eng Block A
+04:57:18 > fill #addressLine3eng Near Park
+04:57:18 > select #region 0
+04:57:18   selected GenericDto(code=RSK, name=Rabat Sale Kenitra, langCode=eng)
+04:57:18 > sleep 600
+04:57:19 > select #province 0
+04:57:19   selected GenericDto(code=KTA, name=Kenitra, langCode=eng)
+04:57:19 > sleep 600
+04:57:20 > select #city 0
+04:57:20   selected GenericDto(code=KNT, name=Kenitra, langCode=eng)
+04:57:20 > sleep 600
+04:57:20 > select #zone 0
+04:57:20   selected GenericDto(code=BNMR, name=Ben Mansour, langCode=eng)
+04:57:20 > sleep 600
+04:57:21 > select #postalCode 0
+04:57:21   selected GenericDto(code=14022, name=14022, langCode=eng)
+04:57:21 > fill #phoneeng 9876543210
+04:57:21 > fill #emaileng demo.resident@example.org
+04:57:21 > sleep 500
+04:57:22 > click #next
+04:57:22   fired Button#next 'CONTINUE'
+04:57:22 > select #proofOfAddress 0
+04:57:22   selected io.mosip.registration.dto.mastersync.DocumentCategoryDto@5a48d4a1
+04:57:22 > click #proofOfAddressbutton
+04:57:22   fired Button#proofOfAddressbutton 'Scan'
+04:57:22 > click #captureBtn
+04:57:22   fired Button#captureBtn 'Capture'
+04:57:22 > sleep 1500
+04:57:22 ALERT Success | Document Captured Successfully | X
+04:57:22 SNAPSHOT 105-alert.png
+04:57:24 > click #saveBtn 20
+04:57:24   fired Button#saveBtn 'Save'
+04:57:24 > sleep 1500
+04:57:25 > select #proofOfIdentity 0
+04:57:25   selected io.mosip.registration.dto.mastersync.DocumentCategoryDto@50a3090a
+04:57:25 > click #proofOfIdentitybutton
+04:57:25   fired Button#proofOfIdentitybutton 'Scan'
+04:57:25 > click #captureBtn
+04:57:25   fired Button#captureBtn 'Capture'
+04:57:26 > sleep 1500
+04:57:26 ALERT Success | Document Captured Successfully | X
+04:57:26 SNAPSHOT 106-alert.png
+04:57:27 > click #saveBtn 20
+04:57:27   fired Button#saveBtn 'Save'
+04:57:27 > sleep 1500
+04:57:29 > click #next
+04:57:29   fired Button#next 'CONTINUE'
+04:57:29 > wait-node #individualBiometricsFACEButton 30
+04:57:29 > click #individualBiometricsFINGERPRINT_SLAB_LEFTButton
+04:57:29   fired Button#individualBiometricsFINGERPRINT_SLAB_LEFTButton ''
+04:57:29 > sleep 800
+04:57:30 > sleep 1
+04:57:30 > click #individualBiometricsScanBtn
+04:57:30   fired Button#individualBiometricsScanBtn 'Scan'
+04:57:30 > sleep 3500
+04:57:30 ALERT Success | Biometrics Captured Successfully | X
+04:57:30 SNAPSHOT 107-alert.png
+04:57:34 > click #individualBiometricsFINGERPRINT_SLAB_RIGHTButton
+04:57:34   fired Button#individualBiometricsFINGERPRINT_SLAB_RIGHTButton ''
+04:57:34 > sleep 800
+04:57:34 > click #individualBiometricsScanBtn
+04:57:34   fired Button#individualBiometricsScanBtn 'Scan'
+04:57:35 > sleep 3500
+04:57:35 ALERT Success | Biometrics Captured Successfully | X
+04:57:35 SNAPSHOT 108-alert.png
+04:57:38 > click #individualBiometricsFINGERPRINT_SLAB_THUMBSButton
+04:57:38   fired Button#individualBiometricsFINGERPRINT_SLAB_THUMBSButton ''
+04:57:38 > sleep 800
+04:57:39 > click #individualBiometricsScanBtn
+04:57:39   fired Button#individualBiometricsScanBtn 'Scan'
+04:57:39 > sleep 3500
+04:57:40 ALERT Success | Biometrics Captured Successfully | X
+04:57:40 SNAPSHOT 109-alert.png
+04:57:43 > if-node #individualBiometricsIRIS_DOUBLEButton click #individualBiometricsIRIS_DOUBLEButton
+04:57:43   fired Button#individualBiometricsIRIS_DOUBLEButton ''
+04:57:43 > sleep 800
+04:57:44 > click #individualBiometricsScanBtn
+04:57:44   fired Button#individualBiometricsScanBtn 'Scan'
+04:57:44 > sleep 3500
+04:57:44 ALERT Success | Biometrics Captured Successfully | X
+04:57:44 SNAPSHOT 110-alert.png
+04:57:47 > click #individualBiometricsFACEButton
+04:57:47   fired Button#individualBiometricsFACEButton ''
+04:57:47 > sleep 1000
+04:57:48 > source s2-main
+04:57:49   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s2-main","fps":15.0,"loop":true,"fr
+04:57:49 > click #individualBiometricsScanBtn
+04:57:49   fired Button#individualBiometricsScanBtn 'Scan'
+04:57:49 > expect Good, face captured successfully 60
+04:57:49 RESULT PASS text Good, face captured successfully 60
+04:57:49 > sleep 3000
+04:57:49 ALERT Success | Biometrics Captured Successfully | X
+04:57:49 SNAPSHOT 111-alert.png
+04:57:52 > include lib/registration-finish.flow
+04:57:52 > click #next
+04:57:52   fired Button#next 'CONTINUE'
+04:57:53 > wait-node #PREVIEW 30
+04:57:53 > sleep 2000
+04:57:55 > snap preview
+04:57:55 SNAPSHOT 112-preview.png
+04:57:55 SNAPSHOT 113-preview.png
+04:57:55 SNAPSHOT 114-preview.png
+04:57:55 > click #next
+04:57:55   fired Button#next 'CONTINUE'
+04:57:55 > wait-node #password 30
+04:57:55 > fill #password ********
+04:57:55 > source s3-main
+04:57:55   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:57:55 > follow s3
+04:57:55 > click #authenticate
+04:57:55   fired Button#authenticate 'Authenticate'
+04:57:55 > wait-node #faceScanButton 30
+04:57:59 > click #faceScanButton
+04:57:59   fired Button#faceScanButton 'Scan'
+04:58 > expect-live 120
+04:58 STATE [Face verification | Checking face liveness… | Attempt 1 of 3 | Cancel] [Files | Status | 10001100010000420260929232013 | PUSHED | 10001100010000520260929232100 | PUSHED] [New Registration | Authentication using Photo | officer1 | Bring your face near the camera | Scan | Attempts | _ | Consent | Demographic Details | Document Upload | Biometric Details | Preview | Authentication | Au
+04:58 STATE [Face verification | Hold still | Attempt 1 of 3 | Cancel] [Files | Status | 10001100010000420260929232013 | PUSHED | 10001100010000520260929232100 | PUSHED] [New Registration | Authentication using Photo | officer1 | Bring your face near the camera | Scan | Attempts | _ | Consent | Demographic Details | Document Upload | Biometric Details | Preview | Authentication | Authenticate | Te
+04:58 RESULT PASS live face passed on attempt 1
+04:58 > follow off
+04:58 > sleep 4000
+04:58:01 ALERT Success | Biometrics Captured Successfully | X
+04:58:01 SNAPSHOT 115-alert.png
+04:58:04 > if-node #username include reviewer-auth.flow
+04:58:04   skipped, #username not shown
+04:58:04 > expect Registration Acknowledgement 60
+04:58:04 RESULT PASS text Registration Acknowledgement 60
+04:58:04 > sql SELECT ID, CLIENT_STATUS_CODE, CR_DTIMES FROM REG.REGISTRATION ORDER BY CR_DTIMES DESC FETCH FIRST 1 ROWS ONLY
+04:58:04   ROW ID=10001100010000820260929232717 | CLIENT_STATUS_CODE=REGISTERED | CR_DTIMES=2026-09-29 23:28:01.6703539
+04:58:04   rows=1
+04:58:04 > set USER supervisor1
+04:58:04 > set PASSWORD ********
+04:58:04 > set OPERATOR s3
+04:58:04 > include lib/face-login.flow
+04:58:04 > if-node #homeImgView click #homeImgView
+04:58:04   clicked ImageView#homeImgView
+04:58:04 > sleep 1500
+04:58:06 > if-node #confirm click #confirm
+04:58:06   skipped, #confirm not shown
+04:58:06 > if-node #homeImgView menu Logout
+04:58:06   menu item Logout
+04:58:06 > wait-node #userId 60
+04:58:06 > source s3-main
+04:58:06   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:58:06 > follow s3
+04:58:06 > login supervisor1 ********
+04:58:10 > expect-live 120
+04:58:12 RESULT PASS live face passed on attempt 1
+04:58:12 > wait Operational Tasks 90
+04:58:12 > follow off
+04:58:12 > snap home-supervisor1
+04:58:12 SNAPSHOT 116-home-supervisor1.png
+04:58:12 SNAPSHOT 117-home-supervisor1.png
+04:58:12 SNAPSHOT 118-home-supervisor1.png
+04:58:12 SNAPSHOT 119-home-supervisor1.png
+04:58:12 > set ATTACK a-s3-screen-replay
+04:58:12 > include lib/eod-approve.flow
+04:58:12 > mark
+04:58:12 > click #homeImgView
+04:58:12   clicked ImageView#homeImgView
+04:58:12 > sleep 2000
+04:58:14 > click #eodApprovalPane
+04:58:14   clicked GridPane#eodApprovalPane
+04:58:14 > sleep 4000
+04:58:18 > snap eod-pending
+04:58:18 SNAPSHOT 120-eod-pending.png
+04:58:19 SNAPSHOT 121-eod-pending.png
+04:58:19 SNAPSHOT 122-eod-pending.png
+04:58:19 > each-row #table click text=Approve
+04:58:19   row 1
+04:58:19   fired ToggleButton#approvalBtn 'Approve'
+04:58:19   row 0
+04:58:19   fired ToggleButton#approvalBtn 'Approve'
+04:58:19 > sleep 1500
+04:58:20 > click text=Authenticate
+04:58:20   fired ToggleButton#authenticateBtn 'Authenticate'
+04:58:20 > sleep 3000
+04:58:23 > fill #username supervisor1
+04:58:23 > fill #password ********
+04:58:24 > click #submitbtn
+04:58:24   fired Button#submitbtn 'Submit'
+04:58:24 > wait-node #faceScanBtn 30
+04:58:28 > snap eod-auth-face
+04:58:28 SNAPSHOT 123-eod-auth-face.png
+04:58:28 SNAPSHOT 124-eod-auth-face.png
+04:58:28 SNAPSHOT 125-eod-auth-face.png
+04:58:28 SNAPSHOT 126-eod-auth-face.png
+04:58:28 > source a-s3-screen-replay
+04:58:28   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\a-s3-screen-replay","fps":15.0,"loo
+04:58:28 > click #faceScanBtn
+04:58:28   fired Button#faceScanBtn 'Scan'
+04:58:28 > expect (Face verification could not be completed|We could not verify face liveness) 60
+04:58:35 RESULT PASS text (Face verification could not be completed|We could not verify face liveness) 60
+04:58:35 > snap eod-attack-refused
+04:58:35 SNAPSHOT 127-eod-attack-refused.png
+04:58:35 SNAPSHOT 128-eod-attack-refused.png
+04:58:35 SNAPSHOT 129-eod-attack-refused.png
+04:58:35 SNAPSHOT 130-eod-attack-refused.png
+04:58:35 SNAPSHOT 131-eod-attack-refused.png
+04:58:35 > source s3-main
+04:58:35   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:58:35 > follow s3
+04:58:35 > click #retryButton
+04:58:35   fired Button#retryButton 'Retry'
+04:58:35 > expect-live 120
+04:58:36 RESULT PASS live face passed on attempt 1
+04:58:36 > follow off
+04:58:36 > expect-alert Authentication successful 30
+04:58:36 ALERT Success | Biometrics Captured Successfully | X
+04:58:36 SNAPSHOT 132-alert.png
+04:58:36 RESULT PASS alert Authentication successful 30
+04:58:36 > sleep 3000
+04:58:37 ALERT Success | Authentication successful. | X
+04:58:37 SNAPSHOT 133-alert.png
+04:58:39 > snap eod-approved
+04:58:39 SNAPSHOT 134-eod-approved.png
+04:58:39 SNAPSHOT 135-eod-approved.png
+04:58:39 SNAPSHOT 136-eod-approved.png
+04:58:39 > label offline: network back, upload
+04:58:39 ==== offline: network back, upload
+04:58:39 > network on
+04:58:39   network restored
+04:58:39 > sleep 5000
+04:58:44 > include lib/upload.flow
+04:58:44 > click #homeImgView
+04:58:44   clicked ImageView#homeImgView
+04:58:45 > sleep 2000
+04:58:47 > click #uploadPacketPane
+04:58:47   clicked GridPane#uploadPacketPane
+04:58:47 > sleep 4000
+04:58:51 > snap upload-list
+04:58:51 SNAPSHOT 137-upload-list.png
+04:58:51 SNAPSHOT 138-upload-list.png
+04:58:51 SNAPSHOT 139-upload-list.png
+04:58:51 > check #selectAllCheckBox true
+04:58:51 > click #uploadBtn
+04:58:51   fired Button#uploadBtn 'Upload'
+04:58:51 > sleep 12000
+04:59:03 > snap upload-done
+04:59:03 SNAPSHOT 140-upload-done.png
+04:59:03 SNAPSHOT 141-upload-done.png
+04:59:03 SNAPSHOT 142-upload-done.png
+04:59:03 SNAPSHOT 143-upload-done.png
+04:59:03 > sql SELECT ID, CLIENT_STATUS_CODE, SERVER_STATUS_CODE, FILE_UPLOAD_STATUS FROM REG.REGISTRATION ORDER BY CR_DTIMES DESC FETCH FIRST 5 ROWS ONLY
+04:59:03   ROW ID=10001100010000820260929232717 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=Packet has reached Packet Receiver | FILE_UPLOAD_STATUS=S
+04:59:03   ROW ID=10001100010000720260929232400 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=Packet has reached Packet Receiver | FILE_UPLOAD_STATUS=S
+04:59:03   ROW ID=10001100010000520260929232100 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=RECEIVED | FILE_UPLOAD_STATUS=S
+04:59:03   ROW ID=10001100010000420260929232013 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=RECEIVED | FILE_UPLOAD_STATUS=S
+04:59:03   ROW ID=10001100010000320260929213659 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=RECEIVED | FILE_UPLOAD_STATUS=S
+04:59:03   rows=5
+04:59:03 > expect-no-rows SELECT ID FROM REG.REGISTRATION WHERE CLIENT_STATUS_CODE = 'APPROVED'
+04:59:03   rows=0
+04:59:03 RESULT PASS sql no rows: SELECT ID FROM REG.REGISTRATION WHERE CLIENT_STATUS_CODE = 'APPROVED'
+04:59:03 > section 85-wrong-person.flow
+04:59:03 > label face match: live but wrong person refused, right person accepted
+04:59:03 ==== face match: live but wrong person refused, right person accepted
+04:59:03 > menu Logout
+04:59:03   menu item Logout
+04:59:03 > wait-node #userId 60
+04:59:03 > source s1-main
+04:59:03   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s1-main","fps":15.0,"loop":true,"fr
+04:59:03 > follow s1
+04:59:03 > login officer1 ********
+04:59:04 > mark
+04:59:04 > expect-live 120
+04:59:06   attempt 1 failed: We could not verify face liveness. Please try again.
+04:59:06   fired Button#retryButton 'Retry'
+04:59:08   attempt 2 failed: We could not verify face liveness. Please try again.
+04:59:08   fired Button#retryButton 'Retry'
+04:59:11   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s1-smile","fps":15.0,"loop":true,"f
+04:59:13   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s1-main","fps":15.0,"loop":true,"fr
+04:59:16 RESULT PASS live face passed on attempt 3
+04:59:16 > follow off
+04:59:16 > expect-alert Face match not found 30
+04:59:16 RESULT PASS alert Face match not found 30
+04:59:16 > snap login-wrong-person
+04:59:16 SNAPSHOT 144-login-wrong-person.png
+04:59:17 SNAPSHOT 145-login-wrong-person.png
+04:59:17 SNAPSHOT 146-login-wrong-person.png
+04:59:17 SNAPSHOT 147-login-wrong-person.png
+04:59:17 SNAPSHOT 148-login-wrong-person.png
+04:59:17 SNAPSHOT 149-login-wrong-person.png
+04:59:17 > wait-gone Face verification 15
+04:59:17 ALERT Note | Face match not found | X
+04:59:17 SNAPSHOT 150-alert.png
+04:59:17 > source s3-main
+04:59:17   MDS /admin/source -> {"errorCode":"0","errorInfo":"Success","state":{"source":{"source":"SEQUENCE","path":"E:\\Projects\\MOSIP\\run\\frame-packs\\s3-main","fps":15.0,"loop":true,"fr
+04:59:17 > follow s3
+04:59:17 > click text=Submit
+04:59:17   fired Button 'Submit'
+04:59:17 > expect-live 90
+04:59:19 RESULT PASS live face passed on attempt 1
+04:59:19 > follow off
+04:59:19 > expect Operational Tasks 90
+04:59:19 RESULT PASS text Operational Tasks 90
+04:59:19 > section 90-evidence.flow
+04:59:19 > label evidence: liveness audit rows in the client database
+04:59:19 ==== evidence: liveness audit rows in the client database
+04:59:19 > sql SELECT EVENT_ID, COUNT(*) AS N FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID LIKE 'REG-EVT-LV%' GROUP BY EVENT_ID ORDER BY EVENT_ID
+04:59:19   ROW EVENT_ID=REG-EVT-LV01 | N=98
+04:59:19   ROW EVENT_ID=REG-EVT-LV02 | N=33
+04:59:19   ROW EVENT_ID=REG-EVT-LV03 | N=30
+04:59:19   ROW EVENT_ID=REG-EVT-LV04 | N=47
+04:59:19   ROW EVENT_ID=REG-EVT-LV05 | N=30
+04:59:19   ROW EVENT_ID=REG-EVT-LV06 | N=15
+04:59:19   ROW EVENT_ID=REG-EVT-LV07 | N=9
+04:59:19   ROW EVENT_ID=REG-EVT-LV08 | N=26
+04:59:19   ROW EVENT_ID=REG-EVT-LV10 | N=43
+04:59:19   ROW EVENT_ID=REG-EVT-LV11 | N=13
+04:59:19   ROW EVENT_ID=REG-EVT-LV12 | N=9
+04:59:19   ROW EVENT_ID=REG-EVT-LV13 | N=1
+04:59:19   ROW EVENT_ID=REG-EVT-LV15 | N=4
+04:59:19   ROW EVENT_ID=REG-EVT-LV16 | N=1
+04:59:19   rows=14
+04:59:19 > sql SELECT EVENT_ID, SESSION_USER_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID LIKE 'REG-EVT-LV%' ORDER BY LOG_DTIMES DESC FETCH FIRST 25 ROWS ONLY
+04:59:19   ROW EVENT_ID=REG-EVT-LV10 | SESSION_USER_ID=NA | LOG_DESC={"workflow":"login_auth","sessionId":"fc1705991e9dcfbeead687d65dc49c7b","method":"PASSIVE","totalMs":"925"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV02 | SESSION_USER_ID=NA | LOG_DESC={"workflow":"login_auth","sessionId":"fc1705991e9dcfbeead687d65dc49c7b","scoreBucket":"90-100","frames":"8","ms":"506"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV01 | SESSION_USER_ID=NA | LOG_DESC={"workflow":"login_auth","sessionId":"fc1705991e9dcfbeead687d65dc49c7b","attempt":"1","deviceSerial":"2345678901","certification":"L0","engine":"mosip-onnx-default@1.0.0"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV10 | SESSION_USER_ID=officer1 | LOG_DESC={"workflow":"login_auth","sessionId":"4a86e4ffa814bb340b6f66f83e059844","method":"PASSIVE_ACTIVE","totalMs":"7738"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV05 | SESSION_USER_ID=officer1 | LOG_DESC={"workflow":"login_auth","sessionId":"4a86e4ffa814bb340b6f66f83e059844","type":"BLINK","onsetMs":"200","holdMs":"200"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV04 | SESSION_USER_ID=officer1 | LOG_DESC={"workflow":"login_auth","sessionId":"4a86e4ffa814bb340b6f66f83e059844","type":"BLINK","index":"1","nonceSha256Prefix":"f5e4f408"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV05 | SESSION_USER_ID=officer1 | LOG_DESC={"workflow":"login_auth","sessionId":"4a86e4ffa814bb340b6f66f83e059844","type":"SMILE","onsetMs":"1669","holdMs":"334"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV04 | SESSION_USER_ID=officer1 | LOG_DESC={"workflow":"login_auth","sessionId":"4a86e4ffa814bb340b6f66f83e059844","type":"SMILE","index":"0","nonceSha256Prefix":"006bb1d6"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV03 | SESSION_USER_ID=officer1 | LOG_DESC={"workflow":"login_auth","sessionId":"4a86e4ffa814bb340b6f66f83e059844","scoreBucket":"70-79","reason":"BELOW_THRESHOLD"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV01 | SESSION_USER_ID=officer1 | LOG_DESC={"workflow":"login_auth","sessionId":"4a86e4ffa814bb340b6f66f83e059844","attempt":"3","deviceSerial":"2345678901","certification":"L0","engine":"mosip-onnx-default@1.0.0"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV06 | SESSION_USER_ID=officer1 | LOG_DESC={"workflow":"login_auth","sessionId":"ed1ea37030f358935187790ed0ec85fa","type":"BLINK","reason":"ONSET_TOO_FAST"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV04 | SESSION_USER_ID=officer1 | LOG_DESC={"workflow":"login_auth","sessionId":"ed1ea37030f358935187790ed0ec85fa","type":"BLINK","index":"0","nonceSha256Prefix":"24692538"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV03 | SESSION_USER_ID=officer1 | LOG_DESC={"workflow":"login_auth","sessionId":"ed1ea37030f358935187790ed0ec85fa","scoreBucket":"70-79","reason":"BELOW_THRESHOLD"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV01 | SESSION_USER_ID=officer1 | LOG_DESC={"workflow":"login_auth","sessionId":"ed1ea37030f358935187790ed0ec85fa","attempt":"2","deviceSerial":"2345678901","certification":"L0","engine":"mosip-onnx-default@1.0.0"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV06 | SESSION_USER_ID=officer1 | LOG_DESC={"workflow":"login_auth","sessionId":"26316efae34426ed604499ed8f167577","type":"BLINK","reason":"ONSET_TOO_FAST"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV04 | SESSION_USER_ID=officer1 | LOG_DESC={"workflow":"login_auth","sessionId":"26316efae34426ed604499ed8f167577","type":"BLINK","index":"0","nonceSha256Prefix":"e244658e"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV03 | SESSION_USER_ID=officer1 | LOG_DESC={"workflow":"login_auth","sessionId":"26316efae34426ed604499ed8f167577","scoreBucket":"70-79","reason":"BELOW_THRESHOLD"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV01 | SESSION_USER_ID=officer1 | LOG_DESC={"workflow":"login_auth","sessionId":"26316efae34426ed604499ed8f167577","attempt":"1","deviceSerial":"2345678901","certification":"L0","engine":"mosip-onnx-default@1.0.0"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV10 | SESSION_USER_ID=supervisor1 | LOG_DESC={"workflow":"eod_auth","sessionId":"0c10c8a038c4a785ab458c11dae890a2","method":"PASSIVE","totalMs":"816"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV02 | SESSION_USER_ID=supervisor1 | LOG_DESC={"workflow":"eod_auth","sessionId":"0c10c8a038c4a785ab458c11dae890a2","scoreBucket":"90-100","frames":"8","ms":"502"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV01 | SESSION_USER_ID=supervisor1 | LOG_DESC={"workflow":"eod_auth","sessionId":"0c10c8a038c4a785ab458c11dae890a2","attempt":"2","deviceSerial":"2345678901","certification":"L0","engine":"mosip-onnx-default@1.0.0"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV07 | SESSION_USER_ID=supervisor1 | LOG_DESC={"workflow":"eod_auth","sessionId":"e92a9c38e76f34ea3ff46eef72596b11","phase":"CHALLENGE_OBSERVE"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV06 | SESSION_USER_ID=supervisor1 | LOG_DESC={"workflow":"eod_auth","sessionId":"e92a9c38e76f34ea3ff46eef72596b11","type":"BLINK","reason":"CHALLENGE_TIMEOUT"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV04 | SESSION_USER_ID=supervisor1 | LOG_DESC={"workflow":"eod_auth","sessionId":"e92a9c38e76f34ea3ff46eef72596b11","type":"BLINK","index":"0","nonceSha256Prefix":"1fffcc1d"}
+04:59:19   ROW EVENT_ID=REG-EVT-LV03 | SESSION_USER_ID=supervisor1 | LOG_DESC={"workflow":"eod_auth","sessionId":"e92a9c38e76f34ea3ff46eef72596b11","scoreBucket":"80-89","reason":"BELOW_THRESHOLD"}
+04:59:19   rows=25
+04:59:19 > sql SELECT ID, CLIENT_STATUS_CODE, SERVER_STATUS_CODE FROM REG.REGISTRATION ORDER BY CR_DTIMES DESC FETCH FIRST 6 ROWS ONLY
+04:59:19   ROW ID=10001100010000820260929232717 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=Packet has reached Packet Receiver
+04:59:19   ROW ID=10001100010000720260929232400 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=Packet has reached Packet Receiver
+04:59:19   ROW ID=10001100010000520260929232100 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=RECEIVED
+04:59:19   ROW ID=10001100010000420260929232013 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=RECEIVED
+04:59:19   ROW ID=10001100010000320260929213659 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=RECEIVED
+04:59:19   ROW ID=10001100010000220260929210239 | CLIENT_STATUS_CODE=PUSHED | SERVER_STATUS_CODE=RECEIVED
+04:59:19   rows=6
+04:59:19 > http GET http://127.0.0.1:8080/admin/packets
+04:59:19   HTTP GET http://127.0.0.1:8080/admin/packets -> 200 [{"name":"10001100010000820260929232717-10001_10001-20260929232801.zip","bytes":1267696,"uploaded":"2026-09-29T23:28:52.053476Z"},{"name":"100011000100007202609
+04:59:19 > exit
+04:59:19 SUMMARY passed=41 failed=0
+DONE

@@ -139,7 +139,7 @@ more per accepted capture (median 6.6 s to 9.7 s). Details: [decision-flow.md](d
 | `mosip.registration.liveness.android.block_emulator` | Android | Y/N | `N` (Y recommended in production) | `LivenessRuntime` | Refuse to run liveness on an emulator (`EMULATOR_BLOCKED`, audit LV12) |
 | `mosip.registration.android.offline_approval.enable` | Android | Y/N | `Y` | `approve_packet_ui.dart` | Supervisor approval without a network connection |
 | `mosip.registration.liveness.face_auth.match_threshold` | Android | int 0-100 | 40 (floor 20) | `EngineFaceVerifier` | 1:1 match threshold for face authentication on the tablet |
-| `mosip.registration.mds.allowed_certifications` | Android | CSV | `L0,L1` | defined, not read yet | Plan change N7 (accept L0 SBI devices in `Biometrics095Service.isDeviceValid`); not implemented. The built-in camera does not go through that check. |
+| `mosip.registration.mds.allowed_certifications` | Android | CSV | `L0,L1` | defined, not read yet | Meant to make `Biometrics095Service.isDeviceValid` accept L0 SBI devices; not implemented. The built-in camera does not go through that check. |
 | JVM property `mosip.liveness.preload` | Desktop | true/false | true | `LivenessEngineRegistry` | `false` loads the models at first use instead of at start-up (set for the unit tests) |
 
 ## 11. Face match SDK keys (MOSIP keys, not liveness keys)

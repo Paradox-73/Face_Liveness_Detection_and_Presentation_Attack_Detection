@@ -1,0 +1,695 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="5224" viewBox="0 0 1440 5224" role="img" aria-labelledby="wf-title wf-desc">
+<title id="wf-title">Face liveness wireframes: desktop dialog and Android capture screen for each state</title>
+<desc id="wf-desc">Fourteen rows, one per user-interface state of PS04 section 10 plus device error, multiple faces, offline and supervisor override. Each row shows the desktop dialog, the Android screen, the message key and notes. Drawn on an opaque light card so it reads the same on light and dark pages.</desc>
+<defs><filter id="shadow" x="-10%" y="-10%" width="130%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.35"/></filter></defs>
+<rect x="0.0" y="0.0" width="1440.0" height="5224.0" rx="12" fill="#F7F9FB" stroke="#9AA5B1" stroke-width="2"/>
+<text x="24.0" y="40.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="24" fill="#0B2E4F" font-weight="bold" text-anchor="start">Face liveness wireframes: desktop dialog and Android capture screen</text>
+<text x="24.0" y="66.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F2933" font-weight="normal" text-anchor="start">One row per state of PS04 section 10 (UI/UX) and four team states. Texts are the English strings of docs/ux/message-catalogue.csv; states, icons and colours follow LivenessUiStateMapper,</text>
+<text x="24.0" y="84.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F2933" font-weight="normal" text-anchor="start">which both clients use. Drawn 2026-10-04. These are wireframes, not screenshots: real screens are in docs/ux/screenshots/ (file names in the last column). Grey shapes stand for the camera image.</text>
+<rect x="24.0" y="102.0" width="22.0" height="16.0" rx="3" fill="#E8F1FA" stroke="#005BAA" stroke-width="1.5"/>
+<text x="54.0" y="114.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#1F2933" font-weight="normal" text-anchor="start">Information and prompts (desktop banner #E8F1FA)</text>
+<rect x="364.0" y="102.0" width="22.0" height="16.0" rx="3" fill="#FFF4DB" stroke="#8A5A00" stroke-width="1.5"/>
+<text x="394.0" y="114.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#1F2933" font-weight="normal" text-anchor="start">Positioning problem (desktop banner #FFF4DB)</text>
+<rect x="704.0" y="102.0" width="22.0" height="16.0" rx="3" fill="#FCE8E6" stroke="#B3261E" stroke-width="1.5"/>
+<text x="734.0" y="114.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#1F2933" font-weight="normal" text-anchor="start">Failure, device error (desktop banner #FCE8E6)</text>
+<rect x="1044.0" y="102.0" width="22.0" height="16.0" rx="3" fill="#E6F4EA" stroke="#1E7B3C" stroke-width="1.5"/>
+<text x="1074.0" y="114.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#1F2933" font-weight="normal" text-anchor="start">Action detected, success (desktop banner #E6F4EA)</text>
+<text x="24.0" y="140.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F2933" font-weight="normal" text-anchor="start">Desktop: 520 px dialog over the face capture screen (drawn at about 48 %). Android: full-screen capture screen on a 1280x800 tablet (about 37.5 %). Text is enlarged for reading.</text>
+<text x="24.0" y="182.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="14" fill="#0B2E4F" font-weight="bold" text-anchor="start">State, PS04 source, message key</text>
+<text x="344.0" y="182.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="14" fill="#0B2E4F" font-weight="bold" text-anchor="start">Desktop Registration Client</text>
+<text x="620.0" y="182.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="14" fill="#0B2E4F" font-weight="bold" text-anchor="start">Android Registration Client</text>
+<text x="1124.0" y="182.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="14" fill="#0B2E4F" font-weight="bold" text-anchor="start">Notes and committed pictures</text>
+<line x1="24" y1="192" x2="1416" y2="192" stroke="#9AA5B1" stroke-width="1.5"/>
+<text x="24.0" y="222.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">1. Live preview with positioning</text>
+<text x="24.0" y="241.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">guide</text>
+<text x="24.0" y="266.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#3E4C59" font-weight="normal" text-anchor="start">PS04 10.1 (live preview, positioning guidance)</text>
+<text x="24.0" y="287.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.guide.look_camera; problems:</text>
+<text x="24.0" y="300.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.guide.face_visible, .in_area, .lighting</text>
+<rect x="344.0" y="206.0" width="250.0" height="330.0" rx="6" fill="#FFFFFF" stroke="#9AA5B1" stroke-width="1"/>
+<text x="356.0" y="226.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#00467F" font-weight="bold" text-anchor="start">Face verification</text>
+<rect x="354.0" y="236.0" width="230.0" height="130.0" rx="4" fill="#1D2025" stroke="none" stroke-width="1"/>
+<ellipse cx="469.0" cy="293.0" rx="15" ry="19" fill="#4A525C"/>
+<path d="M 441.0 339.0 Q 469.0 305.0 497.0 339.0 Z" fill="#4A525C"/>
+<ellipse cx="469.0" cy="301.0" rx="42" ry="54" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-dasharray="7 5"/>
+<rect x="354.0" y="372.0" width="230.0" height="108.0" rx="4" fill="#E8F1FA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="372.0" width="3.0" height="108.0" rx="0" fill="#005BAA" stroke="none" stroke-width="1"/>
+<circle cx="374" cy="394" r="12" fill="#005BAA"/>
+<ellipse cx="374" cy="394" rx="4.5" ry="6.5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="392.0" y="389.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#0B2E4F" font-weight="bold" text-anchor="start">Look directly at the camera.</text>
+<rect x="354.0" y="490.0" width="110.0" height="5.0" rx="2.5" fill="#DDE3EA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="490.0" width="5.5" height="5.0" rx="2.5" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="584.0" y="496.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="end">Attempt 1 of 3</text>
+<rect x="534.8" y="504.0" width="49.2" height="22.0" rx="4" fill="#FFFFFF" stroke="#0B2E4F" stroke-width="1.4"/>
+<text x="559.4" y="519.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#005BAA" font-weight="normal" text-anchor="middle">Cancel</text>
+<rect x="620.0" y="212.0" width="480.0" height="300.0" rx="6" fill="#000000" stroke="#9AA5B1" stroke-width="1"/>
+<text x="860.0" y="234.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Face verification</text>
+<ellipse cx="860.0" cy="312" rx="15" ry="19" fill="#2F353C"/>
+<path d="M 832.0 358 Q 860.0 324 888.0 358 Z" fill="#2F353C"/>
+<ellipse cx="860.0" cy="320" rx="50" ry="62" fill="none" stroke="#FFFFFF" stroke-width="2.2"/>
+<path d="M 620 408 Q 620 398 630 398 H 1090 Q 1100 398 1100 408 V 506 Q 1100 512 1094 512 H 626 Q 620 512 620 506 Z" fill="#12181F"/>
+<ellipse cx="640" cy="416" rx="4.5" ry="6.5" fill="none" stroke="#4FC3F7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="656.0" y="421.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">Look directly at the camera.</text>
+<line x1="634" y1="462" x2="1086" y2="462" stroke="#3B4650" stroke-width="2"/>
+<line x1="634" y1="462" x2="656.6" y2="462" stroke="#4FC3F7" stroke-width="2"/>
+<circle cx="638" cy="473" r="3.2" fill="#FFFFFF"/>
+<circle cx="649" cy="473" r="3.2" fill="#6B7680"/>
+<circle cx="660" cy="473" r="3.2" fill="#6B7680"/>
+<rect x="1031.2" y="482.0" width="56.8" height="20.0" rx="3" fill="#12181F" stroke="#3B4650" stroke-width="1"/>
+<text x="1059.6" y="495.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">CANCEL</text>
+<text x="1124.0" y="222.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Dashed oval = where the face must be. A positioning</text>
+<text x="1124.0" y="236.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">problem turns the banner amber with a warning icon</text>
+<text x="1124.0" y="251.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">and one PS04 guidance line.</text>
+<text x="1124.0" y="271.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– No attempt is used while positioning.</text>
+<text x="1124.0" y="292.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: desktop d-r1-positioning.png; Android</text>
+<text x="1124.0" y="306.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">none yet.</text>
+<rect x="12.0" y="552.0" width="1416.0" height="356.0" rx="6" fill="#EEF2F6" stroke="none" stroke-width="1"/>
+<text x="24.0" y="578.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">2. Checking face liveness…</text>
+<text x="24.0" y="603.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#3E4C59" font-weight="normal" text-anchor="start">PS04 10.2 (passive check, no action)</text>
+<text x="24.0" y="624.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.status.checking</text>
+<rect x="344.0" y="562.0" width="250.0" height="330.0" rx="6" fill="#FFFFFF" stroke="#9AA5B1" stroke-width="1"/>
+<text x="356.0" y="582.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#00467F" font-weight="bold" text-anchor="start">Face verification</text>
+<rect x="354.0" y="592.0" width="230.0" height="130.0" rx="4" fill="#1D2025" stroke="none" stroke-width="1"/>
+<ellipse cx="469.0" cy="649.0" rx="15" ry="19" fill="#4A525C"/>
+<path d="M 441.0 695.0 Q 469.0 661.0 497.0 695.0 Z" fill="#4A525C"/>
+<ellipse cx="469.0" cy="657.0" rx="42" ry="54" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-dasharray="7 5"/>
+<rect x="354.0" y="728.0" width="230.0" height="108.0" rx="4" fill="#E8F1FA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="728.0" width="3.0" height="108.0" rx="0" fill="#005BAA" stroke="none" stroke-width="1"/>
+<circle cx="374" cy="750" r="12" fill="#005BAA"/>
+<path d="M 380 750 A 6 6 0 1 1 374 744" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="392.0" y="745.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#0B2E4F" font-weight="bold" text-anchor="start">Checking face liveness…</text>
+<text x="392.0" y="762.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#0B2E4F" font-weight="normal" text-anchor="start" font-style="italic">(busy indicator)</text>
+<rect x="354.0" y="846.0" width="110.0" height="5.0" rx="2.5" fill="#DDE3EA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="846.0" width="33.0" height="5.0" rx="2.5" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="584.0" y="852.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="end">Attempt 1 of 3</text>
+<rect x="534.8" y="860.0" width="49.2" height="22.0" rx="4" fill="#FFFFFF" stroke="#0B2E4F" stroke-width="1.4"/>
+<text x="559.4" y="875.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#005BAA" font-weight="normal" text-anchor="middle">Cancel</text>
+<rect x="620.0" y="568.0" width="480.0" height="300.0" rx="6" fill="#000000" stroke="#9AA5B1" stroke-width="1"/>
+<text x="860.0" y="590.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Face verification</text>
+<ellipse cx="860.0" cy="668" rx="15" ry="19" fill="#2F353C"/>
+<path d="M 832.0 714 Q 860.0 680 888.0 714 Z" fill="#2F353C"/>
+<ellipse cx="860.0" cy="676" rx="50" ry="62" fill="none" stroke="#FFFFFF" stroke-width="2.2"/>
+<path d="M 620 764 Q 620 754 630 754 H 1090 Q 1100 754 1100 764 V 862 Q 1100 868 1094 868 H 626 Q 620 868 620 862 Z" fill="#12181F"/>
+<path d="M 646 772 A 6 6 0 1 1 640 766" fill="none" stroke="#4FC3F7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="656.0" y="777.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">Checking face liveness…</text>
+<text x="656.0" y="795.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#CFD8DC" font-weight="normal" text-anchor="start" font-style="italic">(busy indicator)</text>
+<line x1="634" y1="818" x2="1086" y2="818" stroke="#3B4650" stroke-width="2"/>
+<line x1="634" y1="818" x2="769.6" y2="818" stroke="#4FC3F7" stroke-width="2"/>
+<circle cx="638" cy="829" r="3.2" fill="#FFFFFF"/>
+<circle cx="649" cy="829" r="3.2" fill="#6B7680"/>
+<circle cx="660" cy="829" r="3.2" fill="#6B7680"/>
+<rect x="1031.2" y="838.0" width="56.8" height="20.0" rx="3" fill="#12181F" stroke="#3B4650" stroke-width="1"/>
+<text x="1059.6" y="851.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">CANCEL</text>
+<text x="1124.0" y="578.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– The resident does nothing; the client moves on by</text>
+<text x="1124.0" y="592.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">itself when the passive score is enough.</text>
+<text x="1124.0" y="613.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– No score or model name is shown (only in diagnostic</text>
+<text x="1124.0" y="627.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">mode, for a supervisor).</text>
+<text x="1124.0" y="648.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: none yet on either client.</text>
+<text x="24.0" y="934.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">3. Challenge prompt</text>
+<text x="24.0" y="959.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#3E4C59" font-weight="normal" text-anchor="start">PS04 10.3 (system-chosen action)</text>
+<text x="24.0" y="980.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.challenge.blink, .smile, .turn_left, ... ;</text>
+<text x="24.0" y="993.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.ui.step</text>
+<rect x="344.0" y="918.0" width="250.0" height="330.0" rx="6" fill="#FFFFFF" stroke="#9AA5B1" stroke-width="1"/>
+<text x="356.0" y="938.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#00467F" font-weight="bold" text-anchor="start">Face verification</text>
+<rect x="354.0" y="948.0" width="230.0" height="130.0" rx="4" fill="#1D2025" stroke="none" stroke-width="1"/>
+<ellipse cx="469.0" cy="1005.0" rx="15" ry="19" fill="#4A525C"/>
+<path d="M 441.0 1051.0 Q 469.0 1017.0 497.0 1051.0 Z" fill="#4A525C"/>
+<ellipse cx="469.0" cy="1013.0" rx="42" ry="54" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-dasharray="7 5"/>
+<rect x="354.0" y="1084.0" width="230.0" height="108.0" rx="4" fill="#E8F1FA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="1084.0" width="3.0" height="108.0" rx="0" fill="#005BAA" stroke="none" stroke-width="1"/>
+<circle cx="374" cy="1106" r="12" fill="#005BAA"/>
+<path d="M 367 1106 Q 374 1099 381 1106 Q 374 1113 367 1106 Z" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="374" cy="1106" r="2" fill="#FFFFFF"/>
+<text x="392.0" y="1101.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#0B2E4F" font-weight="bold" text-anchor="start">Please blink</text>
+<rect x="354.0" y="1202.0" width="110.0" height="5.0" rx="2.5" fill="#DDE3EA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="1202.0" width="27.5" height="5.0" rx="2.5" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="584.0" y="1208.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="end">Step 1 of 2   Attempt 1 of 3</text>
+<rect x="534.8" y="1216.0" width="49.2" height="22.0" rx="4" fill="#FFFFFF" stroke="#0B2E4F" stroke-width="1.4"/>
+<text x="559.4" y="1231.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#005BAA" font-weight="normal" text-anchor="middle">Cancel</text>
+<rect x="620.0" y="924.0" width="480.0" height="300.0" rx="6" fill="#000000" stroke="#9AA5B1" stroke-width="1"/>
+<text x="860.0" y="946.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Face verification</text>
+<ellipse cx="860.0" cy="1024" rx="15" ry="19" fill="#2F353C"/>
+<path d="M 832.0 1070 Q 860.0 1036 888.0 1070 Z" fill="#2F353C"/>
+<ellipse cx="860.0" cy="1032" rx="50" ry="62" fill="none" stroke="#FFFFFF" stroke-width="2.2"/>
+<path d="M 860.0 970 A 50 62 0 0 1 860.0 1094" fill="none" stroke="#4FC3F7" stroke-width="4" stroke-linecap="round"/>
+<path d="M 620 1120 Q 620 1110 630 1110 H 1090 Q 1100 1110 1100 1120 V 1218 Q 1100 1224 1094 1224 H 626 Q 620 1224 620 1218 Z" fill="#12181F"/>
+<path d="M 633 1128 Q 640 1121 647 1128 Q 640 1135 633 1128 Z" fill="none" stroke="#4FC3F7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="640" cy="1128" r="2" fill="#4FC3F7"/>
+<text x="656.0" y="1133.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">Please blink</text>
+<text x="634.0" y="1166.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#CFD8DC" font-weight="normal" text-anchor="start">Step 1 of 2</text>
+<line x1="634" y1="1174" x2="1086" y2="1174" stroke="#3B4650" stroke-width="2"/>
+<line x1="634" y1="1174" x2="747.0" y2="1174" stroke="#4FC3F7" stroke-width="2"/>
+<circle cx="638" cy="1185" r="3.2" fill="#FFFFFF"/>
+<circle cx="649" cy="1185" r="3.2" fill="#6B7680"/>
+<circle cx="660" cy="1185" r="3.2" fill="#6B7680"/>
+<rect x="1031.2" y="1194.0" width="56.8" height="20.0" rx="3" fill="#12181F" stroke="#3B4650" stroke-width="1"/>
+<text x="1059.6" y="1207.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">CANCEL</text>
+<text x="1124.0" y="934.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– The client picks the action at random; the resident</text>
+<text x="1124.0" y="948.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">never chooses it. One icon per action (eye, smile,</text>
+<text x="1124.0" y="963.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">arrow).</text>
+<text x="1124.0" y="983.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– After half the time for the action, the banner</text>
+<text x="1124.0" y="998.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">turns amber and adds "Follow the prompted action."</text>
+<text x="1124.0" y="1018.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: desktop e2e-03 ("Please smile"); Android</text>
+<text x="1124.0" y="1033.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">e2e-06 ("Please smile").</text>
+<rect x="12.0" y="1264.0" width="1416.0" height="356.0" rx="6" fill="#EEF2F6" stroke="none" stroke-width="1"/>
+<text x="24.0" y="1290.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">4. Action detected</text>
+<text x="24.0" y="1315.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#3E4C59" font-weight="normal" text-anchor="start">PS04 10.4 (real-time feedback)</text>
+<text x="24.0" y="1336.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.feedback.detected</text>
+<rect x="344.0" y="1274.0" width="250.0" height="330.0" rx="6" fill="#FFFFFF" stroke="#9AA5B1" stroke-width="1"/>
+<text x="356.0" y="1294.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#00467F" font-weight="bold" text-anchor="start">Face verification</text>
+<rect x="354.0" y="1304.0" width="230.0" height="130.0" rx="4" fill="#1D2025" stroke="none" stroke-width="1"/>
+<ellipse cx="469.0" cy="1361.0" rx="15" ry="19" fill="#4A525C"/>
+<path d="M 441.0 1407.0 Q 469.0 1373.0 497.0 1407.0 Z" fill="#4A525C"/>
+<ellipse cx="469.0" cy="1369.0" rx="42" ry="54" fill="none" stroke="#3DBE6B" stroke-width="2.4" stroke-dasharray="7 5"/>
+<rect x="354.0" y="1440.0" width="230.0" height="108.0" rx="4" fill="#E6F4EA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="1440.0" width="3.0" height="108.0" rx="0" fill="#1E7B3C" stroke="none" stroke-width="1"/>
+<circle cx="374" cy="1462" r="12" fill="#1E7B3C"/>
+<polyline points="369,1462 372.5,1466 379.5,1458" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="392.0" y="1457.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#14532D" font-weight="bold" text-anchor="start">Action detected</text>
+<rect x="354.0" y="1558.0" width="110.0" height="5.0" rx="2.5" fill="#DDE3EA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="1558.0" width="55.0" height="5.0" rx="2.5" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="584.0" y="1564.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="end">Step 1 of 2   Attempt 1 of 3</text>
+<rect x="534.8" y="1572.0" width="49.2" height="22.0" rx="4" fill="#FFFFFF" stroke="#0B2E4F" stroke-width="1.4"/>
+<text x="559.4" y="1587.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#005BAA" font-weight="normal" text-anchor="middle">Cancel</text>
+<rect x="620.0" y="1280.0" width="480.0" height="300.0" rx="6" fill="#000000" stroke="#9AA5B1" stroke-width="1"/>
+<text x="860.0" y="1302.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Face verification</text>
+<ellipse cx="860.0" cy="1380" rx="15" ry="19" fill="#2F353C"/>
+<path d="M 832.0 1426 Q 860.0 1392 888.0 1426 Z" fill="#2F353C"/>
+<ellipse cx="860.0" cy="1388" rx="50" ry="62" fill="none" stroke="#66BB6A" stroke-width="2.2"/>
+<path d="M 860.0 1326 A 50 62 0 0 1 860.0 1450" fill="none" stroke="#4FC3F7" stroke-width="4" stroke-linecap="round"/>
+<path d="M 620 1476 Q 620 1466 630 1466 H 1090 Q 1100 1466 1100 1476 V 1574 Q 1100 1580 1094 1580 H 626 Q 620 1580 620 1574 Z" fill="#12181F"/>
+<polyline points="635,1484 638.5,1488 645.5,1480" fill="none" stroke="#81C784" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="656.0" y="1489.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">Action detected</text>
+<text x="634.0" y="1522.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#CFD8DC" font-weight="normal" text-anchor="start">Step 1 of 2</text>
+<line x1="634" y1="1530" x2="1086" y2="1530" stroke="#3B4650" stroke-width="2"/>
+<line x1="634" y1="1530" x2="860.0" y2="1530" stroke="#4FC3F7" stroke-width="2"/>
+<circle cx="638" cy="1541" r="3.2" fill="#FFFFFF"/>
+<circle cx="649" cy="1541" r="3.2" fill="#6B7680"/>
+<circle cx="660" cy="1541" r="3.2" fill="#6B7680"/>
+<rect x="1031.2" y="1550.0" width="56.8" height="20.0" rx="3" fill="#12181F" stroke="#3B4650" stroke-width="1"/>
+<text x="1059.6" y="1563.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">CANCEL</text>
+<text x="1124.0" y="1290.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Shown briefly after each answered action, then the</text>
+<text x="1124.0" y="1304.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">next step ("Step 2 of 2") or Hold still.</text>
+<text x="1124.0" y="1325.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: none yet; the texts and step counter are</text>
+<text x="1124.0" y="1339.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">covered by unit tests.</text>
+<text x="24.0" y="1646.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">5. Hold still</text>
+<text x="24.0" y="1671.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#3E4C59" font-weight="normal" text-anchor="start">PS04 10.4 (real-time feedback)</text>
+<text x="24.0" y="1692.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.feedback.hold_still</text>
+<rect x="344.0" y="1630.0" width="250.0" height="330.0" rx="6" fill="#FFFFFF" stroke="#9AA5B1" stroke-width="1"/>
+<text x="356.0" y="1650.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#00467F" font-weight="bold" text-anchor="start">Face verification</text>
+<rect x="354.0" y="1660.0" width="230.0" height="130.0" rx="4" fill="#1D2025" stroke="none" stroke-width="1"/>
+<ellipse cx="469.0" cy="1717.0" rx="15" ry="19" fill="#4A525C"/>
+<path d="M 441.0 1763.0 Q 469.0 1729.0 497.0 1763.0 Z" fill="#4A525C"/>
+<ellipse cx="469.0" cy="1725.0" rx="42" ry="54" fill="none" stroke="#FFFFFF" stroke-width="2.4"/>
+<rect x="354.0" y="1796.0" width="230.0" height="108.0" rx="4" fill="#E8F1FA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="1796.0" width="3.0" height="108.0" rx="0" fill="#005BAA" stroke="none" stroke-width="1"/>
+<circle cx="374" cy="1818" r="12" fill="#005BAA"/>
+<circle cx="374" cy="1818" r="6" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="374" cy="1818" r="2" fill="#FFFFFF"/>
+<text x="392.0" y="1813.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#0B2E4F" font-weight="bold" text-anchor="start">Hold still</text>
+<rect x="354.0" y="1914.0" width="110.0" height="5.0" rx="2.5" fill="#DDE3EA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="1914.0" width="99.0" height="5.0" rx="2.5" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="584.0" y="1920.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="end">Attempt 1 of 3</text>
+<rect x="534.8" y="1928.0" width="49.2" height="22.0" rx="4" fill="#FFFFFF" stroke="#0B2E4F" stroke-width="1.4"/>
+<text x="559.4" y="1943.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#005BAA" font-weight="normal" text-anchor="middle">Cancel</text>
+<rect x="620.0" y="1636.0" width="480.0" height="300.0" rx="6" fill="#000000" stroke="#9AA5B1" stroke-width="1"/>
+<text x="860.0" y="1658.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Face verification</text>
+<ellipse cx="860.0" cy="1736" rx="15" ry="19" fill="#2F353C"/>
+<path d="M 832.0 1782 Q 860.0 1748 888.0 1782 Z" fill="#2F353C"/>
+<ellipse cx="860.0" cy="1744" rx="50" ry="62" fill="none" stroke="#FFFFFF" stroke-width="2.2"/>
+<path d="M 620 1832 Q 620 1822 630 1822 H 1090 Q 1100 1822 1100 1832 V 1930 Q 1100 1936 1094 1936 H 626 Q 620 1936 620 1930 Z" fill="#12181F"/>
+<circle cx="640" cy="1840" r="6" fill="none" stroke="#4FC3F7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="640" cy="1840" r="2" fill="#4FC3F7"/>
+<text x="656.0" y="1845.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">Hold still</text>
+<line x1="634" y1="1886" x2="1086" y2="1886" stroke="#3B4650" stroke-width="2"/>
+<line x1="634" y1="1886" x2="1040.8" y2="1886" stroke="#4FC3F7" stroke-width="2"/>
+<circle cx="638" cy="1897" r="3.2" fill="#FFFFFF"/>
+<circle cx="649" cy="1897" r="3.2" fill="#6B7680"/>
+<circle cx="660" cy="1897" r="3.2" fill="#6B7680"/>
+<rect x="1031.2" y="1906.0" width="56.8" height="20.0" rx="3" fill="#12181F" stroke="#3B4650" stroke-width="1"/>
+<text x="1059.6" y="1919.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">CANCEL</text>
+<text x="1124.0" y="1646.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– The live check has passed; the stream stays open</text>
+<text x="1124.0" y="1660.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">while the device takes the signed capture.</text>
+<text x="1124.0" y="1681.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: none yet (desktop state seen in the</text>
+<text x="1124.0" y="1695.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">2026-09-30 run log).</text>
+<rect x="12.0" y="1976.0" width="1416.0" height="356.0" rx="6" fill="#EEF2F6" stroke="none" stroke-width="1"/>
+<text x="24.0" y="2002.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">6. Success</text>
+<text x="24.0" y="2027.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#3E4C59" font-weight="normal" text-anchor="start">PS04 10.4</text>
+<text x="24.0" y="2048.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.feedback.success</text>
+<rect x="344.0" y="1986.0" width="250.0" height="330.0" rx="6" fill="#FFFFFF" stroke="#9AA5B1" stroke-width="1"/>
+<text x="356.0" y="2006.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#00467F" font-weight="bold" text-anchor="start">Face verification</text>
+<rect x="354.0" y="2016.0" width="230.0" height="130.0" rx="4" fill="#1D2025" stroke="none" stroke-width="1"/>
+<ellipse cx="469.0" cy="2073.0" rx="15" ry="19" fill="#4A525C"/>
+<path d="M 441.0 2119.0 Q 469.0 2085.0 497.0 2119.0 Z" fill="#4A525C"/>
+<ellipse cx="469.0" cy="2081.0" rx="42" ry="54" fill="none" stroke="#3DBE6B" stroke-width="2.4"/>
+<rect x="354.0" y="2152.0" width="230.0" height="108.0" rx="4" fill="#E6F4EA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="2152.0" width="3.0" height="108.0" rx="0" fill="#1E7B3C" stroke="none" stroke-width="1"/>
+<circle cx="374" cy="2174" r="12" fill="#1E7B3C"/>
+<polyline points="369,2174 372.5,2178 379.5,2170" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="392.0" y="2169.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#14532D" font-weight="bold" text-anchor="start">Good, face captured</text>
+<text x="392.0" y="2183.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#14532D" font-weight="bold" text-anchor="start">successfully</text>
+<rect x="354.0" y="2270.0" width="110.0" height="5.0" rx="2.5" fill="#DDE3EA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="2270.0" width="110.0" height="5.0" rx="2.5" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="584.0" y="2276.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="end">Attempt 1 of 3</text>
+<rect x="620.0" y="1992.0" width="480.0" height="300.0" rx="6" fill="#000000" stroke="#9AA5B1" stroke-width="1"/>
+<text x="860.0" y="2014.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Face verification</text>
+<ellipse cx="860.0" cy="2092" rx="15" ry="19" fill="#2F353C"/>
+<path d="M 832.0 2138 Q 860.0 2104 888.0 2138 Z" fill="#2F353C"/>
+<ellipse cx="860.0" cy="2100" rx="50" ry="62" fill="none" stroke="#66BB6A" stroke-width="2.2"/>
+<path d="M 620 2188 Q 620 2178 630 2178 H 1090 Q 1100 2178 1100 2188 V 2286 Q 1100 2292 1094 2292 H 626 Q 620 2292 620 2286 Z" fill="#12181F"/>
+<polyline points="635,2196 638.5,2200 645.5,2192" fill="none" stroke="#81C784" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="656.0" y="2201.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">Good, face captured successfully</text>
+<line x1="634" y1="2242" x2="1086" y2="2242" stroke="#3B4650" stroke-width="2"/>
+<line x1="634" y1="2242" x2="1086.0" y2="2242" stroke="#4FC3F7" stroke-width="2"/>
+<circle cx="638" cy="2253" r="3.2" fill="#FFFFFF"/>
+<circle cx="649" cy="2253" r="3.2" fill="#6B7680"/>
+<circle cx="660" cy="2253" r="3.2" fill="#6B7680"/>
+<text x="1124.0" y="2002.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Desktop: the window closes after 0.9 s and the</text>
+<text x="1124.0" y="2016.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">capture screen shows the face. Android: the screen</text>
+<text x="1124.0" y="2031.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">closes and the ARC biometrics page shows the same</text>
+<text x="1124.0" y="2045.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">text in a green banner.</text>
+<text x="1124.0" y="2066.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: Android a-r1-resident-face-passed.png</text>
+<text x="1124.0" y="2080.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">(ARC banner); desktop none.</text>
+<text x="24.0" y="2358.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">7. Liveness failure with guidance</text>
+<text x="24.0" y="2383.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#3E4C59" font-weight="normal" text-anchor="start">PS04 10.5</text>
+<text x="24.0" y="2404.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.fail.liveness + one liveness.guide.* line +</text>
+<text x="24.0" y="2417.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.retry.available</text>
+<rect x="344.0" y="2342.0" width="250.0" height="330.0" rx="6" fill="#FFFFFF" stroke="#9AA5B1" stroke-width="1"/>
+<text x="356.0" y="2362.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#00467F" font-weight="bold" text-anchor="start">Face verification</text>
+<rect x="354.0" y="2372.0" width="230.0" height="130.0" rx="4" fill="#1D2025" stroke="none" stroke-width="1"/>
+<ellipse cx="469.0" cy="2429.0" rx="15" ry="19" fill="#4A525C"/>
+<path d="M 441.0 2475.0 Q 469.0 2441.0 497.0 2475.0 Z" fill="#4A525C"/>
+<ellipse cx="469.0" cy="2437.0" rx="42" ry="54" fill="none" stroke="#F26B5B" stroke-width="2.4" stroke-dasharray="7 5"/>
+<rect x="354.0" y="2508.0" width="230.0" height="108.0" rx="4" fill="#FCE8E6" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="2508.0" width="3.0" height="108.0" rx="0" fill="#B3261E" stroke="none" stroke-width="1"/>
+<circle cx="374" cy="2530" r="12" fill="#B3261E"/>
+<circle cx="374" cy="2530" r="6.5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="374" y1="2526.5" x2="374" y2="2530.8" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="374" cy="2533.2" r="0.9" fill="#FFFFFF"/>
+<text x="392.0" y="2525.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">We could not verify face</text>
+<text x="392.0" y="2539.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">liveness. Please try again.</text>
+<text x="392.0" y="2555.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#1F2933" font-weight="normal" text-anchor="start">Follow the prompted action.</text>
+<text x="392.0" y="2569.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#1F2933" font-weight="normal" text-anchor="start">Attempt 1 of 3. Select Retry to try</text>
+<text x="392.0" y="2581.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#1F2933" font-weight="normal" text-anchor="start">again.</text>
+<rect x="354.0" y="2626.0" width="110.0" height="5.0" rx="2.5" fill="#DDE3EA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="2626.0" width="36.3" height="5.0" rx="2.5" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="584.0" y="2632.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="end">Attempt 1 of 3</text>
+<rect x="534.8" y="2640.0" width="49.2" height="22.0" rx="4" fill="#FFFFFF" stroke="#0B2E4F" stroke-width="1.4"/>
+<text x="559.4" y="2655.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#005BAA" font-weight="normal" text-anchor="middle">Cancel</text>
+<rect x="485.8" y="2640.0" width="43.0" height="22.0" rx="4" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="507.3" y="2655.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Retry</text>
+<rect x="620.0" y="2348.0" width="480.0" height="300.0" rx="6" fill="#000000" stroke="#9AA5B1" stroke-width="1"/>
+<text x="860.0" y="2370.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Face verification</text>
+<ellipse cx="860.0" cy="2448" rx="15" ry="19" fill="#2F353C"/>
+<path d="M 832.0 2494 Q 860.0 2460 888.0 2494 Z" fill="#2F353C"/>
+<ellipse cx="860.0" cy="2456" rx="50" ry="62" fill="none" stroke="#EF5350" stroke-width="2.2"/>
+<path d="M 620 2544 Q 620 2534 630 2534 H 1090 Q 1100 2534 1100 2544 V 2642 Q 1100 2648 1094 2648 H 626 Q 620 2648 620 2642 Z" fill="#12181F"/>
+<circle cx="640" cy="2552" r="6.5" fill="none" stroke="#FF8A80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="640" y1="2548.5" x2="640" y2="2552.8" fill="none" stroke="#FF8A80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="640" cy="2555.2" r="0.9" fill="#FF8A80"/>
+<text x="656.0" y="2557.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">We could not verify face liveness. Please try again.</text>
+<text x="656.0" y="2574.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#CFD8DC" font-weight="normal" text-anchor="start">Follow the prompted action.</text>
+<text x="656.0" y="2588.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#CFD8DC" font-weight="normal" text-anchor="start">Attempt 1 of 3. Select Retry to try again.</text>
+<line x1="634" y1="2598" x2="1086" y2="2598" stroke="#3B4650" stroke-width="2"/>
+<circle cx="638" cy="2609" r="3.2" fill="#FF8A80"/>
+<circle cx="649" cy="2609" r="3.2" fill="#FFFFFF"/>
+<circle cx="660" cy="2609" r="3.2" fill="#6B7680"/>
+<rect x="1038.0" y="2618.0" width="50.0" height="20.0" rx="3" fill="#4FC3F7" stroke="#4FC3F7" stroke-width="1"/>
+<text x="1063.0" y="2631.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#0B1A24" font-weight="bold" text-anchor="middle">RETRY</text>
+<rect x="975.2" y="2618.0" width="56.8" height="20.0" rx="3" fill="#12181F" stroke="#3B4650" stroke-width="1"/>
+<text x="1003.6" y="2631.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">CANCEL</text>
+<text x="1124.0" y="2358.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Used when liveness was not shown (timeout, wrong</text>
+<text x="1124.0" y="2372.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">action, low score) but nothing points to an attack.</text>
+<text x="1124.0" y="2393.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– The guidance line names what to change: look at the</text>
+<text x="1124.0" y="2407.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">camera, face visible, lighting, capture area, follow</text>
+<text x="1124.0" y="2422.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">the action.</text>
+<text x="1124.0" y="2442.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: desktop e2e-05-print-refused.png; Android</text>
+<text x="1124.0" y="2457.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">e2e-03-sign-in-replay-refused.png.</text>
+<rect x="12.0" y="2688.0" width="1416.0" height="356.0" rx="6" fill="#EEF2F6" stroke="none" stroke-width="1"/>
+<text x="24.0" y="2714.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">8. Generic PAD failure</text>
+<text x="24.0" y="2739.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#3E4C59" font-weight="normal" text-anchor="start">PS04 10.6 (no security detail)</text>
+<text x="24.0" y="2760.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.fail.pad + liveness.retry.available</text>
+<rect x="344.0" y="2698.0" width="250.0" height="330.0" rx="6" fill="#FFFFFF" stroke="#9AA5B1" stroke-width="1"/>
+<text x="356.0" y="2718.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#00467F" font-weight="bold" text-anchor="start">Face verification</text>
+<rect x="354.0" y="2728.0" width="230.0" height="130.0" rx="4" fill="#1D2025" stroke="none" stroke-width="1"/>
+<ellipse cx="469.0" cy="2785.0" rx="15" ry="19" fill="#4A525C"/>
+<path d="M 441.0 2831.0 Q 469.0 2797.0 497.0 2831.0 Z" fill="#4A525C"/>
+<ellipse cx="469.0" cy="2793.0" rx="42" ry="54" fill="none" stroke="#F26B5B" stroke-width="2.4" stroke-dasharray="7 5"/>
+<rect x="354.0" y="2864.0" width="230.0" height="108.0" rx="4" fill="#FCE8E6" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="2864.0" width="3.0" height="108.0" rx="0" fill="#B3261E" stroke="none" stroke-width="1"/>
+<circle cx="374" cy="2886" r="12" fill="#B3261E"/>
+<circle cx="374" cy="2886" r="6.5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="374" y1="2882.5" x2="374" y2="2886.8" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="374" cy="2889.2" r="0.9" fill="#FFFFFF"/>
+<text x="392.0" y="2881.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">Face verification could not</text>
+<text x="392.0" y="2895.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">be completed. Please try</text>
+<text x="392.0" y="2909.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">again.</text>
+<text x="392.0" y="2925.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#1F2933" font-weight="normal" text-anchor="start">Attempt 1 of 3. Select Retry to try</text>
+<text x="392.0" y="2937.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#1F2933" font-weight="normal" text-anchor="start">again.</text>
+<rect x="354.0" y="2982.0" width="110.0" height="5.0" rx="2.5" fill="#DDE3EA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="2982.0" width="36.3" height="5.0" rx="2.5" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="584.0" y="2988.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="end">Attempt 1 of 3</text>
+<rect x="534.8" y="2996.0" width="49.2" height="22.0" rx="4" fill="#FFFFFF" stroke="#0B2E4F" stroke-width="1.4"/>
+<text x="559.4" y="3011.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#005BAA" font-weight="normal" text-anchor="middle">Cancel</text>
+<rect x="485.8" y="2996.0" width="43.0" height="22.0" rx="4" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="507.3" y="3011.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Retry</text>
+<rect x="620.0" y="2704.0" width="480.0" height="300.0" rx="6" fill="#000000" stroke="#9AA5B1" stroke-width="1"/>
+<text x="860.0" y="2726.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Face verification</text>
+<ellipse cx="860.0" cy="2804" rx="15" ry="19" fill="#2F353C"/>
+<path d="M 832.0 2850 Q 860.0 2816 888.0 2850 Z" fill="#2F353C"/>
+<ellipse cx="860.0" cy="2812" rx="50" ry="62" fill="none" stroke="#EF5350" stroke-width="2.2"/>
+<path d="M 620 2900 Q 620 2890 630 2890 H 1090 Q 1100 2890 1100 2900 V 2998 Q 1100 3004 1094 3004 H 626 Q 620 3004 620 2998 Z" fill="#12181F"/>
+<circle cx="640" cy="2908" r="6.5" fill="none" stroke="#FF8A80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="640" y1="2904.5" x2="640" y2="2908.8" fill="none" stroke="#FF8A80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="640" cy="2911.2" r="0.9" fill="#FF8A80"/>
+<text x="656.0" y="2913.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">Face verification could not be completed. Please try again.</text>
+<text x="656.0" y="2930.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#CFD8DC" font-weight="normal" text-anchor="start">Attempt 1 of 3. Select Retry to try again.</text>
+<line x1="634" y1="2954" x2="1086" y2="2954" stroke="#3B4650" stroke-width="2"/>
+<circle cx="638" cy="2965" r="3.2" fill="#FF8A80"/>
+<circle cx="649" cy="2965" r="3.2" fill="#FFFFFF"/>
+<circle cx="660" cy="2965" r="3.2" fill="#6B7680"/>
+<rect x="1038.0" y="2974.0" width="50.0" height="20.0" rx="3" fill="#4FC3F7" stroke="#4FC3F7" stroke-width="1"/>
+<text x="1063.0" y="2987.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#0B1A24" font-weight="bold" text-anchor="middle">RETRY</text>
+<rect x="975.2" y="2974.0" width="56.8" height="20.0" rx="3" fill="#12181F" stroke="#3B4650" stroke-width="1"/>
+<text x="1003.6" y="2987.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">CANCEL</text>
+<text x="1124.0" y="2714.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Same words for every suspected attack (photo,</text>
+<text x="1124.0" y="2728.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">screen, replay, injected stream, face swap); the</text>
+<text x="1124.0" y="2743.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">reason goes only to the audit log and diagnostic</text>
+<text x="1124.0" y="2757.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">mode.</text>
+<text x="1124.0" y="2778.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: desktop d-r7-pad-fail-retry.png, e2e-06;</text>
+<text x="1124.0" y="2792.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">Android e2e-05-resident-replay-refused.png.</text>
+<text x="24.0" y="3070.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">9. Retry available</text>
+<text x="24.0" y="3095.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#3E4C59" font-weight="normal" text-anchor="start">PS04 10.7 (retry clearly indicated)</text>
+<text x="24.0" y="3116.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.retry.available, liveness.ui.attempts,</text>
+<text x="24.0" y="3129.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.ui.retry</text>
+<rect x="344.0" y="3054.0" width="250.0" height="330.0" rx="6" fill="#FFFFFF" stroke="#9AA5B1" stroke-width="1"/>
+<text x="356.0" y="3074.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#00467F" font-weight="bold" text-anchor="start">Face verification</text>
+<rect x="354.0" y="3084.0" width="230.0" height="130.0" rx="4" fill="#1D2025" stroke="none" stroke-width="1"/>
+<ellipse cx="469.0" cy="3141.0" rx="15" ry="19" fill="#4A525C"/>
+<path d="M 441.0 3187.0 Q 469.0 3153.0 497.0 3187.0 Z" fill="#4A525C"/>
+<ellipse cx="469.0" cy="3149.0" rx="42" ry="54" fill="none" stroke="#F26B5B" stroke-width="2.4" stroke-dasharray="7 5"/>
+<rect x="354.0" y="3220.0" width="230.0" height="108.0" rx="4" fill="#FCE8E6" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="3220.0" width="3.0" height="108.0" rx="0" fill="#B3261E" stroke="none" stroke-width="1"/>
+<circle cx="374" cy="3242" r="12" fill="#B3261E"/>
+<circle cx="374" cy="3242" r="6.5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="374" y1="3238.5" x2="374" y2="3242.8" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="374" cy="3245.2" r="0.9" fill="#FFFFFF"/>
+<text x="392.0" y="3237.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">Face verification could not</text>
+<text x="392.0" y="3251.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">be completed. Please try</text>
+<text x="392.0" y="3265.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">again.</text>
+<text x="392.0" y="3281.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#1F2933" font-weight="normal" text-anchor="start">Attempt 2 of 3. Select Retry to try</text>
+<text x="392.0" y="3293.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#1F2933" font-weight="normal" text-anchor="start">again.</text>
+<rect x="354.0" y="3338.0" width="110.0" height="5.0" rx="2.5" fill="#DDE3EA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="3338.0" width="72.6" height="5.0" rx="2.5" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="584.0" y="3344.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="end">Attempt 2 of 3</text>
+<rect x="534.8" y="3352.0" width="49.2" height="22.0" rx="4" fill="#FFFFFF" stroke="#0B2E4F" stroke-width="1.4"/>
+<text x="559.4" y="3367.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#005BAA" font-weight="normal" text-anchor="middle">Cancel</text>
+<rect x="485.8" y="3352.0" width="43.0" height="22.0" rx="4" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="507.3" y="3367.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Retry</text>
+<rect x="482.8" y="3349.0" width="49.0" height="28.0" rx="6" fill="none" stroke="#F2B01E" stroke-width="2.5"/>
+<rect x="620.0" y="3060.0" width="480.0" height="300.0" rx="6" fill="#000000" stroke="#9AA5B1" stroke-width="1"/>
+<text x="860.0" y="3082.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Face verification</text>
+<ellipse cx="860.0" cy="3160" rx="15" ry="19" fill="#2F353C"/>
+<path d="M 832.0 3206 Q 860.0 3172 888.0 3206 Z" fill="#2F353C"/>
+<ellipse cx="860.0" cy="3168" rx="50" ry="62" fill="none" stroke="#EF5350" stroke-width="2.2"/>
+<path d="M 620 3256 Q 620 3246 630 3246 H 1090 Q 1100 3246 1100 3256 V 3354 Q 1100 3360 1094 3360 H 626 Q 620 3360 620 3354 Z" fill="#12181F"/>
+<circle cx="640" cy="3264" r="6.5" fill="none" stroke="#FF8A80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="640" y1="3260.5" x2="640" y2="3264.8" fill="none" stroke="#FF8A80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="640" cy="3267.2" r="0.9" fill="#FF8A80"/>
+<text x="656.0" y="3269.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">Face verification could not be completed. Please try again.</text>
+<text x="656.0" y="3286.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#CFD8DC" font-weight="normal" text-anchor="start">Attempt 2 of 3. Select Retry to try again.</text>
+<line x1="634" y1="3310" x2="1086" y2="3310" stroke="#3B4650" stroke-width="2"/>
+<circle cx="638" cy="3321" r="3.2" fill="#FF8A80"/>
+<circle cx="649" cy="3321" r="3.2" fill="#FF8A80"/>
+<circle cx="660" cy="3321" r="3.2" fill="#FFFFFF"/>
+<rect x="1038.0" y="3330.0" width="50.0" height="20.0" rx="3" fill="#4FC3F7" stroke="#4FC3F7" stroke-width="1"/>
+<text x="1063.0" y="3343.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#0B1A24" font-weight="bold" text-anchor="middle">RETRY</text>
+<rect x="975.2" y="3330.0" width="56.8" height="20.0" rx="3" fill="#12181F" stroke="#3B4650" stroke-width="1"/>
+<text x="1003.6" y="3343.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">CANCEL</text>
+<text x="1124.0" y="3070.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Retry appears only while attempts are left.</text>
+<text x="1124.0" y="3084.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">Desktop: Retry takes keyboard focus (amber ring here)</text>
+<text x="1124.0" y="3099.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">and Enter selects it.</text>
+<text x="1124.0" y="3119.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Android: one dot per attempt (red = failed, white =</text>
+<text x="1124.0" y="3134.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">current, grey = left).</text>
+<text x="1124.0" y="3154.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: desktop d-r7-pad-fail-retry.png; Android</text>
+<text x="1124.0" y="3169.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">e2e-05.</text>
+<rect x="12.0" y="3400.0" width="1416.0" height="356.0" rx="6" fill="#EEF2F6" stroke="none" stroke-width="1"/>
+<text x="24.0" y="3426.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">10. Maximum attempts, recovery step</text>
+<text x="24.0" y="3451.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#3E4C59" font-weight="normal" text-anchor="start">PS04 10.7 (recovery process)</text>
+<text x="24.0" y="3472.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.retry.max_resident; sign-in:</text>
+<text x="24.0" y="3485.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.retry.max_auth</text>
+<rect x="344.0" y="3410.0" width="250.0" height="330.0" rx="6" fill="#FFFFFF" stroke="#9AA5B1" stroke-width="1"/>
+<text x="356.0" y="3430.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#00467F" font-weight="bold" text-anchor="start">Face verification</text>
+<rect x="354.0" y="3440.0" width="230.0" height="130.0" rx="4" fill="#1D2025" stroke="none" stroke-width="1"/>
+<ellipse cx="469.0" cy="3497.0" rx="15" ry="19" fill="#4A525C"/>
+<path d="M 441.0 3543.0 Q 469.0 3509.0 497.0 3543.0 Z" fill="#4A525C"/>
+<ellipse cx="469.0" cy="3505.0" rx="42" ry="54" fill="none" stroke="#F26B5B" stroke-width="2.4" stroke-dasharray="7 5"/>
+<rect x="354.0" y="3576.0" width="230.0" height="108.0" rx="4" fill="#FCE8E6" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="3576.0" width="3.0" height="108.0" rx="0" fill="#B3261E" stroke="none" stroke-width="1"/>
+<circle cx="374" cy="3598" r="12" fill="#B3261E"/>
+<rect x="369" y="3597" width="10" height="8" rx="1.5" fill="#FFFFFF"/>
+<path d="M 371 3597 V 3594 A 3 3 0 0 1 377 3594 V 3597" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="392.0" y="3593.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">Face capture could not be</text>
+<text x="392.0" y="3607.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">completed after 3 attempts.</text>
+<text x="392.0" y="3621.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">Please ask your supervisor to</text>
+<text x="392.0" y="3635.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">follow the centre's recovery</text>
+<text x="392.0" y="3649.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">process.</text>
+<rect x="354.0" y="3694.0" width="110.0" height="5.0" rx="2.5" fill="#DDE3EA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="3694.0" width="110.0" height="5.0" rx="2.5" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="584.0" y="3700.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="end">Attempt 3 of 3</text>
+<rect x="541.0" y="3708.0" width="43.0" height="22.0" rx="4" fill="#FFFFFF" stroke="#0B2E4F" stroke-width="1.4"/>
+<text x="562.5" y="3723.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#005BAA" font-weight="normal" text-anchor="middle">Close</text>
+<rect x="620.0" y="3416.0" width="480.0" height="300.0" rx="6" fill="#000000" stroke="#9AA5B1" stroke-width="1"/>
+<text x="860.0" y="3438.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Face verification</text>
+<ellipse cx="860.0" cy="3516" rx="15" ry="19" fill="#2F353C"/>
+<path d="M 832.0 3562 Q 860.0 3528 888.0 3562 Z" fill="#2F353C"/>
+<ellipse cx="860.0" cy="3524" rx="50" ry="62" fill="none" stroke="#EF5350" stroke-width="2.2"/>
+<path d="M 620 3612 Q 620 3602 630 3602 H 1090 Q 1100 3602 1100 3612 V 3710 Q 1100 3716 1094 3716 H 626 Q 620 3716 620 3710 Z" fill="#12181F"/>
+<rect x="635" y="3619" width="10" height="8" rx="1.5" fill="#FF8A80"/>
+<path d="M 637 3619 V 3616 A 3 3 0 0 1 643 3616 V 3619" fill="none" stroke="#FF8A80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="656.0" y="3625.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">Face capture could not be completed after 3 attempts. Please</text>
+<text x="656.0" y="3640.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">ask your supervisor to follow the centre's recovery process.</text>
+<line x1="634" y1="3666" x2="1086" y2="3666" stroke="#3B4650" stroke-width="2"/>
+<circle cx="638" cy="3677" r="3.2" fill="#FF8A80"/>
+<circle cx="649" cy="3677" r="3.2" fill="#FF8A80"/>
+<circle cx="660" cy="3677" r="3.2" fill="#FF8A80"/>
+<rect x="1031.2" y="3686.0" width="56.8" height="20.0" rx="3" fill="#12181F" stroke="#3B4650" stroke-width="1"/>
+<text x="1059.6" y="3699.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">CANCEL</text>
+<text x="1124.0" y="3426.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– No Retry. Sign-in and supervisor checks say</text>
+<text x="1124.0" y="3440.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">instead: "... Maximum attempts reached. Use another</text>
+<text x="1124.0" y="3455.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">sign-in method or contact your supervisor."</text>
+<text x="1124.0" y="3475.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: desktop e2e-07-max-attempts-guidance.png;</text>
+<text x="1124.0" y="3490.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">Android e2e-08-max-attempts.png, a-l2 (sign-in).</text>
+<text x="24.0" y="3782.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">11. Device error</text>
+<text x="24.0" y="3807.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#3E4C59" font-weight="normal" text-anchor="start">team (PS04 10.7 recovery, task 5)</text>
+<text x="24.0" y="3828.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.error.device_unavailable, .device_disconnected;</text>
+<text x="24.0" y="3841.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">Android: .camera_unavailable, .camera_permission</text>
+<rect x="344.0" y="3766.0" width="250.0" height="330.0" rx="6" fill="#FFFFFF" stroke="#9AA5B1" stroke-width="1"/>
+<text x="356.0" y="3786.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#00467F" font-weight="bold" text-anchor="start">Face verification</text>
+<rect x="354.0" y="3796.0" width="230.0" height="130.0" rx="4" fill="#1D2025" stroke="none" stroke-width="1"/>
+<ellipse cx="469.0" cy="3861.0" rx="42" ry="54" fill="none" stroke="#F26B5B" stroke-width="2.4" stroke-dasharray="7 5"/>
+<rect x="354.0" y="3932.0" width="230.0" height="108.0" rx="4" fill="#FCE8E6" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="3932.0" width="3.0" height="108.0" rx="0" fill="#B3261E" stroke="none" stroke-width="1"/>
+<circle cx="374" cy="3954" r="12" fill="#B3261E"/>
+<rect x="367" y="3950" width="10" height="8" rx="1.5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 377 3952.5 L 381 3950.5 V 3957.5 L 377 3955.5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="367" y1="3947" x2="381" y2="3961" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="392.0" y="3949.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">The face camera is not</text>
+<text x="392.0" y="3963.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">available. Check that it is</text>
+<text x="392.0" y="3977.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">connected and select Retry.</text>
+<text x="392.0" y="3993.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#1F2933" font-weight="normal" text-anchor="start">Attempt 1 of 3. Select Retry to try</text>
+<text x="392.0" y="4005.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#1F2933" font-weight="normal" text-anchor="start">again.</text>
+<rect x="354.0" y="4050.0" width="110.0" height="5.0" rx="2.5" fill="#DDE3EA" stroke="none" stroke-width="1"/>
+<text x="584.0" y="4056.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="end">Attempt 1 of 3</text>
+<rect x="534.8" y="4064.0" width="49.2" height="22.0" rx="4" fill="#FFFFFF" stroke="#0B2E4F" stroke-width="1.4"/>
+<text x="559.4" y="4079.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#005BAA" font-weight="normal" text-anchor="middle">Cancel</text>
+<rect x="485.8" y="4064.0" width="43.0" height="22.0" rx="4" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="507.3" y="4079.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Retry</text>
+<rect x="620.0" y="3772.0" width="480.0" height="300.0" rx="6" fill="#000000" stroke="#9AA5B1" stroke-width="1"/>
+<text x="860.0" y="3794.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Face verification</text>
+<ellipse cx="860.0" cy="3880" rx="50" ry="62" fill="none" stroke="#EF5350" stroke-width="2.2"/>
+<path d="M 620 3968 Q 620 3958 630 3958 H 1090 Q 1100 3958 1100 3968 V 4066 Q 1100 4072 1094 4072 H 626 Q 620 4072 620 4066 Z" fill="#12181F"/>
+<rect x="633" y="3972" width="10" height="8" rx="1.5" fill="none" stroke="#FF8A80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 643 3974.5 L 647 3972.5 V 3979.5 L 643 3977.5" fill="none" stroke="#FF8A80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="633" y1="3969" x2="647" y2="3983" fill="none" stroke="#FF8A80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="656.0" y="3981.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">The face camera is not available. Check that it is connected</text>
+<text x="656.0" y="3996.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">and select Retry.</text>
+<text x="656.0" y="4013.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#CFD8DC" font-weight="normal" text-anchor="start">Attempt 1 of 3. Select Retry to try again.</text>
+<line x1="634" y1="4022" x2="1086" y2="4022" stroke="#3B4650" stroke-width="2"/>
+<circle cx="638" cy="4033" r="3.2" fill="#FFFFFF"/>
+<circle cx="649" cy="4033" r="3.2" fill="#6B7680"/>
+<circle cx="660" cy="4033" r="3.2" fill="#6B7680"/>
+<rect x="1038.0" y="4042.0" width="50.0" height="20.0" rx="3" fill="#4FC3F7" stroke="#4FC3F7" stroke-width="1"/>
+<text x="1063.0" y="4055.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#0B1A24" font-weight="bold" text-anchor="middle">RETRY</text>
+<rect x="975.2" y="4042.0" width="56.8" height="20.0" rx="3" fill="#12181F" stroke="#3B4650" stroke-width="1"/>
+<text x="1003.6" y="4055.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">CANCEL</text>
+<text x="1124.0" y="3782.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– A device error never uses an attempt: the counter</text>
+<text x="1124.0" y="3796.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">stays at 1 of 3. On Android, a camera that cannot be</text>
+<text x="1124.0" y="3811.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">opened or camera access turned off have their own</text>
+<text x="1124.0" y="3825.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">texts; the second adds "Open settings".</text>
+<text x="1124.0" y="3846.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: desktop d-r10-device-error.png, e2e-02;</text>
+<text x="1124.0" y="3860.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">Android a-r2-camera-unavailable.png, e2e-04.</text>
+<rect x="12.0" y="4112.0" width="1416.0" height="356.0" rx="6" fill="#EEF2F6" stroke="none" stroke-width="1"/>
+<text x="24.0" y="4138.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">12. Multiple faces</text>
+<text x="24.0" y="4163.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#3E4C59" font-weight="normal" text-anchor="start">team (positioning guidance)</text>
+<text x="24.0" y="4184.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.error.multiple_faces</text>
+<rect x="344.0" y="4122.0" width="250.0" height="330.0" rx="6" fill="#FFFFFF" stroke="#9AA5B1" stroke-width="1"/>
+<text x="356.0" y="4142.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#00467F" font-weight="bold" text-anchor="start">Face verification</text>
+<rect x="354.0" y="4152.0" width="230.0" height="130.0" rx="4" fill="#1D2025" stroke="none" stroke-width="1"/>
+<ellipse cx="443.0" cy="4209.0" rx="15" ry="19" fill="#4A525C"/>
+<path d="M 415.0 4255.0 Q 443.0 4221.0 471.0 4255.0 Z" fill="#4A525C"/>
+<ellipse cx="495.0" cy="4209.0" rx="15" ry="19" fill="#4A525C"/>
+<path d="M 467.0 4255.0 Q 495.0 4221.0 523.0 4255.0 Z" fill="#4A525C"/>
+<ellipse cx="469.0" cy="4217.0" rx="42" ry="54" fill="none" stroke="#F2B01E" stroke-width="2.4" stroke-dasharray="7 5"/>
+<rect x="354.0" y="4288.0" width="230.0" height="108.0" rx="4" fill="#FFF4DB" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="4288.0" width="3.0" height="108.0" rx="0" fill="#8A5A00" stroke="none" stroke-width="1"/>
+<circle cx="374" cy="4310" r="12" fill="#8A5A00"/>
+<path d="M 374 4303 L 381 4315.5 L 367 4315.5 Z" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="374" y1="4307.5" x2="374" y2="4311.2" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="374" cy="4313.4" r="0.9" fill="#FFFFFF"/>
+<text x="392.0" y="4305.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#5B3B00" font-weight="bold" text-anchor="start">More than one face detected.</text>
+<text x="392.0" y="4319.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#5B3B00" font-weight="bold" text-anchor="start">Only the person being</text>
+<text x="392.0" y="4333.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#5B3B00" font-weight="bold" text-anchor="start">captured should be in view.</text>
+<rect x="354.0" y="4406.0" width="110.0" height="5.0" rx="2.5" fill="#DDE3EA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="4406.0" width="5.5" height="5.0" rx="2.5" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="584.0" y="4412.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="end">Attempt 1 of 3</text>
+<rect x="534.8" y="4420.0" width="49.2" height="22.0" rx="4" fill="#FFFFFF" stroke="#0B2E4F" stroke-width="1.4"/>
+<text x="559.4" y="4435.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#005BAA" font-weight="normal" text-anchor="middle">Cancel</text>
+<rect x="620.0" y="4128.0" width="480.0" height="300.0" rx="6" fill="#000000" stroke="#9AA5B1" stroke-width="1"/>
+<text x="860.0" y="4150.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Face verification</text>
+<ellipse cx="834.0" cy="4228" rx="15" ry="19" fill="#2F353C"/>
+<path d="M 806.0 4274 Q 834.0 4240 862.0 4274 Z" fill="#2F353C"/>
+<ellipse cx="886.0" cy="4228" rx="15" ry="19" fill="#2F353C"/>
+<path d="M 858.0 4274 Q 886.0 4240 914.0 4274 Z" fill="#2F353C"/>
+<ellipse cx="860.0" cy="4236" rx="50" ry="62" fill="none" stroke="#FFB300" stroke-width="2.2"/>
+<path d="M 620 4324 Q 620 4314 630 4314 H 1090 Q 1100 4314 1100 4324 V 4422 Q 1100 4428 1094 4428 H 626 Q 620 4428 620 4422 Z" fill="#12181F"/>
+<path d="M 640 4325 L 647 4337.5 L 633 4337.5 Z" fill="none" stroke="#FFB300" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="640" y1="4329.5" x2="640" y2="4333.2" fill="none" stroke="#FFB300" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="640" cy="4335.4" r="0.9" fill="#FFB300"/>
+<text x="656.0" y="4337.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">More than one face detected. Only the person being captured</text>
+<text x="656.0" y="4352.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">should be in view.</text>
+<line x1="634" y1="4378" x2="1086" y2="4378" stroke="#3B4650" stroke-width="2"/>
+<line x1="634" y1="4378" x2="656.6" y2="4378" stroke="#4FC3F7" stroke-width="2"/>
+<circle cx="638" cy="4389" r="3.2" fill="#FFFFFF"/>
+<circle cx="649" cy="4389" r="3.2" fill="#6B7680"/>
+<circle cx="660" cy="4389" r="3.2" fill="#6B7680"/>
+<rect x="1031.2" y="4398.0" width="56.8" height="20.0" rx="3" fill="#12181F" stroke="#3B4650" stroke-width="1"/>
+<text x="1059.6" y="4411.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">CANCEL</text>
+<text x="1124.0" y="4138.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– A positioning problem: the check waits until only</text>
+<text x="1124.0" y="4152.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">one face is in view; no attempt is used.</text>
+<text x="1124.0" y="4173.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: none yet on either client (two-face pack</text>
+<text x="1124.0" y="4187.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">runs only in the scenario runner).</text>
+<text x="24.0" y="4494.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">13. Offline indicator</text>
+<text x="24.0" y="4519.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#3E4C59" font-weight="normal" text-anchor="start">team (offline operation)</text>
+<text x="24.0" y="4540.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.offline.badge</text>
+<rect x="344.0" y="4478.0" width="250.0" height="330.0" rx="6" fill="#FFFFFF" stroke="#9AA5B1" stroke-width="1"/>
+<text x="356.0" y="4498.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#00467F" font-weight="bold" text-anchor="start">Face verification</text>
+<rect x="354.0" y="4508.0" width="230.0" height="130.0" rx="4" fill="#1D2025" stroke="none" stroke-width="1"/>
+<ellipse cx="469.0" cy="4565.0" rx="15" ry="19" fill="#4A525C"/>
+<path d="M 441.0 4611.0 Q 469.0 4577.0 497.0 4611.0 Z" fill="#4A525C"/>
+<ellipse cx="469.0" cy="4573.0" rx="42" ry="54" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-dasharray="7 5"/>
+<rect x="360.0" y="4616.0" width="196.0" height="16.0" rx="8" fill="#5B4200" stroke="none" stroke-width="1"/>
+<text x="368.0" y="4627.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="8.5" fill="#FFFFFF" font-weight="bold" text-anchor="start">Offline – verification runs on this device</text>
+<rect x="354.0" y="4644.0" width="230.0" height="108.0" rx="4" fill="#E8F1FA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="4644.0" width="3.0" height="108.0" rx="0" fill="#005BAA" stroke="none" stroke-width="1"/>
+<circle cx="374" cy="4666" r="12" fill="#005BAA"/>
+<path d="M 380 4666 A 6 6 0 1 1 374 4660" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="392.0" y="4661.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#0B2E4F" font-weight="bold" text-anchor="start">Checking face liveness…</text>
+<text x="392.0" y="4678.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#0B2E4F" font-weight="normal" text-anchor="start" font-style="italic">(busy indicator)</text>
+<rect x="354.0" y="4762.0" width="110.0" height="5.0" rx="2.5" fill="#DDE3EA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="4762.0" width="33.0" height="5.0" rx="2.5" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="584.0" y="4768.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="end">Attempt 1 of 3</text>
+<rect x="534.8" y="4776.0" width="49.2" height="22.0" rx="4" fill="#FFFFFF" stroke="#0B2E4F" stroke-width="1.4"/>
+<text x="559.4" y="4791.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#005BAA" font-weight="normal" text-anchor="middle">Cancel</text>
+<rect x="620.0" y="4484.0" width="480.0" height="300.0" rx="6" fill="#000000" stroke="#9AA5B1" stroke-width="1"/>
+<text x="860.0" y="4506.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Face verification</text>
+<rect x="741.8" y="4514.0" width="236.4" height="15.0" rx="7.5" fill="#5B4200" stroke="none" stroke-width="1"/>
+<text x="860.0" y="4525.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="8.5" fill="#FFFFFF" font-weight="normal" text-anchor="middle">Offline – verification runs on this device</text>
+<ellipse cx="860.0" cy="4584" rx="15" ry="19" fill="#2F353C"/>
+<path d="M 832.0 4630 Q 860.0 4596 888.0 4630 Z" fill="#2F353C"/>
+<ellipse cx="860.0" cy="4592" rx="50" ry="62" fill="none" stroke="#FFFFFF" stroke-width="2.2"/>
+<path d="M 620 4680 Q 620 4670 630 4670 H 1090 Q 1100 4670 1100 4680 V 4778 Q 1100 4784 1094 4784 H 626 Q 620 4784 620 4778 Z" fill="#12181F"/>
+<path d="M 646 4688 A 6 6 0 1 1 640 4682" fill="none" stroke="#4FC3F7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="656.0" y="4693.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">Checking face liveness…</text>
+<text x="656.0" y="4711.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#CFD8DC" font-weight="normal" text-anchor="start" font-style="italic">(busy indicator)</text>
+<line x1="634" y1="4734" x2="1086" y2="4734" stroke="#3B4650" stroke-width="2"/>
+<line x1="634" y1="4734" x2="769.6" y2="4734" stroke="#4FC3F7" stroke-width="2"/>
+<circle cx="638" cy="4745" r="3.2" fill="#FFFFFF"/>
+<circle cx="649" cy="4745" r="3.2" fill="#6B7680"/>
+<circle cx="660" cy="4745" r="3.2" fill="#6B7680"/>
+<rect x="1031.2" y="4754.0" width="56.8" height="20.0" rx="3" fill="#12181F" stroke="#3B4650" stroke-width="1"/>
+<text x="1059.6" y="4767.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">CANCEL</text>
+<text x="1124.0" y="4494.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Shown in any state when there is no network; the</text>
+<text x="1124.0" y="4508.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">check itself never needs the network.</text>
+<text x="1124.0" y="4529.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: desktop d-l1-login-french-offline.png</text>
+<text x="1124.0" y="4543.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">(French); Android none (screen capture failed in</text>
+<text x="1124.0" y="4558.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">airplane mode).</text>
+<rect x="12.0" y="4824.0" width="1416.0" height="356.0" rx="6" fill="#EEF2F6" stroke="none" stroke-width="1"/>
+<text x="24.0" y="4850.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">14. Supervisor override</text>
+<text x="24.0" y="4875.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#3E4C59" font-weight="normal" text-anchor="start">team (resident capture after the last attempt)</text>
+<text x="24.0" y="4896.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start" font-style="italic">liveness.ui.override, liveness.override.confirm</text>
+<rect x="344.0" y="4834.0" width="250.0" height="330.0" rx="6" fill="#FFFFFF" stroke="#9AA5B1" stroke-width="1"/>
+<text x="356.0" y="4854.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#00467F" font-weight="bold" text-anchor="start">Face verification</text>
+<rect x="354.0" y="4864.0" width="230.0" height="130.0" rx="4" fill="#1D2025" stroke="none" stroke-width="1"/>
+<ellipse cx="469.0" cy="4921.0" rx="15" ry="19" fill="#4A525C"/>
+<path d="M 441.0 4967.0 Q 469.0 4933.0 497.0 4967.0 Z" fill="#4A525C"/>
+<ellipse cx="469.0" cy="4929.0" rx="42" ry="54" fill="none" stroke="#F26B5B" stroke-width="2.4" stroke-dasharray="7 5"/>
+<rect x="354.0" y="5000.0" width="230.0" height="108.0" rx="4" fill="#FCE8E6" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="5000.0" width="3.0" height="108.0" rx="0" fill="#B3261E" stroke="none" stroke-width="1"/>
+<circle cx="374" cy="5022" r="12" fill="#B3261E"/>
+<rect x="369" y="5021" width="10" height="8" rx="1.5" fill="#FFFFFF"/>
+<path d="M 371 5021 V 5018 A 3 3 0 0 1 377 5018 V 5021" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="392.0" y="5017.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">Face capture could not be</text>
+<text x="392.0" y="5031.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">completed after 3 attempts.</text>
+<text x="392.0" y="5045.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">Please ask your supervisor to</text>
+<text x="392.0" y="5059.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">follow the centre's recovery</text>
+<text x="392.0" y="5073.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#7A1712" font-weight="bold" text-anchor="start">process.</text>
+<rect x="354.0" y="5118.0" width="110.0" height="5.0" rx="2.5" fill="#DDE3EA" stroke="none" stroke-width="1"/>
+<rect x="354.0" y="5118.0" width="110.0" height="5.0" rx="2.5" fill="#005BAA" stroke="none" stroke-width="1"/>
+<text x="584.0" y="5124.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="end">Attempt 3 of 3</text>
+<rect x="454.2" y="5132.0" width="129.8" height="22.0" rx="4" fill="#FFFFFF" stroke="#0B2E4F" stroke-width="1.4"/>
+<text x="519.1" y="5147.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#005BAA" font-weight="normal" text-anchor="middle">Supervisor override</text>
+<rect x="405.2" y="5132.0" width="43.0" height="22.0" rx="4" fill="#FFFFFF" stroke="#0B2E4F" stroke-width="1.4"/>
+<text x="426.7" y="5147.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" fill="#005BAA" font-weight="normal" text-anchor="middle">Close</text>
+<rect x="358.0" y="4886.0" width="222.0" height="112.0" rx="4" fill="#FFFFFF" stroke="#5F6B76" stroke-width="1" filter="url(#shadow)"/>
+<text x="368.0" y="4903.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#0B2E4F" font-weight="bold" text-anchor="start">Supervisor verification</text>
+<text x="368.0" y="4919.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="start">Supervisor override: this face will be</text>
+<text x="368.0" y="4931.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#1F2933" font-weight="normal" text-anchor="start">flagged for review in the packet. Continue?</text>
+<text x="547.0" y="4988.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#005BAA" font-weight="bold" text-anchor="middle">Cancel</text>
+<text x="509.0" y="4988.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#005BAA" font-weight="bold" text-anchor="middle">OK</text>
+<rect x="620.0" y="4840.0" width="480.0" height="300.0" rx="6" fill="#000000" stroke="#9AA5B1" stroke-width="1"/>
+<text x="860.0" y="4862.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">Face verification</text>
+<ellipse cx="860.0" cy="4940" rx="15" ry="19" fill="#2F353C"/>
+<path d="M 832.0 4986 Q 860.0 4952 888.0 4986 Z" fill="#2F353C"/>
+<ellipse cx="860.0" cy="4948" rx="50" ry="62" fill="none" stroke="#EF5350" stroke-width="2.2"/>
+<path d="M 620 5036 Q 620 5026 630 5026 H 1090 Q 1100 5026 1100 5036 V 5134 Q 1100 5140 1094 5140 H 626 Q 620 5140 620 5134 Z" fill="#12181F"/>
+<rect x="635" y="5043" width="10" height="8" rx="1.5" fill="#FF8A80"/>
+<path d="M 637 5043 V 5040 A 3 3 0 0 1 643 5040 V 5043" fill="none" stroke="#FF8A80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="656.0" y="5049.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">Face capture could not be completed after 3 attempts. Please</text>
+<text x="656.0" y="5064.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="bold" text-anchor="start">ask your supervisor to follow the centre's recovery process.</text>
+<line x1="634" y1="5090" x2="1086" y2="5090" stroke="#3B4650" stroke-width="2"/>
+<circle cx="638" cy="5101" r="3.2" fill="#FF8A80"/>
+<circle cx="649" cy="5101" r="3.2" fill="#FF8A80"/>
+<circle cx="660" cy="5101" r="3.2" fill="#FF8A80"/>
+<rect x="942.8" y="5110.0" width="145.2" height="20.0" rx="3" fill="#12181F" stroke="#3B4650" stroke-width="1"/>
+<text x="1015.4" y="5123.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">SUPERVISOR OVERRIDE</text>
+<rect x="880.0" y="5110.0" width="56.8" height="20.0" rx="3" fill="#12181F" stroke="#3B4650" stroke-width="1"/>
+<text x="908.4" y="5123.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">CANCEL</text>
+<rect x="620.0" y="4840.0" width="480.0" height="300.0" rx="0" fill="#000000" stroke="none" stroke-width="1" fill-opacity="0.45"/>
+<rect x="710.0" y="4910.0" width="300.0" height="112.0" rx="4" fill="#3A3F44" stroke="#5F6B76" stroke-width="1" filter="url(#shadow)"/>
+<text x="720.0" y="4927.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#FFFFFF" font-weight="bold" text-anchor="start">Supervisor verification</text>
+<text x="720.0" y="4943.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#E3E7EA" font-weight="normal" text-anchor="start">Supervisor override: this face will be flagged for review in</text>
+<text x="720.0" y="4955.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#E3E7EA" font-weight="normal" text-anchor="start">the packet. Continue?</text>
+<line x1="720" y1="4977" x2="1000" y2="4977" stroke="#4FC3F7" stroke-width="1.2"/>
+<text x="722.0" y="4974.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#E3E7EA" font-weight="normal" text-anchor="start" font-style="italic">Supervisor user ID</text>
+<text x="938.0" y="5012.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#4FC3F7" font-weight="bold" text-anchor="middle">SUPERVISOR OVERRIDE</text>
+<text x="849.0" y="5012.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9.5" fill="#4FC3F7" font-weight="bold" text-anchor="middle">CANCEL</text>
+<text x="1124.0" y="4850.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Only for resident capture with on_max_failure =</text>
+<text x="1124.0" y="4864.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">SUPERVISOR_OVERRIDE, and never after a suspected</text>
+<text x="1124.0" y="4879.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">attack. The packet marks the face</text>
+<text x="1124.0" y="4893.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">LIVENESS_DECISION=OVERRIDE.</text>
+<text x="1124.0" y="4914.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Who confirms and how:</text>
+<text x="1124.0" y="4928.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">docs/design/desktop-liveness-ui.md and</text>
+<text x="1124.0" y="4943.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">android-liveness.md section 13.1.</text>
+<text x="1124.0" y="4963.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: Android capture-override-*.png; desktop</text>
+<text x="1124.0" y="4978.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">none.</text>
+</svg>

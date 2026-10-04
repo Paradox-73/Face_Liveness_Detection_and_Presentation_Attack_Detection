@@ -1,21 +1,27 @@
 # UX: screens, flows and messages
 
 Index of every committed screen picture of the face liveness feature on both clients, grouped by state, plus the
-states that have no picture yet. All pictures are real screens of the running clients (not drawn mockups). None
-shows a real face: the desktop driver and the Android replay hide the camera preview, so the dark oval is where the
-camera image would be.
+states that have no picture yet. All pictures are real screens of the running clients. The `e2e-*` pictures and
+the Android pictures hide the camera preview, so the dark oval is where the camera image would be. The desktop
+`d-*` pictures show, in the preview, the stock stream image that ships with MOSIP MockMDS (MPL-2.0; see
+[desktop-liveness.md](desktop-liveness.md)), never a team member or a volunteer.
+
+Wireframes of every state, desktop and Android side by side: [wireframes.svg](wireframes.svg) (one row per
+PS04 section 10 state plus device error, multiple faces, offline and supervisor override; drawn 2026-10-04 on an
+opaque light card, so it reads the same on light and dark pages).
 
 | Document | Content |
 |---|---|
+| [wireframes.svg](wireframes.svg) | Wireframe sheet: desktop dialog and Android capture screen for each of 14 states, with message keys and the matching committed pictures. Drawn by [capture/draw_wireframes.py](capture/draw_wireframes.py) from the texts of the message catalogue |
 | [desktop-liveness.md](desktop-liveness.md) | Desktop pictures with captions, accessibility checks (contrast 6.8:1 or more, keyboard, screen reader), how to reproduce them |
-| [flows.md](flows.md) | State diagram of the liveness panel and user flows (resident, operator, supervisor, failure and recovery, device error) as Mermaid diagrams |
+| [flows.md](flows.md) | State diagram of the liveness panel and user flows as Mermaid diagrams: desktop (resident, operator, supervisor, failure and recovery, device error) and Android (screen overview, resident capture, face sign-in, packet authentication, supervisor approval, supervisor override, device errors and offline) |
 | [message-catalogue.csv](message-catalogue.csv) | Every liveness text in English, French and Arabic, with its PS04 source (the same keys and English texts are in the Android module) |
 | [../design/desktop-liveness-ui.md](../design/desktop-liveness-ui.md) | Desktop screen design and deviations |
 | [../design/android-liveness.md](../design/android-liveness.md) | Android capture screen (section 3) and ARC screens (section 11) |
 | [capture/LivenessScreensDriver.java](capture/LivenessScreensDriver.java) | Drives the real desktop client through each state and saves pictures |
 
 Picture folders: `screenshots/desktop/` (JavaFX client, 1280x800 window) and `screenshots/android/` (10.1-inch
-tablet emulator, 1280x800). IDs such as D-R1 follow the mockup list of the design plan (D = desktop, A = Android,
+tablet emulator, 1280x800). IDs such as D-R1 name one screen state (D = desktop, A = Android,
 R = resident, L = login, E = end of day).
 
 ## 1. Resident face capture
@@ -23,10 +29,11 @@ R = resident, L = login, E = end of day).
 | State | Desktop | Android |
 |---|---|---|
 | Positioning (oval guide, "Look directly at the camera.") | [d-r1-positioning.png](screenshots/desktop/d-r1-positioning.png) | — |
-| Checking face liveness (passive, no action needed) | — (described in [desktop-liveness.md](desktop-liveness.md) section 2) | — |
-| Active challenge, step 1 of 2, icon and progress | [e2e-03-low-confidence-challenge.png](screenshots/desktop/e2e-03-low-confidence-challenge.png) ("Please blink") | [e2e-06-low-confidence-challenge.png](screenshots/android/e2e-06-low-confidence-challenge.png) ("Please smile") |
+| Positioning tip during an attempt (amber banner and oval, "Ensure your face is clearly visible.", attempt 3 of 3) | [d-r8-max-attempts.png](screenshots/desktop/d-r8-max-attempts.png) (the file name says maximum attempts, but the picture was taken before the attempt ended; see section 7) | — |
+| Checking face liveness (passive, no action needed) | — (described in [desktop-liveness.md](desktop-liveness.md) section 2; wireframe row 2) | — (wireframe row 2) |
+| Active challenge, step 1 of 2, icon and progress | [e2e-03-low-confidence-challenge.png](screenshots/desktop/e2e-03-low-confidence-challenge.png) ("Please smile", smile icon) | [e2e-06-low-confidence-challenge.png](screenshots/android/e2e-06-low-confidence-challenge.png) ("Please smile") |
 | Challenge forced by policy (`ALWAYS_ACTIVE` after a sync) | [e2e-10-config-sync-print-refused.png](screenshots/desktop/e2e-10-config-sync-print-refused.png) | [e2e-12-config-active-challenge.png](screenshots/android/e2e-12-config-active-challenge.png) |
-| Action detected / hold still | — | — |
+| Action detected / hold still | — (wireframe rows 4 and 5) | — (wireframe rows 4 and 5) |
 | Success, "Good, face captured successfully" | — (described in [desktop-liveness.md](desktop-liveness.md) section 2) | [a-r1-resident-face-passed.png](screenshots/android/a-r1-resident-face-passed.png) (ARC biometrics screen: banner, quality 90%, attempt 1) |
 
 ## 2. Operator authentication
@@ -56,10 +63,12 @@ R = resident, L = login, E = end of day).
 | Liveness not established (challenge timeout): "We could not verify face liveness. Please try again." with guidance | [e2e-05-print-refused.png](screenshots/desktop/e2e-05-print-refused.png) | [e2e-03-sign-in-replay-refused.png](screenshots/android/e2e-03-sign-in-replay-refused.png) |
 | Suspected attack (PAD, integrity): generic "Face verification could not be completed. Please try again." | [d-r7-pad-fail-retry.png](screenshots/desktop/d-r7-pad-fail-retry.png), [e2e-06-injected-still-refused.png](screenshots/desktop/e2e-06-injected-still-refused.png) | [e2e-05-resident-replay-refused.png](screenshots/android/e2e-05-resident-replay-refused.png) |
 | Retry available, "Attempt n of 3" | [d-r7-pad-fail-retry.png](screenshots/desktop/d-r7-pad-fail-retry.png) | [e2e-05-resident-replay-refused.png](screenshots/android/e2e-05-resident-replay-refused.png) |
-| Maximum attempts, recovery guidance | [d-r8-max-attempts.png](screenshots/desktop/d-r8-max-attempts.png), [e2e-07-max-attempts-guidance.png](screenshots/desktop/e2e-07-max-attempts-guidance.png) | [e2e-08-max-attempts.png](screenshots/android/e2e-08-max-attempts.png) |
+| Maximum attempts, recovery guidance | [e2e-07-max-attempts-guidance.png](screenshots/desktop/e2e-07-max-attempts-guidance.png) | [e2e-08-max-attempts.png](screenshots/android/e2e-08-max-attempts.png) |
 | Capture blocked for the registration after maximum attempts | — | [e2e-09-blocked-under-scan.png](screenshots/android/e2e-09-blocked-under-scan.png), [a-r3-resident-max-attempts.png](screenshots/android/a-r3-resident-max-attempts.png) |
 | No face in view (no attempt used) | [d-r12-no-face.png](screenshots/desktop/d-r12-no-face.png) | — |
 | Printed photo accepted under the shipped policy (known weakness, kept as evidence) | — | [e2e-14-print-accepted-shipped-policy.png](screenshots/android/e2e-14-print-accepted-shipped-policy.png) |
+| Supervisor override offered after the last resident attempt (policy `SUPERVISOR_OVERRIDE`, no suspected attack) | — | [capture-override-offered-diagnostics.png](screenshots/android/capture-override-offered-diagnostics.png) (run with `max_retries=1`, so the text reads "after 1 attempts"; diagnostic panel on) |
+| Supervisor override confirmation, supervisor user ID | — | [capture-override-supervisor-dialog.png](screenshots/android/capture-override-supervisor-dialog.png) |
 
 ## 5. Device errors
 
@@ -89,12 +98,22 @@ R = resident, L = login, E = end of day).
 | Resident positioning | present | missing | Android capture screen goes to checking at once with replay |
 | Device unavailable with its own wording | wrong text | not applicable | Desktop maps a refused stream to the "disconnected" message; fix in the services layer |
 | Offline badge | present | missing | Screen capture returns a stale frame in airplane mode; use `uiautomator` screenshot or a physical device |
-| Supervisor override (resident, desktop only) | missing | not applicable | Run section I2 of the desktop report with snapshots on |
+| Supervisor override (resident) | missing | present (text "after 1 attempts", see retakes) | Desktop: run section I2 of the desktop report with snapshots on |
 | Packet authentication by face | missing | present | Desktop driver section D3 has no snapshot step |
 | Arabic / Hindi capture screen on Android | missing | missing | Pictures exist only in the scratch folder of the module engineer; re-take with the masked replay |
-| Diagnostic mode (scores shown to a supervisor) | missing | missing | `mosip.registration.liveness.diagnostic.enable=Y` was not used in any recorded run |
+| Diagnostic mode (scores shown to a supervisor) | present: [e2e-13-diagnostic-mode.png](screenshots/desktop/e2e-13-diagnostic-mode.png) (not yet captioned in [desktop-liveness.md](desktop-liveness.md)) | present: [capture-override-offered-diagnostics.png](screenshots/android/capture-override-offered-diagnostics.png) | — |
 | Configuration updated notice (`liveness.config.updated`) | missing | missing | Text exists but no screen shows it yet |
-| Drawn wireframes / Penpot mockups | missing | missing | The index above uses real screens instead |
+| Drawn wireframes | present | present | [wireframes.svg](wireframes.svg), both clients side by side, 14 states |
+
+### 7.1 Retakes still needed (2026-10-04)
+
+| Picture | Problem | Retake |
+|---|---|---|
+| [d-r8-max-attempts.png](screenshots/desktop/d-r8-max-attempts.png) | Taken during attempt 3 while the positioning tip "Ensure your face is clearly visible." was shown, not after the attempt ended; captioned as what it shows | Run the driver's `static-pad` scenario again and snapshot after the third failure (lock icon, Close), or drop the file: [e2e-07-max-attempts-guidance.png](screenshots/desktop/e2e-07-max-attempts-guidance.png) already shows that state |
+| [e2e-03-low-confidence-challenge.png](screenshots/desktop/e2e-03-low-confidence-challenge.png) | Shows "Please smile" (challenges are random); earlier captions said "Please blink". Captions in this folder are fixed; [../pitch/deck-outline.md](../pitch/deck-outline.md) still says "Please blink" | No retake needed; fix the deck caption |
+| [capture-override-offered-diagnostics.png](screenshots/android/capture-override-offered-diagnostics.png), [capture-override-supervisor-dialog.png](screenshots/android/capture-override-supervisor-dialog.png) | Text reads "after 1 attempts" (run with `max_retries=1`; the message has no singular form) | Retake after the plural fix, or with the shipped 3 attempts |
+| Desktop `d-*` pictures | Preview shows the MockMDS stock photo with mirrored overlay text | Retake with the masked preview like the `e2e-*` pictures, for a consistent look |
+| States marked missing above | No picture | Masked runs as described in each row; the wireframe sheet stands in until then |
 
 ## 8. Consistency between the clients
 
@@ -102,6 +121,12 @@ R = resident, L = login, E = end of day).
   `values/strings.xml` with the same text (checked on 2026-09-30, `../test-report/android-e2e.md` section 7).
 - Same states and meanings: device error without using an attempt, "Step n of k" challenges, generic PAD message,
   "Attempt n of 3", maximum-attempts recovery text, "Supervisor verification" title, offline badge.
-- Differences by design: desktop offers a supervisor override after the last resident failure (not after a
-  suspected attack), Android blocks; the wrong-person text at sign-in differs ("Face match not found" on desktop,
-  "The face does not match this user. Please try again." on Android).
+- Supervisor override: both clients offer it after the last resident failure when the policy is
+  `SUPERVISOR_OVERRIDE`, never after a suspected attack. Desktop asks for an OK in a "Supervisor verification"
+  confirmation and grants it to a signed-in user with the supervisor role
+  ([../design/desktop-liveness-ui.md](../design/desktop-liveness-ui.md)); Android asks for the supervisor's user ID
+  and then the supervisor's own face verification ([../design/android-liveness.md](../design/android-liveness.md)
+  section 13.1). Status as of 2026-10-04.
+- Differences by design: the desktop dialog is a light 520 px window over the capture screen, Android a dark
+  full screen (each follows its platform); the wrong-person text at sign-in differs ("Face match not found" on
+  desktop, "The face does not match this user. Please try again." on Android). Side by side: [wireframes.svg](wireframes.svg).

@@ -87,11 +87,14 @@ public interface LivenessService {
 ```
 
 `LivenessCaptureRequest.builder(Workflow, String subjectRef)` with `.language("eng")`, `.priorAttempts(n)` (attempts
-already used in this transaction), `.photoWhenOff(true)` (exception photo without liveness); debug builds only:
+already used in this transaction), `.priorSuspectedAttack(true)` (an earlier screen saw a suspected attack: no
+override), `.priorLowLight(n)` (uncounted dim-light results since the last counted failure),
+`.photoWhenOff(true)` (exception photo without liveness); debug builds only:
 `.replay(pack, fps)`, `.replayFollow(true)`, `.replayMasked(true)`, `.configOverride(key, value)`.
 
 `LivenessCaptureResult`: `isPass()`, decision, failure reason, reason codes, message key, attempts and maximum,
-`isRetryAllowed()`, `isOverrideAllowed()`, `isLockRequired()`, `onMaxFailure()`, and for a pass
+`isRetryAllowed()`, `isOverrideAllowed()`, `isLockRequired()`, `onMaxFailure()`, `lowLightRetries()` (the
+transaction's uncounted dim-light results, to pass as `priorLowLight` to the next screen), and for a pass
 `rCaptureResponse()` (SBI 0.9.5 JSON for ARC's `Biometrics095Service.handleRCaptureResponse`), `faceIso()`,
 `transactionId()`, `tokenNonce()`, `evidence()` (`LIVENESS_*` map).
 
@@ -103,6 +106,8 @@ already used in this transaction), `.photoWhenOff(true)` (exception photo withou
 | `liveness.subject` | string | RID or user ID |
 | `liveness.language` | string | ARC language code (default `eng`) |
 | `liveness.prior_attempts` | int | attempts already used |
+| `liveness.prior_suspected_attack` | boolean | an earlier screen saw a counted PAD, frame integrity or binding failure since the last pass: no supervisor override (default `false`) |
+| `liveness.prior_low_light` | int | uncounted dim-light results of earlier screens since the last counted failure (default 0) |
 | `liveness.photo_when_off` | boolean | take a plain signed photo when the policy is `OFF` |
 | `liveness.source` = `replay`, `liveness.replay`, `liveness.replay_fps`, `liveness.replay_follow`, `liveness.replay_masked` | debug builds | play a frame pack instead of the camera |
 | `config.<key>` | debug builds | configuration override for this run |

@@ -32,6 +32,7 @@ its status on 2026-09-30 (updated after the engine fixes and the desktop and And
 | `AND-13` | [design/android-liveness.md](design/android-liveness.md) section 13 (override, metrics, diagnostics, execution provider, release build; unit tests and the emulator run of 2026-09-30) |
 | `APCER`, `BPCER` | Attack acceptance rate and genuine-user rejection rate, ISO/IEC 30107-3 metric definitions, from the automated suite (technology regression results, not an ISO/IEC 30107-3 evaluation) |
 | Test class name | JUnit test class; the module table below gives its folder |
+| `T-CORE-*`, `T-SCN-*`, `T-MOCK-*`, `T-SYNC-*`, `T-PERF-*`, `T-MI-*` | Team test IDs, defined in the [Test IDs](#test-ids) table below |
 
 **Path prefixes used in the tables**
 
@@ -51,7 +52,7 @@ its status on 2026-09-30 (updated after the engine fixes and the desktop and And
 
 | Test classes | Folder |
 |---|---|
-| `ChallengeSchedulerTest`, `ChallengeObserverTest`, `ActivePhaseTest`, `QualityAndDecisionTest`, `IntegrityAndPlanarityTest`, `CaptureBindingTest`, `SessionScenarioTest`, `SessionEdgeCaseTest`, `ReportingTest`, `UiStateMapperTest`, `FrameHandOffTest`, `MjpegFrameReaderTest`, `MjpegEdgeCaseTest`, `PolicyResolverTest`, `LivenessPolicyTest`, `LivenessConfigKeysTest`, `AuditTest`, `UiContractTest`, `ImageBufferTest`, `DeviceTypesTest`, `ArchitectureTest` | `liveness/liveness-core/src/test/java/` |
+| `ChallengeSchedulerTest`, `ChallengeObserverTest`, `ActivePhaseTest`, `LivenessTransactionTest`, `QualityAndDecisionTest`, `IntegrityAndPlanarityTest`, `CaptureBindingTest`, `SessionScenarioTest`, `SessionEdgeCaseTest`, `ReportingTest`, `UiStateMapperTest`, `FrameHandOffTest`, `MjpegFrameReaderTest`, `MjpegEdgeCaseTest`, `PolicyResolverTest`, `LivenessPolicyTest`, `LivenessConfigKeysTest`, `AuditTest`, `UiContractTest`, `ImageBufferTest`, `DeviceTypesTest`, `ArchitectureTest` | `liveness/liveness-core/src/test/java/` |
 | `ModelRegistryTest`, `ModelSignerTest`, `OnnxGoldenTest`, `OnnxLivenessEnginesTest`, `MiniFasCropTest`, `YuNetDetectorTest`, `HeadPoseEstimatorTest` | `liveness/liveness-onnx/src/test/java/` |
 | `SFaceBioApiContractTest`, `MosipSdkLoaderTest`, `FaceIsoRecordTest` | `liveness/face-match-sdk/src/test/java/` |
 | `LivenessGateTest`, `BioServiceLivenessGateTest`, `LivenessOrchestratorTest`, `FaceStreamSessionTest`, `LivenessConfigTest`, `DesktopAuditSinkTest`, `LivenessPacketEvidenceTest`, `LivenessTokenStoreTest`, `DesktopImageDecoderTest`, `SbiFaceCaptureDeviceResolveTest`, `LivenessModelImporterTest`, `LivenessOnMaxFailureTest`, `LivenessAccountLockTest`, `AuditFactoryTest` | `clients/desktop/registration/registration-services/src/test/java/` |
@@ -60,6 +61,126 @@ its status on 2026-09-30 (updated after the engine fixes and the desktop and And
 | `FaceCaptureLivenessGateTest`, `FaceAuthFlowTest`, `LivenessCaptureLauncherTest`, `LivenessApiTest`, `SupervisorOverrideFlowTest` | `clients/android/android/app/src/test/java/` |
 | `RegistrationServiceImplTest` | `clients/android/android/clientmanager/src/test/java/` |
 | `face_auth_panel_test.dart`, `liveness_outcome_banner_test.dart` | `clients/android/test/liveness/` |
+
+## Test IDs
+
+Test IDs used in code comments, scenario titles and docs across the repository. Each family has a fixed meaning;
+a range such as `T-CORE-SM-01` ... `T-CORE-SM-20` is one test class whose methods cover those cases.
+
+Where it runs:
+- **engine:** `mvn -f liveness/pom.xml test` (JDK 11 with JavaFX or JDK 21), module `liveness-core`, class named in the row.
+- **scenario:** `tools/eval/scenario-runner` replays `eval/scenarios/<id>.yaml` through the real engine and models
+  (headless; [eval/README.md](eval/README.md)). `*` stands for each subject that has the scenario (`s1`, `s2`, `s3`).
+- **MockMDS:** `devices/mock-mds`, `mvn package -Dgpg.skip=true` on JDK 21; fault types in
+  `devices/mock-mds/LIVENESS-EXTENSIONS.md`, set at run time with `POST /admin/fault`.
+- **desktop:** `clients/desktop/registration/registration-services` unit tests (`mvn -pl registration-services test`).
+- **MockSync:** `mvn -f tools/mock-sync/pom.xml verify` (JDK 11).
+
+**Engine unit tests (`T-CORE-*`)**
+
+| ID | What it checks | Where it runs |
+|---|---|---|
+| `T-CORE-ACT-01` ... `T-CORE-ACT-12` | Challenge action detectors on synthetic landmark sequences at 20 fps: each action detected, wrong direction, onset too fast, action not held | engine, `ChallengeObserverTest` |
+| `T-CORE-ACT-07` | Head-turn direction uses the subject's own left and right (positive yaw is a turn to the subject's left) | engine, `ChallengeObserverTest` |
+| `T-CORE-API-02` | The core has no `javafx`, `android`, `java.awt` or `java.net` dependency, so it runs unchanged on desktop and Android API 28 | engine, `ArchitectureTest` |
+| `T-CORE-AUD-01` | Audit payloads of a whole session carry no image bytes, subject reference or raw score | engine, `ReportingTest` |
+| `T-CORE-AUD-02` | Diagnostic log lines hold technical signals only (no images, embeddings, user or registration IDs) | engine, `ReportingTest` |
+| `T-CORE-BND-01` ... `T-CORE-BND-03` | Stream-to-capture binding: pass token single use, expiry, bound to subject, workflow and device; similarity threshold; time window | engine, `CaptureBindingTest` |
+| `T-CORE-CH-01` ... `T-CORE-CH-06` | Challenge drawing: no public API to choose a challenge (CH-01), no immediate repeats, BLINK excluded at low frame rates, uniform draws, a head turn when planarity is on, seed only from test code | engine, `ChallengeSchedulerTest`; CH-01 also `ArchitectureTest` |
+| `T-CORE-DEC-01` ... `T-CORE-DEC-10` | Passive decision table just below, at and above each threshold, per policy and per workflow | engine, `QualityAndDecisionTest` |
+| `T-CORE-DEC-08` | Authentication workflows default to passive threshold 95 (DEC-09: at or above it they pass passively) | engine, `QualityAndDecisionTest` |
+| `T-CORE-INT-01` ... `T-CORE-INT-08` | Frame integrity: frozen frames, loops, timestamps going backwards, frame rate below minimum, several faces, face switch, corrupt JPEG, duplicate frames | engine, `IntegrityAndPlanarityTest` |
+| `T-CORE-MET-01` ... `T-CORE-MET-05` | Metrics: counters and timers, average and completion time, retry and failure rate | engine, `ReportingTest` |
+| `T-CORE-MET-02` | No identifiers (user, registration, device serial, session) in metric names or tags | engine, `ReportingTest` |
+| `T-CORE-MJ-01` ... `T-CORE-MJ-10` | MJPEG stream reader on synthetic, truncated and malformed streams | engine, `MjpegFrameReaderTest` |
+| `T-CORE-MJ-01` | At end of stream the reader returns instead of spinning like the stock `Streamer` loop | engine, `MjpegFrameReaderTest` |
+| `T-CORE-MJ-06` | A read timeout (for example the 2 s socket timeout) is reported as a stall | engine, `MjpegFrameReaderTest` |
+| `T-CORE-MJ-07` | Bytes arrive but no valid frame within 3 s | engine, `MjpegFrameReaderTest` |
+| `T-CORE-MJ-10` | A reset connection | engine, `MjpegFrameReaderTest` |
+| `T-CORE-PLN-01` ... `T-CORE-PLN-04` | Planarity check: synthetic 3-D versus flat landmark sets | engine, `IntegrityAndPlanarityTest` |
+| `T-CORE-POL-01` ... `T-CORE-POL-08` | Configuration keys to per-workflow policy | engine, `PolicyResolverTest` |
+| `T-CORE-POL-01` | Master switch; reads are null-safe | engine, `PolicyResolverTest` |
+| `T-CORE-POL-02` | Passive threshold, its floor and per-workflow overrides | engine, `PolicyResolverTest` |
+| `T-CORE-POL-03` | Policy per workflow (POL-08: the active switch) | engine, `PolicyResolverTest` |
+| `T-CORE-POL-04` | Challenge pool from `active.challenge_types` | engine, `PolicyResolverTest` |
+| `T-CORE-POL-05` | Counts, timeouts and retries kept within their ranges (POL-05 to POL-07) | engine, `PolicyResolverTest` |
+| `T-CORE-Q-01` ... `T-CORE-Q-03` | Quality gate: no face, poor quality, off-pose give guidance keys | engine, `QualityAndDecisionTest` |
+| `T-CORE-SM-01` ... `T-CORE-SM-20` | Session state transitions driven by a fake clock, device events, cancel and engine errors | engine, `SessionEdgeCaseTest` |
+| `T-CORE-TX-01` | Only counted failures use an attempt | engine, `ReportingTest` |
+| `T-CORE-TX-02` | `<workflow>.on_max_failure` decides what happens after the last attempt | engine, `ReportingTest`; key parsing in `PolicyResolverTest` |
+| `T-CORE-TX-03` | A PAD, integrity or binding failure marks the whole transaction as a suspected attack, so a later timeout or failed challenge on the last attempt cannot unlock the supervisor override | engine, `LivenessTransactionTest` |
+| `T-CORE-UI-01` ... `T-CORE-UI-10` | Session states and results to message keys; every suspected attack maps to the one generic message | engine, `UiStateMapperTest` |
+| `T-CORE-UI-09` | A synced `guidance.<messageKey>.<lang>` key replaces the bundle text for one language | engine, `UiStateMapperTest` |
+
+**Liveness scenarios (`T-SCN-L-*`)**
+
+| ID | What it checks | Where it runs |
+|---|---|---|
+| `T-SCN-L-01` | Genuine user in good light passes with the shipped policy | scenario `bf-*-registration`, `bf-*-login` |
+| `T-SCN-L-02` | Genuine user in a dim room: challenges, then pass | scenario `bf-s3-dim` |
+| `T-SCN-L-03` | Blink challenge passed by a genuine user | scenario `bf-s1-active`, `bf-s3-active` |
+| `T-SCN-L-04` | Smile challenge passed by a genuine user | scenario `bf-s1-active`, `bf-s3-active` |
+| `T-SCN-L-05` | Turn-left and turn-right challenges passed by a genuine user | scenario `bf-s2-active` |
+| `T-SCN-L-06` | Look-up challenge | engine `ChallengeObserverTest` only; no committed frame pack has a look-up clip, although the `bf-*-active` titles name the range L-03..06 |
+| `T-SCN-L-07` | User performs another action than the one prompted: refused | scenario `other-s1-wrong-action` |
+| `T-SCN-L-08` | User ignores the prompt: challenge timeout | scenario `other-s3-ignores-prompt` |
+| `T-SCN-L-09` | Empty scene, no face | scenario `other-no-face` |
+| `T-SCN-L-10` | Two faces in view | scenario `other-two-faces` |
+| `T-SCN-L-11` | Blurred or very dark frames give guidance, not a pass | scenario `other-blurred`, `other-too-dark` |
+| `T-SCN-L-12` | Failed attempt, then success on retry | no committed scenario; retry counting is `T-CORE-TX-01` |
+| `T-SCN-L-13` | Maximum retries reached | scenario `other-s3-ignores-prompt` |
+
+**Attack scenarios (`T-SCN-P-*`)** ([eval/protocol.md](eval/protocol.md) section 12 maps them to the volunteer attack species)
+
+| ID | What it checks | Where it runs |
+|---|---|---|
+| `T-SCN-P-01` | Printed photo held by hand or moved | scenario `atk-*-print-still`, `atk-*-print-still-login`, `atk-*-print-moved` |
+| `T-SCN-P-02` | Curved or tilted print used to fake head turns | scenario `atk-s2-print-tilted` |
+| `T-SCN-P-03` | Print with the eyes cut out | none (needs a physical artefact and a live attacker; volunteer species P3) |
+| `T-SCN-P-04` | Photo shown on a phone screen | scenario `atk-*-screen-photo` |
+| `T-SCN-P-05` | Photo shown on a laptop screen | scenario `atk-*-screen-photo` |
+| `T-SCN-P-06` | Recorded video replayed on a screen | scenario `atk-*-screen-replay`, `atk-s3-screen-replay-login` |
+| `T-SCN-P-07` | Adaptive replay: a clip chosen to match each prompt | scenario `atk-*-adaptive-screen`, `atk-*-adaptive-wrong-clip` |
+| `T-SCN-P-08` | One frozen image sent as every frame | scenario `atk-*-injected-still`, `atk-m-mockmds-stock` |
+| `T-SCN-P-09` | Short genuine clip looped | scenario `atk-*-looped-clip` |
+| `T-SCN-P-10` | Face swapped between the liveness stream and the stored capture | engine `CaptureBindingTest` (`T-CORE-BND-01` ... `T-CORE-BND-03`); no frame pack |
+
+**Mock device faults (`T-MOCK-*`)**: the fault is produced by MockMDS and checked in `FaceFaultInjectorTest`
+(MockMDS); the client reaction is checked where the row says.
+
+| ID | What it checks | Where it runs |
+|---|---|---|
+| `T-MOCK-01` | Device status Not Ready (`NOT_READY`): the client says the camera is not available and uses no attempt | MockMDS `FaceFaultInjectorTest`; client reaction not covered by an automated test |
+| `T-MOCK-02` | TCP reset of the stream (`RESET`) | MockMDS; engine `MjpegFrameReaderTest` (`T-CORE-MJ-10`) |
+| `T-MOCK-03` | Camera cannot be opened (`UNAVAILABLE`) | MockMDS; desktop `FaceStreamSessionTest` (refused stream) |
+| `T-MOCK-07` | Corrupt, truncated or non-JPEG parts and a wrong `Content-Length` are dropped | MockMDS; engine `MjpegFrameReaderTest`; desktop `FaceStreamSessionTest` |
+| `T-MOCK-08` | Stream stays open with no data (`STALL`): device error after the 2 s socket timeout | MockMDS; engine `MjpegFrameReaderTest` (`T-CORE-MJ-06`); desktop `FaceStreamSessionTest` |
+| `T-MOCK-09` | Clean close in the middle of a session (`DISCONNECT`): one reconnect, reader thread ends | MockMDS; desktop `FaceStreamSessionTest`; desktop end-to-end flow `tools/mock-sync/e2e/flows/20-registration-passive.flow` |
+| `T-MOCK-10` | Frame rate below the minimum (`SLOW_FPS`) | MockMDS; engine `IntegrityAndPlanarityTest` (`T-CORE-INT-01` ... `T-CORE-INT-08`) |
+| `T-MOCK-11` | Frozen stream (`FREEZE`, or the stock `STATIC` source) is reported as frozen | MockMDS; engine `IntegrityAndPlanarityTest`; scenario `atk-m-mockmds-stock` |
+
+**MockSync (`T-SYNC-*`)**
+
+| ID | What it checks | Where it runs |
+|---|---|---|
+| `T-SYNC-01` | Responses encrypted by MockSync decrypt with the algorithms each client type uses | MockSync, `ClientCryptoTest` |
+| `T-SYNC-02` | MockSync signatures verify with keymanager `SignatureServiceImpl.jwtVerify` | MockSync, `ResponseSignatureTest` |
+| `T-SYNC-03` | The real desktop client's first login and initial sync against MockSync | `tools/mock-sync/e2e/run-desktop-e2e.sh` with a running MockSync (starts the desktop client; not part of `mvn verify`) |
+| `T-SYNC-04` | A simulated Android tablet registers, logs in and runs the seven sync steps | MockSync, `AndroidClientContractTest` |
+| `T-SYNC-06` | `actuator/info` gives the server version and build fields the Android client uses to pick the sync APIs | MockSync, `AndroidClientContractTest` |
+
+**Performance (`T-PERF-*`)**
+
+| ID | What it checks | Where it runs |
+|---|---|---|
+| `T-PERF-01` | Per-frame time including JPEG decode at 640x480; target p95 at most 20 ms | scenario runner latency figures ([eval/calibration-notes.md](eval/calibration-notes.md)); Android: [test-report/android-e2e.md](test-report/android-e2e.md) section 5. Target not met |
+| `T-PERF-02` | Stream time to the passive decision; target p95 at most 2.5 s | scenario runner ([eval/calibration-notes.md](eval/calibration-notes.md)) |
+
+**Model import (`T-MI-*`)**
+
+| ID | What it checks | Where it runs |
+|---|---|---|
+| `T-MI-06` | Online model upgrade through a MockSync upgrade endpoint | not run: MockSync has no upgrade endpoint ([design/online-offline.md](design/online-offline.md)) |
 
 ## 1. Overview and hybrid flow
 

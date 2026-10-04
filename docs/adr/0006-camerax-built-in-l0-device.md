@@ -37,7 +37,7 @@ MOSIP's SBI specification defines L0 devices as ones where "trust is provided at
   `android.block_emulator=Y` refuses emulators; root detection is not implemented.
 - An unprovisioned tablet gets a self-signed key; liveness runs but ARC's DEVICE trust check refuses the capture,
   and `LivenessService.isBuiltInDeviceProvisioned()` lets screens say so.
-- ARC's `isDeviceValid` (L1 only) is not on this path; plan change N7 is still needed for L0 vendor SBI apps.
+- ARC's `isDeviceValid` (L1 only) is not on this path; accepting the `mosip.registration.mds.allowed_certifications` list there is still needed for L0 vendor SBI apps.
 - ONNX Runtime adds about 30 MB per CPU type; debug builds carry `arm64-v8a` and `x86_64` only. A release APK for `arm64-v8a` with the engine and models is 120.9 MB (`docs/test-report/android-e2e.md` section 6).
 
 ## Alternatives considered

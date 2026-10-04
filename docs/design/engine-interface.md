@@ -98,7 +98,7 @@ Both clients use this class, so retry rules are identical on desktop and Android
 A vendor engine must honour the session contract above, emit the audit events through the listener, and produce
 `LivenessUiState`s from the shared `MessageKeys`, so that the clients' screens and audit tables keep working.
 
-## 7. Deviations from the plan's interface (plan section 4.3)
+## 7. Interface choices
 
 - `ImageDecoder` was added to the core (the core cannot decode JPEG without ImageIO or Android classes).
 - `openStream` throws `DeviceException(NO_STREAM)` instead of returning a `NoStreamSource`.
@@ -107,4 +107,4 @@ A vendor engine must honour the session contract above, emit the audit events th
 - `LivenessSession` adds `start`, `tick`, `captureStarted`, `captureFailed` and `captureFrame`; `bind` takes one
   `BindingRequest` instead of four parameters.
 - `FailureReason.BINDING` also forbids a supervisor override.
-- The plan's `YUV420` frame format is `PixelFormat.NV21`.
+- The Android camera frame format is `PixelFormat.NV21` (no generic `YUV420` format).

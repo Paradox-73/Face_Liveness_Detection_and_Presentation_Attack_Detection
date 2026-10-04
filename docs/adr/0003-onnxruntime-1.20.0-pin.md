@@ -41,7 +41,7 @@ On Android, `onnxruntime-android` 1.29 and later merge `ai.onnxruntime.Telemetry
 
 ## Alternatives considered
 
-- **OpenCV DNN** (`org.opencv.dnn`, already shipped through biometrics-util): kept as fallback F2 in the plan; not
-  needed once 1.20.0 loaded.
+- **OpenCV DNN** (`org.opencv.dnn`, already shipped through biometrics-util): kept as a fallback in case 1.20.0 did
+  not load in the desktop JRE; not needed once 1.20.0 loaded.
 - **LiteRT / MediaPipe on Android:** different API and scores on each platform; rejected for consistency.
 - **Replacing the desktop JRE:** out of scope; MOSIP controls the client runtime.

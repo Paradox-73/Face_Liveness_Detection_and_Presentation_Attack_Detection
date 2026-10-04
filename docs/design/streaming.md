@@ -61,7 +61,7 @@ preview on screen is mirrored like a selfie; analysis frames are not (Android `C
 
 1. `LivenessRun` (desktop, `service/bio/liveness`) asks `SbiFaceCaptureDevice.openStream(StreamRequest)`.
 2. `SbiFaceCaptureDevice` calls the new overload `MosipDeviceSpecificationProvider.stream(device, modality,
-   StreamRequest)` (plan change D1) in the 0.9.5 or 1.0 provider. The request body is the stock SBI one,
+   StreamRequest)` (desktop change D1, [desktop-liveness-services.md](desktop-liveness-services.md) section 8) in the 0.9.5 or 1.0 provider. The request body is the stock SBI one,
    with `timeout` set to `mosip.registration.liveness.stream.timeout_ms` (default 60,000 ms) instead of the
    RC's `capture_time_out` (10,000 ms in mosip-config).
 3. `MosipDeviceSpecificationHelper.openStream(...)` opens the HTTP response with a **2 s socket read timeout** and
@@ -76,7 +76,7 @@ What `MjpegFrameReader` accepts and rejects:
   length, or is over 4 MiB. Invalid parts are counted (`StreamStats.invalidParts`) and skipped; after an
   over-declared length the reader resynchronises on the next boundary.
 - It makes exactly one terminal call, so there is no busy loop at end of stream (the stock `Streamer` spun on
-  `read() != 255` at end of stream; that loop was also fixed, plan D3).
+  `read() != 255` at end of stream; that loop was also fixed, desktop change D3).
 
 | Terminal call | Cause |
 |---|---|

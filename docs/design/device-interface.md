@@ -101,7 +101,7 @@ classDiagram
   found in the end-to-end run).
 - Android: `mosip.registration.liveness.android.device` = `BUILTIN` (default) or `SBI`.
 - The RC's upstream discovery DTOs failed on unknown JSON fields; `@JsonIgnoreProperties(ignoreUnknown = true)` was
-  added (plan D25) so a device that advertises `padCapability` does not break discovery.
+  added (desktop change D25) so a device that advertises `padCapability` does not break discovery.
 
 ### 2.2 L0 and L1
 
@@ -136,9 +136,9 @@ Admin API: [../api/mock-mds-admin.md](../api/mock-mds-admin.md). Full descriptio
 
 ## 5. Known gaps
 
-- The desktop `RCAPTURE` request does not yet send `bio[].pad` to `padCapability` devices (plan D7); the reader
+- The desktop `RCAPTURE` request does not yet send `bio[].pad` to `padCapability` devices (desktop change D7); the reader
   already extracts an echoed challenge and a device PAD block when present.
-- ARC's `Biometrics095Service.isDeviceValid` accepts only L1 SBI devices (plan N7 not done). The built-in camera
+- ARC's `Biometrics095Service.isDeviceValid` accepts only L1 SBI devices (accepting the `mosip.registration.mds.allowed_certifications` list is not done). The built-in camera
   path does not go through it, so it is not blocked; an L0 vendor SBI app on Android would be.
 - The `padCapability` JSON shape is provisional: MOSIP issue `android-registration-client#1117` has no final SBI
   text.

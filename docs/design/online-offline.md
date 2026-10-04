@@ -59,7 +59,7 @@ Every key: [configuration.md](configuration.md).
 | Update path | New client release through MOSIP's software upgrade (jar hashes listed in `MANIFEST.MF` and checked by `ClientSetupValidator` outside `environment=LOCAL`) | New APK |
 | Rollback protection | Raise `mosip.registration.liveness.model.min_version` by sync; an older bundle then refuses to load | same |
 
-Not done: the plan's online test of a model upgrade through a MockSync upgrade endpoint (T-MI-06) and the offline
+Not done: an online test of a model upgrade through a MockSync upgrade endpoint (T-MI-06) and the offline
 USB import of a signed bundle (bonus B6). MockSync has no client-upgrade endpoint, and the desktop run layout uses
 `environment=LOCAL`, which skips the jar hash check. The verification code that such an update would rely on
 (signature, hashes, minimum version, fail closed) is in place and unit-tested (`ModelRegistryTest`,

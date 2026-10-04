@@ -25,26 +25,33 @@ stay in the linked reports; requirement-by-requirement status is in [../traceabi
 
 ## 2. Unit and component tests
 
-All commands from the repository root after `. toolchain/env.sh` (Git Bash on Windows 11, 12 threads, 16 GB, other
-builds running at the same time). "Upstream" means tests that came with the imported MOSIP code and still pass with
-this project's changes.
+Commands run from the repository root in Git Bash (Windows) or bash (Linux), after the setup of
+[../install/README.md](../install/README.md) section 1: JDK 11 with JavaFX as the default `JAVA_HOME`, JDK 21 where the
+row says so, Maven 3.9, and the Maven mirror settings file that the repository ships as `.github/maven-settings.xml`.
+Set it once per shell with `export MAVEN_ARGS="-s .github/maven-settings.xml"` (from the repository root). The
+counts below were taken on the project laptop (Windows 11, 12 threads, 16 GB, other builds running at the same time).
+The last column names the job of `.github/workflows/ci.yml` that runs the same command on a clean `ubuntu-latest`
+machine at every push and pull request. As of 2026-10-04 the jobs `mock-mds`, `scenario-runner`, `eval-python`,
+`desktop-liveness` and `android-unit` have been run only as local commands (GitHub runs a workflow after the push);
+the first GitHub run is the check of the Linux-only steps. "Upstream" means tests that came with the imported MOSIP
+code and still pass with this project's changes.
 
-| Module | What it tests | Command | Tests | Failures / errors | Skipped |
-|---|---|---|---|---|---|
-| `liveness/liveness-core` | engine: session state machine, passive decision, challenges, action detection, integrity, planarity, capture binding, policy, audit, UI states, MJPEG reader | `with_lock liveness-build mvn -o -f liveness/pom.xml verify -Dliveness.benchmark.frames=0` | 272 | 0 | 0 |
-| `liveness/liveness-onnx` | ONNX adapters, golden outputs of the 5 models, signed model registry, engine factory, execution providers | same run | 95 | 0 | 0 |
-| `liveness/face-match-sdk` | SFace face-match SDK behind MOSIP's `IBioApiV2`, ISO 19794-5 records, MOSIP loader | same run | 42 | 0 | 0 |
-| desktop `registration-services` (liveness and audit tests) | capture and authentication gates, stream session, orchestrator, config, audit sink, packet evidence, pass tokens, model import, behaviour on repeated failure, account lock | `cd clients/desktop/registration && mvn -o -pl registration-services test "-Dtest=io/mosip/registration/service/bio/liveness/*Test.java,**/AuditFactoryTest.java"` | 111 | 0 | 0 |
-| desktop `registration-client` (liveness tests) | liveness panel view model, texts and replacement texts, bundle parity (en/fr/ar), JavaFX listener, diagnostic lines, model import window | `cd clients/desktop/registration/registration-client && mvn -o test -Dgpg.skip -Djacoco.skip=true "-Dtest=io/mosip/registration/controller/liveness/*Test.java"` | 36 | 0 | 0 |
-| Android `livenessmanager` | engine loader, config, audit sink, face authenticator, capture screen (Robolectric), image decoding, SBI codec, replay, supervisor override, metrics, diagnostic mode, execution provider | `cd clients/android/android && ./gradlew.bat --no-daemon :livenessmanager:testDebugUnitTest --rerun` | 109 | 0 | 0 |
-| Android `app` | capture gate, face-auth flow, capture launcher, Flutter bridge, supervisor override flow | same, `:app:testDebugUnitTest --rerun` | 35 | 0 | 0 |
-| Android `clientmanager` (upstream + liveness) | packet building with `LIVENESS_*` evidence, meta info; all upstream tests | same, `:clientmanager:testDebugUnitTest --rerun` | 1,186 | 0 | 0 |
-| Android Flutter widgets | face-auth panel, outcome banner, Arabic right-to-left | `cd clients/android && flutter test test/liveness/` (JDK 21) | 13 | 0 | 0 |
-| `tools/mock-sync` | sync endpoints, Android contract (key wrapping), response signatures, packet inspector | `cd tools/mock-sync && mvn -o test` | 37 | 0 | 0 |
-| `devices/mock-mds` (upstream + extensions) | frame sources, capture from the streamed frame, faults, renewed FTM keys | `cd devices/mock-mds && mvn -o test -Dgpg.skip=true` (JDK 21) | 226 | 0 | 0 |
-| `tools/eval/scenario-runner` | scenario loading, playlists, classification, output | `mvn -o -f tools/eval/scenario-runner/pom.xml test` | 29 | 0 | 0 |
-| `tools/eval` Python | APCER/BPCER, confidence intervals, frame-pack manifests | `python -m pytest -q tools/eval/tests` | 33 | 0 | 0 |
-| **Total** | | | **2,224** | **0** | **0** |
+| Module | What it tests | Command | Tests | Failures / errors | Skipped | CI job |
+|---|---|---|---|---|---|---|
+| `liveness/liveness-core` | engine: session state machine, passive decision, challenges, action detection, integrity, planarity, capture binding, policy, audit, UI states, MJPEG reader | `mvn -B -f liveness/pom.xml install -Dliveness.benchmark.frames=0` (the job runs `verify`; `install` also puts the engine in `~/.m2`, which the rows below need) | 272 | 0 | 0 | `liveness` |
+| `liveness/liveness-onnx` | ONNX adapters, golden outputs of the 5 models, signed model registry, engine factory, execution providers | same run | 95 | 0 | 0 | `liveness` |
+| `liveness/face-match-sdk` | SFace face-match SDK behind MOSIP's `IBioApiV2`, ISO 19794-5 records, MOSIP loader | same run | 42 | 0 | 0 | `liveness` |
+| desktop `registration-services` (liveness and audit tests) | capture and authentication gates, stream session, orchestrator, config, audit sink, packet evidence, pass tokens, model import, behaviour on repeated failure, account lock | after the engine install: `mvn -B -f clients/desktop/registration/pom.xml test -pl registration-services,registration-client -am -Dgpg.skip -Djacoco.skip=true -DfailIfNoTests=false "-Dtest=io/mosip/registration/service/bio/liveness/*Test.java,**/AuditFactoryTest.java,io/mosip/registration/controller/liveness/*Test.java"` (on Linux, put `xvfb-run -a` in front: the JavaFX tests need a display) | 111 | 0 | 0 | `desktop-liveness` |
+| desktop `registration-client` (liveness tests) | liveness panel view model, texts and replacement texts, bundle parity (en/fr/ar), JavaFX listener, diagnostic lines, model import window | same run | 36 | 0 | 0 | `desktop-liveness` |
+| Android `livenessmanager` | engine loader, config, audit sink, face authenticator, capture screen (Robolectric), image decoding, SBI codec, replay, supervisor override, metrics, diagnostic mode, execution provider | with JDK 21 as `JAVA_HOME`, Flutter 3.10.4 and the Android SDK of [../install/README.md](../install/README.md) section 1: `bash scripts/android-build.sh --test-only` (installs the engine, generates the code a fresh clone lacks, runs the three `testDebugUnitTest` tasks) | 109 | 0 | 0 | `android-unit` |
+| Android `app` | capture gate, face-auth flow, capture launcher, Flutter bridge, supervisor override flow | same run | 35 | 0 | 0 | `android-unit` |
+| Android `clientmanager` (upstream + liveness) | packet building with `LIVENESS_*` evidence, meta info; all upstream tests | same run | 1,186 | 0 | 0 | `android-unit` |
+| Android Flutter widgets | face-auth panel, outcome banner, Arabic right-to-left | after the Android run above: `cd clients/android && flutter test test/liveness/` | 13 | 0 | 0 | `android-unit` |
+| `tools/mock-sync` | sync endpoints, Android contract (key wrapping), response signatures, packet inspector | `mvn -B -f tools/mock-sync/pom.xml verify` | 37 | 0 | 0 | `mock-sync` |
+| `devices/mock-mds` (upstream + extensions) | frame sources, capture from the streamed frame, faults, renewed FTM keys | with JDK 21: `mvn -B -f devices/mock-mds/pom.xml package -Dgpg.skip=true` | 226 | 0 | 0 | `mock-mds` |
+| `tools/eval/scenario-runner` | scenario loading, playlists, classification, output | after the engine install: `mvn -B -f tools/eval/scenario-runner/pom.xml package` | 29 | 0 | 0 | `scenario-runner` |
+| `tools/eval` Python | APCER/BPCER, confidence intervals, frame-pack manifests | `pip install -r tools/eval/requirements.txt`, then `python -m pytest -q tools/eval/tests` | 33 | 0 | 0 | `eval-python` |
+| **Total** | | | **2,224** | **0** | **0** | |
 
 When each count was taken (all 2026-09-30):
 

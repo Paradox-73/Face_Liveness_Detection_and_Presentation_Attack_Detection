@@ -182,7 +182,7 @@ floors and ranges, and reports each correction; the orchestrator audits correcti
 | `model.store_dir` (desktop only) | `liveness-models` in the client's working folder | engine registry, model import |
 | `guidance.<messageKey>.<lang>` | unset (bundle text) | liveness window (`LivenessTexts.withOverrides`) |
 | `passive.threshold`, `pad.reject_threshold`, `passive.min_frames`, `passive.timeout_ms` | 80 / 20 / 30 / 4000 | session |
-| `active.*` (`enable`, `min_challenges`, `challenge_types`, `challenge_timeout_ms`, `min_onset_ms`, `hold_ms`) | see plan section 4.16 | session |
+| `active.*` (`enable`, `min_challenges`, `challenge_types`, `challenge_timeout_ms`, `min_onset_ms`, `hold_ms`) | see [configuration.md](configuration.md) section 5 | session |
 | `max_retries`, `on_max_failure`, `<workflow>.on_max_failure`, `<workflow>.{passive.threshold, min_challenges, max_retries}` | 3, `BLOCK` | run |
 | `stream.timeout_ms` | 60000 | stream request (replaces `capture_time_out` for liveness streams) |
 | `device.reconnect_attempts` | 1 | stream session |
@@ -253,8 +253,8 @@ is refused even if the pointer file is edited. A stored bundle that fails its ch
 models, an administrator deletes the `liveness-models` folder while the client is stopped.
 
 **Trust:** the store is not trusted: signature, hashes and version are checked again at every load. The trust
-anchor is the key built into `liveness-onnx` (`ModelTrustAnchors`); a production deployment replaces it (plan
-section 4.19).
+anchor is the key built into `liveness-onnx` (`ModelTrustAnchors`); a production deployment replaces it
+([security-privacy.md](security-privacy.md) section 5).
 
 ## 7. Packet evidence
 
@@ -272,7 +272,7 @@ The gate sets `BiometricsDto.livenessEvidence` from `PacketEvidenceKeys.of(resul
 
 ## 8. Upstream edits (surgical)
 
-| Plan ref | File | Change |
+| Change ID | File | Change |
 |---|---|---|
 | D1 | `mdm/integrator/MosipDeviceSpecificationProvider` | default `stream(device, modality, StreamRequest)` overload |
 | D1 | `MosipDeviceSpecification_095_ProviderImpl`, `MosipDeviceSpecification_SBI_1_0_ProviderImpl` | implement it with the liveness stream timeout and a socket read timeout; first frame not consumed |
@@ -290,7 +290,10 @@ The gate sets `BiometricsDto.livenessEvidence` from `PacketEvidenceKeys.of(resul
 | D23 | `registration-services/pom.xml` | `liveness-core`, `liveness-onnx`, `liveness-onnx:models`, `onnxruntime:1.20.0`; surefire property |
 | D25 | `DeviceDiscoveryMDSResponse`, `SbiDeviceDiscoveryMDSResponse`, `MdmSbiDeviceInfo`, `RCaptureResponseDataDTO` | `@JsonIgnoreProperties(ignoreUnknown = true)` so an unknown `padCapability` or `pad` field does not break discovery or capture |
 
-## 9. Deviations from the plan
+## 9. Design decisions
+
+The IDs D1-D25 number the desktop edit points (section 8 lists the service-layer ones,
+[desktop-liveness-ui.md](desktop-liveness-ui.md) section 3 the screens). For the edit points below the code takes another route:
 
 - **D2:** no `BioService.openFaceStream`. The stream is opened through `SbiFaceCaptureDevice.openStream`, which
   the orchestrator uses; screens never open a liveness stream themselves.

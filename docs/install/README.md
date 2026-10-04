@@ -106,7 +106,7 @@ curl -s -X POST http://127.0.0.1:4501/admin/source -d '{"type":"Face","source":"
    powershell -ExecutionPolicy Bypass -File scripts\desktop-run.ps1 -Stop
    ```
    ```bash
-   tools/mock-sync/scripts/register-machine.sh "$(cd ../run/desktop && pwd)"   # absolute path; JDK 11 java on PATH; TPM or local keys
+   tools/mock-sync/scripts/register-machine.sh "$(cd "${MOSIP_RUN_ROOT:-../run}/desktop" && pwd)"   # absolute path; JDK 11 java on PATH; TPM or local keys
    ```
 3. Start and log in (PowerShell):
    ```powershell
@@ -168,3 +168,85 @@ MockSync: Ctrl+C in its window.
 | Liveness says "The face camera is not available" | MockMDS not running or not discovered yet; start it and select Retry |
 | Liveness always "Face verification could not be completed" with MockMDS | MockMDS streams its stock still image (frozen stream): select a frame pack with `/admin/source` |
 | Android build uses the sandbox URL | Build through `scripts/android-build.sh` (it sets `ARC_DEBUG_SERVER_BASE_URL=http://127.0.0.1:8080`) |
+
+## 10. Evaluate in 15 minutes with your own webcam
+
+For a reviewer with a Windows laptop and a webcam: see the liveness check accept your own live face, refuse a
+photo of you, and let you sign in with your face, in the desktop Registration Client. The 15 minutes are
+hands-on time after the tools of section 1 are installed and the builds of sections 2-5 have finished once. A
+first build downloads its dependencies and takes longer; the team has not timed it on a clean machine.
+
+**Status on 2026-10-04: the team has not yet run these steps end to end.** What has been run, and what has not:
+
+| Part | State on 2026-10-04 | Where |
+|---|---|---|
+| Engine build and tests; MockSync, MockMDS, desktop client build and login; every liveness flow with recorded frame packs instead of a webcam | run (desktop end-to-end report, 41 of 41 checks) | [../test-report/desktop-e2e.md](../test-report/desktop-e2e.md) |
+| MockMDS webcam source (`FFMPEG`) streaming a laptop's built-in camera (first frame after about 1.2 s) | run, outside the client; ffmpeg command lines and a live ffmpeg test pattern are covered by MockMDS tests | `devices/mock-mds/LIVENESS-EXTENSIONS.md` sections 2 and 5 |
+| A live face from a webcam passing liveness in the desktop client | **not run** | [../eval/team-self-test.md](../eval/team-self-test.md) (status of 2026-09-30) |
+| Onboarding a live face from the webcam, then face sign-in with it | **not run** | same |
+| A printed photo or a phone screen held to the webcam | **not run**; results with synthetic attacks: [../eval/calibration-notes.md](../eval/calibration-notes.md) | same |
+| This section followed start to finish on a clean machine, timed | **not run** | — |
+
+If a step fails, section 10.3 lists the usual causes. Please tell us what happened (the screen text and the last
+lines of `<run>/desktop/logs/registration.log`).
+
+### 10.1 Steps
+
+Commands run in Git Bash from the repository root unless marked PowerShell.
+
+| # | Step | Target time | Command or action |
+|---|---|---|---|
+| 1 | Put ffmpeg on `PATH` (MockMDS reads the webcam through it; not bundled because of its GPL licence) | 2 min | for example `winget install --id Gyan.FFmpeg`, then open a new Git Bash; check with `ffmpeg -version` |
+| 2 | Find the webcam's name | 1 min | `ffmpeg -hide_banner -list_devices true -f dshow -i dummy` prints it in quotes, for example `Integrated Camera`. Virtual cameras (OBS, ManyCam, XSplit, names containing `Virtual`) are refused |
+| 3 | Start MockSync, the local stand-in for the MOSIP server, in its own window | 1 min | `(cd tools/mock-sync && scripts/run-mock-sync.sh)`; check: `curl -s http://127.0.0.1:8080/v1/syncdata/actuator/health` answers `{"status":"UP"}` |
+| 4 | Start MockMDS, the mock face device, and switch its face camera to the webcam | 1 min | `bash scripts/mockmds-run.sh` (add `--build` the first time), then the `curl` command below |
+| 5 | Start the desktop client and log in | 3 min | Once: build and register the machine (section 5 steps 1-2). Then, in PowerShell, `powershell -ExecutionPolicy Bypass -File scripts\desktop-run.ps1` and log in as `officer1` (password in [../test-data.md](../test-data.md)). The first login syncs and asks for a restart: start again and log in again |
+| 6 | Onboard your own face | 3 min | Log out and log in as `officer2`; the client asks for operator onboarding. Capture the face: the liveness window opens and uses your webcam (screens in 10.2). Fingers and irises come from MockMDS's stock images. Save |
+| 7 | Register a resident: you | 2 min | New Registration, fill the demographic pages, Biometrics, Face, **Scan** |
+| 8 | Try an attack | 1 min | **Scan** again and hold a photo of yourself (printed, or on a phone at full brightness) 40-60 cm in front of the webcam; answer the prompts with it if you can |
+| 9 | Sign in with your face | 1 min | Log out, log in as `officer2` and choose face: liveness runs first, then the match against your onboarding face |
+
+Step 4: switch the face camera of MockMDS to the webcam (use the name from step 2). The answer starts with
+`{"errorCode":"0","errorInfo":"Success"`.
+
+```bash
+curl -s -X POST http://127.0.0.1:4501/admin/source \
+  -d '{"type":"Face","source":"FFMPEG","camera":"Integrated Camera","fps":15}'
+```
+
+The webcam light turns on only while the client streams. The setting lasts until MockMDS stops; after a restart
+of MockMDS, send the command again. All frame-source options: `devices/mock-mds/LIVENESS-EXTENSIONS.md`.
+
+### 10.2 What you should see
+
+MockSync ships the policy `ALWAYS_ACTIVE` for resident capture, onboarding and face sign-in, so every capture asks
+for actions. The prompts appear on the client's screen; here you are operator and resident at once.
+
+| Moment | Screen | Picture |
+|---|---|---|
+| Liveness window opens | title "Face verification", camera preview with a dashed oval, "Look directly at the camera.", "Attempt 1 of 3" | [d-r1-positioning.png](../ux/screenshots/desktop/d-r1-positioning.png) |
+| Passive check | "Checking face liveness..." with a busy indicator; nothing to do | [wireframe sheet](../ux/wireframes.svg), row 2 |
+| Actions | for example "Please smile", "Please blink", "Please turn your head to the left", with an icon and "Step 1 of 2"; 5 s per action by default | [e2e-03-low-confidence-challenge.png](../ux/screenshots/desktop/e2e-03-low-confidence-challenge.png) |
+| After each action | "Action detected", then "Hold still" while the device takes the signed capture | wireframe sheet, rows 4 and 5 |
+| Pass | "Good, face captured successfully", green oval; the window closes after about 1 s and the capture screen shows your face | wireframe sheet, row 6 |
+| Not enough evidence of liveness | "We could not verify face liveness. Please try again." with a guidance line and Retry | [e2e-05-print-refused.png](../ux/screenshots/desktop/e2e-05-print-refused.png) |
+| Suspected attack | only "Face verification could not be completed. Please try again.", never the reason | [d-r7-pad-fail-retry.png](../ux/screenshots/desktop/d-r7-pad-fail-retry.png) |
+| Third failure | recovery message with a lock icon, Close | [e2e-07-max-attempts-guidance.png](../ux/screenshots/desktop/e2e-07-max-attempts-guidance.png) |
+| Face sign-in by someone else | liveness passes, then "Face match not found" | [e2e-12-face-match-not-found.png](../ux/screenshots/desktop/e2e-12-face-match-not-found.png) |
+
+Every state of both clients, side by side: [../ux/wireframes.svg](../ux/wireframes.svg).
+
+### 10.3 If it does not work
+
+| Symptom | Cause and fix |
+|---|---|
+| The `curl` command answers error `512` | ffmpeg not found, or the webcam is busy: close other programs that use the camera (video calls), check `ffmpeg -version`, send the command again |
+| The `curl` command answers error `511` | the request is malformed, for example a wrong source name; copy the command again |
+| "The face camera is not available" | MockMDS not running, or it lost the webcam: `bash scripts/mockmds-run.sh --status`, send the `curl` command again, select Retry |
+| Always "Face verification could not be completed" and the webcam light stays off | MockMDS still streams its stock still image: the `curl` command was not accepted |
+| One kind of action fails for you again and again | limit the actions to blink and smile, as in the team's recorded desktop runs: `curl -s -X PUT http://127.0.0.1:8080/admin/config -H 'Content-Type: application/json' -d '{"mosip.registration.liveness.active.challenge_types":"BLINK,SMILE"}'`, then Sync Data in the client |
+| Genuine attempts fail in dim light | face a window or a lamp: the synthetic dim-light clip is refused by the passive check in every attempt ([../eval/calibration-notes.md](../eval/calibration-notes.md) section 4.5) |
+| You want to see why an attempt failed | diagnostic mode: [../eval/team-self-test.md](../eval/team-self-test.md) section 2, item 3; reason lines: `grep LIVENESS-DIAG <run>/desktop/logs/registration.log` |
+
+The Android client can use the webcam too (the emulator's front camera is the PC webcam, `ARC_WEBCAM`; see
+[android.md](android.md)). It is not part of these 15 minutes, and the webcam serves one program at a time.

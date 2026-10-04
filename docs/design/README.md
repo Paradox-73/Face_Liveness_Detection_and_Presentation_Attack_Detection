@@ -2,7 +2,7 @@
 
 Design of face liveness and presentation attack detection (PAD) in the MOSIP desktop and Android Registration
 Clients. Every page describes the code as built in this repository and names the classes that implement it. Where
-the code differs from the team's original plan, the page says so.
+the code takes a different route from an earlier design choice, the page says so.
 
 ## Map from the PS04 deliverable list to the pages
 
@@ -44,7 +44,7 @@ Also here:
 |---|---|
 | Architecture decisions (why) | [../adr/README.md](../adr/README.md) |
 | API documentation | [../api/README.md](../api/README.md) |
-| UI/UX design (Deliverable 2) | `docs/ux/` (`flows.md`, `desktop-liveness.md`, `message-catalogue.csv`, screenshots) |
+| UI/UX design (Deliverable 2) | [../ux/README.md](../ux/README.md): [wireframe sheet](../ux/wireframes.svg) (desktop and Android side by side, every state), [user flows](../ux/flows.md) (desktop and Android), [desktop screens](../ux/desktop-liveness.md), [message catalogue](../ux/message-catalogue.csv), screenshots |
 | Installation | [../install/README.md](../install/README.md) |
 | Test reports | `docs/test-report/desktop-e2e.md`, `docs/test-report/android-e2e.md` |
 | PAD evaluation | `docs/eval/protocol.md`, `docs/eval/calibration-notes.md` |

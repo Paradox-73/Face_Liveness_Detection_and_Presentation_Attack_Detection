@@ -94,7 +94,7 @@ looped clip (SYN-A8) accepted passively in all 8 attempts each. Under the shippe
 time of an accepted attempt rose from 6.6 s to 9.7 s. The end-to-end runs show a printed photo accepted passively
 under the legacy policy and refused under `ALWAYS_ACTIVE` (desktop D8, Android A12).
 
-## 6. Deviation from the plan
+## 6. Case with no possible challenge
 
 `ALWAYS_ACTIVE` ignores `active.enable` (that key controls escalation only), and when no challenge can run on the
-stream it fails `ENGINE/UNSUPPORTED` without using an attempt. The plan did not define this case.
+stream it fails `ENGINE/UNSUPPORTED` without using an attempt.

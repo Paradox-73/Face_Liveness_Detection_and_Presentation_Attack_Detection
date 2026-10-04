@@ -326,10 +326,10 @@ New code:
 - **STALL and client departure:** during `STALL` a client that gives up is noticed only at the next write, after the stall ends or the fault is cleared. The device stays Busy until then or until the stream timeout.
 - **Any web page can read STREAM:** MockMDS answers any origin, so while a webcam source streams, any local web page could read the frames. Admin calls from browsers are refused, but STREAM itself is stock SBI behaviour.
 - **`STATIC` is frozen by design:** a liveness client should reject it as a frozen stream.
-- **Not implemented from plan §4.14:**
+- **Not implemented (considered for the liveness mock device, left out):**
   - `PlaylistSource`: scripted segments can be done by calling `/admin/source` during a stream.
   - `OpenCvCameraSource`.
   - Demo control page on port 4700.
   - The ISO/IEC 39794-5 PAD data block.
-- **Deviation from plan §4.14:** the plan advertises `padCapability` in DeviceInfo always. Here it is off by default (`mosip.mock.sbi.face.pad.capability=false`), so default output equals stock MockMDS.
+- **`padCapability` off by default:** DeviceInfo does not advertise `padCapability` unless it is switched on (`mosip.mock.sbi.face.pad.capability=false`), so default output equals stock MockMDS.
 - **`run.sh` line endings:** `run.sh` keeps the upstream CRLF line endings, which `/bin/sh` on Linux may reject. Convert it with `dos2unix` before use there.

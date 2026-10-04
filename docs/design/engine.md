@@ -185,6 +185,6 @@ factory is registered as a `LivenessEngineProvider` with engine ID `mosip-onnx-d
 | Android emulator | passive pass, user-visible total | 2.2-3.0 s | same |
 | Model loading | desktop start-up preload / Android emulator | about 1.4 s / 10.7 s | `docs/design/desktop-liveness-services.md`, `docs/design/android-liveness.md` |
 
-The plan's per-frame target (p95 at most 20 ms) is not met. Face Mesh on every passive frame is two thirds of the
+The per-frame target (p95 at most 20 ms, test T-PERF-01 in [../traceability.md](../traceability.md)) is not met. Face Mesh on every passive frame is two thirds of the
 cost; proposal E4 in the calibration notes (detector-only analysis in the passive stage) is the next step.
 No physical Android tablet was measured.

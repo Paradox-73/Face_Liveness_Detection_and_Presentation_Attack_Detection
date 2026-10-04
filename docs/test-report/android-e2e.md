@@ -111,7 +111,7 @@ the reference run (`frame-times.txt`):
   at 09:51 measured a median p50 of 150 ms over 17 attempts (`run8/frame-times.txt`); run-to-run spread is large.
 - User-visible time (audit rows LV02 `ms` and LV10 `totalMs`): the passive check took 1.6-2.3 s and a passive pass
   2.2-3.0 s in total; a capture with two challenges took 7.4-12.1 s.
-- The plan's target (p95 at most 20 ms per frame) is not met on the emulator. The desktop evaluation measured p95
+- The per-frame target (p95 at most 20 ms, T-PERF-01 in [../traceability.md](../traceability.md)) is not met on the emulator. The desktop evaluation measured p95
   38-45 ms on the host JVM (`docs/eval/calibration-notes.md`). No physical arm64 tablet was measured.
 
 ## 6. APK size

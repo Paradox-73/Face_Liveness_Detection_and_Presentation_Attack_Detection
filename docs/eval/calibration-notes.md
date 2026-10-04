@@ -254,7 +254,7 @@ Two facts explain most of the table:
   person from being reported as a loop. In the strict suite the S2 loop is caught during the challenges, after
   more frames.
 - Proposal P3: `passive.min_frames` 8 to 30. The passive decision then takes 2.0 s of stream time instead of
-  0.53 s, inside the plan's 2.5 s target (T-PERF-02), and the frozen-frame check is unchanged (5 frames).
+  0.53 s, inside the 2.5 s target (T-PERF-02), and the frozen-frame check is unchanged (5 frames).
 
 ### 4.4 Blurred frames reach the challenges instead of the quality gate (F4)
 
@@ -390,7 +390,7 @@ Wall-clock time of `onFrame` plus `tick` per analysed frame, JPEG decode include
   difference is machine load, not the engine. The decisions did not change (section "Read this first").
   The load fell during the `proposed` run (its p50 is back to 25 ms while its mean and p95 stay high), so its
   row mixes both conditions.
-- The plan's target (T-PERF-01, p95 at or below 20 ms at 640x480 including decode) is **not met** even in the
+- The target (T-PERF-01, p95 at or below 20 ms at 640x480 including decode) is **not met** even in the
   quieter runs: p95 is 38-45 ms, p50 21-23 ms. A measurement on an otherwise idle machine is still needed
   before quoting a figure outside this document.
 - Face analysis is two thirds of the frame: YuNet plus the Face Mesh on every frame. The mesh is needed only for

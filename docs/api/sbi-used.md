@@ -38,7 +38,7 @@ Response:
 "deviceProviderId":"MOSIP.PROXY.SBI","deviceProvider":"MOSIP","dateTime":"2026-09-30T05:18:55Z"}`.
 
 Liveness use: device choice, `deviceStatus` polling every 100 ms (up to 1,500 ms) until `Ready` after an
-authentication stream is closed. The RC's discovery DTOs now ignore unknown fields (plan D25), so a device that adds
+authentication stream is closed. The RC's discovery DTOs now ignore unknown fields (desktop change D25, [../design/desktop-liveness-services.md](../design/desktop-liveness-services.md) section 8), so a device that adds
 `padCapability` here does not break discovery.
 
 ## 2. `MOSIPDINFO /info` (signed device information)
@@ -99,7 +99,7 @@ first capture, a field SBI 0.9.5 requires and MockMDS rejects when `null`). Valu
  "customOpts":null}
 ```
 
-Provisional #1117 addition for `padCapability` devices (not yet sent by the desktop client, plan D7):
+Provisional #1117 addition for `padCapability` devices (not yet sent by the desktop client, desktop change D7):
 `"pad":{"required":true,"method":"passive","challenge":"<session nonce>"}` inside `bio[0]`.
 
 Response:

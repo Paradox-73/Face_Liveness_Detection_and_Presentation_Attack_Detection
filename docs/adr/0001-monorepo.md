@@ -8,8 +8,8 @@
 PS04 needs changes in three MOSIP code bases at once: the desktop Registration Client (`mosip/registration-client`),
 the Android Registration Client (`mosip/android-registration-client`) and the mock device service
 (`mosip/mosip-mock-services`, MockMDS). The shared engine, the model bundle, the mock server and the evaluation
-tools are new. The team plan (`WINNING_PLAN.md` section 8.1) proposed an umbrella repository plus three forks and
-a patch series.
+tools are new. The first repository layout considered was an umbrella repository plus three forks and a patch
+series (see Alternatives considered).
 
 A feature in this project usually touches the engine and both clients in one change (for example the pass-token
 binding: core `CaptureBinder`, desktop `LivenessGate`, Android `LivenessRunner`). Judges also need one place to
@@ -45,7 +45,7 @@ Rules that keep the upstream history readable:
 
 ## Alternatives considered
 
-- **Umbrella repository plus three forks and a patch series** (the plan): closer to how MOSIP would take the change,
+- **Umbrella repository plus three forks and a patch series** (the first layout considered): closer to how MOSIP would take the change,
   but every cross-cutting change needs coordinated commits in four repositories and pinned submodule updates.
   Rejected for team speed during the hackathon.
 - **Git submodules:** same coordination cost, and submodules are easy to check out wrongly.

@@ -22,6 +22,19 @@ authentication.
   policies, floors that cannot be undercut; everything runs without a network.
 - **Evidence:** audit events `REG-EVT-LV01..17` and `LIVENESS_*` entries in every face record of the packet.
 
+## Screens
+
+The same challenge on both clients: a low passive score, so the client asks for a randomly chosen action
+("Please smile", step 1 of 2). Real screens from the scripted end-to-end runs; the camera preview is hidden, so
+the dark oval is where the face would be.
+
+| Desktop Registration Client | Android Registration Client (tablet emulator) |
+|---|---|
+| <img src="docs/ux/screenshots/desktop/e2e-03-low-confidence-challenge.png" alt="Desktop face verification window: dashed oval, smile icon, Please smile, Step 1 of 2, Attempt 1 of 3, Cancel" width="300"> | <img src="docs/ux/screenshots/android/e2e-06-low-confidence-challenge.png" alt="Android capture screen: oval with progress arc, Please smile, Step 1 of 2, attempt dots, Cancel" width="520"> |
+
+Every state of both clients side by side (wireframes): [docs/ux/wireframes.svg](docs/ux/wireframes.svg); all
+pictures by state: [docs/ux/README.md](docs/ux/README.md).
+
 ## Architecture
 
 ![Component view: face devices, desktop and Android Registration Clients, shared liveness engine, signed model bundle, MOSIP server](docs/design/img/architecture.svg)
@@ -78,12 +91,18 @@ exactly what this project changed ([ADR 0001](docs/adr/0001-monorepo.md)).
 
 Full clean-machine guide (Windows): [docs/install/README.md](docs/install/README.md).
 
+Before the first build: install JDK 11 with JavaFX (Azul Zulu 11 FX) and JDK 21, and create the Maven mirror
+settings for the retired Sonatype repositories that the upstream desktop POM uses; both are in
+[docs/install/README.md](docs/install/README.md) section 1 (`JAVA11_HOME`, `JAVA21_HOME`, `MAVEN_ARGS`). Run
+folders go to `${MOSIP_RUN_ROOT:-../run}`.
+
 ```bash
-mvn -f liveness/pom.xml install -Dliveness.benchmark.frames=0     # engine, models jar, SDK; runs the tests
-(cd tools/mock-sync && scripts/run-mock-sync.sh)                  # own terminal; local MOSIP server: HTTPS 8443, HTTP 8080
-bash scripts/mockmds-run.sh --build                               # mock face device on 127.0.0.1:4501 (Java 21)
-bash scripts/desktop-build.sh --mocksync                          # desktop client run folder in ../run/desktop
-bash scripts/android-build.sh                                     # Android debug APK (JDK 21, Flutter 3.10.4)
+export JAVA_HOME="$JAVA11_HOME"                                   # JDK 11 with JavaFX for the next three steps
+mvn -f liveness/pom.xml install -Dliveness.benchmark.frames=0     # JDK 11 FX: engine, models jar, SDK; runs the tests
+(cd tools/mock-sync && scripts/run-mock-sync.sh)                  # JDK 11; own terminal; local MOSIP server: HTTPS 8443, HTTP 8080
+bash scripts/desktop-build.sh --mocksync                          # JDK 11 FX: desktop client run folder in ${MOSIP_RUN_ROOT:-../run}/desktop
+bash scripts/mockmds-run.sh --build                               # JDK 21 from JAVA21_HOME: mock face device on 127.0.0.1:4501
+JAVA_HOME="$JAVA21_HOME" bash scripts/android-build.sh            # JDK 21 as JAVA_HOME, Flutter 3.10.4: Android debug APK
 ```
 
 Then: register the machine with MockSync and start the desktop client with `scripts\desktop-run.ps1`
@@ -91,6 +110,30 @@ Then: register the machine with MockSync and start the desktop client with `scri
 and run `scripts/android-mocksync-setup.sh --login` ([docs/install/android.md](docs/install/android.md)).
 Scripted demos of every flow: `scripts/demo-desktop.sh`, `scripts/demo-android.sh`. Demo logins:
 `docs/test-data.md`.
+
+## Evaluate in 15 minutes
+
+Try the check with your own face through a webcam, in the desktop client. Full steps, expected screens and
+troubleshooting: [docs/install/README.md section 10](docs/install/README.md#10-evaluate-in-15-minutes-with-your-own-webcam).
+
+**Status on 2026-10-04: the team has not yet run this webcam route end to end.** Every recorded run so far used
+recorded frame packs; a live face through the full client, onboarding your own face and face sign-in with it are
+still to be run (details in that section).
+
+1. ffmpeg on `PATH` (MockMDS reads the webcam through it); find the webcam's name with
+   `ffmpeg -hide_banner -list_devices true -f dshow -i dummy`.
+2. Start MockSync (`(cd tools/mock-sync && scripts/run-mock-sync.sh)`) and MockMDS (`bash scripts/mockmds-run.sh`).
+3. Switch the mock face device to the webcam:
+   `curl -s -X POST http://127.0.0.1:4501/admin/source -d '{"type":"Face","source":"FFMPEG","camera":"Integrated Camera","fps":15}'`
+   (all sources: [devices/mock-mds/LIVENESS-EXTENSIONS.md](devices/mock-mds/LIVENESS-EXTENSIONS.md)).
+4. Start the desktop client (`scripts\desktop-run.ps1`; build and machine registration once, Quick start above)
+   and log in as `officer1` ([docs/test-data.md](docs/test-data.md)).
+5. Log in as `officer2` and onboard your own face; register yourself as a resident; hold a photo of yourself to
+   the webcam; sign in as `officer2` with your face.
+
+Expected: "Checking face liveness...", then actions such as "Please smile" (step 1 of 2), "Action detected",
+"Hold still", "Good, face captured successfully"; a photo gets "Face verification could not be completed. Please
+try again." Each state is drawn in [docs/ux/wireframes.svg](docs/ux/wireframes.svg).
 
 ## Documentation
 
@@ -101,7 +144,7 @@ Scripted demos of every flow: `scripts/demo-desktop.sh`, `scripts/demo-android.s
 | Requirement traceability (PS04 bullet → code → test → status) | [docs/traceability.md](docs/traceability.md) |
 | Architecture decision records | [docs/adr/README.md](docs/adr/README.md) |
 | API documentation: engine, device adapter, desktop services, Android API, face-match SDK, SBI calls, MockMDS admin, MockSync | [docs/api/README.md](docs/api/README.md) |
-| UI/UX design (PS04 Deliverable 2): flows, screens, message catalogue | `docs/ux/` (`flows.md`, `desktop-liveness.md`, `message-catalogue.csv`) |
+| UI/UX design (PS04 Deliverable 2): wireframes, user flows, screens, message catalogue | [docs/ux/README.md](docs/ux/README.md): [wireframes.svg](docs/ux/wireframes.svg) (desktop and Android side by side), [flows.md](docs/ux/flows.md) (desktop and Android), [desktop-liveness.md](docs/ux/desktop-liveness.md), [message-catalogue.csv](docs/ux/message-catalogue.csv) |
 | Install and run | [docs/install/README.md](docs/install/README.md), [desktop.md](docs/install/desktop.md), [android.md](docs/install/android.md) |
 | Test reports | [summary](docs/test-report/README.md), [desktop](docs/test-report/desktop-e2e.md), [Android](docs/test-report/android-e2e.md) |
 | Pitch material | [deck outline](docs/pitch/deck-outline.md), [summary](docs/pitch/summary.md), [video script](docs/pitch/video-script.md) |

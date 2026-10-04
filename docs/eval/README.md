@@ -158,9 +158,9 @@ python -m pytest tools/eval/tests                  # 33 pytest tests
 
 The Java tests cover the scenario loader (every field and error), the playlist (endings, reaction delay, match, mismatch, fixed), outcome and layer classification, the runner end to end with a scripted engine (bona fide pass, wrong-clip rejection over all retries, retry budget from the scenario, no-face and stream-end non-responses, runner time limit, expectation and layer mismatches, parameter pass-through, no frame content in records), JSON, latency statistics, CLI options, and that every committed scenario loads and names only packs that have a manifest. The Python tests check the Clopper-Pearson values against published figures, the counting rules, DET and BPCER20, the report, the manifest helpers, that every committed manifest is consistent, and the image transforms.
 
-## Deviations from the design document
+## Design choices
 
-- Pack manifests are in `eval/packs/`, scenarios in `eval/scenarios/` (the plan put both under `eval/scenarios/`), because several scenarios share one pack.
-- The frame packs are not from team members (plan section 10.4) but from openly licensed clips of unrelated people plus software-made attacks, because no consenting team captures exist yet. The plan's development-split capture (S1-S4 frame packs) replaces them once recorded; the tools do not change.
-- The plan's `tools/eval/metrics.py` and `det_plot.py` are one script, `tools/eval/analyze.py`.
-- Only the headless runner exists; the plan's second, services-level mode through the Registration Client and MockMDS `ImageSequenceSource` is not built. The same packs can be streamed by hand with MockMDS `POST /admin/source {source: SEQUENCE, path: ...}`.
+- Pack manifests are in `eval/packs/` and scenarios in `eval/scenarios/` (not both under `eval/scenarios/`), because several scenarios share one pack.
+- The frame packs are not from team members but from openly licensed clips of unrelated people plus software-made attacks, because no consenting team captures exist yet. The development-split capture ([protocol.md](protocol.md) section 5, S1-S4 frame packs) replaces them once recorded; the tools do not change.
+- Metrics and DET plots come from one script, `tools/eval/analyze.py`, not two.
+- Only the headless runner exists; a second, services-level mode through the Registration Client and MockMDS `ImageSequenceSource` is not built. The same packs can be streamed by hand with MockMDS `POST /admin/source {source: SEQUENCE, path: ...}`.

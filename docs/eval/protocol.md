@@ -98,7 +98,7 @@ At least 60 attack transactions per species on the test split (8 source subjects
 
 - **Out of scope, stated in the report:** 3-D masks (silicone, latex, resin), make-up, deepfakes and face swaps, and every injection attack (virtual camera, emulator, stream substitution, replaying frames into the device API).
 - **Order:** about one bona fide transaction for every two attack transactions, interleaved, so lighting drift and tester fatigue affect both.
-- **Smaller team fallback** (plan section 10.6): P1, P4, P6 and P7 x 30 transactions plus 100 bona fide.
+- **Smaller team fallback:** P1, P4, P6 and P7 x 30 transactions plus 100 bona fide.
 - **Android replication:** P1, P4 and P6 x 30 plus 60 bona fide on the lowest-specification phone available.
 - **Full-system test (c):** 4 enrolled operators x 5 attempts x (P1, P4, P6) = 60 impostor presentations, plus 40 genuine operator logins.
 
@@ -164,7 +164,7 @@ All computed by `tools/eval/analyze.py`, separately for evaluation types (a) and
 
 ## 12. Relation to the automated suite
 
-| Plan test | Automated scenario (synthetic, technology regression) | Evaluation species (real artefacts) |
+| Test ID ([../traceability.md](../traceability.md)) | Automated scenario (synthetic, technology regression) | Evaluation species (real artefacts) |
 |---|---|---|
 | T-SCN-P-01 A4 print | `atk-*-print-still` (SYN-A2), `atk-*-print-moved` (SYN-A3) | P1 |
 | T-SCN-P-02 curved print | `atk-s2-print-tilted` (SYN-A4, a flat print tilted to fake head turns) | P2 |

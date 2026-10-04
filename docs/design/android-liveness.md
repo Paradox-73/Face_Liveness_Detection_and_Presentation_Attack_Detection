@@ -120,7 +120,8 @@ minimum model version and `on_max_failure` always use the synced value, so a loc
 liveness off. Missing or malformed values never throw: the core `PolicyResolver` applies defaults, floors and
 ranges and reports corrections (audit `REG-EVT-LV15`).
 
-Android-only keys: `mosip.registration.liveness.android.device` (`BUILTIN`, default, or `SBI`),
+Android-only keys: `mosip.registration.liveness.android.device` (`BUILTIN`, default, or `SBI`; a blank or unknown
+value means `BUILTIN` for face capture routing and for `LivenessService.isBuiltInCameraFaceDevice`),
 `mosip.registration.liveness.android.block_emulator` (default `N`) and
 `mosip.registration.android.offline_approval.enable`.
 
@@ -227,30 +228,30 @@ Automated runs never use the live webcam: they replay frame packs. Debug builds 
 no second copy is kept in git and release builds carry no replay frames. More packs can be pushed with
 `scripts/android-liveness-demo.sh --push DIR --pack NAME`; use synthetic or openly licensed frames only.
 
-## 9. Deviations from the plan
+## 9. Design decisions for the module build
 
-- Plan section 4.13 N1 puts the core jar in `livenessmanager/libs/` with a SHA-256 check. The module reads the
+- The engine is not copied as a jar into `livenessmanager/libs/` with a SHA-256 check. The module reads the
   engine from the local Maven repository instead, built from the same commit by `scripts/android-build.sh`: no
   binary in git, one version for desktop and Android, and the Gradle build uses the engine's own
   `ModelRegistry` to verify the model bundle. `mavenLocal()` is limited to the group `io.mosip.liveness`.
-- N15 (typed getters in `GlobalParamRepository`) is replaced by the `GlobalParamConfigSource` adapter, so
+- No typed liveness getters are added to `GlobalParamRepository`; the `GlobalParamConfigSource` adapter reads the keys, so
   `clientmanager` needs no liveness-specific code and the core resolver applies defaults and ranges exactly as on
   desktop.
 
 ## 10. Not done in this module (next steps)
 
-- Done in section 11. ARC call sites (plan N3-N5, N8-N13, N17, N18): `BiometricsDetailsApi` must start the screen for FACE when
+- Done in section 11. ARC call sites (face capture, `MainActivity` result handling, `BiometricsDto`, BIR `others`, packet and supervisor face authentication, onboarding, Flutter screens and strings): `BiometricsDetailsApi` must start the screen for FACE when
   `isEnforced(workflow)` is true, `MainActivity.onActivityResult` must handle request code 6, and the result must
   feed `handleRCaptureResponse`, the BIR `others` entries and the Flutter UI. The Flutter strings (ARB files) and
   the Pigeon calls belong there too.
-- `Biometrics095Service.isDeviceValid` accepts only certification `L1` today; plan N7 (accept the
-  `mosip.registration.mds.allowed_certifications` list) is needed before a built-in L0 capture is stored.
+- `Biometrics095Service.isDeviceValid` accepts only certification `L1` today; accepting the
+  `mosip.registration.mds.allowed_certifications` list is needed before a built-in L0 capture is stored.
 - Done in section 11.7 with the `s3-main` pack. A passing replay demo needs a frame pack of a live subject doing the challenges; only the still pack is
   bundled, so the emulator demo shows the attack path (failure, retry, maximum attempts).
 
 ## 11. ARC flows that use the module
 
-This section covers the ARC side (plan section 4.13, N3-N5, N8-N13, N17, N18): the resident and onboarding face
+This section covers the ARC side (the call sites listed in section 10): the resident and onboarding face
 capture, operator and supervisor face authentication, the Flutter screens and what was run on the emulator. It
 replaces the first and last bullets of section 10.
 
@@ -280,7 +281,7 @@ replaces the first and last bullets of section 10.
    `getBestBiometrics`, so no face is stored and no ARC attempt is counted (PS04 task 5). The Flutter block shows
    the outcome from `getLastCaptureOutcome` under the Scan button.
 
-The built-in capture does not go through SBI discovery, so `Biometrics095Service.isDeviceValid` (L1 only, plan N7)
+The built-in capture does not go through SBI discovery, so `Biometrics095Service.isDeviceValid` (L1 only; section 10)
 is not on this path.
 
 ### 11.3 Operator and supervisor face authentication
@@ -362,6 +363,32 @@ already counted the earlier failures; the last screen could therefore allow more
 `LivenessCaptureRequest.priorAttempts`; `LivenessRunner` numbers the sessions from there and gives its
 transaction only the remaining attempts, so the screen shows "Attempt 2 of 3", the third failure shows the
 recovery message and writes `REG-EVT-LV11`, and a further Scan opens no screen.
+
+Since 2026-10-05 the next screen also receives two more values of the earlier screens of the same subject and
+field (resident and onboarding capture: `FaceCaptureLivenessGate.nextRequest`, opened through
+`LivenessCaptureLauncher.launch(gate, subject, field, photoWhenOff, callback)`; face authentication: per workflow
+and user in `FaceAuthFlow`):
+
+- `liveness.prior_suspected_attack` (`LivenessCaptureRequest.priorSuspectedAttack`): a counted PAD, frame
+  integrity or binding failure since the last pass. The screen's transaction starts with it, so the screen never
+  offers the supervisor override, even when its own failures were timeouts.
+- `liveness.prior_low_light` (`LivenessCaptureRequest.priorLowLight`): the uncounted dim-light results since the
+  last counted failure. `LivenessRunner` always turns on the engine's low-light rule
+  (`LivenessSessionDriver.Builder.trackLowLight(true)`, with the carried count through
+  `priorFailures(attempts, attack, lowLight)`): a PAD rejection of a dark face ends as "We could not verify face
+  liveness. Please try again." with "Improve lighting", not counted, at most `passive.low_light_max_uncounted` (3)
+  times; the next one counts. Each result reports the count (`LivenessCaptureResult.lowLightRetries()`, extra
+  `liveness.result.low_light`); the gate and `FaceAuthFlow` keep it and reset it on a counted failure, a block or a
+  pass. Dim, dim, close the screen, Scan again, dim is therefore still uncounted, and the next dim try counts as
+  attempt 1.
+
+Tests (2026-10-05, JDK 21, `--rerun`: clientmanager 1,186, livenessmanager 194, app 64, 0 failures; Flutter
+`test/liveness/` 26): `LivenessRunnerTest` (dim, dim, close, reopen, dim uncounted, then the next dim counts;
+an earlier attack never offers the override; every session gets the count; range clamped),
+`FaceCaptureLivenessGateTest` and `FaceAuthFlowTest` (count kept per key, reset by a counted failure, a block or
+a pass; the next request carries attempts, attack and count), `LivenessCaptureActivityTest` (both extras round
+trip, missing extras mean `false` and 0), `LivenessServiceTest` (`isBuiltInCameraFaceDevice` true for missing,
+blank, `BUILTIN` and unknown values, false only for `SBI`). No camera or emulator run of this change yet.
 
 ### 12.3 Packet evidence as on desktop
 
