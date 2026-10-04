@@ -19,6 +19,8 @@ out/
 # Local machine files
 local.properties
 *.log
+# Test-report logs are evidence and are committed
+!docs/test-report/**/*.log
 .DS_Store
 Thumbs.db
 
