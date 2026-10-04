@@ -68,7 +68,10 @@ import javafx.stage.Window;
  * <pre>
  * java -cp "lib/*" DesktopFlowDriver.java &lt;outDir&gt; &lt;script&gt; [&lt;script&gt;...]
  * java -cp "lib/*" DesktopFlowDriver.java &lt;outDir&gt; --interactive &lt;commandDir&gt;
+ * java -cp "lib/*" DesktopFlowDriver.java --check-prompts
  * </pre>
+ * {@code --check-prompts} only checks which frame pack each liveness prompt selects and exits (0 when all match).
+ * <p>
  * In interactive mode the driver polls {@code <commandDir>/next.cmd}, runs its lines and deletes it, so flows can be
  * explored step by step against one running client.
  * <p>
@@ -100,8 +103,11 @@ import javafx.stage.Window;
  * {@code <name>.txt}</li>
  * <li>{@code mds <path> <json>} MockMDS admin call; {@code source <pack>} switch the face source to a frame pack
  * folder under the pack root ({@code -Dframe.packs}, default {@code ../frame-packs}); {@code follow <prefix>|off}
- * switch to {@code <prefix>-blink}/{@code -smile}/{@code -main} whenever the liveness prompt asks for that action,
- * after a reaction time ({@code follow <prefix> [ms]}, default 500 ms)</li>
+ * switch to {@code <prefix>-blink}, {@code -smile}, {@code -turn-left}, {@code -turn-right} or {@code -look-up}
+ * whenever the liveness prompt asks for that action (prompts matched without regard to case), and back to
+ * {@code <prefix>-main} for "Look directly at the camera and hold still" and every other state, after a reaction
+ * time ({@code follow <prefix> [ms]}, default 500 ms); a prompt whose pack is missing is logged as
+ * {@code FOLLOW no pack for <action>} and the source is left unchanged</li>
  * <li>{@code sql <query>} run a query on the client database and log the rows; {@code expect-sql <min rows>
  * <query>}; {@code expect-no-rows <query>}</li>
  * <li>{@code if-node <#fxId> <command>} run the command only when that node is shown; {@code each-row <#table>
@@ -155,6 +161,9 @@ public class DesktopFlowDriver {
 	 * @throws Exception on I/O failure
 	 */
 	public static void main(String[] args) throws Exception {
+		if (args.length == 1 && "--check-prompts".equals(args[0])) {
+			System.exit(checkPrompts());
+		}
 		out = Path.of(args[0]);
 		Files.createDirectories(out);
 		log = new PrintStream(Files.newOutputStream(out.resolve("driver.log")), true, "UTF-8");
@@ -814,23 +823,95 @@ public class DesktopFlowDriver {
 		watcher.start();
 	}
 
-	private static void follow(String prefix, String state) throws Exception {
-		String wanted;
-		if (state.contains("Please blink")) {
-			wanted = prefix + "-blink";
-		} else if (state.contains("Please smile")) {
-			wanted = prefix + "-smile";
-		} else if (state.contains("Turn your head to the left")) {
-			wanted = prefix + "-turn-left";
-		} else if (state.contains("Turn your head to the right")) {
-			wanted = prefix + "-turn-right";
-		} else {
-			wanted = prefix + "-main";
+	/**
+	 * Liveness prompts the frame source follows, in the order they are tested, and the pack suffix of each: the
+	 * English texts of {@code labels_en.properties} ({@code liveness.challenge.*} and
+	 * {@code liveness.feedback.look_straight}), matched without regard to case. After the last challenge the client
+	 * asks the person to look straight at the camera and hold still, which goes back to the {@code -main} pack.
+	 */
+	private static final String[][] PROMPTS = {
+			{ "look straight|look directly at the camera and hold still|hold still", "main" },
+			{ "please blink", "blink" },
+			{ "please smile", "smile" },
+			{ "turn your head to the left", "turn-left" },
+			{ "turn your head to the right", "turn-right" },
+			{ "please look up", "look-up" } };
+	private static final Pattern[] PROMPT_PATTERNS = new Pattern[PROMPTS.length];
+	static {
+		for (int i = 0; i < PROMPTS.length; i++) {
+			PROMPT_PATTERNS[i] = Pattern.compile(PROMPTS[i][0], Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 		}
-		if (wanted.equals(currentSource) || !Files.isDirectory(PACKS.resolve(wanted))) {
+	}
+	/** The action whose missing pack was logged last, so a prompt that stays on screen is logged once. */
+	private static String missingLogged;
+
+	/**
+	 * Returns the frame-pack suffix for the liveness prompt in the visible texts.
+	 *
+	 * @param state the visible texts of all windows
+	 * @return {@code blink}, {@code smile}, {@code turn-left}, {@code turn-right}, {@code look-up} or {@code main}
+	 */
+	static String packSuffix(String state) {
+		for (int i = 0; i < PROMPTS.length; i++) {
+			if (PROMPT_PATTERNS[i].matcher(state).find()) {
+				return PROMPTS[i][1];
+			}
+		}
+		return "main";
+	}
+
+	/**
+	 * Checks the prompt table against the client's English texts without starting the client
+	 * ({@code DesktopFlowDriver --check-prompts}).
+	 *
+	 * @return 0 when every case matches, 1 otherwise
+	 */
+	static int checkPrompts() {
+		String[][] cases = {
+				{ "liveness | Please blink | Attempt 1 of 3", "blink" },
+				{ "Please smile", "smile" },
+				{ "Please turn your head to the left", "turn-left" },
+				{ "Please turn your head to the right", "turn-right" },
+				{ "TURN YOUR HEAD TO THE RIGHT", "turn-right" },
+				{ "Please look up", "look-up" },
+				{ "please LOOK UP", "look-up" },
+				{ "Look directly at the camera and hold still.", "main" },
+				{ "Look straight at the camera and hold still", "main" },
+				{ "Hold still", "main" },
+				{ "Look directly at the camera.", "main" },
+				{ "Checking face liveness", "main" },
+				{ "Good, face captured successfully", "main" } };
+		int failures = 0;
+		for (String[] c : cases) {
+			String got = packSuffix(c[0]);
+			boolean ok = got.equals(c[1]);
+			if (!ok) {
+				failures++;
+			}
+			System.out.println((ok ? "PASS " : "FAIL ") + "'" + c[0] + "' -> " + got + (ok ? "" : " (want " + c[1] + ")"));
+		}
+		System.out.println("prompt checks: " + (cases.length - failures) + "/" + cases.length + " passed");
+		return failures == 0 ? 0 : 1;
+	}
+
+	private static void follow(String prefix, String state) throws Exception {
+		String suffix = packSuffix(state);
+		String wanted = prefix + "-" + suffix;
+		if (wanted.equals(currentSource)) {
 			pendingAction = null;
 			return;
 		}
+		if (!Files.isDirectory(PACKS.resolve(wanted))) {
+			// The face has no recording of this action: the challenge cannot be answered and the attempt fails.
+			if (!wanted.equals(missingLogged)) {
+				missingLogged = wanted;
+				log.println(stamp() + "FOLLOW no pack for " + suffix.replace('-', '_') + " (" + wanted
+						+ " missing under " + PACKS + ")");
+			}
+			pendingAction = null;
+			return;
+		}
+		missingLogged = null;
 		// A person reacts to a prompt after a few hundred milliseconds; switching at once would answer faster than
 		// the engine's minimum onset and fail the challenge as ONSET_TOO_FAST.
 		if (!wanted.endsWith("-main")) {

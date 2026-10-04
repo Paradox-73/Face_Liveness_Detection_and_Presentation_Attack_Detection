@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import org.junit.Test;
 
@@ -176,5 +177,100 @@ public class LivenessViewModelTest {
 		assertTrue(blocked.isTerminal());
 		assertFalse(blocked.isRetryVisible());
 		assertTrue(blocked.prompt(), blocked.prompt().startsWith("Face capture could not be completed after 3 attempts."));
+	}
+
+	@Test
+	public void residentLanguageIsAddedOnlyForResidentCapturesInAnotherSupportedLanguage() {
+		assertEquals(Optional.of("fra"), LivenessViewModel.residentLanguage(true, "eng", "fra"));
+		assertEquals(Optional.of("ara"), LivenessViewModel.residentLanguage(true, "fra", " ARA "));
+		assertEquals(Optional.of("eng"), LivenessViewModel.residentLanguage(true, "ara", "eng"));
+		assertEquals("ISO 639-1 and 639-2/B codes are the same language", Optional.empty(),
+				LivenessViewModel.residentLanguage(true, "fre", "fr"));
+		assertEquals("same language as the operator", Optional.empty(),
+				LivenessViewModel.residentLanguage(true, "eng", "eng"));
+		assertEquals("operator language unknown means English", Optional.empty(),
+				LivenessViewModel.residentLanguage(true, null, "en"));
+		assertEquals("operator, supervisor and login captures: the operator is in front of the camera",
+				Optional.empty(), LivenessViewModel.residentLanguage(false, "eng", "fra"));
+		assertEquals("no registration language", Optional.empty(),
+				LivenessViewModel.residentLanguage(true, "eng", null));
+		assertEquals("blank registration language", Optional.empty(),
+				LivenessViewModel.residentLanguage(true, "eng", "  "));
+		assertEquals("no liveness texts in that language", Optional.empty(),
+				LivenessViewModel.residentLanguage(true, "eng", "hin"));
+	}
+
+	@Test
+	public void residentLanguageChallengeShowsTheSecondLineInTheResidentsLanguage() {
+		LivenessTexts french = LivenessTexts.forLanguage("fra");
+		LivenessViewModel vm = LivenessViewModel.of(LivenessUiState
+				.builder(UiPhase.CHALLENGE, MessageKeys.CHALLENGE_BLINK).promptIcon(PromptIcon.BLINK).step(1, 2)
+				.attempt(1, 3).build(), english, french);
+
+		assertEquals("operator's line stays in the operator's language", "Please blink", vm.prompt());
+		assertEquals("Veuillez cligner des yeux", vm.residentPrompt());
+		assertEquals("counters stay in the operator's language", "Step 1 of 2", vm.stepText());
+	}
+
+	@Test
+	public void residentLanguageArabicLineForAFrenchOperator() {
+		LivenessTexts french = LivenessTexts.forLanguage("fra");
+		LivenessTexts arabic = LivenessTexts.forLanguage("ara");
+		LivenessViewModel vm = LivenessViewModel.of(LivenessUiState
+				.builder(UiPhase.CHALLENGE, MessageKeys.CHALLENGE_TURN_LEFT).promptIcon(PromptIcon.TURN_LEFT)
+				.step(1, 1).build(), french, arabic);
+
+		assertEquals("Veuillez tourner la t\u00eate vers la gauche", vm.prompt());
+		assertEquals(arabic.text(MessageKeys.CHALLENGE_TURN_LEFT), vm.residentPrompt());
+		assertTrue(vm.residentPrompt().startsWith("\u064a\u0631\u062c\u0649"));
+	}
+
+	@Test
+	public void residentLanguageLineFollowsEveryPhaseInWhichTheResidentActs() {
+		LivenessTexts french = LivenessTexts.forLanguage("fra");
+
+		assertEquals("Ne bougez plus", LivenessViewModel.of(LivenessUiState
+				.builder(UiPhase.HOLD_STILL, MessageKeys.FEEDBACK_HOLD_STILL).build(), english, french)
+				.residentPrompt());
+		assertEquals("Regardez directement la cam\u00e9ra et ne bougez plus.", LivenessViewModel.of(LivenessUiState
+				.builder(UiPhase.HOLD_STILL, MessageKeys.FEEDBACK_LOOK_STRAIGHT).build(), english, french)
+				.residentPrompt());
+		assertEquals("Action d\u00e9tect\u00e9e", LivenessViewModel.of(LivenessUiState
+				.builder(UiPhase.ACTION_DETECTED, MessageKeys.FEEDBACK_DETECTED).build(), english, french)
+				.residentPrompt());
+		assertFalse(LivenessViewModel.of(LivenessUiState
+				.builder(UiPhase.POSITIONING, MessageKeys.ERROR_NO_FACE).build(), english, french)
+				.residentPrompt().isEmpty());
+	}
+
+	@Test
+	public void residentLanguageLineIsHiddenOutsideTheResidentsActions() {
+		LivenessTexts french = LivenessTexts.forLanguage("fra");
+
+		for (LivenessUiState state : Arrays.asList(
+				LivenessUiState.builder(UiPhase.CHECKING, MessageKeys.STATUS_CHECKING).build(),
+				LivenessUiState.builder(UiPhase.VERIFYING, MessageKeys.STATUS_CHECKING).build(),
+				LivenessUiState.builder(UiPhase.SUCCESS, MessageKeys.FEEDBACK_SUCCESS).severity(Severity.SUCCESS)
+						.build(),
+				LivenessUiState.builder(UiPhase.FAILED, MessageKeys.FAIL_PAD).severity(Severity.ERROR)
+						.retryAvailable(true).build(),
+				LivenessUiState.builder(UiPhase.MAX_ATTEMPTS, MessageKeys.RETRY_MAX_RESIDENT).args("3")
+						.severity(Severity.ERROR).build())) {
+			assertEquals(state.phase().name(), "", LivenessViewModel.of(state, english, french).residentPrompt());
+		}
+		assertEquals("", LivenessViewModel.starting(english).residentPrompt());
+		assertEquals("", LivenessViewModel.error(LivenessTexts.UI_BUSY, english, PromptIcon.WARNING).residentPrompt());
+	}
+
+	@Test
+	public void residentLanguageLineIsHiddenWithoutAResidentResolverOrAnOwnText() {
+		LivenessUiState blink = LivenessUiState.builder(UiPhase.CHALLENGE, MessageKeys.CHALLENGE_BLINK).build();
+
+		assertEquals("", LivenessViewModel.of(blink, english).residentPrompt());
+		assertEquals("", LivenessViewModel.of(blink, english, null).residentPrompt());
+		assertEquals("a resident bundle without the key would repeat the English text", "",
+				LivenessViewModel.of(blink, english, new LivenessTexts(null, null)).residentPrompt());
+		assertEquals("same text as the operator's line", "",
+				LivenessViewModel.of(blink, english, LivenessTexts.forLanguage("eng")).residentPrompt());
 	}
 }

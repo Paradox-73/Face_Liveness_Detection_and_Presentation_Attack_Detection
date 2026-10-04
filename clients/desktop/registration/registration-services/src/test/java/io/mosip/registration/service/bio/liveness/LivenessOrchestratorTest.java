@@ -25,6 +25,8 @@ import io.mosip.liveness.core.audit.AuditEventId;
 import io.mosip.liveness.core.engine.LivenessTransaction;
 import io.mosip.liveness.core.image.ImageBuffer;
 import io.mosip.liveness.core.image.PixelFormat;
+import io.mosip.liveness.core.ui.LivenessUiState;
+import io.mosip.liveness.core.ui.MessageKeys;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
@@ -79,8 +81,17 @@ public class LivenessOrchestratorTest {
 				return e;
 			}
 		};
-		return new LivenessOrchestrator(config, registry, tokens, audit, record -> {
+		LivenessOrchestrator o = new LivenessOrchestrator(config, registry, tokens, audit, record -> {
 		}, null, clock);
+		o.setUserIdSupplier(() -> "officer1");
+		return o;
+	}
+
+	/** A supervisor other than the logged-in operator ({@code officer1}), authenticated now. */
+	private SupervisorApproval secondSupervisor() {
+		return SupervisorApproval.of("supervisor1",
+				java.util.Collections.singletonList(io.mosip.registration.enums.Role.REGISTRATION_SUPERVISOR.name()),
+				clock.now());
 	}
 
 	private LivenessRequest request(Workflow workflow) {
@@ -301,7 +312,7 @@ public class LivenessOrchestratorTest {
 		run = orchestrator.start(request(Workflow.REGISTRATION), listener);
 		assertTrue(listener.awaitEnded());
 		assertTrue(listener.last().isOverrideAllowed());
-		LivenessContext override = run.grantOverride("supervisor1");
+		LivenessContext override = run.grantOverride(secondSupervisor());
 		LivenessTokenStore.PassHandle handle = tokens.consume(override.getToken().get(), clock.now());
 		assertEquals(Optional.of("supervisor1"), handle.overrideSupervisor());
 	}
@@ -314,7 +325,437 @@ public class LivenessOrchestratorTest {
 		engine.scripts.add(Script.FAIL_PAD);
 		run = orchestrator.start(request(Workflow.REGISTRATION), listener);
 		assertTrue(listener.awaitEnded());
-		run.grantOverride("supervisor1");
+		run.grantOverride(secondSupervisor());
+	}
+
+	// ------------------------------------------------------------------ attempts across liveness windows
+
+	private static final String RID = "10001100010002";
+
+	private void scripts(Script... s) {
+		engine.scripts.clear();
+		java.util.Collections.addAll(engine.scripts, s);
+	}
+
+	/** Waits for the end of the current session of a window and returns its outcome. */
+	private static LivenessOutcome ended(RecordingListener l) throws InterruptedException {
+		assertTrue("session ended", l.awaitEnded());
+		LivenessOutcome o = l.last();
+		l.reset();
+		return o;
+	}
+
+	private int attemptOfSession(int index) {
+		return engine.sessions.get(index).request.attempt();
+	}
+
+	private void assertStartRefused() throws Exception {
+		try {
+			run = orchestrator.start(request(Workflow.REGISTRATION), new RecordingListener());
+			fail("the attempts are used up");
+		} catch (RegBaseCheckedException e) {
+			assertEquals(RegistrationExceptionConstants.LIVENESS_MAX_ATTEMPTS.getErrorCode(), e.getErrorCode());
+		}
+	}
+
+	@Test
+	public void padPadCancelContinuesAtTheLastAttemptAndAThirdPadBlocks() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "3");
+		scripts(Script.FAIL_PAD, Script.FAIL_PAD, Script.PASS, Script.FAIL_PAD);
+		run = orchestrator.start(request(Workflow.REGISTRATION), listener);
+		assertEquals(1, ended(listener).attemptsUsed());
+		run.retry();
+		assertEquals(2, ended(listener).attemptsUsed());
+		run.retry();
+		assertTrue(listener.awaitReady());
+		run.cancel();
+		LivenessOutcome cancelled = ended(listener);
+		assertEquals(Optional.of(FailureReason.CANCELLED), cancelled.failureReason());
+		assertEquals("Cancel does not use up an attempt", 2, cancelled.attemptsUsed());
+		run.close();
+
+		assertEquals(2, orchestrator.countedFailures(Workflow.REGISTRATION, RID));
+		assertFalse(orchestrator.isBlocked(Workflow.REGISTRATION, RID));
+		assertEquals("another person starts afresh", 0, orchestrator.countedFailures(Workflow.REGISTRATION,
+				"10001100010003"));
+		assertEquals("another workflow starts afresh", 0, orchestrator.countedFailures(Workflow.LOGIN_AUTH, RID));
+
+		RecordingListener second = new RecordingListener();
+		run = orchestrator.start(request(Workflow.REGISTRATION), second);
+		LivenessOutcome third = ended(second);
+		assertEquals("the new window starts at attempt 3 of 3", 3, attemptOfSession(3));
+		assertEquals(Optional.of(FailureReason.PAD), third.failureReason());
+		assertEquals(3, third.attemptsUsed());
+		assertEquals(3, third.maxAttempts());
+		assertEquals(LivenessTransaction.Status.EXHAUSTED, third.status());
+		assertFalse(third.isRetryAllowed());
+		assertTrue(audit.has(AuditEventId.LIVENESS_MAX_RETRIES.id()));
+		run.close();
+
+		assertTrue(orchestrator.isBlocked(Workflow.REGISTRATION, RID));
+		assertStartRefused();
+		assertEquals("no session was opened for the refused window", 4, engine.sessions.size());
+	}
+
+	@Test
+	public void padPadCancelByClosingTheWindowKeepsTheCount() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "3");
+		scripts(Script.FAIL_PAD);
+		for (int window = 1; window <= 3; window++) {
+			RecordingListener l = new RecordingListener();
+			run = orchestrator.start(request(Workflow.REGISTRATION), l);
+			LivenessOutcome o = ended(l);
+			assertEquals("window " + window, window, o.attemptsUsed());
+			assertEquals(window, attemptOfSession(window - 1));
+			run.close();
+		}
+		assertTrue(orchestrator.isBlocked(Workflow.REGISTRATION, RID));
+		assertStartRefused();
+	}
+
+	@Test
+	public void padPadQualityKeepsTheCountAtTwo() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "3");
+		scripts(Script.FAIL_PAD, Script.FAIL_PAD, Script.FAIL_QUALITY, Script.FAIL_QUALITY);
+		run = orchestrator.start(request(Workflow.REGISTRATION), listener);
+		ended(listener);
+		run.retry();
+		ended(listener);
+		run.retry();
+		LivenessOutcome quality = ended(listener);
+		assertEquals(Optional.of(FailureReason.QUALITY), quality.failureReason());
+		assertEquals("a quality failure does not use up an attempt", 2, quality.attemptsUsed());
+		assertTrue(quality.isRetryAllowed());
+		run.close();
+		assertEquals(2, orchestrator.countedFailures(Workflow.REGISTRATION, RID));
+
+		RecordingListener second = new RecordingListener();
+		run = orchestrator.start(request(Workflow.REGISTRATION), second);
+		LivenessOutcome again = ended(second);
+		assertEquals(3, attemptOfSession(3));
+		assertEquals(Optional.of(FailureReason.QUALITY), again.failureReason());
+		assertEquals(2, again.attemptsUsed());
+		assertTrue(again.isRetryAllowed());
+		run.close();
+		assertEquals("quality failures never lower or raise the count", 2,
+				orchestrator.countedFailures(Workflow.REGISTRATION, RID));
+		assertFalse(orchestrator.isBlocked(Workflow.REGISTRATION, RID));
+	}
+
+	@Test
+	public void padPadDeviceErrorKeepsTheCount() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "3");
+		scripts(Script.FAIL_PAD);
+		run = orchestrator.start(request(Workflow.REGISTRATION), listener);
+		ended(listener);
+		run.retry();
+		ended(listener);
+		run.close();
+		device.failOpen = true;
+		RecordingListener second = new RecordingListener();
+		run = orchestrator.start(request(Workflow.REGISTRATION), second);
+		LivenessOutcome deviceError = ended(second);
+		assertEquals(Optional.of(FailureReason.DEVICE), deviceError.failureReason());
+		assertEquals(2, deviceError.attemptsUsed());
+		run.close();
+		assertEquals(2, orchestrator.countedFailures(Workflow.REGISTRATION, RID));
+	}
+
+	@Test
+	public void earlierAttackThenTimeoutsInANewWindowOfferNoOverride() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "3");
+		values.put("mosip.registration.liveness.on_max_failure", "SUPERVISOR_OVERRIDE");
+		scripts(Script.FAIL_PAD, Script.FAIL_TIMEOUT);
+		run = orchestrator.start(request(Workflow.REGISTRATION), listener);
+		LivenessOutcome pad = ended(listener);
+		assertTrue(pad.isSuspectedAttack());
+		run.close();
+
+		RecordingListener second = new RecordingListener();
+		run = orchestrator.start(request(Workflow.REGISTRATION), second);
+		LivenessOutcome firstTimeout = ended(second);
+		assertEquals(2, firstTimeout.attemptsUsed());
+		assertTrue("the earlier attack is remembered", firstTimeout.isSuspectedAttack());
+		run.retry();
+		LivenessOutcome last = ended(second);
+		assertEquals(Optional.of(FailureReason.TIMEOUT), last.failureReason());
+		assertEquals(LivenessTransaction.Status.EXHAUSTED, last.status());
+		assertFalse("no override after an earlier suspected attack", last.isOverrideAllowed());
+		try {
+			run.grantOverride(secondSupervisor());
+			fail("override must be refused");
+		} catch (IllegalStateException expected) {
+			// expected
+		}
+	}
+
+	@Test
+	public void earlierAttackInTheSameWindowOffersNoOverride() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "3");
+		values.put("mosip.registration.liveness.on_max_failure", "SUPERVISOR_OVERRIDE");
+		scripts(Script.FAIL_PAD, Script.FAIL_TIMEOUT);
+		run = orchestrator.start(request(Workflow.REGISTRATION), listener);
+		ended(listener);
+		run.retry();
+		ended(listener);
+		run.retry();
+		LivenessOutcome last = ended(listener);
+		assertEquals(LivenessTransaction.Status.EXHAUSTED, last.status());
+		assertFalse(last.isOverrideAllowed());
+	}
+
+	@Test
+	public void timeoutsAcrossWindowsStillOfferTheOverride() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "2");
+		values.put("mosip.registration.liveness.on_max_failure", "SUPERVISOR_OVERRIDE");
+		scripts(Script.FAIL_TIMEOUT);
+		run = orchestrator.start(request(Workflow.REGISTRATION), listener);
+		ended(listener);
+		run.close();
+		RecordingListener second = new RecordingListener();
+		run = orchestrator.start(request(Workflow.REGISTRATION), second);
+		LivenessOutcome last = ended(second);
+		assertEquals(LivenessTransaction.Status.EXHAUSTED, last.status());
+		assertFalse(last.isSuspectedAttack());
+		assertTrue(last.isOverrideAllowed());
+		assertNotNull(run.grantOverride(secondSupervisor()));
+	}
+
+	@Test
+	public void passClearsTheCount() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "3");
+		scripts(Script.FAIL_TIMEOUT, Script.PASS);
+		run = orchestrator.start(request(Workflow.REGISTRATION), listener);
+		ended(listener);
+		run.close();
+		assertEquals(1, orchestrator.countedFailures(Workflow.REGISTRATION, RID));
+
+		RecordingListener second = new RecordingListener();
+		run = orchestrator.start(request(Workflow.REGISTRATION), second);
+		assertTrue(second.awaitReady());
+		assertEquals(2, attemptOfSession(1));
+		LivenessPassToken token = second.captureContext.getToken().get();
+		assertTrue(tokens.consume(token, clock.now()).bind(bindingFor(token), 2_000).verdict().isPassed());
+		assertTrue(ended(second).isPassed());
+		run.close();
+		assertEquals(0, orchestrator.countedFailures(Workflow.REGISTRATION, RID));
+
+		RecordingListener third = new RecordingListener();
+		run = orchestrator.start(request(Workflow.REGISTRATION), third);
+		assertTrue(third.awaitReady());
+		assertEquals("after a pass the next window starts at attempt 1", 1, attemptOfSession(2));
+	}
+
+	@Test
+	public void countedFailuresExpireWithTheBlockTime() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "3");
+		scripts(Script.FAIL_TIMEOUT);
+		run = orchestrator.start(request(Workflow.LOGIN_AUTH), listener);
+		ended(listener);
+		run.close();
+		assertEquals(1, orchestrator.countedFailures(Workflow.LOGIN_AUTH, RID));
+		clock.advance((LivenessConfig.DEFAULT_AUTH_BLOCK_MINUTES + 1) * 60_000L);
+		assertEquals(0, orchestrator.countedFailures(Workflow.LOGIN_AUTH, RID));
+	}
+
+	@Test
+	public void loweredMaxRetriesRefusesTheNextWindow() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "3");
+		scripts(Script.FAIL_TIMEOUT);
+		run = orchestrator.start(request(Workflow.REGISTRATION), listener);
+		ended(listener);
+		run.retry();
+		ended(listener);
+		run.close();
+		values.put("mosip.registration.liveness.max_retries", "2");
+		assertStartRefused();
+		assertTrue(orchestrator.isBlocked(Workflow.REGISTRATION, RID));
+	}
+
+	// ------------------------------------------------------------------ low light across liveness windows
+
+	private int lowLightOfSession(int index) {
+		return engine.sessions.get(index).request.lowLightRetries();
+	}
+
+	private static LivenessUiState lastState(RecordingListener l) {
+		return l.states.get(l.states.size() - 1);
+	}
+
+	private static void assertLowLight(LivenessOutcome o, int lowLight, RecordingListener l) {
+		assertEquals(Optional.of(FailureReason.QUALITY), o.failureReason());
+		assertTrue("ended for low light", o.isLowLightRetry());
+		assertEquals("a low-light result does not use up an attempt", 0, o.attemptsUsed());
+		assertEquals(1, o.attempt());
+		assertEquals(lowLight, o.lowLightRetries());
+		assertTrue(o.isRetryAllowed());
+		assertFalse(o.isOverrideAllowed());
+		assertFalse(o.isSuspectedAttack());
+		LivenessUiState shown = lastState(l);
+		assertEquals(MessageKeys.FAIL_LIVENESS, shown.messageKey());
+		assertEquals("the lighting hint comes first", MessageKeys.GUIDE_LIGHTING, shown.guidanceKeys().get(0));
+	}
+
+	@Test
+	public void dimDimCancelNewWindowDimUsesUpTheUncountedTriesAndTheNextDimCounts() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "3");
+		engine.auditsPadAttack = true;
+		scripts(Script.DIM_FACE, Script.DIM_FACE, Script.PASS, Script.DIM_FACE);
+		run = orchestrator.start(request(Workflow.REGISTRATION), listener);
+		assertLowLight(ended(listener), 1, listener);
+		assertEquals("the run tracks low-light results from the first session", 0, lowLightOfSession(0));
+		run.retry();
+		assertLowLight(ended(listener), 2, listener);
+		assertEquals(1, lowLightOfSession(1));
+		run.retry();
+		assertTrue(listener.awaitReady());
+		run.cancel();
+		LivenessOutcome cancelled = ended(listener);
+		assertEquals(Optional.of(FailureReason.CANCELLED), cancelled.failureReason());
+		assertEquals("Cancel keeps the low-light count", 2, cancelled.lowLightRetries());
+		run.close();
+		assertEquals(2, orchestrator.lowLightRetries(Workflow.REGISTRATION, RID));
+		assertEquals(0, orchestrator.countedFailures(Workflow.REGISTRATION, RID));
+		assertEquals("another person starts afresh", 0,
+				orchestrator.lowLightRetries(Workflow.REGISTRATION, "10001100010003"));
+
+		RecordingListener second = new RecordingListener();
+		run = orchestrator.start(request(Workflow.REGISTRATION), second);
+		assertLowLight(ended(second), 3, second);
+		assertEquals("the new window continues the low-light count", 2, lowLightOfSession(3));
+		assertEquals(1, attemptOfSession(3));
+		assertFalse("low-light results write no REG-EVT-LV08",
+				audit.has(AuditEventId.LIVENESS_PAD_ATTACK_SUSPECTED.id()));
+		assertEquals(3, orchestrator.lowLightRetries(Workflow.REGISTRATION, RID));
+
+		run.retry();
+		LivenessOutcome counted = ended(second);
+		assertEquals(3, lowLightOfSession(4));
+		assertEquals("the fourth dim try counts", Optional.of(FailureReason.PAD), counted.failureReason());
+		assertFalse(counted.isLowLightRetry());
+		assertEquals(1, counted.attempt());
+		assertEquals(1, counted.attemptsUsed());
+		assertEquals(0, counted.lowLightRetries());
+		assertTrue(counted.isSuspectedAttack());
+		LivenessUiState shown = lastState(second);
+		assertEquals("the generic message", MessageKeys.FAIL_PAD, shown.messageKey());
+		assertFalse(shown.guidanceKeys().contains(MessageKeys.GUIDE_LIGHTING));
+		assertTrue(audit.has(AuditEventId.LIVENESS_PAD_ATTACK_SUSPECTED.id()));
+		run.close();
+		assertEquals(1, orchestrator.countedFailures(Workflow.REGISTRATION, RID));
+		assertEquals(0, orchestrator.lowLightRetries(Workflow.REGISTRATION, RID));
+	}
+
+	@Test
+	public void dimThenCountedPadResetsTheLowLightCount() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "3");
+		scripts(Script.DIM_FACE, Script.FAIL_PAD, Script.DIM_FACE);
+		run = orchestrator.start(request(Workflow.REGISTRATION), listener);
+		assertLowLight(ended(listener), 1, listener);
+		run.close();
+		assertEquals(1, orchestrator.lowLightRetries(Workflow.REGISTRATION, RID));
+
+		RecordingListener second = new RecordingListener();
+		run = orchestrator.start(request(Workflow.REGISTRATION), second);
+		LivenessOutcome pad = ended(second);
+		assertEquals(1, lowLightOfSession(1));
+		assertEquals(Optional.of(FailureReason.PAD), pad.failureReason());
+		assertEquals(1, pad.attemptsUsed());
+		assertEquals("a counted failure resets the low-light count", 0, pad.lowLightRetries());
+		run.close();
+		assertEquals(0, orchestrator.lowLightRetries(Workflow.REGISTRATION, RID));
+		assertEquals(1, orchestrator.countedFailures(Workflow.REGISTRATION, RID));
+
+		RecordingListener third = new RecordingListener();
+		run = orchestrator.start(request(Workflow.REGISTRATION), third);
+		LivenessOutcome dim = ended(third);
+		assertEquals(0, lowLightOfSession(2));
+		assertEquals(2, attemptOfSession(2));
+		assertTrue("the allowance starts again after the counted failure", dim.isLowLightRetry());
+		assertEquals(1, dim.attemptsUsed());
+		assertEquals(1, dim.lowLightRetries());
+	}
+
+	@Test
+	public void normalLightPadCountsOnTheFirstTry() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "3");
+		engine.auditsPadAttack = true;
+		scripts(Script.FAIL_PAD);
+		run = orchestrator.start(request(Workflow.REGISTRATION), listener);
+		LivenessOutcome pad = ended(listener);
+		assertEquals("the session tracks low light", 0, lowLightOfSession(0));
+		assertEquals(Optional.of(FailureReason.PAD), pad.failureReason());
+		assertFalse(pad.isLowLightRetry());
+		assertEquals(1, pad.attemptsUsed());
+		assertEquals(0, pad.lowLightRetries());
+		assertTrue(pad.isSuspectedAttack());
+		assertTrue(audit.has(AuditEventId.LIVENESS_PAD_ATTACK_SUSPECTED.id()));
+		run.close();
+		assertEquals(1, orchestrator.countedFailures(Workflow.REGISTRATION, RID));
+		assertEquals(0, orchestrator.lowLightRetries(Workflow.REGISTRATION, RID));
+	}
+
+	@Test
+	public void lowLightResultsDoNotUnlockTheOverride() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "1");
+		values.put("mosip.registration.liveness.on_max_failure", "SUPERVISOR_OVERRIDE");
+		engine.auditsPadAttack = true;
+		scripts(Script.DIM_FACE);
+		run = orchestrator.start(request(Workflow.REGISTRATION), listener);
+		for (int i = 1; i <= 3; i++) {
+			LivenessOutcome dim = ended(listener);
+			assertLowLight(dim, i, listener);
+			assertEquals(LivenessTransaction.Status.IN_PROGRESS, dim.status());
+			try {
+				run.requestOverride();
+				fail("no override after a low-light result");
+			} catch (IllegalStateException expected) {
+				// expected
+			}
+			run.retry();
+		}
+		assertFalse(audit.has(AuditEventId.LIVENESS_PAD_ATTACK_SUSPECTED.id()));
+		LivenessOutcome last = ended(listener);
+		assertEquals(Optional.of(FailureReason.PAD), last.failureReason());
+		assertEquals(LivenessTransaction.Status.EXHAUSTED, last.status());
+		assertFalse("the counted dim failure is a PAD failure: no override", last.isOverrideAllowed());
+		assertTrue(audit.has(AuditEventId.LIVENESS_PAD_ATTACK_SUSPECTED.id()));
+	}
+
+	@Test
+	public void passClearsTheLowLightCount() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "3");
+		scripts(Script.DIM_FACE, Script.PASS, Script.DIM_FACE);
+		run = orchestrator.start(request(Workflow.REGISTRATION), listener);
+		ended(listener);
+		run.close();
+		assertEquals(1, orchestrator.lowLightRetries(Workflow.REGISTRATION, RID));
+
+		RecordingListener second = new RecordingListener();
+		run = orchestrator.start(request(Workflow.REGISTRATION), second);
+		assertTrue(second.awaitReady());
+		LivenessPassToken token = second.captureContext.getToken().get();
+		assertTrue(tokens.consume(token, clock.now()).bind(bindingFor(token), 2_000).verdict().isPassed());
+		assertTrue(ended(second).isPassed());
+		run.close();
+		assertEquals(0, orchestrator.lowLightRetries(Workflow.REGISTRATION, RID));
+
+		RecordingListener third = new RecordingListener();
+		run = orchestrator.start(request(Workflow.REGISTRATION), third);
+		ended(third);
+		assertEquals("after a pass the next window starts without low-light results", 0, lowLightOfSession(2));
+	}
+
+	@Test
+	public void lowLightCountExpiresWithTheBlockTime() throws Exception {
+		values.put("mosip.registration.liveness.max_retries", "3");
+		scripts(Script.DIM_FACE);
+		run = orchestrator.start(request(Workflow.LOGIN_AUTH), listener);
+		assertTrue(ended(listener).isLowLightRetry());
+		run.close();
+		assertEquals(1, orchestrator.lowLightRetries(Workflow.LOGIN_AUTH, RID));
+		clock.advance((LivenessConfig.DEFAULT_AUTH_BLOCK_MINUTES + 1) * 60_000L);
+		assertEquals(0, orchestrator.lowLightRetries(Workflow.LOGIN_AUTH, RID));
 	}
 
 	@Test

@@ -36,7 +36,7 @@ import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.mdm.dto.MdmBioDevice;
 
 /**
- * The service-layer liveness checks that no screen can skip (design section 4.12, D8 and D14).
+ * The service-layer liveness checks that no screen can skip.
  *
  * <p><b>Capture gate</b> ({@code BioServiceImpl.captureModality}, every face capture): {@link #admit} runs before
  * the device capture and {@link #complete} after it.
@@ -285,8 +285,10 @@ public class LivenessGate {
 		Optional<String> supervisor = admission.handle.overrideSupervisor();
 		if (supervisor.isPresent()) {
 			evidence.put(PacketEvidenceKeys.DECISION, PacketEvidenceKeys.DECISION_OVERRIDE);
-			audit.emit(new AuditPayloadBuilder(admission.workflow, admission.token.sessionId(), clock)
-					.overrideUsed(supervisor.get()));
+			if (!admission.handle.auditsOverride()) {
+				audit.emit(new AuditPayloadBuilder(admission.workflow, admission.token.sessionId(), clock)
+						.overrideUsed(supervisor.get()));
+			}
 		} else {
 			evidence.put(PacketEvidenceKeys.DECISION, PacketEvidenceKeys.DECISION_PASS);
 		}

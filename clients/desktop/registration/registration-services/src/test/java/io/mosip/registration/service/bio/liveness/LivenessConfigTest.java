@@ -32,7 +32,7 @@ public class LivenessConfigTest {
 		assertFalse(config.isDiagnosticEnabled());
 		assertTrue(config.isMetricsEnabled());
 		assertEquals("mosip-onnx-default", config.engineId());
-		assertEquals("1.0.0", config.modelMinVersion());
+		assertEquals("1.3.0", config.modelMinVersion());
 		for (Workflow w : Workflow.values()) {
 			LivenessPolicy p = config.policy(w);
 			if (w == Workflow.EXCEPTION_PHOTO) {
@@ -64,7 +64,7 @@ public class LivenessConfigTest {
 		values.put("mosip.registration.liveness.engine", "  vendor-x ");
 		values.put("mosip.registration.liveness.model.min_version", "   ");
 		assertEquals("vendor-x", config.engineId());
-		assertEquals("1.0.0", config.modelMinVersion());
+		assertEquals("1.3.0", config.modelMinVersion());
 	}
 
 	@Test
@@ -102,6 +102,94 @@ public class LivenessConfigTest {
 		assertTrue("reject threshold is clamped to its floor", p.padRejectThreshold() >= 5);
 		assertTrue(p.maxRetries() <= 10);
 		assertFalse(config.resolve(Workflow.REGISTRATION).issues().isEmpty());
+	}
+
+	/**
+	 * Fills the application map the way the client builds it at start-up: synced values first, then the local
+	 * preferences copied over them.
+	 */
+	private void syncedAndLocal(Map<String, Object> synced, Map<String, String> local) {
+		values.putAll(synced);
+		values.putAll(local);
+		config.setLocalSettings(() -> local, () -> synced);
+	}
+
+	@Test
+	public void localOverrideOfPolicyAndMasterSwitchIsIgnoredButThresholdApplies() {
+		Map<String, Object> synced = new HashMap<>();
+		synced.put(LivenessConfigKeys.ENABLE, "Y");
+		synced.put(LivenessConfigKeys.PASSIVE_THRESHOLD, "80");
+		Map<String, String> local = new HashMap<>();
+		local.put(LivenessConfigKeys.ENABLE, "N");
+		local.put(LivenessConfigKeys.policyKey(Workflow.REGISTRATION), "OFF");
+		local.put(LivenessConfigKeys.PASSIVE_THRESHOLD, "90");
+		syncedAndLocal(synced, local);
+
+		assertTrue("a local value cannot switch liveness off", config.isMasterSwitchOn());
+		assertTrue(config.isEnforced(Workflow.REGISTRATION));
+		assertEquals("no synced policy: the shipped default applies",
+				LivenessConfigKeys.defaultPolicyMode(Workflow.REGISTRATION), config.policy(Workflow.REGISTRATION).mode());
+		assertEquals("passive.threshold is on the allow-list", 90,
+				config.policy(Workflow.REGISTRATION).passiveThreshold());
+		assertEquals(Optional.of("90"), config.get(LivenessConfigKeys.PASSIVE_THRESHOLD));
+		assertEquals(Arrays.asList(LivenessConfigKeys.ENABLE, LivenessConfigKeys.policyKey(Workflow.REGISTRATION)),
+				config.refusedLocalKeys());
+	}
+
+	@Test
+	public void localOverrideOfPolicyFallsBackToTheSyncedValue() {
+		Map<String, Object> synced = new HashMap<>();
+		synced.put(LivenessConfigKeys.policyKey(Workflow.PACKET_AUTH), "ALWAYS_ACTIVE");
+		synced.put(LivenessConfigKeys.ENABLE, "Y");
+		Map<String, String> local = new HashMap<>();
+		local.put(LivenessConfigKeys.policyKey(Workflow.PACKET_AUTH), "PASSIVE_ONLY");
+		local.put(LivenessConfigKeys.ENABLE, "N");
+		syncedAndLocal(synced, local);
+
+		assertEquals(PolicyMode.ALWAYS_ACTIVE, config.policy(Workflow.PACKET_AUTH).mode());
+		assertEquals(Optional.of("Y"), config.get(LivenessConfigKeys.ENABLE));
+	}
+
+	@Test
+	public void localOverrideOfAllowListedOrForeignKeysStillApplies() {
+		Map<String, Object> synced = new HashMap<>();
+		synced.put(LivenessConfigKeys.MAX_RETRIES, "3");
+		synced.put("mosip.registration.some_upstream_key", "1");
+		Map<String, String> local = new HashMap<>();
+		local.put(LivenessConfigKeys.MAX_RETRIES, "4");
+		local.put(LivenessConfigKeys.DIAGNOSTIC_ENABLE, "Y");
+		local.put("mosip.registration.some_upstream_key", "2");
+		syncedAndLocal(synced, local);
+
+		assertEquals(4, config.policy(Workflow.REGISTRATION).maxRetries());
+		assertTrue(config.isDiagnosticEnabled());
+		assertEquals("keys outside liveness keep the upstream local preference rules", Optional.of("2"),
+				config.get("mosip.registration.some_upstream_key"));
+		assertEquals(Collections.emptyList(), config.refusedLocalKeys());
+	}
+
+	@Test
+	public void localOverrideIgnoredKeysAreReportedWithTheirEffectiveValue() {
+		Map<String, Object> synced = new HashMap<>();
+		synced.put(LivenessConfigKeys.ENABLE, "Y");
+		Map<String, String> local = new HashMap<>();
+		local.put(LivenessConfigKeys.ENABLE, "N");
+		syncedAndLocal(synced, local);
+
+		assertEquals(Collections.emptyList(), config.changedKeysSinceLastCheck());
+		values.put(LivenessConfigKeys.ENABLE, "N");
+		assertEquals("the effective value did not change", Collections.emptyList(),
+				config.changedKeysSinceLastCheck());
+	}
+
+	@Test
+	public void localOverrideReadFailureNeverThrows() {
+		values.put(LivenessConfigKeys.PASSIVE_THRESHOLD, "85");
+		config.setLocalSettings(() -> {
+			throw new IllegalStateException("database not ready");
+		}, () -> null);
+		assertEquals(Optional.of("85"), config.get(LivenessConfigKeys.PASSIVE_THRESHOLD));
+		assertTrue(config.isMasterSwitchOn());
 	}
 
 	@Test

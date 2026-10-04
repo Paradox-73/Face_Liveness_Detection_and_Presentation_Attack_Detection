@@ -1,10 +1,14 @@
 package io.mosip.registration.controller.liveness;
 
+import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -17,6 +21,7 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.dto.LivenessContext;
@@ -26,12 +31,17 @@ import io.mosip.registration.service.bio.liveness.LivenessRequest;
 import io.mosip.registration.service.bio.liveness.LivenessRun;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.geometry.NodeOrientation;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
 import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
@@ -51,12 +61,29 @@ import javafx.util.Duration;
  * Retry button while the policy allows another attempt; after the last attempt it shows the recovery message, and
  * for resident workflows a supervisor override when the policy allows it.
  *
+ * <p>Supervisor override: after the confirmation, a supervisor who is not the logged-in operator enters a user ID and
+ * passes the client's supervisor face authentication (face liveness under the {@code exception_auth} policy, then
+ * the 1:1 match). Only then is the override granted ({@link SupervisorOverrideFlow}); the photo taken next is
+ * checked for one face and passive PAD before it is stored.
+ *
+ * <p>Window size: the panel sits in a scroll area, and the window is never taller than the visual bounds of the
+ * operator's monitor ({@link LivenessDialogSizing}); on a small screen the content scrolls and Retry and Close stay
+ * reachable.
+ *
+ * <p>Languages: all texts are in the operator's display language. For a resident capture whose first registration
+ * language differs from it, the prompt the resident must follow is also shown in the resident's language, as a
+ * second, larger line ({@link LivenessViewModel#residentLanguage(boolean, String, String)}).
+ *
  * <p>All methods run on the JavaFX application thread.
  */
 public final class LivenessDialog {
 
 	private static final Logger LOGGER = AppConfig.getLogger(LivenessDialog.class);
 	private static final Duration SUCCESS_DISPLAY = Duration.millis(900);
+	/** Room for the vertical scroll bar when the content scrolls (modena scroll bars are about 15 px wide). */
+	private static final double SCROLL_BAR_WIDTH = 16;
+	private static final String SCROLL_STYLE = "-fx-background-color: transparent; -fx-background-insets: 0;"
+			+ " -fx-padding: 0;";
 
 	/** What the screen does at each step; called on the JavaFX application thread. */
 	public interface Callbacks {
@@ -85,11 +112,31 @@ public final class LivenessDialog {
 		}
 	}
 
+	/** Authenticates the supervisor who approves an override; called on the JavaFX application thread. */
+	public interface SupervisorAuthenticator {
+
+		/**
+		 * Authenticates a supervisor.
+		 *
+		 * @param userId       the user ID entered for the override
+		 * @param orchestrator the liveness services
+		 * @param parent       the options of the liveness window that asks (language, direction)
+		 * @param owner        the liveness window
+		 * @param done         receives {@code true} on the JavaFX application thread when the supervisor's face
+		 *                     passed liveness and matched; {@code false} otherwise
+		 */
+		void authenticate(String userId, LivenessOrchestrator orchestrator, Options parent, Window owner,
+				Consumer<Boolean> done);
+	}
+
 	private final LivenessOrchestrator orchestrator;
 	private final Options options;
 	private final Callbacks callbacks;
 	private final LivenessTexts texts;
+	private final LivenessTexts residentTexts;
+	private final boolean residentRightToLeft;
 	private final LivenessPanel panel;
+	private final ScrollPane scroller;
 	private final FxLivenessListener listener;
 	private Stage stage;
 	private LivenessRun run;
@@ -97,13 +144,20 @@ public final class LivenessDialog {
 	private LivenessUiState lastState;
 	private boolean passed;
 	private boolean closed;
+	private boolean overrideRunning;
 
 	private LivenessDialog(LivenessOrchestrator orchestrator, Options options, Callbacks callbacks) {
 		this.orchestrator = Objects.requireNonNull(orchestrator, "orchestrator");
 		this.options = Objects.requireNonNull(options, "options");
 		this.callbacks = Objects.requireNonNull(callbacks, "callbacks");
 		this.texts = textsFor(options.languageCode).withOverrides(orchestrator.config(), options.languageCode);
+		Optional<String> residentLanguage = LivenessViewModel.residentLanguage(options.workflow.isResident(),
+				options.languageCode, options.residentLanguage());
+		this.residentTexts = residentLanguage
+				.map(lang -> textsFor(lang).withOverrides(orchestrator.config(), lang)).orElse(null);
+		this.residentRightToLeft = residentLanguage.map(LivenessDialog::isRightToLeft).orElse(false);
 		this.panel = new LivenessPanel();
+		this.scroller = new ScrollPane(panel);
 		this.listener = new FxLivenessListener(new PanelTarget());
 	}
 
@@ -157,7 +211,12 @@ public final class LivenessDialog {
 		panel.setOnRetry(this::retry);
 		panel.setOnCancel(this::cancel);
 		panel.setOnOverride(this::override);
+		panel.setResidentDirection(residentRightToLeft);
 		panel.render(LivenessViewModel.starting(texts));
+		scroller.setFitToWidth(true);
+		scroller.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+		scroller.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+		scroller.setStyle(SCROLL_STYLE);
 
 		stage = new Stage();
 		stage.setTitle(title);
@@ -168,12 +227,13 @@ public final class LivenessDialog {
 		} else {
 			stage.initModality(Modality.APPLICATION_MODAL);
 		}
-		Scene scene = new Scene(panel);
+		Scene scene = new Scene(scroller);
 		scene.setNodeOrientation(options.rightToLeft ? NodeOrientation.RIGHT_TO_LEFT : NodeOrientation.LEFT_TO_RIGHT);
 		stage.setScene(scene);
 		stage.setOnCloseRequest(event -> cancel());
 		SessionContext.setAutoLogout(false);
 		stage.show();
+		fitWindow();
 
 		checkOnline();
 		start();
@@ -186,14 +246,20 @@ public final class LivenessDialog {
 			updateDiagnostic();
 		} catch (RegBaseCheckedException e) {
 			LOGGER.error("Face liveness could not start: {}", e.getErrorCode());
-			panel.render(startRefusal(e.getErrorCode()));
-			panel.setCancelText(texts.text(LivenessTexts.UI_CLOSE));
-			fitWindow();
+			showFinalMessage(startRefusal(e.getErrorCode()));
 		} catch (RuntimeException e) {
 			LOGGER.error("Face liveness could not start: {}", e.getClass().getSimpleName());
-			panel.render(LivenessViewModel.error(MessageKeys.ERROR_ENGINE, texts, PromptIcon.ERROR));
-			panel.setCancelText(texts.text(LivenessTexts.UI_CLOSE));
+			showFinalMessage(LivenessViewModel.error(MessageKeys.ERROR_ENGINE, texts, PromptIcon.ERROR));
 		}
+	}
+
+	/** Shows a message after which only Close is left, with the Close button in view. */
+	private void showFinalMessage(LivenessViewModel model) {
+		panel.render(model);
+		panel.setCancelText(texts.text(LivenessTexts.UI_CLOSE));
+		fitWindow();
+		// on a small screen the content scrolls: show the message's end and the Close button
+		scroller.setVvalue(scroller.getVmax());
 	}
 
 	/** What the panel shows when the orchestrator refuses to start: attempts used up, or another run is open. */
@@ -215,13 +281,14 @@ public final class LivenessDialog {
 			run.retry();
 			panel.setCancelText(texts.text(LivenessTexts.UI_CANCEL));
 			panel.render(LivenessViewModel.starting(texts));
+			scroller.setVvalue(scroller.getVmin());
 		} catch (IllegalStateException e) {
 			LOGGER.info("Face liveness retry not available");
 		}
 	}
 
 	private void override() {
-		if (run == null || closed) {
+		if (run == null || closed || overrideRunning) {
 			return;
 		}
 		Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, texts.text(MessageKeys.OVERRIDE_CONFIRM),
@@ -233,19 +300,51 @@ public final class LivenessDialog {
 		if (!answer.isPresent() || answer.get() != ButtonType.OK) {
 			return;
 		}
-		Optional<String> supervisor = options.supervisorId.get();
-		if (!supervisor.isPresent()) {
-			panel.render(LivenessViewModel.error(MessageKeys.ERROR_NOT_SUPERVISOR, texts, PromptIcon.LOCKED));
+		LivenessRun.OverrideRequest request;
+		try {
+			request = run.requestOverride();
+		} catch (IllegalStateException e) {
+			LOGGER.info("Supervisor override not available");
+			showOverrideRefusal(LivenessTexts.OVERRIDE_NOT_ALLOWED);
 			return;
 		}
-		try {
-			LivenessContext context = run.grantOverride(supervisor.get());
-			finish();
-			callbacks.captureReady(context);
-		} catch (IllegalStateException | IllegalArgumentException e) {
-			LOGGER.info("Supervisor override refused: {}", e.getClass().getSimpleName());
-			panel.render(LivenessViewModel.error(MessageKeys.ERROR_NOT_SUPERVISOR, texts, PromptIcon.LOCKED));
+		SupervisorOverrideFlow flow = new SupervisorOverrideFlow(request::grant, options.operatorId, options.users,
+				Instant::now);
+		TextInputDialog prompt = new TextInputDialog();
+		prompt.initOwner(stage);
+		prompt.setTitle(texts.text(MessageKeys.TITLE_SUPERVISOR));
+		prompt.setHeaderText(texts.text(LivenessTexts.OVERRIDE_PROMPT));
+		prompt.setContentText(texts.text(LivenessTexts.OVERRIDE_SUPERVISOR_ID));
+		Optional<String> entered = prompt.showAndWait();
+		if (!entered.isPresent()) {
+			return;
 		}
+		String supervisorId = entered.get().trim();
+		Optional<String> refusal = flow.checkCandidate(supervisorId);
+		if (refusal.isPresent()) {
+			LOGGER.info("Supervisor override refused before authentication");
+			showOverrideRefusal(refusal.get());
+			return;
+		}
+		overrideRunning = true;
+		options.supervisorAuthenticator.authenticate(supervisorId, orchestrator, options, stage, matched -> {
+			overrideRunning = false;
+			SupervisorOverrideFlow.Step step = flow.authenticated(supervisorId, Boolean.TRUE.equals(matched));
+			if (closed) {
+				return;
+			}
+			if (!step.isGranted()) {
+				LOGGER.info("Supervisor override not granted");
+				showOverrideRefusal(step.messageKey());
+				return;
+			}
+			finish();
+			callbacks.captureReady(step.context());
+		});
+	}
+
+	private void showOverrideRefusal(String messageKey) {
+		showFinalMessage(LivenessViewModel.error(messageKey, texts, PromptIcon.LOCKED));
 	}
 
 	private void onSessionEnded(LivenessOutcome outcome) {
@@ -285,10 +384,52 @@ public final class LivenessDialog {
 		LOGGER.info("Face liveness window closed for {} (passed={})", options.workflow.id(), passed);
 	}
 
-	/** Grows the window when a longer message or the buttons need more room, so nothing is cut off. */
+	/**
+	 * Sizes the window to its content, capped at the visual bounds of the monitor it is on; a taller content scrolls.
+	 * Called whenever the panel shows a new state, so a longer message or the buttons get room.
+	 */
 	private void fitWindow() {
-		if (stage != null && stage.isShowing()) {
-			stage.sizeToScene();
+		if (stage == null || !stage.isShowing() || stage.getScene() == null) {
+			return;
+		}
+		Scene scene = stage.getScene();
+		Insets insets = scroller.getInsets();
+		double panelWidth = panel.prefWidth(-1);
+		double contentWidth = panelWidth + insets.getLeft() + insets.getRight();
+		double contentHeight = panel.prefHeight(panelWidth) + insets.getTop() + insets.getBottom();
+		Rectangle2D bounds = visualBoundsOf(stage);
+		LivenessDialogSizing.Placement placement = LivenessDialogSizing.fit(contentWidth, contentHeight,
+				decoration(stage.getWidth(), scene.getWidth()), decoration(stage.getHeight(), scene.getHeight()),
+				SCROLL_BAR_WIDTH, stage.getX(), stage.getY(), new LivenessDialogSizing.Area(bounds.getMinX(),
+						bounds.getMinY(), bounds.getWidth(), bounds.getHeight()));
+		stage.setMaxHeight(bounds.getHeight());
+		stage.setWidth(placement.width);
+		stage.setHeight(placement.height);
+		stage.setX(placement.x);
+		stage.setY(placement.y);
+	}
+
+	/** Visual bounds (without the taskbar) of the monitor that holds the window's centre; the primary one if none. */
+	private static Rectangle2D visualBoundsOf(Stage window) {
+		double centreX = window.getX() + window.getWidth() / 2;
+		double centreY = window.getY() + window.getHeight() / 2;
+		List<Screen> screens = Double.isNaN(centreX) || Double.isNaN(centreY) ? Collections.<Screen>emptyList()
+				: Screen.getScreensForRectangle(centreX, centreY, 1, 1);
+		return (screens.isEmpty() ? Screen.getPrimary() : screens.get(0)).getVisualBounds();
+	}
+
+	/** Size of the window frame along one axis: window size minus scene size, 0 when not known yet. */
+	private static double decoration(double windowSize, double sceneSize) {
+		double frame = windowSize - sceneSize;
+		return Double.isNaN(frame) || frame < 0 ? 0 : frame;
+	}
+
+	/** Tells whether a language is written right to left, from the client's {@code mosip.right_to_left_orientation}. */
+	private static boolean isRightToLeft(String languageCode) {
+		try {
+			return ApplicationContext.getInstance().isLanguageRightToLeft(languageCode);
+		} catch (RuntimeException e) {
+			return "ara".equals(languageCode);
 		}
 	}
 
@@ -354,9 +495,14 @@ public final class LivenessDialog {
 				return;
 			}
 			lastState = state;
-			panel.render(LivenessViewModel.of(state, texts));
+			LivenessViewModel model = LivenessViewModel.of(state, texts, residentTexts);
+			panel.render(model);
 			updateDiagnostic();
 			fitWindow();
+			if (model.isTerminal()) {
+				// on a small screen the content scrolls: show the message's end and the Retry / Close buttons
+				scroller.setVvalue(scroller.getVmax());
+			}
 		}
 
 		@Override
@@ -391,7 +537,10 @@ public final class LivenessDialog {
 		private String titleKey = LivenessTexts.UI_TITLE;
 		private boolean rightToLeft;
 		private BooleanSupplier onlineCheck;
-		private Supplier<Optional<String>> supervisorId = Optional::empty;
+		private Supplier<String> operatorId = Options::sessionUserId;
+		private Supplier<String> residentLanguage = Options::sessionResidentLanguage;
+		private SupervisorOverrideFlow.UserDirectory users = SupervisorFaceAuth::rolesOf;
+		private SupervisorAuthenticator supervisorAuthenticator = new SupervisorFaceAuth();
 
 		/**
 		 * Creates options.
@@ -431,6 +580,32 @@ public final class LivenessDialog {
 		}
 
 		/**
+		 * Sets the resident's language for the second prompt line of resident captures (default: the first language
+		 * chosen for the registration in the session).
+		 *
+		 * @param languageCode client language code ({@code eng}, {@code fra}, {@code ara}), or {@code null} for no
+		 *                     second line
+		 * @return these options
+		 */
+		public Options residentLanguage(String languageCode) {
+			this.residentLanguage = () -> languageCode;
+			return this;
+		}
+
+		/**
+		 * Returns the resident's language for the second prompt line.
+		 *
+		 * @return the client language code, or {@code null} when not known
+		 */
+		public String residentLanguage() {
+			try {
+				return residentLanguage.get();
+			} catch (RuntimeException e) {
+				return null;
+			}
+		}
+
+		/**
 		 * Sets the title key (default: "Face verification"; "Supervisor verification" for reviewer and EOD).
 		 *
 		 * @param titleKey label key
@@ -453,15 +628,68 @@ public final class LivenessDialog {
 		}
 
 		/**
-		 * Sets who may grant a supervisor override (resident workflows, after the last attempt, when the policy's
-		 * {@code on_max_failure} is {@code SUPERVISOR_OVERRIDE}).
+		 * Sets how the supervisor who approves an override authenticates (default: the client's supervisor face
+		 * authentication with face liveness under the {@code exception_auth} policy).
 		 *
-		 * @param supervisorId returns the logged-in supervisor's user ID, or empty when the user is not a supervisor
+		 * @param authenticator the authenticator
 		 * @return these options
 		 */
-		public Options supervisorId(Supplier<Optional<String>> supervisorId) {
-			this.supervisorId = Objects.requireNonNull(supervisorId, "supervisorId");
+		public Options supervisorAuthenticator(SupervisorAuthenticator authenticator) {
+			this.supervisorAuthenticator = Objects.requireNonNull(authenticator, "authenticator");
 			return this;
+		}
+
+		/**
+		 * Sets where the logged-in operator's user ID and the roles of other users come from (default: the session
+		 * and the users registered on this machine).
+		 *
+		 * @param operatorId the logged-in operator's user ID
+		 * @param users      the roles of a user
+		 * @return these options
+		 */
+		Options users(Supplier<String> operatorId, SupervisorOverrideFlow.UserDirectory users) {
+			this.operatorId = Objects.requireNonNull(operatorId, "operatorId");
+			this.users = Objects.requireNonNull(users, "users");
+			return this;
+		}
+
+		/**
+		 * Returns the display language.
+		 *
+		 * @return the client language code, or {@code null}
+		 */
+		public String languageCode() {
+			return languageCode;
+		}
+
+		/**
+		 * Tells whether the display language is written right to left.
+		 *
+		 * @return {@code true} for right-to-left
+		 */
+		public boolean isRightToLeft() {
+			return rightToLeft;
+		}
+
+		/** First language chosen for the registration in the session, or {@code null} outside a registration. */
+		private static String sessionResidentLanguage() {
+			if (!SessionContext.isSessionContextAvailable() || SessionContext.map() == null) {
+				return null;
+			}
+			Object data = SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
+			if (!(data instanceof RegistrationDTO)) {
+				return null;
+			}
+			List<String> languages = ((RegistrationDTO) data).getSelectedLanguagesByApplicant();
+			return languages == null || languages.isEmpty() ? null : languages.get(0);
+		}
+
+		private static String sessionUserId() {
+			try {
+				return SessionContext.isSessionContextAvailable() ? SessionContext.userId() : "";
+			} catch (RuntimeException e) {
+				return "";
+			}
 		}
 	}
 }

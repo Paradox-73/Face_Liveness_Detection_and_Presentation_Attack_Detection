@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import io.mosip.liveness.core.engine.LivenessTransaction;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.mdm.dto.LivenessContext;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.mdm.dto.MdmBioDevice;
@@ -70,6 +72,7 @@ public class LivenessOnMaxFailureTest {
 		orchestrator = new LivenessOrchestrator(config, registry, tokens, audit, record -> {
 		}, null, clock);
 		orchestrator.setUserIdSupplier(() -> "supervisor1");
+		orchestrator.setOverridePhotoModels(new LivenessFakes.PhotoModels());
 	}
 
 	@After
@@ -87,7 +90,8 @@ public class LivenessOnMaxFailureTest {
 		assertFalse("BLOCK offers no override", last.isOverrideAllowed());
 		assertFalse("BLOCK never locks", last.isLockRequired());
 		try {
-			run.grantOverride("supervisor1");
+			run.grantOverride(SupervisorApproval.of("supervisor2",
+					Collections.singletonList(Role.REGISTRATION_SUPERVISOR.name()), clock.now()));
 			fail("no override under BLOCK");
 		} catch (IllegalStateException expected) {
 			// expected
@@ -105,7 +109,9 @@ public class LivenessOnMaxFailureTest {
 		assertTrue(listener.awaitEnded());
 		assertTrue(listener.last().isOverrideAllowed());
 
-		LivenessContext context = run.grantOverride("supervisor1");
+		// a second supervisor (the operator here is supervisor1) approves; the photo shows one face, PAD 92
+		LivenessContext context = run.grantOverride(SupervisorApproval.of("supervisor2",
+				Collections.singletonList(Role.REGISTRATION_SUPERVISOR.name()), clock.now()));
 		LivenessGate gate = new LivenessGate(LivenessConfig.of(values), tokens, new DesktopImageDecoder(), audit,
 				clock);
 		MDMRequestDto request = new MDMRequestDto(RegistrationConstants.FACE_FULLFACE, null, "Registration", "test",

@@ -4,12 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.text.NumberFormat;
 import java.util.ListResourceBundle;
 import java.util.Locale;
 
 import org.junit.Test;
 
 import io.mosip.liveness.core.config.ConfigSource;
+import io.mosip.liveness.core.ui.MessageKeys;
 
 /** Text lookup, fallbacks and placeholders. */
 public class LivenessTextsTest {
@@ -88,5 +90,94 @@ public class LivenessTextsTest {
 		assertEquals("ar", LivenessTexts.localeOf("ara").getLanguage());
 		assertEquals(Locale.ENGLISH, LivenessTexts.localeOf(null));
 		assertEquals(Locale.ENGLISH, LivenessTexts.localeOf("xyz"));
+	}
+
+	private static final String ARABIC_ONE = "\u0645\u062d\u0627\u0648\u0644\u0629 \u0648\u0627\u062d\u062f\u0629";
+	private static final String ARABIC_TWO = "\u0645\u062d\u0627\u0648\u0644\u062a\u064a\u0646";
+	private static final String ARABIC_FEW = "\u0645\u062d\u0627\u0648\u0644\u0627\u062a";
+	private static final String ARABIC_MANY = "\u0645\u062d\u0627\u0648\u0644\u0629";
+	private static final String ARABIC_AFTER = "\u0628\u0639\u062f ";
+
+	/** How {@link java.text.MessageFormat} writes a count in this JVM's locale. */
+	private static String count(int n) {
+		return NumberFormat.getInstance().format(n);
+	}
+
+	@Test
+	public void pluralEnglishAttemptCountReadsCorrectlyForEveryCount() {
+		LivenessTexts english = LivenessTexts.forLanguage("eng");
+
+		assertTrue(english.text(MessageKeys.RETRY_MAX_RESIDENT, "1").contains("after " + count(1) + " attempt. "));
+		for (int n = 2; n <= 12; n++) {
+			String engineArg = english.text(MessageKeys.RETRY_MAX_RESIDENT, Integer.toString(n));
+			assertTrue(engineArg, engineArg.contains("after " + count(n) + " attempts. "));
+			assertEquals("a number and its text form read the same", engineArg,
+					english.text(MessageKeys.RETRY_MAX_RESIDENT, n));
+		}
+		assertTrue(english.text(MessageKeys.RETRY_MAX_RESIDENT, 1).endsWith("the centre's recovery process."));
+	}
+
+	@Test
+	public void pluralFrenchUsesTheSingularForOneAndKeepsApostrophes() {
+		LivenessTexts french = LivenessTexts.forLanguage("fra");
+
+		String one = french.text(MessageKeys.RETRY_MAX_RESIDENT, "1");
+		assertTrue(one, one.contains("apr\u00e8s " + count(1) + " tentative. "));
+		assertTrue(one, one.startsWith("La capture du visage n'a pas abouti"));
+		assertTrue(one, one.contains("d'appliquer"));
+		for (int n = 2; n <= 12; n++) {
+			String text = french.text(MessageKeys.RETRY_MAX_RESIDENT, Integer.toString(n));
+			assertTrue(text, text.contains("apr\u00e8s " + count(n) + " tentatives. "));
+		}
+	}
+
+	@Test
+	public void pluralArabicUsesTheFormsForOneTwoThreeToTenAndElevenOrMore() {
+		LivenessTexts arabic = LivenessTexts.forLanguage("ara");
+
+		assertTrue(arabic.text(MessageKeys.RETRY_MAX_RESIDENT, "1").contains(ARABIC_AFTER + ARABIC_ONE + ". "));
+		assertTrue(arabic.text(MessageKeys.RETRY_MAX_RESIDENT, "2").contains(ARABIC_AFTER + ARABIC_TWO + ". "));
+		for (int n = 3; n <= 10; n++) {
+			String text = arabic.text(MessageKeys.RETRY_MAX_RESIDENT, Integer.toString(n));
+			assertTrue(text, text.contains(ARABIC_AFTER + count(n) + " " + ARABIC_FEW + ". "));
+		}
+		for (int n : new int[] { 11, 12, 25, 99 }) {
+			String text = arabic.text(MessageKeys.RETRY_MAX_RESIDENT, Integer.toString(n));
+			assertTrue(text, text.contains(ARABIC_AFTER + count(n) + " " + ARABIC_MANY + ". "));
+		}
+	}
+
+	@Test
+	public void pluralNoLivenessTextShowsARawPatternForAnyCount() {
+		for (String lang : new String[] { "eng", "fra", "ara" }) {
+			LivenessTexts texts = LivenessTexts.forLanguage(lang);
+			for (int n = 1; n <= 12; n++) {
+				for (String key : new String[] { MessageKeys.RETRY_MAX_RESIDENT, MessageKeys.RETRY_AVAILABLE,
+						LivenessTexts.UI_ATTEMPTS, LivenessTexts.UI_STEP }) {
+					String text = texts.text(key, Integer.toString(n), "3");
+					assertFalse(lang + " " + key + " " + n + ": " + text, text.contains("{") || text.contains("choice"));
+				}
+			}
+			assertFalse(lang, texts.text(MessageKeys.RETRY_MAX_RESIDENT, "1").contains("1 attempts"));
+		}
+	}
+
+	@Test
+	public void pluralConversionLeavesPatternsWithoutChoiceAlone() {
+		LivenessTexts texts = new LivenessTexts(new Bundle(new Object[][] { { "v", "Models {0} version {1}" },
+				{ "c", "{0,choice,1#one file|1<{0} files} in {1}" } }), null);
+
+		assertEquals("a version number is not regrouped", "Models m version 20261004",
+				texts.text("v", "m", "20261004"));
+		assertEquals("one file in 20261004", texts.text("c", " 1 ", "20261004"));
+		assertEquals(count(4) + " files in x", texts.text("c", "4", "x"));
+	}
+
+	@Test
+	public void pluralTextWhereACountIsExpectedShowsThePatternInsteadOfFailing() {
+		LivenessTexts texts = new LivenessTexts(new Bundle(new Object[][] {
+				{ "c", "after {0,choice,1#{0} attempt|1<{0} attempts}" } }), null);
+
+		assertEquals("after {0,choice,1#{0} attempt|1<{0} attempts}", texts.text("c", "several"));
 	}
 }

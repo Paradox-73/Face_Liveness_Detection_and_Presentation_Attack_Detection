@@ -7,6 +7,8 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.Objects;
 import java.util.ResourceBundle;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.engine.LivenessUiStateMapper;
@@ -20,6 +22,12 @@ import io.mosip.liveness.core.engine.LivenessUiStateMapper;
  * with {@link #withOverrides(ConfigSource, String)} first looks for a configured replacement text
  * {@code mosip.registration.liveness.guidance.<messageKey>.<lang>} (synced like every other key, so the same text
  * applies offline). Placeholders {@code {0}}, {@code {1}} are filled with {@link MessageFormat}.
+ *
+ * <p>Counts that change the noun use a {@link java.text.ChoiceFormat} element, for example
+ * {@code after {0,choice,1#{0} attempt|1<{0} attempts}}, so every count reads correctly in each language (Arabic has
+ * separate forms for 1, 2, 3 to 10 and 11 and more). The engine sends its arguments as text; a whole-number text
+ * argument of such a pattern is passed to the choice as a number. A choice branch must not contain an apostrophe: a
+ * branch with a placeholder is formatted a second time, which drops it.
  */
 public final class LivenessTexts {
 
@@ -41,7 +49,21 @@ public final class LivenessTexts {
 	public static final String UI_PREVIEW = "liveness.ui.preview";
 	/** Label key of the busy message when another face verification is running. */
 	public static final String UI_BUSY = "liveness.ui.busy";
+	/** Label key of the supervisor override prompt: a second supervisor must verify. */
+	public static final String OVERRIDE_PROMPT = "liveness.override.prompt";
+	/** Label key of the user ID field of the supervisor override prompt. */
+	public static final String OVERRIDE_SUPERVISOR_ID = "liveness.override.supervisor_id";
+	/** Label key shown when the logged-in operator tries to approve the override. */
+	public static final String OVERRIDE_SAME_USER = "liveness.override.same_user";
+	/** Label key shown when the supervisor's face authentication failed. */
+	public static final String OVERRIDE_AUTH_FAILED = "liveness.override.auth_failed";
+	/** Label key shown when the supervisor authenticated too long before the override. */
+	public static final String OVERRIDE_AUTH_EXPIRED = "liveness.override.auth_expired";
+	/** Label key shown when the override cannot be granted at all. */
+	public static final String OVERRIDE_NOT_ALLOWED = "liveness.override.not_allowed";
 
+	private static final Pattern CHOICE = Pattern.compile("\\{\\s*(\\d{1,9})\\s*,\\s*choice\\s*,");
+	private static final Pattern WHOLE_NUMBER = Pattern.compile("-?\\d{1,18}");
 	private static final String MISSING_BUNDLE_BASE = "labels";
 	private static final String DEFAULT_LANGUAGE = "eng";
 
@@ -115,7 +137,12 @@ public final class LivenessTexts {
 		if (args == null || args.length == 0) {
 			return pattern;
 		}
-		return new MessageFormat(escapeQuotes(pattern)).format(args);
+		try {
+			return new MessageFormat(escapeQuotes(pattern)).format(numbersForChoices(pattern, args));
+		} catch (IllegalArgumentException e) {
+			// a broken translation or a text argument where a count is expected: show the text unformatted
+			return pattern;
+		}
 	}
 
 	/**
@@ -194,6 +221,26 @@ public final class LivenessTexts {
 		} catch (MissingResourceException e) {
 			return null;
 		}
+	}
+
+	/**
+	 * Turns the whole-number text arguments of the pattern's choice elements into numbers, which a choice needs.
+	 * Other arguments keep their text, so version numbers and IDs are not regrouped.
+	 */
+	static Object[] numbersForChoices(String pattern, Object[] args) {
+		Matcher choice = CHOICE.matcher(pattern);
+		Object[] converted = args;
+		while (choice.find()) {
+			int index = Integer.parseInt(choice.group(1));
+			if (index < args.length && args[index] instanceof String
+					&& WHOLE_NUMBER.matcher(((String) args[index]).trim()).matches()) {
+				if (converted == args) {
+					converted = args.clone();
+				}
+				converted[index] = Long.valueOf(((String) args[index]).trim());
+			}
+		}
+		return converted;
 	}
 
 	/** Keeps apostrophes in translations (French "l'eclairage") literal for {@link MessageFormat}. */

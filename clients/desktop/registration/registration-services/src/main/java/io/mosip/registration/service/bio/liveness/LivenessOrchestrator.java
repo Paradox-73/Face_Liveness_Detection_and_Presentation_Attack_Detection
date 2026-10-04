@@ -47,16 +47,25 @@ import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
  * and run the existing capture service; the liveness gate in {@code BioServiceImpl.captureModality} binds the
  * signed capture to the session.</li>
  * <li>{@link LivenessRunListener#onSessionEnded(LivenessOutcome)}: on failure offer {@link LivenessRun#retry()}
- * or, when allowed, {@link LivenessRun#grantOverride(String)}; always {@link LivenessRun#close()} when the screen
+ * or, when allowed, {@link LivenessRun#requestOverride()} and, after a second supervisor authenticated,
+ * {@link LivenessRun.OverrideRequest#grant(SupervisorApproval)}; always {@link LivenessRun#close()} when the screen
  * closes.</li>
  * </ol>
  *
  * <p>One run exists at a time, because the client has one face device. Starting a run while another one has an
  * open session is refused ({@code REG-LIV-016}); a previous run without an open session is closed first.
  *
- * <p>When a run uses up its attempts ({@code max_retries}), the same person cannot start a new run in the same
- * workflow for a while ({@code REG-LIV-014}, see {@link LivenessConfig#exhaustedBlockMinutes(Workflow)}): closing the
- * liveness window and opening it again does not give a fresh set of attempts.
+ * <p>Counted failures are kept per workflow and person across liveness windows ({@link AttemptHistory}): a new run
+ * starts with the failures that earlier windows used up, so "fail twice, Cancel, open again" continues at the third
+ * attempt. Once {@code max_retries} is reached the same person cannot start a new run in the same workflow for a
+ * while ({@code REG-LIV-014}, see {@link LivenessConfig#exhaustedBlockMinutes(Workflow)}). A pass clears the count;
+ * quality, device and engine errors and cancellation never lower it. A suspected attack (PAD, integrity or binding)
+ * in any window forbids the supervisor override for that person in that workflow.
+ *
+ * <p>Uncounted low-light results ("Improve lighting.") are kept the same way: a new run starts with the low-light
+ * count of the earlier windows, so a resident in dim light gets at most {@code passive.low_light_max_uncounted}
+ * uncounted tries per capture, however often the window is closed and opened again. A counted failure or a pass
+ * resets the count.
  *
  * <p>Thread-safe.
  */
@@ -75,9 +84,10 @@ public class LivenessOrchestrator {
 	private final MosipDeviceSpecificationFactory deviceFactory;
 	private final Clock clock;
 
-	private final ExhaustedTransactions exhausted = new ExhaustedTransactions();
+	private final AttemptHistory history = new AttemptHistory();
 	private final DiagnosticModeAudit diagnosticMode;
 	private Supplier<String> userId = LivenessOrchestrator::sessionUserId;
+	private OverridePhotoCheck.ModelLookup overridePhotoModels = OverridePhotoCheck.ENGINE_MODELS;
 	private LivenessRun current;
 
 	/**
@@ -166,6 +176,15 @@ public class LivenessOrchestrator {
 	}
 
 	/**
+	 * Replaces how the models that check a supervisor override photo are found (tests).
+	 *
+	 * @param lookup finds the face analyser and passive PAD of the engine
+	 */
+	void setOverridePhotoModels(OverridePhotoCheck.ModelLookup lookup) {
+		this.overridePhotoModels = Objects.requireNonNull(lookup, "lookup");
+	}
+
+	/**
 	 * Starts a liveness transaction: resolves the policy, writes {@code REG-EVT-LV15} when configuration values
 	 * changed or were corrected and {@code REG-EVT-LV17} when diagnostic mode was switched, and opens the first
 	 * session on the liveness worker thread.
@@ -194,17 +213,28 @@ public class LivenessOrchestrator {
 		if (!policy.isEnabled()) {
 			throw new IllegalStateException("liveness is not enforced for " + request.workflow().id());
 		}
-		if (isBlocked(request.workflow(), request.subjectRef())) {
+		Optional<AttemptHistory.Entry> earlier = history.get(request.workflow(), request.subjectRef(), clock.now());
+		int carriedFailures = earlier.isPresent() ? earlier.get().countedFailures() : 0;
+		boolean carriedAttack = earlier.isPresent() && earlier.get().isSuspectedAttack();
+		int carriedLowLight = earlier.isPresent() ? Math.min(earlier.get().lowLightRetries(),
+				LivenessTransaction.maxPriorLowLightRetries()) : 0;
+		if (isBlocked(request.workflow(), request.subjectRef()) || carriedFailures >= policy.maxRetries()) {
+			if (!isBlocked(request.workflow(), request.subjectRef())) {
+				// max_retries was lowered after the earlier failures: the person has no attempt left.
+				history.block(request.workflow(), request.subjectRef(), blockEnd(request.workflow()));
+			}
 			LOGGER.info("Liveness attempts for {} are used up; new run refused", request.workflow().id());
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.LIVENESS_MAX_ATTEMPTS.getErrorCode(),
 					RegistrationExceptionConstants.LIVENESS_MAX_ATTEMPTS.getErrorMessage());
 		}
 		auditConfigChanges(request.workflow(), resolution);
 		diagnosticMode.observe(policy.isDiagnosticEnabled(), userId.get(), request.workflow());
-		LivenessRun run = new LivenessRun(request, policy, trackExhaustion(request, listener), engines::engine,
-				() -> device(request), tokens, audit, policy.isDiagnosticEnabled() ? diagnostics : NO_DIAGNOSTICS, clock);
+		LivenessRun run = new LivenessRun(request, policy, carriedFailures, carriedAttack, carriedLowLight,
+				trackAttempts(request, listener), engines::engine, () -> device(request), tokens, audit,
+				policy.isDiagnosticEnabled() ? diagnostics : NO_DIAGNOSTICS, clock, userId, overridePhotoModels);
 		current = run;
-		LOGGER.info("Starting liveness for {} with policy {}", request, policy.mode());
+		LOGGER.info("Starting liveness for {} with policy {} at attempt {} of {}, low-light retries {}", request,
+				policy.mode(), carriedFailures + 1, policy.maxRetries(), carriedLowLight);
 		run.begin();
 		return run;
 	}
@@ -217,7 +247,44 @@ public class LivenessOrchestrator {
 	 * @return {@code true} while the block lasts
 	 */
 	public boolean isBlocked(Workflow workflow, String subjectRef) {
-		return subjectRef != null && exhausted.blockedUntil(workflow, subjectRef, clock.now()).isPresent();
+		if (subjectRef == null) {
+			return false;
+		}
+		Instant now = clock.now();
+		Optional<AttemptHistory.Entry> entry = history.get(workflow, subjectRef, now);
+		return entry.isPresent() && entry.get().blockedUntil().filter(until -> until.isAfter(now)).isPresent();
+	}
+
+	/**
+	 * Returns the failures that earlier liveness windows of a person used up in a workflow; the next run starts at
+	 * this count plus one.
+	 *
+	 * @param workflow   the workflow
+	 * @param subjectRef the registration ID or user ID
+	 * @return counted failures still remembered, 0 when none
+	 */
+	public int countedFailures(Workflow workflow, String subjectRef) {
+		if (subjectRef == null) {
+			return 0;
+		}
+		Optional<AttemptHistory.Entry> entry = history.get(workflow, subjectRef, clock.now());
+		return entry.isPresent() ? entry.get().countedFailures() : 0;
+	}
+
+	/**
+	 * Returns the uncounted low-light results that earlier liveness windows of a person left in a workflow since
+	 * their last counted failure; the next run continues from this count.
+	 *
+	 * @param workflow   the workflow
+	 * @param subjectRef the registration ID or user ID
+	 * @return low-light results still remembered, 0 when none
+	 */
+	public int lowLightRetries(Workflow workflow, String subjectRef) {
+		if (subjectRef == null) {
+			return 0;
+		}
+		Optional<AttemptHistory.Entry> entry = history.get(workflow, subjectRef, clock.now());
+		return entry.isPresent() ? entry.get().lowLightRetries() : 0;
 	}
 
 	/**
@@ -260,8 +327,12 @@ public class LivenessOrchestrator {
 		return pendingContext(workflow, subjectRef).orElseGet(() -> LivenessContext.withoutPass(workflow, subjectRef));
 	}
 
-	/** Wraps the screen's listener so that a transaction that uses up its attempts blocks the next run. */
-	private LivenessRunListener trackExhaustion(LivenessRequest request, LivenessRunListener screen) {
+	/**
+	 * Wraps the screen's listener so that counted failures, suspected attacks and uncounted low-light results carry
+	 * over to the next run of the same workflow and person, a pass clears them, and a transaction that uses up its
+	 * attempts blocks the next run.
+	 */
+	private LivenessRunListener trackAttempts(LivenessRequest request, LivenessRunListener screen) {
 		return new LivenessRunListener() {
 			@Override
 			public void onUiState(LivenessUiState state) {
@@ -280,13 +351,25 @@ public class LivenessOrchestrator {
 
 			@Override
 			public void onSessionEnded(LivenessOutcome outcome) {
+				Workflow workflow = request.workflow();
+				if (outcome.isPassed()) {
+					history.clear(workflow, request.subjectRef());
+				} else if (outcome.failureReason().isPresent() && outcome.failureReason().get().countsAsAttempt()) {
+					history.counted(workflow, request.subjectRef(), outcome.attemptsUsed(),
+							outcome.isSuspectedAttack(), blockEnd(workflow));
+				} else if (outcome.isLowLightRetry()) {
+					history.lowLight(workflow, request.subjectRef(), outcome.lowLightRetries(), blockEnd(workflow));
+				}
 				if (outcome.status() == LivenessTransaction.Status.EXHAUSTED) {
-					exhausted.record(request.workflow(), request.subjectRef(), clock.now()
-							.plus(Duration.ofMinutes(config.exhaustedBlockMinutes(request.workflow()))));
+					history.block(workflow, request.subjectRef(), blockEnd(workflow));
 				}
 				screen.onSessionEnded(outcome);
 			}
 		};
+	}
+
+	private Instant blockEnd(Workflow workflow) {
+		return clock.now().plus(Duration.ofMinutes(config.exhaustedBlockMinutes(workflow)));
 	}
 
 	private FaceCaptureDevice device(LivenessRequest request)

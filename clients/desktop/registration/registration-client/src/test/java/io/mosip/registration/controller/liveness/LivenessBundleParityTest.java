@@ -34,7 +34,9 @@ public class LivenessBundleParityTest {
 	private static final List<String> LANGUAGES = Arrays.asList("en", "fr", "ar");
 	private static final List<String> UI_KEYS = Arrays.asList(LivenessTexts.UI_TITLE, LivenessTexts.UI_RETRY,
 			LivenessTexts.UI_CANCEL, LivenessTexts.UI_CLOSE, LivenessTexts.UI_OVERRIDE, LivenessTexts.UI_STEP,
-			LivenessTexts.UI_ATTEMPTS, LivenessTexts.UI_PREVIEW, LivenessTexts.UI_BUSY);
+			LivenessTexts.UI_ATTEMPTS, LivenessTexts.UI_PREVIEW, LivenessTexts.UI_BUSY, LivenessTexts.OVERRIDE_PROMPT,
+			LivenessTexts.OVERRIDE_SUPERVISOR_ID, LivenessTexts.OVERRIDE_SAME_USER, LivenessTexts.OVERRIDE_AUTH_FAILED,
+			LivenessTexts.OVERRIDE_AUTH_EXPIRED, LivenessTexts.OVERRIDE_NOT_ALLOWED);
 	private static final List<String> MESSAGE_KEYS = Arrays.asList("LIVENESS_CAPTURE_REFUSED",
 			"LIVENESS_MAX_ATTEMPTS_AUTH");
 	private static final Pattern PLACEHOLDER = Pattern.compile("\\{\\d+\\}");

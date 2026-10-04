@@ -24,7 +24,7 @@ import io.mosip.registration.dto.packetmanager.metadata.BiometricsMetaInfoDto;
 import io.mosip.registration.util.common.BIRBuilder;
 
 /**
- * Tests the packet evidence of a face capture (design section 4.18): the {@code LIVENESS_*} entries in the CBEFF
+ * Tests the packet evidence of a face capture: the {@code LIVENESS_*} entries in the CBEFF
  * BIR {@code others} map, their survival through CBEFF XML, and the liveness fields of the packet meta info.
  */
 public class LivenessPacketEvidenceTest {

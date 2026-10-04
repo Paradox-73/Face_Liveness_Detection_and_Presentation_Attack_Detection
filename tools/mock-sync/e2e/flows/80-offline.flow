@@ -1,7 +1,8 @@
 # Offline: every server call of the client fails (network off; MockSync keeps running for other clients). The
 # officer logs in with password and face liveness against the local database, registers a resident with packet
-# authentication, and the supervisor approves at end of day; liveness behaves exactly as online. The network
-# comes back at the end and the packets are uploaded.
+# authentication (the resident, face pack s3, answers the challenges of the shipped ALWAYS_ACTIVE policy), and the
+# supervisor approves at end of day; liveness behaves exactly as online. The network comes back at the end and the
+# packets are uploaded.
 label offline: network cut; login, registration and EOD run locally
 network off
 set USER ${OFFICER}
@@ -10,9 +11,11 @@ set OPERATOR ${OFFICER_FACE}
 include lib/face-login.flow
 set RESIDENT_NAME Dara Offline
 include lib/registration-start.flow
-source s2-main
+source s3-main
+follow s3
 click #individualBiometricsScanBtn
-expect Good, face captured successfully 60
+expect-live 120
+follow off
 sleep 3000
 include lib/registration-finish.flow
 set USER ${SUPERVISOR}

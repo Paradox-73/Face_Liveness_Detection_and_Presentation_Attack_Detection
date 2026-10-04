@@ -7,9 +7,11 @@ import io.mosip.liveness.core.FailureReason;
 import io.mosip.liveness.core.Workflow;
 import io.mosip.liveness.core.api.LivenessResult;
 import io.mosip.liveness.core.engine.LivenessTransaction;
+import io.mosip.liveness.core.run.AttemptOutcome;
 
 /**
- * End of one liveness session within a {@link LivenessRun}, with what the retry policy allows next.
+ * End of one liveness session within a {@link LivenessRun}, with what the retry policy allows next: the
+ * {@link AttemptOutcome} of the shared session driver plus the client's {@code REG-LIV-*} error code.
  *
  * <p>Detailed reasons and scores stay in the {@link #result()} for audits, diagnostics and packet evidence; a
  * screen shows only the {@code LivenessUiState} it already received.
@@ -21,27 +23,50 @@ public final class LivenessOutcome {
 	private final FailureReason failureReason;
 	private final String errorCode;
 	private final LivenessTransaction.Status status;
+	private final int attempt;
 	private final int attemptsUsed;
 	private final int maxAttempts;
 	private final boolean retryAllowed;
 	private final boolean overrideAllowed;
 	private final boolean lockRequired;
+	private final boolean suspectedAttack;
+	private final int lowLightRetries;
 
-	private LivenessOutcome(Builder b) {
-		this.workflow = b.workflow;
-		this.result = b.result;
-		this.failureReason = b.failureReason;
-		this.errorCode = b.errorCode;
-		this.status = b.status;
-		this.attemptsUsed = b.attemptsUsed;
-		this.maxAttempts = b.maxAttempts;
-		this.retryAllowed = b.retryAllowed;
-		this.overrideAllowed = b.overrideAllowed;
-		this.lockRequired = b.lockRequired;
+	private LivenessOutcome(AttemptOutcome o, String errorCode) {
+		this.workflow = o.workflow();
+		this.result = o.result().orElse(null);
+		this.failureReason = o.failureReason().orElse(null);
+		this.errorCode = errorCode;
+		this.status = o.transactionStatus();
+		this.attempt = o.attempt();
+		this.attemptsUsed = o.attemptsUsed();
+		this.maxAttempts = o.maxRetries();
+		this.retryAllowed = o.isRetryAllowed();
+		this.overrideAllowed = o.isOverrideAllowed();
+		this.lockRequired = o.isLockRequired();
+		this.suspectedAttack = o.isSuspectedAttack();
+		this.lowLightRetries = o.lowLightRetries();
 	}
 
-	static Builder builder(Workflow workflow, LivenessTransaction transaction, int maxAttempts) {
-		return new Builder(workflow, transaction, maxAttempts);
+	/**
+	 * Wraps the outcome of an attempt of the shared session driver.
+	 *
+	 * @param attempt   the driver's outcome
+	 * @param errorCode {@code REG-LIV-*} code of a failure before a session existed, or {@code null}
+	 * @return the outcome
+	 */
+	static LivenessOutcome of(AttemptOutcome attempt, String errorCode) {
+		return new LivenessOutcome(Objects.requireNonNull(attempt, "attempt"), errorCode);
+	}
+
+	/**
+	 * Returns the attempt number the session ran as, earlier liveness windows of the same workflow and person
+	 * included.
+	 *
+	 * @return 1 to {@link #maxAttempts()}
+	 */
+	public int attempt() {
+		return attempt;
 	}
 
 	/**
@@ -99,7 +124,8 @@ public final class LivenessOutcome {
 	}
 
 	/**
-	 * Returns the attempts used so far (failures that count against {@code max_retries}).
+	 * Returns the attempts used so far (failures that count against {@code max_retries}), including those of earlier
+	 * liveness windows for the same workflow and person.
 	 *
 	 * @return used attempts
 	 */
@@ -143,55 +169,42 @@ public final class LivenessOutcome {
 		return lockRequired;
 	}
 
+	/**
+	 * Tells whether a counted failure of this transaction, or of an earlier liveness window for the same workflow and
+	 * person, was a suspected attack (PAD, integrity or binding). While it is set no supervisor override is offered.
+	 *
+	 * @return {@code true} after a suspected attack
+	 */
+	public boolean isSuspectedAttack() {
+		return suspectedAttack;
+	}
+
+	/**
+	 * Tells whether the session ended for low light without using up an attempt ({@code QUALITY} with
+	 * {@code LOW_LIGHT}): the screen shows "Improve lighting." and the next try keeps the attempt number.
+	 *
+	 * @return {@code true} for an uncounted low-light result
+	 */
+	public boolean isLowLightRetry() {
+		return result != null && result.isLowLightRetry();
+	}
+
+	/**
+	 * Returns the uncounted low-light results of the transaction since its last counted failure, earlier liveness
+	 * windows of the same workflow and person included. Once it reaches {@code passive.low_light_max_uncounted} the
+	 * next low-light PAD failure counts as an attempt.
+	 *
+	 * @return 0 or more; 0 after a counted failure
+	 */
+	public int lowLightRetries() {
+		return lowLightRetries;
+	}
+
 	@Override
 	public String toString() {
 		return "LivenessOutcome[" + workflow.id() + ", " + (isPassed() ? "PASSED" : "FAILED(" + failureReason + ")")
-				+ ", " + status + ", attempts=" + attemptsUsed + "/" + maxAttempts + ", retry=" + retryAllowed
-				+ ", override=" + overrideAllowed + ", lock=" + lockRequired + "]";
+				+ ", " + status + ", attempt " + attempt + ", attempts=" + attemptsUsed + "/" + maxAttempts + ", retry=" + retryAllowed
+				+ ", override=" + overrideAllowed + ", lock=" + lockRequired + ", attack=" + suspectedAttack + ", lowLight=" + lowLightRetries + "]";
 	}
 
-	static final class Builder {
-
-		private final Workflow workflow;
-		private final int maxAttempts;
-		private LivenessResult result;
-		private FailureReason failureReason;
-		private String errorCode;
-		private LivenessTransaction.Status status;
-		private int attemptsUsed;
-		private boolean retryAllowed;
-		private boolean overrideAllowed;
-		private boolean lockRequired;
-
-		private Builder(Workflow workflow, LivenessTransaction transaction, int maxAttempts) {
-			this.workflow = Objects.requireNonNull(workflow, "workflow");
-			this.maxAttempts = maxAttempts;
-			this.status = transaction.status();
-			this.attemptsUsed = transaction.attemptsUsed();
-			this.retryAllowed = transaction.canRetry();
-			this.overrideAllowed = transaction.isOverrideAllowed();
-			this.lockRequired = transaction.isLockRequired();
-		}
-
-		Builder result(LivenessResult result) {
-			this.result = result;
-			this.failureReason = result.failureReason().orElse(null);
-			return this;
-		}
-
-		Builder failure(FailureReason reason, String errorCode) {
-			this.failureReason = reason;
-			this.errorCode = errorCode;
-			return this;
-		}
-
-		Builder retryAllowed(boolean retryAllowed) {
-			this.retryAllowed = retryAllowed;
-			return this;
-		}
-
-		LivenessOutcome build() {
-			return new LivenessOutcome(this);
-		}
-	}
 }

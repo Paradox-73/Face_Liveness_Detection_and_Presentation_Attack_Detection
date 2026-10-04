@@ -28,7 +28,7 @@ expect Checking face liveness\. Keep looking at the camera\. 30
 expect DIAGNOSTIC\s+workflow=registration 30
 expect state=(ACQUIRING|PASSIVE|CAPTURE_READY|CAPTURING|BINDING) 30
 snap diagnostic-mode-checking
-expect Please (blink|smile) 60
+expect Please (blink|smile|turn your head to the (left|right)|look up) 60
 snap diagnostic-mode-challenge
 sleep 10000
 follow off

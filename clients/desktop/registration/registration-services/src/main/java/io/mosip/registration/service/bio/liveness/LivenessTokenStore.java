@@ -18,7 +18,7 @@ import io.mosip.liveness.core.api.LivenessResult;
 import io.mosip.liveness.core.device.DeviceError;
 
 /**
- * Registry of the liveness pass tokens that are waiting for their signed capture (design section 4.10).
+ * Registry of the liveness pass tokens that are waiting for their signed capture.
  *
  * <p>A liveness run registers its token when the session reaches {@code CAPTURE_READY}; the gate in
  * {@code BioServiceImpl.captureModality} consumes it. A token is <b>single-use</b>: the first
@@ -79,6 +79,16 @@ public class LivenessTokenStore {
 		 */
 		default Optional<String> overrideSupervisor() {
 			return Optional.empty();
+		}
+
+		/**
+		 * Tells whether this handle writes the override audit event ({@code REG-EVT-LV16}) itself, with both user IDs
+		 * and the photo's score bucket, so that the gate does not write a second one.
+		 *
+		 * @return {@code true} when the handle audits the override
+		 */
+		default boolean auditsOverride() {
+			return false;
 		}
 	}
 

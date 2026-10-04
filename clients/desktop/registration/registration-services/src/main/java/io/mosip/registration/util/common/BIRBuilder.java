@@ -92,7 +92,7 @@ public class BIRBuilder {
 	}
 
 	/**
-	 * Adds the liveness evidence of a face capture (LIVENESS_* keys, design section 4.18) to the BIR others map.
+	 * Adds the liveness evidence of a face capture (LIVENESS_* keys) to the BIR others map.
 	 * Captures without evidence are returned unchanged.
 	 *
 	 * @param bir    the built BIR

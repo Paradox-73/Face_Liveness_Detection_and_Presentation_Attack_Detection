@@ -13,7 +13,7 @@ import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.service.login.LoginService;
 
 /**
- * Applies {@code on_max_failure=BLOCK_AND_LOCK} to an operator or supervisor account (plan section 4.9): a
+ * Applies {@code on_max_failure=BLOCK_AND_LOCK} to an operator or supervisor account: a
  * face authentication whose liveness attempts are used up counts as one failed login under the client's existing
  * rule {@code mosip.registration.invalid_login_count} / {@code invalid_login_time}, through
  * {@link LoginService#validateInvalidLogin}. When the count is reached the account is locked for the lock time, as

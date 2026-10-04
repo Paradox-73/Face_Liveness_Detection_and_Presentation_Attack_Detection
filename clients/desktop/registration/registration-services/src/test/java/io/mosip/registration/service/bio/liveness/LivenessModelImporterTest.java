@@ -76,6 +76,8 @@ public class LivenessModelImporterTest {
 
 	@Before
 	public void setUp() throws Exception {
+		// the import rules are tested against a configured minimum of 1.0.0, below the shipped default
+		values.put("mosip.registration.liveness.model.min_version", "1.0.0");
 		LivenessConfig config = LivenessConfig.of(values);
 		registry = new LivenessEngineRegistry(config, new DesktopImageDecoder(),
 				new DesktopAuditSink(Mockito.mock(AuditManagerService.class), Runnable::run),
@@ -113,7 +115,8 @@ public class LivenessModelImporterTest {
 		assertTrue(audit.events.stream().anyMatch(e -> e.eventId() == AuditEventId.LIVENESS_CONFIG_APPLIED
 				&& e.descriptionJson().contains("1.0.0->1.1.0")));
 		assertEquals("the engine now loads the stored bundle", "1.1.0",
-				ModelRegistry.builder(registry.activeModelSource()).trustAnchor(trusted.getPublic()).open()
+				ModelRegistry.builder(registry.activeModelSource()).trustAnchor(trusted.getPublic())
+						.minimumVersion(registry.minimumModelVersion()).open()
 						.bundleVersion());
 		assertEquals("the floor becomes the minimum version", "1.1.0", registry.minimumModelVersion());
 	}

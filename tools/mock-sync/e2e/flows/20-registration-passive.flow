@@ -1,19 +1,30 @@
-# Resident registration, bona fide face with a high passive score (s2): a device disconnect during the check shows
-# the device message and does not use an attempt; after reconnection the passive check passes at once. Then
-# preview and operator packet authentication with face liveness (packet_auth).
-label registration 1: device disconnect and recovery, then passive pass, packet authentication
+# Resident registration at the shipped defaults: policy.registration=ALWAYS_ACTIVE, so every capture asks for
+# active.min_challenges (2) random actions from the five-action pool (blink, smile, turn left, turn right, look
+# up), even when the passive score alone would pass. A device disconnect during the check shows the device message
+# and does not use an attempt; after reconnection the resident (face pack s3) answers the challenges, the frame
+# source following the prompts. Then preview and operator packet authentication with face liveness (packet_auth,
+# also ALWAYS_ACTIVE). The passive-first flow of PS04 (PASSIVE_THEN_ACTIVE) is shown in 60-config-sync.flow.
+# Face pack s3 has blink, smile and turn-left recordings only: a turn-right or look-up challenge is logged as
+# "FOLLOW no pack for ..." and fails that attempt; expect-live retries up to three attempts.
+label registration 1: device disconnect and recovery, then challenges at the shipped defaults, packet authentication
 set RESIDENT_NAME Asha Resident
 include lib/registration-start.flow
-source s2-main
+sql SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME IN ('mosip.registration.liveness.policy.registration','mosip.registration.liveness.active.challenge_types','mosip.registration.liveness.active.min_challenges')
+source s3-main
 mds /admin/fault {"type":"Face","fault":"DISCONNECT","afterFrames":6}
 click #individualBiometricsScanBtn
 expect disconnected 60
 snap device-disconnected
 mds /admin/fault {"type":"Face","fault":"NONE"}
+follow s3
 click #retryButton
-expect Good, face captured successfully 60
+expect Please (blink|smile|turn your head to the (left|right)|look up) 60
+snap resident-challenge-default
+expect-live 120
+follow off
+expect-sql 1 SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV04' AND LOG_DESC LIKE '%"workflow":"registration"%'
 sleep 3000
-snap resident-face-passive
+snap resident-face-active
 set PASSWORD ${OFFICER_PASSWORD}
 set OPERATOR ${OFFICER_FACE}
 include lib/registration-finish.flow

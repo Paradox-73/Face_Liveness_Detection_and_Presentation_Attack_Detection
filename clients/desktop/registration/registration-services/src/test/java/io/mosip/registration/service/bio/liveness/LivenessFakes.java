@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.imageio.ImageIO;
 
 import io.mosip.liveness.core.Clock;
+import io.mosip.liveness.core.EngineException;
 import io.mosip.liveness.core.FailureReason;
 import io.mosip.liveness.core.ReasonCode;
 import io.mosip.liveness.core.SessionState;
@@ -33,6 +34,7 @@ import io.mosip.liveness.core.api.LivenessSession;
 import io.mosip.liveness.core.api.SessionRequest;
 import io.mosip.liveness.core.audit.AuditSink;
 import io.mosip.liveness.core.engine.AuditPayloadBuilder;
+import io.mosip.liveness.core.engine.LivenessUiStateMapper;
 import io.mosip.liveness.core.audit.LivenessAuditEvent;
 import io.mosip.liveness.core.device.CaptureRequest;
 import io.mosip.liveness.core.device.CertificationLevel;
@@ -51,7 +53,15 @@ import io.mosip.liveness.core.device.FrameSink;
 import io.mosip.liveness.core.device.SignedFaceCapture;
 import io.mosip.liveness.core.device.StreamRequest;
 import io.mosip.liveness.core.device.StreamStats;
+import io.mosip.liveness.core.image.ImageBuffer;
 import io.mosip.liveness.core.image.PixelFormat;
+import io.mosip.liveness.core.vision.AnalyzerFeature;
+import io.mosip.liveness.core.vision.DetectedFace;
+import io.mosip.liveness.core.vision.FaceAnalyzer;
+import io.mosip.liveness.core.vision.FaceBox;
+import io.mosip.liveness.core.vision.FaceObservation;
+import io.mosip.liveness.core.vision.PadScore;
+import io.mosip.liveness.core.vision.PassivePad;
 import io.mosip.liveness.core.ui.LivenessUiState;
 import io.mosip.liveness.core.ui.MessageKeys;
 import io.mosip.liveness.core.ui.UiPhase;
@@ -64,6 +74,8 @@ import io.mosip.registration.mdm.dto.LivenessContext;
 final class LivenessFakes {
 
 	static final String SERIAL = "SN-TEST-1";
+	/** Longest wait for a session event; the first session of a test JVM also loads the logger and image codecs. */
+	static final long WAIT_SECONDS = 20;
 
 	private LivenessFakes() {
 	}
@@ -167,11 +179,11 @@ final class LivenessFakes {
 		}
 
 		boolean awaitReady() throws InterruptedException {
-			return ready.await(5, TimeUnit.SECONDS);
+			return ready.await(WAIT_SECONDS, TimeUnit.SECONDS);
 		}
 
 		boolean awaitEnded() throws InterruptedException {
-			return ended.await(5, TimeUnit.SECONDS);
+			return ended.await(WAIT_SECONDS, TimeUnit.SECONDS);
 		}
 
 		void reset() {
@@ -187,7 +199,14 @@ final class LivenessFakes {
 
 	/** What a scripted session does after it received enough frames. */
 	enum Script {
-		PASS, FAIL_PAD, FAIL_TIMEOUT
+		PASS, FAIL_PAD, FAIL_TIMEOUT, FAIL_QUALITY,
+		/**
+		 * A genuine face in dim light whose passive PAD fails, following the engine's low-light rule: while the
+		 * request tracks low-light results and fewer than {@link ScriptedEngine#lowLightAllowance} came since the
+		 * last counted failure, the session ends {@code QUALITY} with {@code LOW_LIGHT}; otherwise it ends
+		 * {@code PAD}. The final screen state comes from the engine's {@link LivenessUiStateMapper}.
+		 */
+		DIM_FACE
 	}
 
 	/** Engine whose sessions follow {@link #scripts} in order (the last one repeats). */
@@ -198,6 +217,10 @@ final class LivenessFakes {
 		int framesToDecide = 3;
 		/** Sessions write REG-EVT-LV11 on the last counted attempt, as the real engine does. */
 		boolean auditsMaxRetries;
+		/** Sessions write REG-EVT-LV08 on a PAD failure, as the real engine does. */
+		boolean auditsPadAttack;
+		/** {@code passive.low_light_max_uncounted} of the {@link Script#DIM_FACE} sessions (shipped value 3). */
+		int lowLightAllowance = 3;
 
 		ScriptedEngine(Clock clock, Script... scripts) {
 			this.clock = clock;
@@ -214,6 +237,8 @@ final class LivenessFakes {
 			Script s = scripts.get(Math.min(sessions.size(), scripts.size() - 1));
 			ScriptedSession session = new ScriptedSession(request, listener, s, framesToDecide, clock);
 			session.auditsMaxRetries = auditsMaxRetries;
+			session.auditsPadAttack = auditsPadAttack;
+			session.lowLightAllowance = lowLightAllowance;
 			sessions.add(session);
 			return session;
 		}
@@ -236,6 +261,8 @@ final class LivenessFakes {
 		Instant started;
 		volatile boolean closed;
 		boolean auditsMaxRetries;
+		boolean auditsPadAttack;
+		int lowLightAllowance;
 
 		ScriptedSession(SessionRequest request, LivenessListener listener, Script script, int framesToDecide,
 				Clock clock) {
@@ -285,6 +312,19 @@ final class LivenessFakes {
 				break;
 			case FAIL_PAD:
 				end(FailureReason.PAD);
+				break;
+			case FAIL_QUALITY:
+				end(FailureReason.QUALITY);
+				break;
+			case DIM_FACE:
+				int used = request.lowLightRetries();
+				if (used >= 0 && used < lowLightAllowance) {
+					end(FailureReason.QUALITY, ReasonCode.LOW_LIGHT);
+				} else {
+					end(FailureReason.PAD, ReasonCode.PAD_SCORE);
+				}
+				listener.onUi(new LivenessUiStateMapper(request.policy(), request.attempt()).forResult(result,
+						Collections.<ReasonCode>emptyList()));
 				break;
 			default:
 				end(FailureReason.TIMEOUT);
@@ -360,8 +400,20 @@ final class LivenessFakes {
 		}
 
 		private void end(FailureReason reason) {
-			result = base().fail(reason).method(LivenessMethod.PASSIVE).build();
+			end(reason, null);
+		}
+
+		private void end(FailureReason reason, ReasonCode code) {
+			LivenessResult.Builder b = base().fail(reason).method(LivenessMethod.PASSIVE);
+			if (code != null) {
+				b.reason(code);
+			}
+			result = b.build();
 			state = reason == FailureReason.CANCELLED ? SessionState.CANCELLED : SessionState.FAILED;
+			if (auditsPadAttack && reason == FailureReason.PAD) {
+				listener.onAudit(new AuditPayloadBuilder(request.workflow(), id, clock)
+						.padAttackSuspected(code == null ? ReasonCode.PAD_SCORE : code));
+			}
 			// Like DefaultLivenessSession: the session itself reports the last counted attempt (REG-EVT-LV11).
 			if (auditsMaxRetries && reason.countsAsAttempt() && request.attempt() >= request.policy().maxRetries()) {
 				listener.onAudit(new AuditPayloadBuilder(request.workflow(), id, clock).maxRetries(request.attempt(),
@@ -441,6 +493,41 @@ final class LivenessFakes {
 		@Override
 		public SignedFaceCapture capture(CaptureRequest request) throws DeviceException {
 			throw new DeviceException(DeviceErrorCode.CAPTURE_FAILED, "not used");
+		}
+	}
+
+	/**
+	 * Face analyser and passive PAD for the override photo check: report {@link #faces} faces and a PAD score of
+	 * {@link #padScore}, and count the images they were given.
+	 */
+	static final class PhotoModels implements OverridePhotoCheck.ModelLookup, FaceAnalyzer, PassivePad {
+		volatile int faces = 1;
+		volatile int padScore = 92;
+		final AtomicInteger analysed = new AtomicInteger();
+
+		@Override
+		public Optional<OverridePhotoCheck.Models> modelsOf(LivenessEngine engine) {
+			return Optional.of(new OverridePhotoCheck.Models(this, this));
+		}
+
+		@Override
+		public java.util.Set<AnalyzerFeature> features() {
+			return java.util.EnumSet.of(AnalyzerFeature.LANDMARKS_5);
+		}
+
+		@Override
+		public FaceObservation analyze(ImageBuffer image) {
+			analysed.incrementAndGet();
+			List<DetectedFace> found = new ArrayList<>();
+			for (int i = 0; i < faces; i++) {
+				found.add(DetectedFace.builder(FaceBox.of(2 + 12 * i, 2, 10, 10, 0.9)).build());
+			}
+			return FaceObservation.of(image.width(), image.height(), found);
+		}
+
+		@Override
+		public PadScore score(ImageBuffer image, FaceBox face) throws EngineException {
+			return PadScore.of(padScore / 100.0);
 		}
 	}
 }

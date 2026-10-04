@@ -1,9 +1,11 @@
 # Resident registration with a low-confidence face: s3 through a noisy camera (packs s3n-*, made by
 # e2e/NoisyPack.java; session passive score 74 in the reference run, below the resident threshold 80 and above the
 # reject threshold 20).
-# The engine asks for random challenges (blink, smile) and the frame source follows the prompts. (Pack s1 has a
-# passive score of 70-79 too, but its clip blinks every third of a second, so it cannot hold still between the
-# prompts.) One finger is marked as an exception, so the client also takes an exception photo (no liveness, by
+# At the shipped defaults (ALWAYS_ACTIVE) the engine asks for random challenges from the five-action pool and the
+# frame source follows the prompts. Pack s3n has blink and smile recordings only: a turn or look-up challenge is
+# logged as "FOLLOW no pack for ..." and fails that attempt; expect-live retries up to three attempts. (Pack s1
+# has a passive score of 70-79 too, but its clip blinks every third of a second, so it cannot hold still between
+# the prompts.) One finger is marked as an exception, so the client also takes an exception photo (no liveness, by
 # policy) and asks for a reviewer (supervisor) with face liveness (exception_auth) after the operator.
 label registration 2: low passive score, active challenges; finger exception, reviewer authentication
 set RESIDENT_NAME Bilal Resident
@@ -13,7 +15,7 @@ set LEFT_EXCEPTION sleep 1
 source s3n-main
 follow s3n
 click #individualBiometricsScanBtn
-expect Please (blink|smile) 60
+expect Please (blink|smile|turn your head to the (left|right)|look up) 60
 snap resident-challenge
 expect-live 120
 follow off

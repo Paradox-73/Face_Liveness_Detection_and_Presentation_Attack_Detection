@@ -1,22 +1,47 @@
-# Configuration change by sync: MockSync switches the resident face check (policy.registration) from
-# PASSIVE_THEN_ACTIVE to ALWAYS_ACTIVE, the evaluation's proposal P1 (docs/eval/calibration-notes.md, section 6).
-# After "Synchronize Data" the rigid-motion print, which the passive check accepts, must answer challenges and is
-# refused; a live resident (s3, whose passive score alone would pass) answers them. The key is removed and
-# synchronised back at the end, because MockSync is shared with the Android client.
-label config by sync: policy.registration ALWAYS_ACTIVE, synchronise
-sql SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration'
-http PUT ${MOCKSYNC}/admin/config {"mosip.registration.liveness.policy.registration":"ALWAYS_ACTIVE"}
+# Configuration change by sync, from the shipped default to another value. The shipped resident policy is
+# ALWAYS_ACTIVE (every capture answers challenges). MockSync sets policy.registration=PASSIVE_THEN_ACTIVE, the
+# literal passive-first flow of PS04: after "Synchronize Data" (audited as REG-EVT-LV15) a resident with a high
+# passive score (face pack s2, above the resident threshold 80) passes the passive check at once, with no challenge
+# (REG-EVT-LV10 with method PASSIVE). The key is then removed and synchronised back, because MockSync is shared
+# with the Android client, and the default applies again: a rigid-motion print (a-s2-print-affine), which the
+# passive check alone accepts (docs/eval/calibration-notes.md 3.2), must answer challenges and is refused; a live
+# resident (s3) answers them.
+# Face pack s3 has blink, smile and turn-left recordings only: a turn-right or look-up challenge is logged as
+# "FOLLOW no pack for ..." and fails that attempt; expect-live retries up to three attempts.
+label config by sync: policy.registration from ALWAYS_ACTIVE (default) to PASSIVE_THEN_ACTIVE, synchronise
+expect-sql 1 SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'ALWAYS_ACTIVE'
+http PUT ${MOCKSYNC}/admin/config {"mosip.registration.liveness.policy.registration":"PASSIVE_THEN_ACTIVE"}
+click #homeImgView
+sleep 1500
+click #syncDataPane
+sleep 20000
+expect-sql 1 SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'PASSIVE_THEN_ACTIVE'
+label config by sync: passive-first, a high passive score passes without challenges
+set RESIDENT_NAME Esi Resident
+include lib/registration-start.flow
+source s2-main
+click #individualBiometricsScanBtn
+expect Good, face captured successfully 60
+expect-sql 1 SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV15' AND LOG_DESC LIKE '%policy.registration%'
+expect-sql 1 SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV10' AND LOG_DESC LIKE '%"workflow":"registration"%' AND LOG_DESC LIKE '%"method":"PASSIVE"%'
+sleep 3000
+snap config-resident-passive
+set PASSWORD ${SUPERVISOR_PASSWORD}
+set OPERATOR ${SUPERVISOR_FACE}
+include lib/registration-finish.flow
+label config by sync: key removed, synchronised back to the default ALWAYS_ACTIVE
+http DELETE ${MOCKSYNC}/admin/config/mosip.registration.liveness.policy.registration
 click #homeImgView
 sleep 1500
 click #syncDataPane
 sleep 20000
 expect-sql 1 SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'ALWAYS_ACTIVE'
-label config by sync: rigid-motion print now refused, live resident answers the challenges
-set RESIDENT_NAME Esi Resident
+label config by sync: default again, rigid-motion print refused, live resident answers the challenges
+set RESIDENT_NAME Femi Resident
 include lib/registration-start.flow
 source a-s2-print-affine
 click #individualBiometricsScanBtn
-expect Please (blink|smile) 30
+expect Please (blink|smile|turn your head to the (left|right)|look up) 30
 expect (Face verification could not be completed|We could not verify face liveness) 60
 snap config-print-refused
 source s3-main
@@ -24,16 +49,8 @@ follow s3
 click #retryButton
 expect-live 120
 follow off
-expect-sql 1 SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV15' AND LOG_DESC LIKE '%policy.registration%'
 sleep 3000
 snap config-resident-active
 set PASSWORD ${SUPERVISOR_PASSWORD}
 set OPERATOR ${SUPERVISOR_FACE}
 include lib/registration-finish.flow
-label config by sync: key removed, synchronised back
-http DELETE ${MOCKSYNC}/admin/config/mosip.registration.liveness.policy.registration
-click #homeImgView
-sleep 1500
-click #syncDataPane
-sleep 20000
-expect-sql 1 SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'PASSIVE_THEN_ACTIVE'

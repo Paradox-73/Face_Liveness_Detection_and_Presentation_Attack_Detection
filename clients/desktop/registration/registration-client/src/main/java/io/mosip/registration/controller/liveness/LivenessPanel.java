@@ -20,6 +20,7 @@ import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -37,11 +38,18 @@ import javafx.scene.shape.SVGPath;
  * <p>Layout and styles: {@code fxml/LivenessPanel.fxml} and {@code liveness-panel.css}. The preview and the icons keep
  * left-to-right orientation in right-to-left languages: the preview is mirrored like a selfie, and head-turn arrows
  * show the physical direction.
+ *
+ * <p>Under the prompt, a second, larger line shows the prompt in the resident's language when it differs from the
+ * operator's ({@link LivenessViewModel#residentPrompt()}); it has its own text direction
+ * ({@link #setResidentDirection(boolean)}).
  */
 public class LivenessPanel extends VBox {
 
 	private static final String FXML = "/fxml/LivenessPanel.fxml";
 	private static final String CSS = "/liveness-panel.css";
+	private static final String RESIDENT_PROMPT_STYLE = "liveness-resident-prompt";
+	/** Larger than the 26 px operator prompt of {@code liveness-panel.css}, so it reads from the resident's seat. */
+	private static final String RESIDENT_PROMPT_FONT = "-fx-font-size: 32px; -fx-font-weight: bold;";
 	private static final String BULLET = "\u2022 ";
 	private static final List<String> SEVERITY_STYLES = Arrays.asList(LivenessViewModel.STYLE_INFO,
 			LivenessViewModel.STYLE_SUCCESS, LivenessViewModel.STYLE_WARNING, LivenessViewModel.STYLE_ERROR);
@@ -83,6 +91,7 @@ public class LivenessPanel extends VBox {
 	@FXML
 	private Button retryButton;
 
+	private final Label residentPromptLabel = new Label();
 	private LivenessViewModel model;
 	private Runnable retryAction = () -> {
 	};
@@ -108,7 +117,31 @@ public class LivenessPanel extends VBox {
 		previewPane.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
 		iconBox.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
 		promptLabel.setAccessibleRole(AccessibleRole.TEXT);
+		addResidentPromptLine();
 		setIcon(PromptIcon.FACE_OVAL);
+	}
+
+	/** Puts the resident's prompt line right under the operator's prompt, in the same banner column. */
+	private void addResidentPromptLine() {
+		residentPromptLabel.getStyleClass().addAll("liveness-prompt", RESIDENT_PROMPT_STYLE);
+		residentPromptLabel.setStyle(RESIDENT_PROMPT_FONT);
+		residentPromptLabel.setWrapText(true);
+		residentPromptLabel.setMinHeight(Region.USE_PREF_SIZE);
+		residentPromptLabel.setMaxWidth(Double.MAX_VALUE);
+		residentPromptLabel.setAccessibleRole(AccessibleRole.TEXT);
+		show(residentPromptLabel, false);
+		Pane column = (Pane) promptLabel.getParent();
+		column.getChildren().add(column.getChildren().indexOf(promptLabel) + 1, residentPromptLabel);
+	}
+
+	/**
+	 * Sets the text direction of the resident's prompt line, which may differ from the operator's.
+	 *
+	 * @param rightToLeft {@code true} when the resident's language is written right to left
+	 */
+	public void setResidentDirection(boolean rightToLeft) {
+		residentPromptLabel
+				.setNodeOrientation(rightToLeft ? NodeOrientation.RIGHT_TO_LEFT : NodeOrientation.LEFT_TO_RIGHT);
 	}
 
 	/**
@@ -138,6 +171,9 @@ public class LivenessPanel extends VBox {
 		setIcon(model.icon());
 		promptLabel.setText(model.prompt());
 		promptLabel.setAccessibleText(model.prompt());
+		residentPromptLabel.setText(model.residentPrompt());
+		residentPromptLabel.setAccessibleText(model.residentPrompt());
+		show(residentPromptLabel, !model.residentPrompt().isEmpty());
 		guidanceBox.getChildren().clear();
 		for (String line : model.guidance()) {
 			Label label = new Label(BULLET + line);
@@ -238,6 +274,15 @@ public class LivenessPanel extends VBox {
 	 */
 	public String promptText() {
 		return promptLabel.getText();
+	}
+
+	/**
+	 * Returns the resident's prompt line now shown (for tests and screenshots).
+	 *
+	 * @return the text; empty when the line is hidden
+	 */
+	public String residentPromptText() {
+		return residentPromptLabel.isVisible() ? residentPromptLabel.getText() : "";
 	}
 
 	/**

@@ -50,7 +50,6 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
-import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.controller.liveness.LivenessDialog;
 import io.mosip.registration.controller.device.BiometricsController;
 import io.mosip.registration.controller.device.ScanPopUpViewController;
@@ -71,7 +70,6 @@ import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.entity.UserBiometric;
-import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RemapException;
@@ -1798,8 +1796,7 @@ public class BaseController {
 		LivenessDialog.Options options = new LivenessDialog.Options(workflow, subjectRef)
 				.owner(owner != null ? owner : fXComponents.getStage())
 				.language(ApplicationContext.applicationLanguage(), applicationContext.isPrimaryLanguageRightToLeft())
-				.onlineCheck(() -> serviceDelegateUtil.isNetworkAvailable())
-				.supervisorId(BaseController::loggedInSupervisorId);
+				.onlineCheck(() -> serviceDelegateUtil.isNetworkAvailable());
 		return LivenessDialog.open(livenessOrchestrator, options, callbacks);
 	}
 
@@ -1867,14 +1864,6 @@ public class BaseController {
 		}
 		generateAlert(RegistrationConstants.ERROR,
 				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.LIVENESS_MAX_ATTEMPTS_AUTH));
-	}
-
-	private static Optional<String> loggedInSupervisorId() {
-		UserContext user = SessionContext.isSessionContextAvailable() ? SessionContext.userContext() : null;
-		if (user == null || user.getRoles() == null || !user.getRoles().contains(Role.REGISTRATION_SUPERVISOR.name())) {
-			return Optional.empty();
-		}
-		return Optional.ofNullable(user.getUserId());
 	}
 	
 	protected void showAlertAndLogout() {

@@ -1,10 +1,18 @@
-# End of day: log out, supervisor1 logs in with face liveness, approves every pending packet with supervisor
-# authentication (password, then face liveness, workflow eod_auth; a screen replay is refused first) and uploads.
-label end of day: supervisor login, EOD approval with supervisor face, upload
+# End of day at the shipped defaults: every supervisor workflow is ALWAYS_ACTIVE (login_auth, eod_auth), so the
+# supervisor's face always answers random challenges from the five-action pool; no passive score alone passes.
+# supervisor1 logs out the officer and logs in with face liveness, then approves every pending packet with
+# supervisor authentication (password, then face liveness, workflow eod_auth): a screen replay is refused first,
+# the retry with the supervisor's live face (pack s3, the frame source following the prompts) passes, and the
+# packets are uploaded. Face pack s3 has blink, smile and turn-left recordings only: a turn-right or look-up
+# challenge is logged as "FOLLOW no pack for ..." and fails that attempt.
+label end of day: supervisor login, EOD approval with supervisor face (ALWAYS_ACTIVE), upload
+sql SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME IN ('mosip.registration.liveness.policy.login_auth','mosip.registration.liveness.policy.eod_auth')
 set USER ${SUPERVISOR}
 set PASSWORD ${SUPERVISOR_PASSWORD}
 set OPERATOR ${SUPERVISOR_FACE}
 include lib/face-login.flow
+expect-sql 1 SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV04' AND LOG_DESC LIKE '%"workflow":"login_auth"%'
 set ATTACK a-s2-screen-replay
 include lib/eod-approve.flow
+expect-sql 1 SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV04' AND LOG_DESC LIKE '%"workflow":"eod_auth"%'
 include lib/upload.flow

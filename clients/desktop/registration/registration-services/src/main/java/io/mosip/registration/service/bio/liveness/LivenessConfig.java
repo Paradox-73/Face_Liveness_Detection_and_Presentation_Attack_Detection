@@ -12,29 +12,44 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Supplier;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.liveness.core.Workflow;
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.config.LivenessPolicy;
 import io.mosip.liveness.core.policy.PolicyResolution;
 import io.mosip.liveness.core.policy.PolicyResolver;
+import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.dao.GlobalParamDAO;
+import io.mosip.registration.dao.LocalConfigDAO;
 
 /**
  * Liveness configuration of the desktop client: a {@link ConfigSource} over {@link ApplicationContext#map()}.
  *
- * <p>The map holds the synced {@code GLOBAL_PARAM} values, the permitted local overrides and the
- * {@code spring.properties} defaults, so the same values apply online and offline (design section 4.11). Values
+ * <p>The map holds the synced {@code GLOBAL_PARAM} values, the local preferences an operator saved in the
+ * settings screen ({@code LOCAL_PREFERENCES}, copied over the synced values at start-up) and the
+ * {@code spring.properties} defaults, so the same values apply online and offline. Values
  * are read at each call, which means a config sync takes effect at the next session. Missing, blank or
  * malformed values never cause an exception: the core {@link PolicyResolver} applies the shipped defaults,
  * clamps values to their floors and ranges, and reports each correction as a {@code ConfigIssue}.
+ *
+ * <p><b>Local preferences.</b> A local value of a liveness key applies only when
+ * {@link LivenessConfigKeys#isLocalOverrideAllowed(String)} accepts the key (thresholds, timeouts, attempts,
+ * diagnostic mode). For every other liveness key (for example the master switch or a workflow's policy) the synced
+ * value applies, or the shipped default when none was synced, so a local preference cannot switch liveness off or
+ * weaken a workflow's policy. The list of local liveness preferences is read again at most every
+ * {@value #LOCAL_REFRESH_MS} ms.
  *
  * <p>Thread-safe.
  */
 @Component
 public class LivenessConfig implements ConfigSource {
+
+	private static final Logger LOGGER = AppConfig.getLogger(LivenessConfig.class);
 
 	/** The client's lock time after too many failed logins, in minutes (mosip-config key). */
 	static final String INVALID_LOGIN_TIME_KEY = "mosip.registration.invalid_login_time";
@@ -47,8 +62,16 @@ public class LivenessConfig implements ConfigSource {
 	public static final String MODEL_STORE_KEY = LivenessConfigKeys.PREFIX + "model.store_dir";
 	/** Default model store folder, relative to the client's working folder. */
 	public static final String DEFAULT_MODEL_STORE = "liveness-models";
+	/** Longest time between two reads of the local liveness preferences, in milliseconds. */
+	static final long LOCAL_REFRESH_MS = 5_000L;
 
 	private final Supplier<Map<String, Object>> values;
+	private volatile Supplier<Map<String, String>> localValues = Collections::emptyMap;
+	private volatile Supplier<Map<String, Object>> syncedValues = Collections::emptyMap;
+	/** Liveness keys with a refused local value, mapped to the synced value that applies instead. */
+	private volatile Map<String, Optional<String>> refusedLocal = Collections.emptyMap();
+	private volatile long refusedLoadedAt;
+	private volatile boolean refusedLoaded;
 	private Map<String, String> lastSnapshot;
 
 	/** Creates the configuration backed by the client's application map. */
@@ -77,7 +100,35 @@ public class LivenessConfig implements ConfigSource {
 	}
 
 	/**
-	 * Reads one value. Never throws and never returns {@code null}.
+	 * Connects the client's local preferences and synced global parameters, so that a local value of a liveness
+	 * key outside the core allow-list is replaced by the synced value.
+	 *
+	 * @param localConfigDAO local preferences saved in the settings screen
+	 * @param globalParamDAO synced global parameters
+	 */
+	@Autowired(required = false)
+	public void setLocalSettings(LocalConfigDAO localConfigDAO, GlobalParamDAO globalParamDAO) {
+		Objects.requireNonNull(localConfigDAO, "localConfigDAO");
+		Objects.requireNonNull(globalParamDAO, "globalParamDAO");
+		setLocalSettings(localConfigDAO::getLocalConfigurations,
+				() -> globalParamDAO.getGlobalParams(LivenessConfigKeys.PREFIX + "%"));
+	}
+
+	/**
+	 * Sets where the local preferences and the synced global parameters are read (tests and tools).
+	 *
+	 * @param localValues  supplier of the local preferences (key to value); may return {@code null}
+	 * @param syncedValues supplier of the synced global parameters (key to value); may return {@code null}
+	 */
+	void setLocalSettings(Supplier<Map<String, String>> localValues, Supplier<Map<String, Object>> syncedValues) {
+		this.localValues = Objects.requireNonNull(localValues, "localValues");
+		this.syncedValues = Objects.requireNonNull(syncedValues, "syncedValues");
+		this.refusedLoaded = false;
+	}
+
+	/**
+	 * Reads one value. Never throws and never returns {@code null}. A local preference of a liveness key outside
+	 * the core allow-list is ignored: the synced value is returned instead.
 	 *
 	 * @param key full configuration key
 	 * @return the trimmed value, or empty when the key is missing, blank or the map is unavailable
@@ -87,6 +138,10 @@ public class LivenessConfig implements ConfigSource {
 		if (key == null) {
 			return Optional.empty();
 		}
+		Optional<String> synced = refusedLocal().get(key);
+		if (synced != null) {
+			return synced;
+		}
 		Object raw;
 		try {
 			Map<String, Object> map = values.get();
@@ -94,6 +149,70 @@ public class LivenessConfig implements ConfigSource {
 		} catch (RuntimeException e) {
 			raw = null;
 		}
+		return text(raw);
+	}
+
+	/**
+	 * Returns the liveness keys whose local preference is ignored because the core allow-list does not accept them.
+	 *
+	 * @return key names in sorted order; empty when every local liveness preference is allowed
+	 */
+	public List<String> refusedLocalKeys() {
+		List<String> keys = new ArrayList<>(refusedLocal().keySet());
+		Collections.sort(keys);
+		return keys;
+	}
+
+	private Map<String, Optional<String>> refusedLocal() {
+		long now = System.nanoTime();
+		if (refusedLoaded && now - refusedLoadedAt < LOCAL_REFRESH_MS * 1_000_000L) {
+			return refusedLocal;
+		}
+		synchronized (this) {
+			if (!refusedLoaded || now - refusedLoadedAt >= LOCAL_REFRESH_MS * 1_000_000L) {
+				Map<String, Optional<String>> refused = loadRefusedLocal();
+				if (!refused.keySet().equals(refusedLocal.keySet()) && !refused.isEmpty()) {
+					LOGGER.info("Local liveness preferences ignored, synced values apply: {}", refused.keySet());
+				}
+				refusedLocal = refused;
+				refusedLoadedAt = now;
+				refusedLoaded = true;
+			}
+			return refusedLocal;
+		}
+	}
+
+	private Map<String, Optional<String>> loadRefusedLocal() {
+		Map<String, Optional<String>> refused = new TreeMap<>();
+		try {
+			Map<String, String> local = localValues.get();
+			if (local == null || local.isEmpty()) {
+				return refused;
+			}
+			Map<String, Object> synced = null;
+			for (Map.Entry<String, String> e : new ArrayList<>(local.entrySet())) {
+				String key = e.getKey();
+				if (key == null || !key.startsWith(LivenessConfigKeys.PREFIX)
+						|| LivenessConfigKeys.isLocalOverrideAllowed(key)) {
+					continue;
+				}
+				if (synced == null) {
+					synced = syncedValues.get();
+					if (synced == null) {
+						synced = Collections.emptyMap();
+					}
+				}
+				refused.put(key, text(synced.get(key)));
+			}
+		} catch (RuntimeException e) {
+			// Database not ready: keep the previous list rather than letting a local value through.
+			LOGGER.error("Local liveness preferences could not be read: {}", e.getClass().getSimpleName());
+			return new TreeMap<>(refusedLocal);
+		}
+		return refused;
+	}
+
+	private static Optional<String> text(Object raw) {
 		if (raw == null) {
 			return Optional.empty();
 		}
@@ -288,6 +407,13 @@ public class LivenessConfig implements ConfigSource {
 			// The application map is a plain HashMap updated by the sync job; a concurrent change only delays
 			// the change report to the next call.
 			return lastSnapshot == null ? result : lastSnapshot;
+		}
+		for (Map.Entry<String, Optional<String>> e : refusedLocal().entrySet()) {
+			if (e.getValue().isPresent()) {
+				result.put(e.getKey(), e.getValue().get());
+			} else {
+				result.remove(e.getKey());
+			}
 		}
 		return result;
 	}
