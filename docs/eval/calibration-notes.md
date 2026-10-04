@@ -19,14 +19,36 @@ Read this first:
   metrics), `summary.md` (one row per transaction) and `run.json` (models, parameters, platform). The frame
   measurements quoted below come from the `inspect` command of the runner (`inspect --all`, one CSV row per frame).
 
+## Update 2026-10-05: current defaults and results
+
+The sections below keep the dated studies of 2026-09-29 and 2026-09-30. Since then the defaults and the engine changed again (2026-10-04 and 2026-10-05), and the three suites were re-run; their numbers are copied from [results/20261005-shipped/README.md](results/20261005-shipped/README.md) and the `report.md` files next to it.
+
+What changed in the shipped defaults:
+
+- `packet_auth`, `exception_auth` and `eod_auth` are `ALWAYS_ACTIVE` too (they were passive first at threshold 95); `exception_photo` stays off. Every workflow that matches a face therefore asks for challenges on every capture.
+- Model bundle 1.3.0 (minimum accepted version 1.3.0) carries `integrity.loop_window_frames` 300 in its signed parameters, up from 30: loops of 2, 4 and 8 s (30, 60 and 120 frames) are now caught; the longest period the window finds is 294 frames (9.8 s at 30 fps).
+- Dim light: a passive PAD failure on a dark face (median grey level below 75) ends as `LOW_LIGHT`, not counted, up to 3 times per transaction; the 4th counts. The runner tracks this by default (`--no-low-light` reproduces older runs).
+- Capture frame: after the last challenge the engine waits for a neutral, frontal, eyes-open frame ("Look directly at the camera and hold still"); `active.neutral_max_pitch_deg` is 20.
+- Local settings can no longer weaken the checks: only the keys on the local allow-list (passive and PAD reject thresholds with floors, challenge timeout, stream timeout, `max_retries`, `diagnostic.enable`, per-workflow threshold and `max_retries`) are read from the client.
+
+Results (275 transactions, 75 scenarios, shipped defaults, no overrides): APCER is 0.0% per transaction and on the first attempt for every species and workflow except `registration` SYN-A7, the adaptive screen replay: **50.0% (4/8)**, source artefacts accepted 1 of 2 (`atk-s3-adaptive-screen` is accepted in 4 of 4 seeds; `atk-s2-adaptive-screen` is rejected in 4 of 4). Replays are refused except this one; the limit is inherent to challenge-response, because a clip of the right action scores like a genuine one, and no threshold separates them. The pooled per-attempt figure is a secondary line only: `registration` 1.7% (4/238) per attempt, 4.9% (4/82) per transaction. BPCER: `registration` 14.3% (4/28) per transaction and on the first attempt, all four from the dim clip `bf-s3-dim` (expected ACCEPT, observed REJECT; still a known mismatch, a later runner check shows 3 `LOW_LIGHT` endings and then a counted `PAD_SCORE` failure); `login_auth` 0.0% (0/12). The report lists 9 of 275 transactions that did not meet their scenario expectation (4 adaptive screen, 4 dim, 1 loop ending on seed 2). Interval columns treat transactions as independent, which they are not (one artefact is replayed in several transactions); read the counts first.
+
+Legacy configuration (`PASSIVE_THEN_ACTIVE` for all six workflows, `passive.min_frames=8`), same 275 transactions, `results/20261005-legacy/`: pooled attack APCER per transaction and on the first attempt `eod_auth` 50.0% (16/32), `exception_auth` 50.0% (16/32), `login_auth` 33.3% (4/12), `packet_auth` 71.4% (40/56), `registration` 63.4% (52/82); APCER_max 100.0% (80/80), species SYN-A8; 136 of 275 transactions did not meet their expectation.
+
+Latency (`results/20261005-latency/`, 24 bona fide `registration` transactions, 1 ONNX Runtime thread, shared laptop): per analysed frame p50 69.4 ms, p95 162.4 ms (n=4410); decode p50 6.7 ms, analyse p50 50.7 ms, PAD p50 18.7 ms. The 2026-09-30 timing figures below came from a quieter machine and are not comparable.
+
+Not measured: real people, real artefacts, a physical phone, a live webcam through the full client. The figures of sections 0.2 and 1-6 (including the 29.4% per-attempt BPCER and 25% worst species) are the historic 2026-09-30 data of `results/20260930-engine-fixes/`; the headline of the protocol is per species and per transaction, never pooled.
+
 ## 0. Adopted changes and before/after results (2026-09-30)
+
+Historic: dated 2026-09-30, folder `results/20260930-engine-fixes/`. The current figures are in the update above.
 
 ### 0.1 What changed
 
 | Id | Change | Where |
 |---|---|---|
-| P1 | `policy.registration`, `policy.onboard_auth`, `policy.login_auth` default to `ALWAYS_ACTIVE`; the three supervisor workflows stay `PASSIVE_THEN_ACTIVE` at threshold 95 | `LivenessConfigKeys.defaultPolicyMode`, `tools/mock-sync/data/mock-sync-defaults.properties` |
-| P2 | `quality.min_sharpness` 40 (was 10), set in the signed `engineParams` of model bundle 1.0.1, because the sharpness scale belongs to the analyser; the compiled default stays 10 | `models/manifest.json`, `models/manifest.jws` |
+| P1 | `policy.registration`, `policy.onboard_auth`, `policy.login_auth` default to `ALWAYS_ACTIVE`; the three supervisor workflows stayed `PASSIVE_THEN_ACTIVE` at threshold 95 on 2026-09-30 (since 2026-10-04 they are `ALWAYS_ACTIVE` too, see the update above) | `LivenessConfigKeys.defaultPolicyMode`, `tools/mock-sync/data/mock-sync-defaults.properties` |
+| P2 | `quality.min_sharpness` 40 (was 10), set in the signed `engineParams` of model bundle 1.0.1 (bundle 1.3.0 today, with the same value plus `integrity.loop_window_frames` 300), because the sharpness scale belongs to the analyser; the compiled default stays 10 | `models/manifest.json`, `models/manifest.jws` |
 | P3 | `passive.min_frames` default 30 (was 8) | `LivenessConfigKeys.DEFAULT_PASSIVE_MIN_FRAMES`, MockSync defaults |
 | E1 | The smile is unmeasured while the head is turned more than `active.smile_max_yaw_deg` (new engine parameter, 15) from the neutral face, so a head turn can no longer be taken as a smile | `ActionLevels.smile` |
 | E3 | Frames with \|yaw\| above `active.pad_max_yaw_deg` (new, 30) are not scored by PAD during the challenges | `DefaultLivenessSession.scoreActivePad` |
@@ -242,7 +264,7 @@ Two facts explain most of the table:
 
 ### 4.3 Loop detection cannot run inside an 8-frame passive stage (F3)
 
-- **Status 2026-09-30: P3 adopted; both looped packs rejected with `LOOP` 12/12 in the after `shipped` suite.**
+- **Status 2026-09-30: P3 adopted; both looped packs rejected with `LOOP` 12/12 in the after `shipped` suite. Update 2026-10-05: the signed loop window is 300 frames (it was 30), measured on this laptop at about 23-27 us per frame in the worst case; the 2, 4 and 8 s loop packs (`a-s2-loop-*`, `a-s3-loop-*`) are not flagged at a window of 30 and are flagged at 150-600; none of the 17 genuine packs and 5 source clips is flagged at 30-600.**
 
 - `FrameIntegrityChecker` reports `LOOP` when the last `loop_match_frames` (6) hashes repeat an earlier run at a
   lag of at least 6 frames. That needs at least 12 analysed frames plus the loop length, so a 20-frame loop is
@@ -258,7 +280,7 @@ Two facts explain most of the table:
 
 ### 4.4 Blurred frames reach the challenges instead of the quality gate (F4)
 
-- **Status 2026-09-30: P2 adopted through the signed model bundle 1.0.1; blurred sessions end as `BLURRY` no-responses.**
+- **Status 2026-09-30: P2 adopted through the signed model bundle 1.0.1 (the current bundle is 1.3.0 with the same value); blurred sessions end as `BLURRY` no-responses.**
 
 - The blurred pack (`q-s3-blur`, Gaussian blur 6 px) has sharpness 11.5-12.3 by the analyser's measure. The gate
   `quality.min_sharpness` is 10, so the frames pass, the face is found, the passive score is 46 (between reject
@@ -326,16 +348,18 @@ Two facts explain most of the table:
   clips answer the prompts within the onset and hold rules. It is the only attack that survives the strict
   configuration, and it is the realistic replay attacker of species P7.
 - Nothing in the shipped parameter set separates it: the screen look on the S3 frames does not move MiniFASNet,
-  the loop detector sees no repetition and the planarity check needs a head turn. Head turns are the answer the
-  engine already has: `ChallengeScheduler` draws one turn whenever the planarity check is enabled and the
-  analysed frame rate allows it (`active.head_turn_min_fps`, 5), and a replay of a turn on a flat screen then
-  meets the planarity residual. The S3 clips contain no head turn, so the suite cannot show this; the S2 screen
-  copies of the turns (`a-s2-screen-turn-*`) are rejected by the passive score before any challenge.
+  the loop detector sees no repetition and the planarity check needs a head turn. A head turn is the check the
+  engine has for this: `ChallengeScheduler` draws one turn whenever the planarity check is enabled and the
+  analysed frame rate allows it (`active.head_turn_min_fps`, 5), and the planarity residual is meant to flag a
+  flat surface. The planarity check has no attack evidence yet, though: the S3 clips contain no head turn, and the S2 screen
+  copies of the turns (`a-s2-screen-turn-*`) are rejected by the passive score before any challenge, so no attack
+  reached the residual. A screen that replays a real head turn is flat, but the replayed face still turns, so planarity cannot be
+  relied on to stop it; treat the adaptive replay as the known limit of challenge-response.
 - Keep P1 and record the S3-style case (warm light, no turn available) in the protocol as the P7 species to watch.
 
 ### 4.10 Authentication threshold 95 is not a substitute for challenges (F10)
 
-- **Status 2026-09-30: P1 adopted for `login_auth` and `onboard_auth`; the supervisor workflows keep passive first.**
+- **Status 2026-09-30: P1 adopted for `login_auth` and `onboard_auth`; the supervisor workflows kept passive first then. Update 2026-10-04: `packet_auth`, `exception_auth` and `eod_auth` are `ALWAYS_ACTIVE` as well, for the reason below (a print above 95 passed passively).**
 
 Three scenarios added after the first run replay the print and screen packs on the `login_auth` workflow
 (passive threshold 95; first alone in `results/20260930/login-probe`, then inside the `shipped` and `strict`

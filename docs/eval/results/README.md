@@ -6,6 +6,9 @@ All of it is technology regression data on synthetic attacks and three openly li
 
 | Folder | What ran | Configuration |
 |---|---|---|
+| `20261005-shipped` | all 75 scenarios, 275 transactions, 755 attempt records, engine and model bundle 1.3.0 after the 2026-10-04 and 2026-10-05 changes; headline per species per transaction and on the first attempt | the shipped defaults: `ALWAYS_ACTIVE` for every workflow except `exception_photo`, `passive.min_frames=30`, loop window 300 and `quality.min_sharpness=40` from the signed bundle; start with [20261005-shipped/README.md](20261005-shipped/README.md) |
+| `20261005-legacy` | the same 275 transactions, 517 attempt records | the configuration before 2026-09-30: `PASSIVE_THEN_ACTIVE` for all six workflows, `passive.min_frames=8` (see the note in 20261005-shipped/README.md on which run is stored) |
+| `20261005-latency` | the 6 bona fide registration scenarios, 24 transactions | shipped defaults, 1 ONNX Runtime thread |
 | `20260930-engine-fixes/shipped` | all 39 scenarios, engine after the 2026-09-30 fixes (smile unmeasured beyond 15 degrees of yaw, profile frames left out of the active PAD score, passive decision at the timeout on slow devices), model bundle 1.0.1 | the calibrated shipped defaults: `ALWAYS_ACTIVE` for `registration`, `login_auth` and `onboard_auth`, `passive.min_frames=30`, `quality.min_sharpness=40` from the signed bundle |
 | `20260930-engine-fixes/legacy` | all 39 scenarios, same engine | the configuration shipped before 2026-09-30 (passive first everywhere, `passive.min_frames=8`, `quality.min_sharpness=10`): isolates the engine fixes |
 | `20260930-engine-fixes/legacy-strict` | all 39 scenarios, same engine | `legacy` with `policy.registration=ALWAYS_ACTIVE` (the old `strict` suite) |

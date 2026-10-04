@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Downloads the openly licensed source clips and cuts the bona fide frame packs.
 
 Reads eval/packs/sources.yaml (what to download, licence, attribution, SHA-256) and every

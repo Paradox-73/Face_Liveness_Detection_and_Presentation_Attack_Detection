@@ -95,9 +95,11 @@ jobs:
           cache: maven
       - name: Install the liveness engine (the desktop client reads it from the local Maven repository)
         run: mvn -B -f liveness/pom.xml install -DskipTests -Dliveness.benchmark.frames=0
-      - name: registration-services and registration-client liveness tests
+      - name: registration-services and registration-client liveness tests (with the cross-client parity test)
         # xvfb-run gives the JavaFX tests a virtual display. -am builds the modules the two depend on;
         # -DfailIfNoTests=false lets those modules, which match none of the -Dtest patterns, pass.
+        # LivenessParityTest (bonus B4) checks the committed cases of eval/interop/liveness-parity.json; the
+        # frame-pack cases are skipped here because the packs are not in git (docs/test-report/interoperability.md).
         run: >
           xvfb-run -a mvn -B -f clients/desktop/registration/pom.xml test
           -pl registration-services,registration-client -am
@@ -141,7 +143,8 @@ jobs:
       - name: Engine install, code generation (pub get, build_runner, pigeon) and Gradle wrapper, then the unit tests
         # scripts/android-build.sh --test-only does all of that: it installs liveness-core, liveness-onnx and
         # face-match-sdk, runs the code generation on a fresh clone, and runs the testDebugUnitTest tasks of
-        # :livenessmanager and :app (and of :clientmanager, which holds the upstream tests).
+        # :livenessmanager and :app (and of :clientmanager, which holds the upstream tests). :livenessmanager
+        # includes LivenessParityTest, the Android half of the cross-client parity check (bonus B4).
         run: scripts/android-build.sh --test-only
       - name: Flutter widget tests (use the code the previous step generated)
         working-directory: clients/android

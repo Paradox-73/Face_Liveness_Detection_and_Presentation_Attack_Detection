@@ -106,7 +106,7 @@ At least 60 attack transactions per species on the test split (8 source subjects
 
 1. **Source sessions** (test split): frontal photos, a P6 video and P7 per-action clips of each subject, taken with a phone camera, never with the webcam under test. About 20 minutes per subject.
 2. **Artefact production:** print P1-P3 and P8; load P4-P7 onto the replay devices. Photograph each artefact type once (consenting subject only) for the report.
-3. **Threshold choice on the development split:** run the development frame packs through the scenario runner and choose the lowest passive threshold that gives zero accepted development attacks with BPCER at most 10%. Write the chosen values and the evidence into the report.
+3. **Threshold choice on the development split:** run the development frame packs through the scenario runner and choose the lowest `pad.reject_threshold` (the PAD reject threshold; the shipped registration, sign-in and supervisor workflows are `ALWAYS_ACTIVE`, which never uses the passive threshold) that gives zero accepted development attacks with BPCER at most 10%. Calibrate the passive threshold too only for a workflow configured `PASSIVE_THEN_ACTIVE`. Write the chosen values and the evidence into the report.
 4. **Freeze:** after the freeze no engine, model or threshold changes are allowed. Any change after the freeze needs a full re-run of the automated suite and a note in the report.
 5. **Capture:** run the transactions on both stations (same webcam model). A transaction ends at a pass or at the maximum number of attempts. The recorder logs every attempt.
 6. **Analysis:** `python tools/eval/analyze.py attempts.jsonl --out report.md`.
@@ -115,13 +115,15 @@ At least 60 attack transactions per species on the test split (8 source subjects
 
 `schema, run_id, txn_id, scenario, kind (bona_fide | attack | other), species, subject_id, condition, split, workflow, attempt_no, last_in_txn, txn_outcome, outcome (ACCEPT | REJECT | NO_RESPONSE), failure_reason, reason_codes[], layer, no_response_reason, method, active_triggered, passive_score, challenges[], t_passive_ms, t_total_ms, frame_ms, model_set_sha256, config_hash, platform`.
 
+Optional fields: `match_outcome` (ACCEPT | REJECT: the face matcher's result, present only in full-system runs; without it the report computes no IAPAR or FRR) and `artefact_id` (the physical artefact or source clip behind the presentation, so the report can count source artefacts and give an interval over artefacts instead of over transactions).
+
 For live capture the values come from the client's liveness diagnostic log (`mosip.registration.liveness.diagnostic.enable=Y` on the test stations only) plus the recorder's labels (subject, species, condition). The diagnostic log never contains images or embeddings.
 
 ## 9. Metrics and statistics
 
-All computed by `tools/eval/analyze.py`, separately for evaluation types (a) and (b).
+All computed by `tools/eval/analyze.py`, separately for evaluation types (a) and (b). The report leads with a Headline section: **APCER per species per transaction and on the first attempt of each transaction, per workflow**, with the share of source artefacts accepted. Per-attempt figures and figures pooled over species are secondary, labelled as such, and never the headline. Transactions that replay one artefact repeat the same frames, so their intervals are labelled "not independent"; the interval over source artefacts is reported next to them. SYN-A9 (a genuine clip of the wrong action) is outside APCER, BPCER and the DET, and has its own section. IAPAR and FRR come from `match_outcome` and are computed only for workflows whose records carry it.
 
-- **APCER per species** = attacks of that species accepted / attacks of that species with a decision.
+- **APCER per species** = attacks of that species accepted / attacks of that species with a decision, counted per transaction and on the first attempt of each transaction (per attempt as a secondary table).
 - **APCER_max** ("APCER_AP" in the standard) = the highest APCER over all species of the basic attack potential. It is the headline security figure, in bold. Species are never averaged.
 - **BPCER** = bona fide presentations rejected / bona fide presentations with a decision, overall and per condition C1-C5.
 - **APNRR and BPNRR** = presentations without a decision / all presentations of that kind. Reported next to, never inside, APCER and BPCER.
@@ -150,7 +152,7 @@ All computed by `tools/eval/analyze.py`, separately for evaluation types (a) and
 1. Item under test (section 1 facts).
 2. Test approach, attack potential, roles and their experience, cooperative subjects.
 3. PAIS table: recipe, materials, cost, preparation time, one photo per artefact type (consenting subject only).
-4. Results per species, per attempt and per transaction; APCER_max in bold.
+4. Results per species per transaction and on the first attempt, per workflow, with source artefacts accepted; per-attempt and pooled figures as secondary lines; APCER_max in bold.
 5. Bona fide results per condition: n, BPCER with intervals, BPNRR, share that needed challenges, median time.
 6. DET plot and BPCER20.
 7. Full-system results: IAPAR per species and FRR.

@@ -104,7 +104,7 @@ adb shell am start -W -n io.mosip.registration_client/io.mosip.registration.live
 - A real phone gives a truer result than the emulator: enable USB debugging, then
   `bash scripts/android-build.sh --abis arm64-v8a`, `adb install -r -g clients/android/build/app/outputs/flutter-apk/app-debug.apk`,
   `adb reverse tcp:8080 tcp:8080`, `bash scripts/android-mocksync-setup.sh --login` (registers the phone with
-  MockSync) and `bash scripts/android-liveness-device-cert.sh`. With the emulator stopped, `adb` talks to the phone.
+  MockSync) and `bash scripts/android-liveness-device-cert.sh --csr` (the app creates its device key in the Android Keystore and the script has MockSync's device CA sign it; this also works on release builds, the older run-as route without `--csr` only on debug builds). With the emulator stopped, `adb` talks to the phone.
   Not tried yet by the team: write down what fails.
 
 ## 6. The results sheet
@@ -123,17 +123,18 @@ Copy [self-test-sheet.csv](self-test-sheet.csv) (its rows are examples; delete t
 | `attempt_no` | 1, 2, 3 |
 | `result` | `PASS`, `FAIL`, `NO_FACE` |
 | `reason` | from the diagnostic line, for example `PAD`, `ACTIVE`, `TIMEOUT`, `INTEGRITY`, `too dark` |
+| `match` | optional: `PASS` or `FAIL`, the face matcher's result, when the recorder saw it (sign-in rows) |
+| `artefact_id` | optional: label of the physical artefact (A1, A2, ...), so the report can count source artefacts |
 | `notes` | anything odd (never a name) |
 
 Then:
 
 ```bash
-python tools/eval/sheet-to-attempts.py results-team.csv --out ../run/selftest/attempts.jsonl --model-set mosip-onnx-default@1.0.1
+python tools/eval/sheet-to-attempts.py results-team.csv --out ../run/selftest/attempts.jsonl --model-set mosip-onnx-default@1.3.0
 python tools/eval/analyze.py ../run/selftest/attempts.jsonl --out ../run/selftest/report.md
 ```
 
-The report gives APCER per attack type (share of attacks accepted), BPCER (share of genuine attempts refused),
-per lighting condition and per person, with confidence intervals. Keep the CSV and report in `../run/selftest/`
+A row with `result` FAIL and `reason` MATCH is converted as liveness passed and matcher refused (liveness ACCEPT, `match_outcome` REJECT), never as a liveness rejection. In sign-in workflows a PASS row means liveness and the matcher both accepted. The report leads with APCER per attack type per transaction and on the first attempt (share of attacks accepted), then BPCER (share of genuine attempts refused), per lighting condition and per person, with confidence intervals labelled not independent where one artefact is replayed; IAPAR and FRR appear for the sign-in rows that carry a match result. Keep the CSV and report in `../run/selftest/`
 (outside git) until the team agrees to publish the aggregated report under `docs/eval/results/`.
 
 ## 7. What to look for, and when to stop

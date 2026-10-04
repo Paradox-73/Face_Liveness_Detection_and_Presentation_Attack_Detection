@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Converts the recorder's results sheet (CSV) from a hands-on test session into attempt records for analyze.py.
 
 The sheet has one row per attempt, filled in by the recorder while the tester uses the real client

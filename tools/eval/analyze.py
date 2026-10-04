@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Team Badmosip
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """Computes ISO/IEC 30107-3-style metrics from scenario-runner attempt records and writes a Markdown report.
 
 Input: one or more ``attempts.jsonl`` files written by tools/eval/scenario-runner or by
