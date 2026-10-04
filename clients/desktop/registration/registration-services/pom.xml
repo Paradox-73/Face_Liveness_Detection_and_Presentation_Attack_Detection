@@ -538,10 +538,19 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-			<!-- Kept at 1.20.0: newer releases fail to load on the bundled Zulu 11.0.8 JRE -->
+			<!-- Kept at 1.20.0: newer releases fail to load on the bundled Zulu 11.0.8 JRE. The Android client
+				uses onnxruntime-android of the same version (ADR 0003). -->
 			<groupId>com.microsoft.onnxruntime</groupId>
 			<artifactId>onnxruntime</artifactId>
 			<version>${onnxruntime.version}</version>
+		</dependency>
+		<dependency>
+			<!-- Cross-client parity replay (io.mosip.liveness.core.interop), used by LivenessParityTest -->
+			<groupId>io.mosip.liveness</groupId>
+			<artifactId>liveness-core</artifactId>
+			<version>${liveness.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<!-- SFace face-match SDK (IBioApiV2), selected for FACE by mosip.biometric.sdk.providers.face.* -->

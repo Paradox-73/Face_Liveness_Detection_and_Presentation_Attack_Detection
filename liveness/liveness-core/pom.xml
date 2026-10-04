@@ -63,6 +63,16 @@
                         </manifestEntries>
                     </archive>
                 </configuration>
+                <executions>
+                    <execution>
+                        <!-- The tests jar carries the cross-client parity replay (io.mosip.liveness.core.interop) that
+                             the desktop and Android client tests run against eval/interop/liveness-parity.json. -->
+                        <id>test-jar</id>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <!-- Fails the build if main code calls a Java API that Android API 28 does not provide. -->
