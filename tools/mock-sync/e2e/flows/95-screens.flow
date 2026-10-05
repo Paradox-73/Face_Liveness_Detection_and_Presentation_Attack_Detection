@@ -1,0 +1,106 @@
+# Screens of the liveness window that the other sections pass through too quickly to photograph, and the supervisor
+# override with a second person (shipped registration.on_max_failure=SUPERVISOR_OVERRIDE, 3 attempts).
+# 1. A live resident (face pack s3): "Checking face liveness", a challenge, "Action detected", "Hold still" and the
+#    success message, each snapped as soon as its text shows (the transient states last about half a second, so a
+#    snapshot can miss one; the RESULT lines say which were seen).
+# 2. Two faces in view (pack q-pair): "More than one face detected".
+# 3. Override refused: a live resident who does not answer the challenges (s2, no follow) fails 3 attempts by
+#    timeout (not an attack, so the override is offered); the logged-in officer enters his own user ID and is
+#    refused ("Another supervisor must verify").
+# 4. Override granted: the same for another resident; supervisor1 enters the user ID, passes face liveness
+#    (exception_auth, face s3) and face matching; the resident photo (s2) is checked (one face, PAD score) and stored
+#    flagged OVERRIDE (REG-EVT-LV16 decision GRANTED). The registration is finished, so the packet carries the flag.
+label screens 1: checking, challenge, action detected, hold still, success
+set RESIDENT_NAME Grace Resident
+set LEFT_EXCEPTION sleep 1
+include lib/registration-start.flow
+source s3-main
+click #individualBiometricsScanBtn
+expect Checking face liveness 60
+snap state-checking
+follow s3
+expect Please (blink|smile|turn your head to the (left|right)|look up) 60
+snap state-challenge
+expect Action detected 30
+snap state-action-detected
+expect Hold still 30
+snap state-hold-still
+expect-live 120
+snap state-success
+follow off
+sleep 3000
+label screens 2: two faces in view
+source q-pair
+click #individualBiometricsScanBtn
+expect More than one face detected 60
+snap state-multiple-faces
+click #cancelButton
+sleep 2000
+click #homeImgView
+sleep 1500
+if-node #confirm click #confirm
+sleep 2000
+label override 1: three timeouts, the logged-in officer cannot approve his own override
+set RESIDENT_NAME Hana Resident
+include lib/registration-start.flow
+source s2-main
+click #individualBiometricsScanBtn
+expect Please (blink|smile|turn your head to the (left|right)|look up) 60
+expect (We could not verify face liveness|Face verification could not be completed) 60
+click #retryButton
+sleep 1500
+expect (We could not verify face liveness|Face verification could not be completed) 60
+click #retryButton
+sleep 1500
+expect after 3 attempts 60
+expect Supervisor override 10
+snap override-offered
+click text=Supervisor override
+sleep 1500
+snap override-confirm
+dialog OK
+sleep 1500
+fill dialog ${OFFICER}
+snap override-supervisor-id
+dialog OK
+expect Another supervisor must verify 30
+snap override-same-user-refused
+click #cancelButton
+sleep 2000
+click #homeImgView
+sleep 1500
+if-node #confirm click #confirm
+sleep 2000
+label override 2: supervisor1 verifies with face liveness; photo checked and stored flagged OVERRIDE
+set RESIDENT_NAME Ivan Resident
+include lib/registration-start.flow
+source s2-main
+click #individualBiometricsScanBtn
+expect Please (blink|smile|turn your head to the (left|right)|look up) 60
+expect (We could not verify face liveness|Face verification could not be completed) 60
+click #retryButton
+sleep 1500
+expect (We could not verify face liveness|Face verification could not be completed) 60
+click #retryButton
+sleep 1500
+expect after 3 attempts 60
+click text=Supervisor override
+sleep 1500
+dialog OK
+sleep 1500
+fill dialog ${SUPERVISOR}
+dialog OK
+source ${SUPERVISOR_FACE}-main
+follow ${SUPERVISOR_FACE}
+expect Please (blink|smile|turn your head to the (left|right)|look up) 60
+snap override-supervisor-liveness
+expect-live 120
+follow off
+source s2-main
+sleep 8000
+snap override-granted
+expect-sql 1 SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV16' AND LOG_DESC LIKE '%GRANTED%'
+sql SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV16' ORDER BY LOG_DTIMES DESC FETCH FIRST 3 ROWS ONLY
+set PASSWORD ${OFFICER_PASSWORD}
+set OPERATOR ${OFFICER_FACE}
+include lib/registration-finish.flow

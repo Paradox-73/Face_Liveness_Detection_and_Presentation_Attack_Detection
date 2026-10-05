@@ -90,7 +90,8 @@ import javafx.stage.Window;
  * <li>{@code start} start the client; {@code wait-login [sec]} wait for the login screen</li>
  * <li>{@code login <user> <password>} password login (user ID page, then password page)</li>
  * <li>{@code click <sel> [sec]} fire a button, or dispatch a mouse click on a node (waits until it is shown)</li>
- * <li>{@code fill <sel> <text>}, {@code select <sel> <index|text>}, {@code check <sel> [true|false]}</li>
+ * <li>{@code fill <sel> <text>}, {@code select <sel> <index|text>}, {@code check <sel> [true|false]}; the selector
+ * {@code dialog} names the text field of an open JavaFX {@code TextInputDialog} (it has no id)</li>
  * <li>{@code wait <regex> [sec]}, {@code wait-gone <regex> [sec]}, {@code wait-node <sel> [sec]},
  * {@code sleep <ms>}</li>
  * <li>{@code expect <regex> [sec]} like wait, but records RESULT PASS/FAIL and never aborts</li>
@@ -584,14 +585,33 @@ public class DesktopFlowDriver {
 	}
 
 	private static void fill(String selector, String text) throws Exception {
-		require(waitFor(() -> shownNode(selector) instanceof TextInputControl, DEFAULT_WAIT_SECONDS),
-				"no text field " + selector);
+		require(waitFor(() -> field(selector) != null, DEFAULT_WAIT_SECONDS), "no text field " + selector);
 		onFx(() -> {
-			TextInputControl field = (TextInputControl) shownNode(selector);
+			TextInputControl field = field(selector);
 			field.requestFocus();
 			field.setText(text);
 			return null;
 		});
+	}
+
+	/** The text field for a selector; {@code dialog} is the first text field of the newest open dialog window. */
+	private static TextInputControl field(String selector) {
+		if ("dialog".equals(selector)) {
+			for (Window w : windows()) {
+				if (w.getScene().getRoot() instanceof DialogPane) {
+					List<Node> all = new ArrayList<>();
+					collect(w.getScene().getRoot(), all);
+					for (Node n : all) {
+						if (n instanceof TextInputControl && shown(n)) {
+							return (TextInputControl) n;
+						}
+					}
+				}
+			}
+			return null;
+		}
+		Node n = shownNode(selector);
+		return n instanceof TextInputControl ? (TextInputControl) n : null;
 	}
 
 	@SuppressWarnings("unchecked")

@@ -13,5 +13,6 @@ section 60-config-sync.flow
 section 70-device-l1.flow
 section 80-offline.flow
 section 85-wrong-person.flow
+section 95-screens.flow
 section 90-evidence.flow
 exit
