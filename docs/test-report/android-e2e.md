@@ -15,6 +15,9 @@ Android 14 x86_64 emulator, against MockSync as the MOSIP server. The camera was
   5 passed and 7 failed; nothing else could be run. The runs above used the replay profile (`PASSIVE_THEN_ACTIVE`,
   8 passive frames, SMILE and BLINK challenges only), not the shipped policy, so the tables in sections 3 and 5 are
   not measurements of the shipped defaults.
+- **Re-run of 2026-10-06 (section 12):** attacks section 11 of 11 passed at the shipped defaults; the resident
+  section 7 of 12 and the login section 3 of 10 (genuine-person steps fail: no turn or look-up footage, clips that
+  repeat); the other sections could not run.
 - **Committed screenshots** without any face: `docs/ux/screenshots/android/e2e-*.png` (the capture screen's preview is
   kept dark by the replay's `masked` option; ARC screens that show the stored face are not committed).
 - **Earlier runs** of the same script (same day) found the problems in section 4; each was fixed and the script run
@@ -277,3 +280,24 @@ login section, screenshots) and `run/demo/android-20261005-wp20b/`.
   [a-p2-no-face-offline.png](../ux/screenshots/android/a-p2-no-face-offline.png),
   [a-s1-model-import-button.png](../ux/screenshots/android/a-s1-model-import-button.png). The capture screen shows the
   masked replay (black preview), never a face.
+
+## 12. Re-run at the shipped defaults (2026-10-06, 00:00-01:15 IST)
+
+Same set-up as section 11: debug APK of 2026-10-05 21:33 (current engine, bundle 1.3.0), emulator `arc_api34` started
+with `ARC_EMULATOR_GPU=host` and `ARC_WEBCAM=emulated` under the emulator lock (it ran for the whole stretch without a
+crash), MockSync on 8080 with the shipped pool BLINK, SMILE, TURN_LEFT, TURN_RIGHT, LOOK_UP and no policy override
+(A-P0 passed in every run). Results files: `test-report/android-e2e/shipped-20261006/`.
+
+| Section | Checks | Result | Detail |
+|---|---|---|---|
+| attacks (A6 to A8) | 11 | **11 passed, 0 failed** | printed photo, injected still stream and screen replay each refused (attempts 1, 2, 3) with the generic message; recovery guidance and no Retry after the third; LV11 once; a further Scan opens no capture screen (`results-attacks.txt`) |
+| resident (A5 to A9) | 12 | 7 passed, 5 failed | passed: grid with exceptions (A-R0), camera unavailable error without using an attempt (A-R1, A-R2), screen replay refused on attempt 1 (A-R3, A-R4), challenge shown (A-R5). Failed A-R6 to A-R10: attempt 2 of the noisy resident `s3n`: passive bucket 50-59, `POLICY` escalation, SMILE answered (`onsetMs=599`), then LV08 `LOOP` (the same replay repetition as desktop, see [desktop-e2e.md](desktop-e2e.md); `s3n` has no footage of the second action), so no genuine pass, no exception photo step, no packet authentication (`results-resident.txt`, `logcat-resident.txt`) |
+| login (A1, A2) | 10 | 3 passed, 7 failed | A-P0, password sign-in (A-L1) and "Sign in with face" offered (A-L2) passed; face sign-in with `s3` and the not-enrolled `s1` (A-L3 to A-L8) and the replay at sign-in (A-L9, A-L10) failed: the packs hold no turn or look-up footage and the replay repeats clips, so no genuine face reaches a pass (`results-login.txt`). A-R0 of this run's first stretch failed because ARC had closed itself after the failed sign-ins; it passed in the resident run above |
+| approval, config, override, offline, latency | not run | | every one starts with a genuine pass (supervisor face sign-in, operator packet authentication, supervisor liveness), which the current packs cannot give at the shipped policy |
+
+- A first stretch of this day (23:54, same script, `-gpu host`) failed at A-P0 and every login step because the script
+  started tapping while ARC was still starting after a cold emulator boot; its results are discarded, the same
+  steps passed after ARC had finished loading.
+- The sections in the tables of 3 and 5 keep the values of the replay profile (2026-09-30); only the attack rows A6 to A8 now also have a
+  shipped-policy measurement (11 of 11 above).
+- Not done: every genuine-person flow at the shipped policy; no new Android pictures were taken.

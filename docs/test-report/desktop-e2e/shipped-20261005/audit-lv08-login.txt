@@ -1,0 +1,6 @@
+> sql SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID IN ('REG-EVT-LV08','REG-EVT-LV06') ORDER BY LOG_DTIMES DESC FETCH FIRST 8 ROWS ONLY
+ROW EVENT_ID=REG-EVT-LV08 | LOG_DESC={"workflow":"login_auth","sessionId":"def0d405e0473406d581a758ec5f02df","reason":"LOOP"}
+ROW EVENT_ID=REG-EVT-LV08 | LOG_DESC={"workflow":"login_auth","sessionId":"028b6bdab2ce00339567c25299704d2c","reason":"LOOP"}
+ROW EVENT_ID=REG-EVT-LV08 | LOG_DESC={"workflow":"login_auth","sessionId":"890dfc56ea337d61c1fcd085341673c6","reason":"LOOP"}
+ROW EVENT_ID=REG-EVT-LV08 | LOG_DESC={"workflow":"eod_auth","sessionId":"b2b65f8ffa4972d96e88eccc0b0cc54f","reason":"PAD_SCORE"}
+ROW EVENT_ID=REG-EVT-LV08 | LOG_DESC={"workflow":"eod_auth","sessionId":"dc3c67fc98fd638554cfb9461a4be478","reason":"PAD_SCORE"}

@@ -1,0 +1,3 @@
+23:44:36 ==== start: MockMDS face device reset to L0, no fault; client started
+23:45:51 ==== login: officer1 password then face with liveness
+23:47:55 RESULT FAIL live face did not pass in 3 attempt(s)

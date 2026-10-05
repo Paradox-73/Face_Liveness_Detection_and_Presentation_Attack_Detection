@@ -7,7 +7,7 @@ stay in the linked reports; requirement-by-requirement status is in [../traceabi
 | Report | What it covers |
 |---|---|
 | [desktop-e2e.md](desktop-e2e.md) | Real desktop Registration Client against MockSync (mock MOSIP server) and MockMDS (mock face device): 13 scripted flows, 3 interactive flows, audit and packet evidence |
-| [android-e2e.md](android-e2e.md) | Real Android Registration Client on an Android 14 emulator against MockSync: 16 flows, latency, APK size |
+| [android-e2e.md](android-e2e.md) | Real Android Registration Client on an Android 14 emulator against MockSync: 16 flows, latency, APK size Re-run at the shipped defaults 2026-10-06: attacks 11 of 11, resident 7 of 12, login 3 of 10 (genuine-person steps need turn and look-up footage and clips that do not repeat). Desktop re-run 2026-10-05: stopped at the face sign-in (repeated replay clips caught by the loop check), no screenshots retaken |
 | [interoperability.md](interoperability.md) | Desktop and Android give the same liveness decision: 19 replayed cases through each client's engine loader, configuration and decoder, one ONNX Runtime release (1.20.0) on both (bonus B4) |
 | [android-performance.md](android-performance.md) | Per-frame latency and memory of the engine on a physical Android phone (bonus B7 and B8): the measurement kit is built, the phone table is still empty |
 | [../install/android.md](../install/android.md#10-import-a-liveness-model-bundle-offline-model-update), [../design/android-liveness.md](../design/android-liveness.md#14-offline-model-update-bonus-b6) | Offline import of a signed model bundle on Android (bonus B6): how to run it and how it works; unit tests only, no phone run |

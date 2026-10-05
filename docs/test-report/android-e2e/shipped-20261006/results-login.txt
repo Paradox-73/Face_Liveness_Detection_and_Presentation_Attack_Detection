@@ -1,0 +1,12 @@
+PASS A-P0 [profile] replay profile set on MockSync and synchronised
+PASS A-L1 [login] officer password sign-in reaches the home screen
+PASS A-L2 [login] "Sign in with face" offered to an onboarded operator
+FAIL A-L3 [login] face sign-in (login_auth): liveness PASS
+FAIL A-L4 [login] face sign-in: 1:1 match with the onboarding face
+FAIL A-L5 [login] face sign-in reaches the home screen
+FAIL A-L6 [login] live person who is not enrolled: liveness PASS
+FAIL A-L7 [login] live person who is not enrolled: no match
+FAIL A-L8 [login] no match: sign-in stays on the password step with the mismatch message
+FAIL A-L9 [login] screen replay at sign-in refused
+FAIL A-L10 [login] refusal shown with a generic message that names no attack type
+FAIL A-R0 [resident] Lost UIN registration reaches the biometrics grid with exceptions marked

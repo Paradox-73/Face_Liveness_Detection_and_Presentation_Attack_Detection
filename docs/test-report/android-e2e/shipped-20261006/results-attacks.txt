@@ -1,0 +1,11 @@
+PASS A-P0 [profile] replay profile set on MockSync and synchronised
+PASS A-A1 [attacks] attack a-s2-print-still refused (attempt 1 of 3)
+PASS A-A1g [attacks] generic message after attempt 1
+PASS A-A2 [attacks] attack a-s2-identical refused (attempt 2 of 3)
+PASS A-A2g [attacks] generic message after attempt 2
+PASS A-A3 [attacks] attack a-s2-screen-replay refused (attempt 3 of 3)
+PASS A-A3g [attacks] generic message after attempt 3
+PASS A-A4 [attacks] third failure: recovery guidance, no Retry
+PASS A-A5 [attacks] maximum attempts audited once (REG-EVT-LV11)
+PASS A-A6 [attacks] ARC shows the blocked message under Scan
+PASS A-A7 [attacks] a further Scan opens no capture screen

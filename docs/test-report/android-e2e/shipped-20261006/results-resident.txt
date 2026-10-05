@@ -1,0 +1,12 @@
+PASS A-P0 [profile] replay profile set on MockSync and synchronised
+PASS A-R0 [resident] Lost UIN registration reaches the biometrics grid with exceptions marked
+PASS A-R1 [resident] camera unavailable: device error shown
+PASS A-R2 [resident] camera unavailable uses no attempt
+PASS A-R3 [resident] screen replay refused on attempt 1 with a generic message
+PASS A-R4 [resident] attempt 1 of 3 used, Retry offered
+PASS A-R5 [resident] low-confidence resident: challenge prompt shown
+FAIL A-R6 [resident] challenge answered: capture PASS on attempt 2
+FAIL A-R7 [resident] session escalated to challenges (REG-EVT-LV03) and passed (REG-EVT-LV10)
+FAIL A-R8 [resident] exception photo taken with the built-in camera, preview and authentication step reached
+FAIL A-R9 [resident] exception photo taken without a liveness check (policy OFF)
+FAIL A-R10 [resident] operator packet authentication by face (packet_auth): liveness and match, acknowledgement

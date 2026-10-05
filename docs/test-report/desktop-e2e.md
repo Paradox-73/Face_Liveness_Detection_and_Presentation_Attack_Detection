@@ -44,6 +44,33 @@ git):
   logged-in officer and granted for supervisor1, with snapshots) and the screen-sized window check are still to run
   once MockSync answers on 8443 (`tools/mock-sync/scripts/run-mock-sync.sh`).
 
+**Attempt of 2026-10-05, 23:33-23:50 (IST), MockSync answering on 8443 and 8080** (three runs of
+`scripts/demo-desktop.sh --restore-golden`, outputs `run/demo/desktop-wp24`, `-wp24b`, `-wp24c`, outside git; summaries in
+`test-report/desktop-e2e/shipped-20261005/`):
+
+- `run/desktop` was rebuilt again with `scripts/desktop-build.sh --mocksync` (Maven 396 s; `lib/` replaced, `db`, keys
+  and logs kept) and carries the engine and signed model bundle 1.3.0 of commit `3f0b5a3`. Synchronise Data and the
+  startup sync worked ("Machine is ONLINE", sync completed in 12 s).
+- **Result: 0 checks passed, 1 failed, the demo aborted at the first step.** The operator face sign-in (`login_auth`,
+  challenges on every capture) used up its 3 attempts in all three runs:
+  - Run 1, shipped pool of five actions: the second challenge drawn was TURN_RIGHT or LOOK_UP, for which no recorded
+    footage of the enrolled face `s3` exists (`FOLLOW no pack for turn_right`, `look_up`). Not a defect of the client.
+  - Runs 2 and 3, `active.challenge_types` set to `BLINK,SMILE,TURN_LEFT` and then `BLINK,SMILE` (a restriction to
+    actions with footage; removed afterwards): attempts 1 and 2 ended with `FAILED(INTEGRITY)`, reason `LOOP`
+    (audit LV08 `{"workflow":"login_auth","reason":"LOOP"}`, three rows, `audit-lv08-login.txt`). The cause is the
+    replay, not a person: the frame packs are 4 to 6 s clips that MockMDS repeats, and the packs switch back to
+    `s3-main` after each challenge, so the same frames reappear inside one session. Since bundle 1.3.0 the signed
+    loop window is 300 frames (WP06), which catches that; the window of 30 frames did not. A genuine person does not
+    repeat frames.
+- **Nothing after the login ran**: not the 95-screens flow (checking, action detected, hold still, success, two
+  faces, supervisor override refused and granted), not the screen-size check, not any other section. D1 to D13 above
+  therefore stay the results of 2026-09-30 and are not measurements of the shipped defaults.
+- **No new desktop screenshots were taken**: the existing `d-*` and `e2e-*` pictures are unchanged, the mis-captioned
+  and "after 1 attempts" ones are not yet replaced.
+- **What is missing to run it**: recordings of the enrolled face that are long enough not to repeat inside a session
+  (about 10 to 20 s of neutral face plus each action, none of them looped) and the turn-right and look-up clips;
+  a real person on the webcam route would also do. No clip was made by repeating or editing stills.
+
 ## 1. Set-up
 
 | Part | What was used |
