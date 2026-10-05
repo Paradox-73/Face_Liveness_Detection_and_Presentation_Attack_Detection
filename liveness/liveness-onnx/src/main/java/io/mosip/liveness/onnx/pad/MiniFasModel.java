@@ -102,11 +102,36 @@ public final class MiniFasModel {
      * @return 3 probabilities summing to 1
      * @throws EngineException if inference fails
      */
-    public synchronized float[] probabilities(Rgb8Image image, FaceBox face, TensorFormat format)
+    public float[] probabilities(Rgb8Image image, FaceBox face, TensorFormat format) throws EngineException {
+        return probabilities(image, face, format, 1.0);
+    }
+
+    /**
+     * Returns the class probabilities with an exposure gain applied to the crop: each tensor value is multiplied by
+     * {@code gain} and clipped to 255, as a camera with a longer exposure would record it ({@link SceneExposure}).
+     *
+     * @param image  the image
+     * @param face   the face box
+     * @param format tensor format
+     * @param gain   exposure gain, 1 to 4; 1 is the upstream preprocessing
+     * @return 3 probabilities summing to 1
+     * @throws EngineException if inference fails
+     * @throws IllegalArgumentException if the gain is outside 1-4
+     */
+    public synchronized float[] probabilities(Rgb8Image image, FaceBox face, TensorFormat format, double gain)
             throws EngineException {
+        if (!(gain >= 1 && gain <= 4)) {
+            throw new IllegalArgumentException("gain must be 1-4: " + gain);
+        }
         int[] r = cropRegion(image.width(), image.height(), face, cropScale);
         ImageOps.resizeRegionToTensor(image, r[0], r[1], r[2], r[3], INPUT_SIZE, INPUT_SIZE, format, tensor, INPUT_SIZE,
                 INPUT_SIZE);
+        if (gain != 1.0) {
+            float g = (float) gain;
+            for (int i = 0; i < tensor.length; i++) {
+                tensor[i] = Math.min(255f, tensor[i] * g);
+            }
+        }
         Map<String, float[]> out = model.run(tensor, new long[] {1, 3, INPUT_SIZE, INPUT_SIZE});
         float[] logits = out.get(model.outputNames().get(0));
         if (logits == null || logits.length != CLASSES) {

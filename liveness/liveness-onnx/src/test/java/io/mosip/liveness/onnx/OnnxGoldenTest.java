@@ -26,6 +26,7 @@ import io.mosip.liveness.onnx.mesh.FaceMeasures;
 import io.mosip.liveness.onnx.model.ModelIds;
 import io.mosip.liveness.onnx.pad.MiniFasModel;
 import io.mosip.liveness.onnx.pad.MiniFasPassivePad;
+import io.mosip.liveness.onnx.pad.ScreenPatternMeter;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -151,9 +152,13 @@ class OnnxGoldenTest {
         OnnxModelSet models = TestSupport.nativeResolutionModels();
         FaceBox box = models.faceAnalyzer().analyze(image).primary().get().box();
         PadScore score = models.passivePad().score(image, box);
-        assertEquals(2, score.modelProbabilities().size());
+        assertEquals(3, score.modelProbabilities().size());
         assertTrue(score.modelProbabilities().containsKey(ModelIds.MINIFASNET_V2));
         assertTrue(score.modelProbabilities().containsKey(ModelIds.MINIFASNET_V1SE));
+        // The MockMDS stock photo is a normally lit frame (no exposure gain) and shows no screen pattern.
+        System.out.println("[golden] screen-pattern peak ratio of the stock photo "
+                + ScreenPatternMeter.peakRatio(Rgb8Image.of(image), box));
+        assertEquals(1.0, score.modelProbabilities().get(MiniFasPassivePad.SCREEN_PATTERN_ID), 0);
         double mean = (score.modelProbabilities().get(ModelIds.MINIFASNET_V2)
                 + score.modelProbabilities().get(ModelIds.MINIFASNET_V1SE)) / 2;
         assertEquals(mean, score.liveProbability(), 1e-9);

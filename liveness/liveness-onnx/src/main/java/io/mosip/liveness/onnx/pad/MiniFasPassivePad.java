@@ -12,6 +12,7 @@ import io.mosip.liveness.core.vision.FaceBox;
 import io.mosip.liveness.core.vision.PadScore;
 import io.mosip.liveness.core.vision.PassivePad;
 import io.mosip.liveness.onnx.image.Rgb8Image;
+import io.mosip.liveness.onnx.image.TensorFormat;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,17 +30,39 @@ import java.util.Objects;
  * accepts about two thirds of them) and it does not detect digital injection or frozen frames; the engine
  * combines it with active challenges and frame-integrity checks. Calls are serialised per model; one
  * instance may be shared.
+ *
+ * <p>Two additions to the upstream scoring, both on by default: in a dark frame the PAD crop is brightened first
+ * ({@link SceneExposure}), and the live probability is capped by the screen-pattern check
+ * ({@link ScreenPatternMeter}), reported as model {@value #SCREEN_PATTERN_ID}.
  */
 public final class MiniFasPassivePad implements PassivePad {
 
+    /** Entry of the screen-pattern check in {@link PadScore#modelProbabilities()}. */
+    public static final String SCREEN_PATTERN_ID = "screen-pattern";
+
     private final List<MiniFasModel> models;
+    private final boolean exposureCorrection;
+    private final boolean screenCheck;
 
     /**
-     * Creates the ensemble.
+     * Creates the ensemble with exposure correction and the screen-pattern check.
      *
      * @param models one or more models; the standard ensemble is V2 (2.7) and V1SE (4.0)
      */
     public MiniFasPassivePad(List<MiniFasModel> models) {
+        this(models, true, true);
+    }
+
+    /**
+     * Creates the ensemble.
+     *
+     * @param models             one or more models; the standard ensemble is V2 (2.7) and V1SE (4.0)
+     * @param exposureCorrection {@code true} to brighten the crop of a dark frame ({@link SceneExposure})
+     * @param screenCheck        {@code true} to cap the live probability with {@link ScreenPatternMeter}
+     */
+    public MiniFasPassivePad(List<MiniFasModel> models, boolean exposureCorrection, boolean screenCheck) {
+        this.exposureCorrection = exposureCorrection;
+        this.screenCheck = screenCheck;
         Objects.requireNonNull(models, "models");
         if (models.isEmpty()) {
             throw new IllegalArgumentException("at least one model required");
@@ -66,22 +89,49 @@ public final class MiniFasPassivePad implements PassivePad {
      *
      * @param image the image
      * @param face  the face box
-     * @return mean live probability, with each model's live probability
+     * @return mean live probability of the models, capped by the screen-pattern check, with each model's live
+     * probability (and the screen-pattern check's, when it is on)
      * @throws EngineException if inference fails
      */
     public PadScore score(Rgb8Image image, FaceBox face) throws EngineException {
         Map<String, Double> perModel = new LinkedHashMap<>();
+        double gain = exposureCorrection ? SceneExposure.gain(image) : 1.0;
         double sum = 0;
         for (MiniFasModel m : models) {
-            double live = clamp01(m.probabilities(image, face)[MiniFasModel.LIVE_CLASS]);
+            double live = clamp01(m.probabilities(image, face, TensorFormat.BGR_RAW, gain)[MiniFasModel.LIVE_CLASS]);
             perModel.put(m.id(), live);
             sum += live;
         }
-        return PadScore.of(clamp01(sum / models.size()), perModel);
+        double live = clamp01(sum / models.size());
+        if (screenCheck) {
+            double screen = ScreenPatternMeter.liveProbability(ScreenPatternMeter.peakRatio(image, face));
+            perModel.put(SCREEN_PATTERN_ID, screen);
+            live = Math.min(live, screen);
+        }
+        return PadScore.of(live, perModel);
     }
 
     /**
-     * Returns the mean class probabilities of the ensemble (diagnostics and tests).
+     * Tells whether a dark frame is brightened before scoring.
+     *
+     * @return {@code true} when exposure correction is on
+     */
+    public boolean exposureCorrection() {
+        return exposureCorrection;
+    }
+
+    /**
+     * Tells whether the screen-pattern check caps the score.
+     *
+     * @return {@code true} when the check is on
+     */
+    public boolean screenCheck() {
+        return screenCheck;
+    }
+
+    /**
+     * Returns the mean class probabilities of the ensemble with the upstream preprocessing only (no exposure
+     * correction, no screen-pattern check; diagnostics and tests).
      *
      * @param image the image
      * @param face  the face box
@@ -105,6 +155,6 @@ public final class MiniFasPassivePad implements PassivePad {
 
     @Override
     public String toString() {
-        return "MiniFasPassivePad" + models;
+        return "MiniFasPassivePad" + models + (exposureCorrection ? "+exposure" : "") + (screenCheck ? "+screen" : "");
     }
 }

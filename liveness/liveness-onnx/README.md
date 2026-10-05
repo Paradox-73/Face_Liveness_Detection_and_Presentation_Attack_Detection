@@ -6,7 +6,7 @@ on the desktop registration client and on the Android registration client. Licen
 | Core contract | Implementation | Models |
 |---|---|---|
 | `FaceAnalyzer` | `io.mosip.liveness.onnx.OnnxFaceAnalyzer` | YuNet (faces and five landmarks); MediaPipe Face Mesh V2 (478 landmarks) |
-| `PassivePad` | `io.mosip.liveness.onnx.pad.MiniFasPassivePad` | MiniFASNetV2 (crop scale 2.7) and MiniFASNetV1SE (crop scale 4.0) |
+| `PassivePad` | `io.mosip.liveness.onnx.pad.MiniFasPassivePad` | MiniFASNetV2 (crop scale 2.7) and MiniFASNetV1SE (crop scale 4.0); a dark frame is brightened first (`SceneExposure`) and the score is capped by the screen-pattern check (`ScreenPatternMeter`), both in Java ([../../docs/design/engine.md](../../docs/design/engine.md) section 4) |
 | `FaceEmbedder` | `io.mosip.liveness.onnx.embed.SFaceEmbedder` | SFace (128 values) |
 
 The model files, their licences, hashes, input and output shapes, and exact preprocessing are listed in
@@ -44,7 +44,7 @@ The model files, their licences, hashes, input and output shapes, and exact prep
 | `...onnx.detect` | `YuNetFaceDetector` (decoding identical to OpenCV `FaceDetectorYN`; greedy NMS) |
 | `...onnx.mesh` | `FaceMeshLandmarker`; `FaceMeasures` (eye aspect ratio, mouth ratio, gaze, inter-eye distance); `HeadPoseEstimator` |
 | `...onnx.quality` | `FaceQualityMeter` (brightness, Laplacian-variance sharpness) |
-| `...onnx.pad` | `MiniFasModel` (upstream crop and preprocessing); `MiniFasPassivePad` (ensemble) |
+| `...onnx.pad` | `MiniFasModel` (upstream crop and preprocessing, optional exposure gain); `MiniFasPassivePad` (ensemble); `SceneExposure` (gain for a dark frame); `ScreenPatternMeter` (frequency peaks of a screen's pixel grid and moire) |
 | `...onnx.embed` | `FaceAligner` (OpenCV 112x112 five-point template); `SFaceEmbedder` |
 | `...onnx.tools` | `ModelSigner`, a command-line tool: `keygen`, `update`, `sign`, `verify`, `digest` |
 
