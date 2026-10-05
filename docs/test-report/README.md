@@ -20,12 +20,12 @@ stay in the linked reports; requirement-by-requirement status is in [../traceabi
 
 | Area | Result |
 |---|---|
-| Unit and component tests | **2,542 tests, 0 failures, 0 errors** in the verification run of 2026-10-05 over 13 test suites (section 2). Suites changed after that run (interoperability, model import, low-light and driver tests) now count more; the per-suite counts are in section 2 |
-| Automated liveness and attack scenarios | re-run on 2026-10-05 at the shipped defaults: 275 transactions, 755 attempt records (section 3). **Worst species (APCER_max) per transaction: SYN-A7 on `registration`, 50.0% (4/8); every other species and workflow 0.0%. Bona fide: `registration` 14.3% (4/28), all from the dim clip; `login_auth` 0.0% (0/12)** |
+| Unit and component tests | **2,619 tests, 0 failures, 0 errors** in the verification run of 2026-10-05 evening over 13 test suites (section 2) |
+| Automated liveness and attack scenarios | re-run on 2026-10-05 evening at the shipped defaults, after the exposure correction and the screen-pattern check: 275 transactions, 755 attempt records (section 3.0). **APCER 0.0% per transaction for every species and workflow (SYN-A7 on `registration` was 50.0%, 4/8, in the morning run). Bona fide: `registration` 0.0% (0/28; was 14.3%, all from the dim clip), `login_auth` 0.0% (0/12)** |
 | Desktop end-to-end | reference run 2026-09-30: 41 of 41 checks passed **at the old defaults** (all workflows passive first); not re-run at the shipped defaults (section 4) |
 | Android end-to-end | reference run 2026-09-30: 58 of 58 checks passed **at the old defaults**; a repeat run found one real weakness; the full demo was not repeated at the shipped defaults (section 4) |
-| Bonus items | B4 interoperability done (19 of 19 replayed cases agree on desktop and on Android unit tests, 6 of 6 on an emulator); B6 model import done on both clients (no Flutter button on Android yet); B7 and B8 measurement kit done, **phone measurement pending** (section 8) |
-| Headline weakness | an adaptive screen replay that answers each prompt (SYN-A7) is accepted in 4 of 8 `registration` transactions (`atk-s3-adaptive-screen` 4 of 4, `atk-s2-adaptive-screen` 0 of 4); every other synthetic attack species is refused. A genuine clip in dim light (`bf-s3-dim`) is still rejected in the scenario runner (section 6) |
+| Bonus items | B4 interoperability done (19 of 19 replayed cases agree on desktop and on Android unit tests, 6 of 6 on an emulator); B6 model import done on both clients (Android button in Device Settings); B7 and B8 measurement kit done, **phone measurement pending** (section 8) |
+| Headline weakness | every synthetic attack species is refused, but the attacks are software-made: the screen-pattern check that now stops the adaptive screen replay (SYN-A7, 4 of 8 accepted before it) is proven on synthetic screens only, and frames enlarged by 1.5x or a whole number before the engine could look like a screen to it. The dim clip passes since the exposure correction; real dim rooms are untested (section 6) |
 | Evaluation with real people and artefacts | not run yet; placeholder in section 7 |
 
 ## 2. Unit and component tests
@@ -44,36 +44,34 @@ code and still pass with this project's changes.
 | Module | What it tests | Command | Tests | Failures / errors | Skipped | CI job |
 |---|---|---|---|---|---|---|
 | `liveness/liveness-core` | engine: session state machine, passive decision, challenges, action detection, integrity, planarity, capture binding, policy, audit, UI states, MJPEG reader | `mvn -B -f liveness/pom.xml install -Dliveness.benchmark.frames=0` (the job runs `verify`; `install` also puts the engine in `~/.m2`, which the rows below need) | 365 | 0 | 0 | `liveness` |
-| `liveness/liveness-onnx` | ONNX adapters, golden outputs of the 5 models, signed model registry, engine factory, execution providers | same run | 96 | 0 | 2 | `liveness` |
+| `liveness/liveness-onnx` | ONNX adapters, golden outputs of the 5 models, signed model registry, engine factory, execution providers, exposure correction and screen-pattern check | same run | 109 | 0 | 2 | `liveness` |
 | `liveness/face-match-sdk` | SFace face-match SDK behind MOSIP's `IBioApiV2`, ISO 19794-5 records, MOSIP loader | same run | 42 | 0 | 0 | `liveness` |
 | desktop `registration-services` (liveness and audit tests) | capture and authentication gates, stream session, orchestrator, config, audit sink, packet evidence, pass tokens, model import, behaviour on repeated failure, account lock | after the engine install: `mvn -B -f clients/desktop/registration/pom.xml test -pl registration-services,registration-client -am -Dgpg.skip -Djacoco.skip=true -DfailIfNoTests=false "-Dtest=io/mosip/registration/service/bio/liveness/*Test.java,**/AuditFactoryTest.java,io/mosip/registration/controller/liveness/*Test.java"` (on Linux, put `xvfb-run -a` in front: the JavaFX tests need a display) | 150 | 0 | 0 | `desktop-liveness` |
 | desktop `registration-client` (liveness tests) | liveness panel view model, texts and replacement texts, bundle parity (en/fr/ar), JavaFX listener, diagnostic lines, model import window | same run | 63 | 0 | 0 | `desktop-liveness` |
-| Android `livenessmanager` | engine loader, config, audit sink, face authenticator, capture screen (Robolectric), image decoding, SBI codec, replay, supervisor override, metrics, diagnostic mode, execution provider | with JDK 21 as `JAVA_HOME`, Flutter 3.10.4 and the Android SDK of [../install/README.md](../install/README.md) section 1: `bash scripts/android-build.sh --test-only` (installs the engine, generates the code a fresh clone lacks, runs the three `testDebugUnitTest` tasks) | 210 | 0 | 0 | `android-unit` |
+| Android `livenessmanager` | engine loader, config, audit sink, face authenticator, capture screen (Robolectric), image decoding, SBI codec, replay, supervisor override, metrics, diagnostic mode, execution provider | with JDK 21 as `JAVA_HOME`, Flutter 3.10.4 and the Android SDK of [../install/README.md](../install/README.md) section 1: `bash scripts/android-build.sh --test-only` (installs the engine, generates the code a fresh clone lacks, runs the three `testDebugUnitTest` tasks) | 211 | 0 | 0 | `android-unit` |
 | Android `app` | capture gate, face-auth flow, capture launcher, Flutter bridge, supervisor override flow | same run | 64 | 0 | 0 | `android-unit` |
 | Android `clientmanager` (upstream + liveness) | packet building with `LIVENESS_*` evidence, meta info; all upstream tests | same run | 1,186 | 0 | 0 | `android-unit` |
-| Android Flutter widgets | face-auth panel, outcome banner, Arabic right-to-left | after the Android run above: `cd clients/android && flutter test test/liveness/` | 26 | 0 | 0 | `android-unit` |
+| Android Flutter widgets | face-auth panel, outcome banner, Arabic right-to-left, model import panel | after the Android run above: `cd clients/android && flutter test test/liveness/` | 32 | 0 | 0 | `android-unit` |
 | `tools/mock-sync` | sync endpoints, Android contract (key wrapping), response signatures, packet inspector | `mvn -B -f tools/mock-sync/pom.xml verify` | 38 | 0 | 0 | `mock-sync` |
 | `devices/mock-mds` (upstream + extensions) | frame sources, capture from the streamed frame, faults, renewed FTM keys | with JDK 21: `mvn -B -f devices/mock-mds/pom.xml package -Dgpg.skip=true` | 226 | 0 | 0 | `mock-mds` |
 | `tools/eval/scenario-runner` | scenario loading, playlists, classification, output | after the engine install: `mvn -B -f tools/eval/scenario-runner/pom.xml package` | 31 | 0 | 0 | `scenario-runner` |
 | `tools/eval` Python | APCER/BPCER, confidence intervals, frame-pack manifests | `pip install -r tools/eval/requirements.txt`, then `python -m pytest -q tools/eval/tests` | 102 | 0 | 0 | `eval-python` |
-| **Total** | | | **2,599 if every suite passes as last run; 2,542 verified together on 2026-10-05** | **0** | **2** | |
+| **Total** | | | **2,619, verified together on 2026-10-05 evening** | **0** | **2** | |
 
-**Totals.** The verification run of 2026-10-05 ran every suite and found **2,542 tests, 0 failures, 0 errors** (liveness-core 351,
-liveness-onnx 96 with 2 benchmark tests skipped, face-match-sdk 42, MockSync 37, MockMDS 226, scenario runner 29, pytest 102,
-desktop 142 + 63, Android clientmanager 1,186, livenessmanager 185, app 57, Flutter 26). Later the same day tests were added
-(low-light carry-over in the shared driver and both clients, the runner's low-light option, the desktop and Android parity
-replay, Android model import, the measurement kit), and each affected suite was run on its own: the table above shows those
-latest counts. Their sum, 2,599, was **not** run together as one verification.
+**Totals.** The verification run of 2026-10-05 evening (22:18-22:48, logs `PS04-fixes/verify/wp23-*.log` outside the
+repository) ran every suite of the table together and found **2,619 tests, 0 failures, 0 errors**, 2 benchmark tests
+skipped. The earlier runs of that day found 2,542 (morning) and 2,606 (04:20, before the exposure correction and the
+screen-pattern check added 13 `liveness-onnx` tests).
 
 **Upstream and team-written.** About 1,361 of the tests are upstream: the Android `clientmanager` suite (1,186, all upstream
 tests, passing with this project's changes) and about 175 in MockMDS (an estimate from the first audit count; the 226 in the
-table also include the tests added for the mock face device). The remaining 1,180 or so of the 2,542 are team-written (an
+table also include the tests added for the mock face device). The remaining 1,258 or so of the 2,619 are team-written (an
 approximate figure).
 
 When each count was taken:
 
 - 2026-10-05: all rows, verification run (engine installed first, then every suite with the commands above; Android tests forced with `--rerun`).
-- 2026-10-05, after that run: `liveness-core` 365, desktop 150 + 63, `livenessmanager` 210, `app` 64, MockSync 38, scenario runner 31, run per suite. JDK 11 for the engine, desktop, MockSync and runner; JDK 21 for Android and MockMDS.
+- 2026-10-05 evening: every row again in one run (2,619 tests), after the exposure correction and the screen-pattern check. JDK 11 for the engine, desktop, MockSync and runner; JDK 21 for Android and MockMDS.
 - The CI jobs of `.github/workflows/ci.yml` have run only as local commands so far; the first run on GitHub after the push checks the Linux-only steps.
 
 Not re-run for this page (results from the engineers' reports of the same day):
@@ -104,6 +102,19 @@ The tables from section 3.1 on are the 39-scenario suites of 2026-09-30, kept as
 **These are technology regression results on synthetic attacks, not an ISO/IEC 30107-3 evaluation.**
 
 ### 3.0 Re-run on 2026-10-05 at the shipped defaults
+
+**Evening run after the two PAD additions** (exposure correction in a dark frame, screen-pattern check;
+[../design/engine.md](../design/engine.md) section 4), same scenarios and defaults, from
+[../eval/results/20261005b-shipped/README.md](../eval/results/20261005b-shipped/README.md):
+
+- APCER per transaction and on the first attempt: **0.0% for every species and workflow**; `atk-s3-adaptive-screen`
+  (SYN-A7) is refused in 4 of 4 seeds by the passive PAD (score 0).
+- BPCER per transaction and on the first attempt: `registration` **0.0% (0/28)**, `login_auth` 0.0% (0/12);
+  `bf-s3-dim` passes on the first attempt with passive score 55 (was 3); the other bona fide scores are unchanged.
+- 1 of 275 transactions misses its expectation (was 9): `other-s3-ignores-prompt` seed 2, refused by the loop check
+  instead of the challenge layer.
+
+The morning run below is the "before".
 
 Quoted from [../eval/results/20261005-shipped/README.md](../eval/results/20261005-shipped/README.md) (copied from the
 "Headline" section of `20261005-shipped/report.md`); the full per-species table, the legacy table and the notes are there.
@@ -251,8 +262,8 @@ Reference run 7 of 2026-09-30: **58 checks passed, 0 failed, at the old defaults
 
 | # | Limitation | Effect | Where described |
 |---|---|---|---|
-| 1 | Adaptive screen replay of subject S3 (SYN-A7) passes every layer | APCER_max 25% per attempt (4/16), 50% per transaction, in every configuration | calibration notes 0.2, 4.9 |
-| 2 | The synthetic very dim pack `bf-s3-dim` is rejected by passive PAD (score 3) | all 4 rejected `registration` transactions of 2026-10-05 (BPCER 14.3%, 4/28). Both clients now end a dim-light failure with "Improve lighting." without counting an attempt, up to 3 times per capture; the scenario runner shows the same ending and the 4th failure still counts, so the clip is still rejected. Real dim-light behaviour unknown until the volunteer evaluation | [../eval/results/20261005-shipped/README.md](../eval/results/20261005-shipped/README.md); calibration notes 0.2, 4.5 |
+| 1 | The screen-pattern check that refuses the adaptive screen replay (SYN-A7, 50% per transaction before it) is measured on software-made screens only; a camera frame enlarged by 1.5x or a whole number before the engine shows the same kind of frequency peaks | real-screen APCER unknown until the volunteer test; a client or device that upscales frames could see false rejections (none in the suite: every bona fide score unchanged) | [../design/engine.md](../design/engine.md) section 4; [../eval/results/20261005b-shipped/README.md](../eval/results/20261005b-shipped/README.md) |
+| 2 | Dim light is tested only with the synthetic pack `bf-s3-dim` (45% brightness) | with the exposure correction it passes (score 55, BPCER 0/28; it was 14.3% before). A real dim room with an auto-exposure camera is untested; faces that still fail end with "Improve lighting." without counting an attempt, up to 3 times per capture | [../eval/results/20261005b-shipped/README.md](../eval/results/20261005b-shipped/README.md); calibration notes, update of 2026-10-05 (evening) |
 | 3 | Every registration, sign-in, onboarding and supervisor authentication now answers 2 challenges | median accepted attempt 9.7 s instead of 6.6 s; one synced key per workflow switches back to passive first | calibration notes 0.2; `design/decision-flow.md` section 5 |
 | 4 | A blink already in progress at the prompt fails (`ONSET_TOO_FAST`); kept on purpose against replays that blink continuously | the person blinks again (0 cases in the shipped suite, 3 under the old configuration) | calibration notes 0.1, 4.7; desktop 5.3 |
 | 5 | The capture frame can be the last streamed frame while the head is still turned | 3 of 15 S2 attempts fail `CAPTURE_PAD_SCORE`, each followed by an accepted retry | calibration notes 0.2 |
@@ -265,11 +276,11 @@ Reference run 7 of 2026-09-30: **58 checks passed, 0 failed, at the old defaults
 | 12 | SFace match threshold 40 chosen from published values, not calibrated on a larger set | match error rates unknown | desktop 5.10; `liveness/face-match-sdk/README.md` |
 | 13 | All attack data is synthetic; bona fide data is three people from stock clips | numbers are regression figures, not security claims | section 3 |
 | 14 | The end-to-end client runs (sections 4.1, 4.2) were made at the old defaults; neither full demo was repeated at the shipped defaults | the clients' behaviour under `ALWAYS_ACTIVE` is shown by DE-D8 and AE-A12, the desktop flow 65 (15/15, bundle 1.0.1 era) and unit tests, not by a full re-run | `design/android-liveness.md` 13.8 |
-| 15 | Android model import has no screen or button yet (the Flutter call exists); no BUSY check while a capture screen is open | an operator cannot start the import from the app | [../install/android.md](../install/android.md#10-import-a-liveness-model-bundle-offline-model-update) |
-| 16 | No real person, no physical phone and no real print or screen has been tested through either client | results of sections 3 and 4 are replayed frames only | section 7 |
+| 15 | No real person, no physical phone and no real print or screen has been tested through either client | results of sections 3 and 4 are replayed frames only | section 7 |
 
 Closed on 2026-09-30: prints and looped clips passing the passive check (old #1), head turns to the left misread as
-a smile (old #3), blurred frames reaching the challenges.
+a smile (old #3), blurred frames reaching the challenges. Closed on 2026-10-05: the Android import button (old #15,
+Settings, Device Settings, with a BUSY check while a capture screen is open).
 
 ## 7. In-house evaluation with volunteers (ISO/IEC 30107-3 method) — placeholder
 

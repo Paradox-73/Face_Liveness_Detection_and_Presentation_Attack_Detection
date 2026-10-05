@@ -12,9 +12,9 @@ authentication.
   supervisor workflows (packet, exception and end-of-day authentication) ship with challenges on every capture
   (`ALWAYS_ACTIVE`), because synthetic prints scored above the passive threshold; only the exception photo has
   liveness off. Each workflow's policy is one synced setting; `PASSIVE_THEN_ACTIVE` (challenges only after a low
-  passive score, the PS04 literal flow) is a configuration change. In the synthetic suite photos, screens, frozen or
-  looped streams and face swaps are refused; the one known exception is an adaptive screen replay that answers each
-  prompt (below).
+  passive score, the PS04 literal flow) is a configuration change. In the synthetic suite every attack species is
+  refused, including an adaptive screen replay that answers each prompt, which a screen-pattern check added on
+  2026-10-05 now stops (below; synthetic screens only).
 - **One engine, two clients:** a Java 11 library with no runtime dependencies (`liveness/`) runs unchanged on the
   desktop client and on Android, with the same thresholds, prompts, audit events and packet evidence.
 - **Device independent:** SBI 0.9.5 L0 or L1 face devices on the desktop (SBI 1.0 is implemented and untested; only the
@@ -54,39 +54,41 @@ decision flow picture: [docs/design/img/decision-flow.svg](docs/design/img/decis
 | Part | State | Evidence |
 |---|---|---|
 | Shared engine (`liveness/liveness-core`) | Passive PAD, active challenges, frame integrity (loop window 300 frames), planarity, capture binding that fails closed, policy resolution, audit, metrics, one session driver used by both clients | 365 tests; `liveness/README.md` |
-| ONNX adapters and models (`liveness/liveness-onnx`, `models/`) | YuNet, Face Mesh, MiniFASNet V2 + V1SE, SFace; signed bundle 1.3.0 with rollback protection | 96 tests (2 benchmark tests skipped); `models/SOURCES.md` |
+| ONNX adapters and models (`liveness/liveness-onnx`, `models/`) | YuNet, Face Mesh, MiniFASNet V2 + V1SE, SFace; signed bundle 1.3.0 with rollback protection | 109 tests (2 benchmark tests skipped); `models/SOURCES.md` |
 | Face-match SDK (`liveness/face-match-sdk`) | SFace `IBioApiV2` for FACE 1:1 matching | 42 tests |
 | Desktop client (`clients/desktop`) | Liveness gates resident capture, exception photo, onboarding, face login, packet and reviewer authentication, end-of-day approval; supervisor override (second supervisor with face authentication, checked photo), account lock, retry limit that survives Cancel, diagnostic mode, replacement texts, offline import of a signed model bundle | 150 + 63 liveness unit tests (`registration-services`, `registration-client`); end-to-end run 41 of 41 checks on 2026-09-30 at the earlier defaults, not re-run at the shipped defaults (`docs/test-report/desktop-e2e.md`); diagnostic and model-import flow, 15 of 15 |
-| Android client (`clients/android`) | `livenessmanager` module with the built-in camera device; resident capture, onboarding, face sign-in, packet authentication, supervisor approval; supervisor override, retry limit that survives Cancel, metrics, diagnostic panel, execution provider choice, signed release build with in-app device key provisioning, offline model bundle import (no screen button yet), vendor SBI face app through intents | 210 `livenessmanager` + 64 `app` unit tests, 26 Flutter tests; end-to-end run 58 of 58 checks on 2026-09-30 at the earlier defaults, not re-run at the shipped defaults: `docs/test-report/android-e2e.md` |
+| Android client (`clients/android`) | `livenessmanager` module with the built-in camera device; resident capture, onboarding, face sign-in, packet authentication, supervisor approval; supervisor override, retry limit that survives Cancel, metrics, diagnostic panel, execution provider choice, signed release build with in-app device key provisioning, offline model bundle import (button in Device Settings), vendor SBI face app through intents | 211 `livenessmanager` + 64 `app` unit tests, 32 Flutter tests; end-to-end run 58 of 58 checks on 2026-09-30 at the earlier defaults, not re-run at the shipped defaults: `docs/test-report/android-e2e.md` |
 | Mock face device (`devices/mock-mds`) | Image sequences, video or webcam; capture signed from the streamed frame; 13 fault types; L0/L1; provisional PAD capability | 226 tests (upstream and extensions); `devices/mock-mds/LIVENESS-EXTENSIONS.md` |
 | Mock MOSIP server (`tools/mock-sync`) | Both real clients log in, sync, onboard and upload against it; live config changes; packet evidence viewer | 38 tests; `tools/mock-sync/README.md` |
-| Evaluation (`tools/eval`, `eval/`) | Scenario runner (31 tests) and analysis (102 pytest tests) with ISO/IEC 30107-3-style metrics; 275 transactions at the shipped defaults, synthetic attacks and three openly licensed clips; worst species per transaction: SYN-A7 on `registration` accepted 50.0% (4/8), every other species 0.0%; `registration` BPCER 14.3% (4/28 per transaction, all from the dim-light clip), `login_auth` BPCER 0.0% (0/12) | [docs/eval/results/20261005-shipped/README.md](docs/eval/results/20261005-shipped/README.md); `docs/eval/calibration-notes.md` |
+| Evaluation (`tools/eval`, `eval/`) | Scenario runner (31 tests) and analysis (102 pytest tests) with ISO/IEC 30107-3-style metrics; 275 transactions at the shipped defaults, synthetic attacks and three openly licensed clips; APCER 0.0% per transaction for every species and workflow (SYN-A7, the adaptive screen replay, was 50.0% (4/8) before the screen-pattern check); `registration` BPCER 0.0% (0/28; was 14.3%, all from the dim-light clip, before the exposure correction), `login_auth` BPCER 0.0% (0/12) | [docs/eval/results/20261005b-shipped/README.md](docs/eval/results/20261005b-shipped/README.md) (before and after); `docs/eval/calibration-notes.md` |
 | Requirements | Every PS04 bullet mapped to code, test and status | `docs/traceability.md` |
 
-Tests: 2,542 tests passed with 0 failures and 0 errors in the verification run of 2026-10-05 (all suites above, Android
-unit tests, Flutter tests); about 1,361 of them are upstream MOSIP tests (Android `clientmanager` 1,186 and about 175 in
-MockMDS), so about 1,180 are written by this team. Suites changed after that run (parity and model-import tests, the
-low-light ending, runner and MockSync tests) are quoted with their latest counts above; their sum was not re-run as one
-verification. Per-suite table and commands: [docs/test-report/README.md](docs/test-report/README.md).
+Tests: 2,619 tests passed with 0 failures and 0 errors in the verification run of 2026-10-05, 22:18-22:48 (all suites
+above, Android unit tests, Flutter tests); about 1,361 of them are upstream MOSIP tests (Android `clientmanager` 1,186
+and about 175 in MockMDS), so about 1,258 are written by this team. Per-suite table and commands:
+[docs/test-report/README.md](docs/test-report/README.md).
 
 ### Bonus items
 
 | Item | State |
 |---|---|
 | B4 interoperability testing | Done. One ONNX Runtime release (1.20.0) on both clients; a parity test replays the same recorded frames through each client's engine loader, configuration and decoder: desktop 19 of 19, Android unit 19 of 19, emulator 6 of 6 committed cases, identical decisions. No physical phone. [docs/test-report/interoperability.md](docs/test-report/interoperability.md) |
-| B6 secure offline model import | Done on both clients (signature, per-file SHA-256, rollback protection, self-test, previous bundle kept, audit). Android has no screen button yet and no phone test. [Android import steps](docs/install/android.md#10-import-a-liveness-model-bundle-offline-model-update), [design](docs/design/android-liveness.md#14-offline-model-update-bonus-b6) |
+| B6 secure offline model import | Done on both clients (signature, per-file SHA-256, rollback protection, self-test, previous bundle kept, audit). Android: "Import liveness model" button in Settings, Device Settings ([picture](docs/ux/screenshots/android/a-s1-model-import-button.png)); no phone test. [Android import steps](docs/install/android.md#10-import-a-liveness-model-bundle-offline-model-update), [design](docs/design/android-liveness.md#14-offline-model-update-bonus-b6) |
 | B7 and B8 per-frame latency and memory on a phone | Code done (measurement kit: instrumented test and `scripts/android-perf.sh`); the phone measurement is pending, the results table is empty. [docs/test-report/android-performance.md](docs/test-report/android-performance.md) |
 
 Known limits, stated in the linked documents:
 
-- An adaptive screen replay that answers each prompt (SYN-A7) is accepted in 50.0% (4/8) of `registration`
-  transactions: `atk-s3-adaptive-screen` passed in 4 of 4 seeds, 1 of 2 source artefacts. Thresholds do not fix it:
-  its scores overlap genuine ones. Every other synthetic attack species is refused (0.0% in every workflow).
+- The adaptive screen replay that answers each prompt (SYN-A7, `atk-s3-adaptive-screen`) was accepted in 4 of 8
+  `registration` transactions until 2026-10-05; the screen-pattern check (isolated peaks in the face's frequency
+  spectrum, the trace of a pixel grid and moire) now refuses it in 4 of 4 seeds. The screens are synthetic, so the
+  effect on real screens is unknown, and a camera frame enlarged by 1.5x or a whole-number factor before it reaches
+  the engine could be taken for a screen. [docs/design/engine.md](docs/design/engine.md) section 4.
 - Planarity (a check that the face moves like a 3-D head) has no attack evidence and cannot stop a screen that
   replays a real head turn.
-- A genuine clip in dim light (`bf-s3-dim`) is rejected in all 4 runs; the dim-light ending (not counted, up to
-  3 tries) is on in both clients and in the runner, and the runner still ends in REJECT after 3 such endings.
-  Real dim-room recordings are missing.
+- Dim light: the synthetic dim clip (`bf-s3-dim`, 45% brightness) scored 3 and was rejected in 4 of 4 runs; with
+  the exposure correction (a dark frame is brightened before the PAD models see it) it scores 55 and is accepted in
+  4 of 4. Real dim-room recordings are missing; the dim-light ending ("Improve lighting", not counted, up to 3 tries)
+  stays for faces that still fail.
 - Challenges on every registration and sign-in cost time: the median accepted `registration` attempt takes 11.0 s of
   replayed stream in the 2026-10-05 latency run (9.7 s against 6.6 s in the 2026-09-30 runs).
 - The per-frame latency target (p95 at most 20 ms) is not met: p95 162.4 ms per frame (decode, analysis, PAD; 1 thread,
@@ -94,7 +96,7 @@ Known limits, stated in the linked documents:
 - Not run yet: no physical Android phone or tablet, no live face or real artefact through either client, no desktop
   GUI run and no Android scripted demo at the shipped defaults (the 41 of 41 and 58 of 58 runs predate them), no L1
   or vendor face device on Android, no second device vendor, no volunteer evaluation with real artefacts.
-- Model updates: offline signed import on both clients (no screen button on Android yet); no download through sync.
+- Model updates: offline signed import on both clients; no download through sync.
 
 ## Repository map
 

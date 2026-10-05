@@ -59,7 +59,7 @@ mvn -f liveness/pom.xml install -Dliveness.benchmark.frames=0
 ```
 
 Builds and installs `liveness-core`, `liveness-onnx` (with the `models` jar) and `face-match-sdk` into `~/.m2`,
-runs the tests (core 365, onnx 96 with 2 benchmark tests skipped by that flag, face-match-sdk 42; counts of 2026-10-05) and the Android
+runs the tests (core 365, onnx 109 with 2 benchmark tests skipped by that flag, face-match-sdk 42; counts of 2026-10-05) and the Android
 API 28 check. Both clients take the engine from `~/.m2`.
 
 ## 3. Start MockSync (local MOSIP server)

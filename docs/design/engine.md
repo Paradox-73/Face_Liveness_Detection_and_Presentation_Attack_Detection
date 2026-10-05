@@ -17,7 +17,7 @@ any one of them can fail the session.
 | Layer | Class (`io.mosip.liveness.core.engine` unless noted) | Attack it targets | Failure |
 |---|---|---|---|
 | Quality gate | `QualityGate` | none directly; guarantees the other layers see a usable face | `QUALITY` (guidance only, no attempt used) |
-| Passive texture PAD | `PassivePadAggregator` over `liveness-onnx` `MiniFasPassivePad` (MiniFASNet V2 + V1SE ensemble) | print, screen, replay (texture, moire, borders) | `PAD` below `pad.reject_threshold`; else decision (section 3) |
+| Passive texture PAD | `PassivePadAggregator` over `liveness-onnx` `MiniFasPassivePad` (MiniFASNet V2 + V1SE ensemble; exposure correction in a dark frame; score capped by the screen-pattern check, section 4) | print, screen, replay (texture, moire, borders, screen pixel grid) | `PAD` below `pad.reject_threshold`; else decision (section 3) |
 | Frame integrity | `FrameIntegrityChecker` | injected or frozen streams, looped video, timestamp tampering | `INTEGRITY` (`FROZEN`, `LOOP`, `TIMESTAMP_REGRESSION`, `INVALID_FRAMES`) |
 | Face tracking and identity | `FaceTracker`, `IdentityTracker` (SFace embeddings) | face swap during the session | `INTEGRITY` (`FACE_SWITCH`, `TRACKING_LOST`) |
 | Active challenges | `ChallengeScheduler`, `ChallengeObserver`, `ActionLevels` | static photo, pre-recorded video | `ACTIVE` (`WRONG_ACTION`, `ONSET_TOO_FAST`, `NOT_HELD`) or `TIMEOUT` |
@@ -37,7 +37,7 @@ flowchart TB
   D --> A["FaceAnalyzer (OnnxFaceAnalyzer):<br/>YuNet box + 5 landmarks; Face Mesh 478 points;<br/>head pose, eye aspect ratio, mouth ratio, gaze, quality"]
   A --> Q{"State?"}
   Q -- "ACQUIRING" --> QG["QualityGate: one face, size, pose,<br/>light, sharpness, inside area"]
-  Q -- "PASSIVE" --> P["PassivePad.score: MiniFASNet V2 (crop x2.7)<br/>+ V1SE (crop x4.0), live probability averaged"]
+  Q -- "PASSIVE" --> P["PassivePad.score: MiniFASNet V2 (crop x2.7)<br/>+ V1SE (crop x4.0), live probability averaged;<br/>dark frame brightened; capped by screen-pattern check"]
   Q -- "CHALLENGE_*" --> C["ChallengeObserver: action level vs neutral baseline;<br/>PAD on every 2nd frame; planarity samples"]
   QG --> T["FaceTracker (IoU >= 0.3, gap <= 500 ms)"]
   P --> T
@@ -107,6 +107,29 @@ Class: `DefaultLivenessSession` (package-private) behind `LivenessSession`. Test
 
 Model preprocessing (crop scales 2.7 and 4.0, raw 0-255 BGR input, softmax class 1 = live) is pinned by unit tests
 and documented in `models/SOURCES.md`.
+
+Two additions in `MiniFasPassivePad` (2026-10-05), both on in the shipped engine and used by every PAD score (passive,
+during challenges, capture binding):
+
+- **Exposure correction** (`SceneExposure`): when the mean grey level of the whole frame is below 90, the PAD crop is
+  multiplied by `160 / mean` (at most 2.5) before the models see it, as a longer camera exposure would record it.
+  - Why: MiniFASNet calls a dark, noisy face an attack. The synthetic dim packs `s3-dim-*` (the S3 recordings at
+    45% brightness with extra noise) scored 2-3 out of 100; with the correction they score about 55.
+  - The trigger is the frame, not the face: a darker skin tone in a normally lit room (pack `s1-*`, face grey 66,
+    frame 105) is left alone, because brightening that face lowers its score (48 to 6 in a test).
+  - It gives an attack nothing it would not get in good light: the models then see what they see in a lit room,
+    and faces darker than `quality.min_brightness` are still refused by the quality gate.
+- **Screen-pattern check** (`ScreenPatternMeter`): the central 64x64 pixels of the face box are searched for isolated
+  peaks in the spatial frequency spectrum, the trace of a screen's pixel grid and moire; the 8x8 JPEG block
+  frequencies are left out. The peak ratio (strongest peak against the median at the same frequency radius) maps to a
+  live probability of 1 up to 600 and 0 from 1,500; the frame's score is the lower of that and the MiniFASNet score.
+  - Measured on the frame packs: live faces median 15-55 per pack, largest single frame 748; synthetic screen
+    replays median 436-5,990; prints stay at live values; the MockMDS stock photo 494.
+  - Limits: the screen packs are synthetic (`tools/eval/synth.py`), so the effect on real screens is unknown until
+    the volunteer test; a frame enlarged by a whole-number or 1.5x factor before it reaches the engine shows the same
+    kind of peaks (pixel repetition) and would score as a screen. Faces smaller than 64 pixels are not checked.
+  - Results before and after: [../eval/results/20261005b-shipped/README.md](../eval/results/20261005b-shipped/README.md);
+    [../eval/calibration-notes.md](../eval/calibration-notes.md), update of 2026-10-05 (evening).
 
 ## 5. Active stage
 

@@ -139,8 +139,8 @@ the claim.
 
 **On the slide**
 - Four large numbers:
-  - **2,542** tests passed on 2026-10-05 (verification run, 0 failures): about 1,361 come with the upstream MOSIP
-    code, about 1,180 are written by the team.
+  - **2,619** tests passed on 2026-10-05 (verification run, 0 failures): about 1,361 come with the upstream MOSIP
+    code, about 1,258 are written by the team.
   - **41 / 41** checks: scripted end-to-end run on the real desktop client (run at the earlier defaults, not yet
     repeated at the current ones).
   - **58 / 58** checks: scripted end-to-end run on the real Android client (same limit).
@@ -150,7 +150,8 @@ the claim.
 | Configuration | Worst attack species | Genuine rejected (registration) |
 |---|---|---|
 | legacy: passive first everywhere | 100.0% (80/80, looped clip SYN-A8) | 21.4% (6/28), 35.7% (10/28) on the first attempt |
-| **shipped now** (challenges on every workflow, bundle 1.3.0) | **50.0% (4/8)**, adaptive screen replay SYN-A7, registration; every other species 0.0% | **14.3% (4/28)**, all from one synthetic dark clip |
+| challenges on every workflow, bundle 1.3.0 (morning of 2026-10-05) | 50.0% (4/8), adaptive screen replay SYN-A7, registration; every other species 0.0% | 14.3% (4/28), all from one synthetic dark clip |
+| **shipped now** (plus exposure correction and screen-pattern check in the PAD) | **0.0%** for every species (SYN-A7 0/8) | **0.0% (0/28)** |
 
 - Printed on the slide: "Synthetic attacks, three people from open clips: regression results, not an ISO/IEC
   30107-3 evaluation. No real artefacts, real people or physical phone tested yet."
@@ -163,14 +164,14 @@ the claim.
   now always asks for challenges (one synced key per workflow). Legacy pooled attack APCER per transaction was
   33.3% to 71.4% by workflow; at the shipped defaults every species is 0.0% except SYN-A7. The cost is about
   3 seconds per capture (median accepted stream 9.7 s instead of 6.6 s, measured 2026-09-30).
-- Genuine rejection: registration 14.3% (4/28) per transaction, all four from one synthetic very dark clip
-  (`bf-s3-dim`), which still ends REJECT where the scenario expects ACCEPT; the clients now show a dim-light
-  guidance ending for it, not counted up to 3 times. Sign-in: 0.0% (0/12). The earlier figure of 29.4% was per
-  attempt (2026-09-30 data) and is historic.
-- What still passes: an adaptive screen replay, one that plays the right clip for each prompt: 4 of 8 transactions
-  (1 of 2 source artefacts). Thresholds do not separate it; it is the known limit of challenge-response and needs
-  device-side PAD or a stronger model. The pooled per-attempt figure 1.7% (4/238) is secondary and never the
-  headline.
+- Genuine rejection: registration 0.0% (0/28) per transaction. It was 14.3% (4/28) until the exposure correction:
+  the synthetic very dark clip (`bf-s3-dim`) scored 3 and now scores 55, because a dark frame is brightened before
+  the PAD models see it. Sign-in: 0.0% (0/12). The earlier figure of 29.4% was per attempt (2026-09-30 data) and is
+  historic.
+- The adaptive screen replay (a clip that answers each prompt) passed 4 of 8 transactions until the screen-pattern
+  check: the face is searched for a screen's pixel grid and moire in its frequency spectrum, and that replay now
+  scores 0. Say plainly: the screens are software-made, so the real-screen result comes from the volunteer test.
+  The pooled per-attempt figure is secondary and never the headline.
 - Per-frame time, latency run at 1 thread on a shared laptop: p50 69.4 ms, p95 162.4 ms, above our own 20 ms
   target. Android was measured only on an emulator; the phone measurement kit (`docs/test-report/android-performance.md`)
   has not been run on a phone.

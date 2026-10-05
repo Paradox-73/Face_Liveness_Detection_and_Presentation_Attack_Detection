@@ -97,7 +97,11 @@ and on the first attempt for every species and workflow except SYN-A7 on `regist
 screen replay is accepted in 4 of 4 seeds of `atk-s3-adaptive-screen`), and BPCER 14.3% (4/28) on `registration`, all
 four from the dim clip `bf-s3-dim`, and 0.0% (0/12) on `login_auth`
 ([../eval/results/20261005-shipped/README.md](../eval/results/20261005-shipped/README.md)). A screen replay that answers
-each prompt is the known limit of challenge-response; thresholds do not separate it from a genuine score. The cost for a genuine user is time: the median stream
+each prompt is the known limit of challenge-response; thresholds do not separate it from a genuine score. Two PAD
+additions of the same evening (exposure correction in a dark frame, screen-pattern check; [engine.md](engine.md)
+section 4) bring both remaining figures to 0.0%: SYN-A7 0/8 and `registration` BPCER 0/28
+([../eval/results/20261005b-shipped/README.md](../eval/results/20261005b-shipped/README.md)); the screen check is
+proven on synthetic screens only. The cost for a genuine user is time: the median stream
 time of an accepted attempt rose from 6.6 s to 9.7 s. The end-to-end runs show a printed photo accepted passively
 under the legacy policy and refused under `ALWAYS_ACTIVE` (desktop D8, Android A12).
 

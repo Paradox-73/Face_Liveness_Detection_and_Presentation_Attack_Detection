@@ -63,7 +63,7 @@ Design details: `liveness/README.md`, `docs/design/desktop-liveness-services.md`
 
 | Evidence | Result | Where |
 |---|---|---|
-| Unit and component tests (engine, clients, mocks, tools) | 2,542 passed on 2026-10-05, 0 failures: about 1,361 are upstream MOSIP tests, about 1,180 are written by the team; engine line coverage 93% | `docs/test-report/README.md` section 2 |
+| Unit and component tests (engine, clients, mocks, tools) | 2,619 passed on 2026-10-05, 0 failures: about 1,361 are upstream MOSIP tests, about 1,258 are written by the team; engine line coverage 93% | `docs/test-report/README.md` section 2 |
 | Desktop client, scripted end-to-end run (13 flows) | 41 of 41 checks passed (run at the earlier defaults; not repeated at the current ones) | `docs/test-report/desktop-e2e.md` |
 | Android client, scripted end-to-end run (16 flows) | 58 of 58 checks passed (same limit) | `docs/test-report/android-e2e.md` |
 | Desktop and Android give the same decision (bonus B4) | 19 replayed cases on desktop, 19 in Android unit tests, 6 on an emulator; one ONNX Runtime release (1.20.0) on both clients | `docs/test-report/interoperability.md` |
@@ -76,8 +76,9 @@ Design details: `liveness/README.md`, `docs/design/desktop-liveness-services.md`
 open clips, so these are regression results, not an ISO/IEC 30107-3 evaluation (the volunteer evaluation is planned,
 `docs/eval/protocol.md`; no real person or real artefact has been tested yet). Because synthetic prints passed the
 passive check, every workflow that matches a face now always asks for challenges; this costs about 3 s per capture
-(median 9.7 s). Replays are refused except an adaptive screen replay that plays the right clip for each prompt: it
-passes 4 of 8 transactions, the known limit of challenge-response. Android was tested on an emulator with replayed
+(median 9.7 s). Every synthetic replay is refused, including an adaptive screen replay that plays the right clip
+for each prompt (it passed 4 of 8 transactions until a screen-pattern check was added on 2026-10-05; proven on
+software-made screens only). Android was tested on an emulator with replayed
 frames, built-in camera only; no physical phone or L1 device yet, and no live webcam run through the full client.
 
 ## 5. Next steps

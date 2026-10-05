@@ -68,8 +68,8 @@ Why every workflow except `exception_photo` defaults to `ALWAYS_ACTIVE` (registr
 2026-10-04): the synthetic suite showed prints and screen replays that the passive model scores 82-99, above both
 passive thresholds, so a passive-first supervisor workflow accepted them. In the 2026-09-30 suite challenges on
 registration, sign-in and onboarding cut the pooled APCER from 17.6% to 1.7% per attempt (a pooled figure; per species
-and per transaction the worst case is the adaptive screen replay, SYN-A7, accepted in 4 of 8 registration
-transactions in the 2026-10-05 run); the cost is about 3 s more per accepted capture (median 6.6 s to 9.7 s). Details: [decision-flow.md](decision-flow.md) section 5,
+and per transaction the worst case was the adaptive screen replay, SYN-A7, accepted in 4 of 8 registration
+transactions in the morning run of 2026-10-05 and in 0 of 8 after the screen-pattern check of that evening); the cost is about 3 s more per accepted capture (median 6.6 s to 9.7 s). Details: [decision-flow.md](decision-flow.md) section 5,
 [calibration notes](../eval/calibration-notes.md) section 0.
 
 ## 4. Passive stage

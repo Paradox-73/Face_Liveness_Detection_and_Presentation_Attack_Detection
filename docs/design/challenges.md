@@ -51,8 +51,8 @@ over the 14 allowed sequences of the default pool with k = 2, and over 68 sequen
 sequences| per attempt: 1/14 (7.1%) for the default pool with k = 2, 1/68 (1.5%) with k = 3. With `max_retries` = 3
 the chance over a whole transaction is at most 3/14 (21%) for k = 2. Other layers (random timing, onset rule,
 continuous PAD) cut this further; planarity is not counted on, because it has no attack evidence and does not stop a
-screen that replays a real head turn. The measured result for an adaptive replay (the one attack that still passes)
-is in [iso-30107.md](iso-30107.md).
+screen that replays a real head turn. The measured result for an adaptive replay (the one synthetic attack that
+passed the challenges, refused since the screen-pattern check of 2026-10-05) is in [iso-30107.md](iso-30107.md).
 
 ## 4. One challenge, step by step
 

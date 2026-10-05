@@ -61,7 +61,8 @@ Every key: [configuration.md](configuration.md).
 
 The offline import of a signed bundle (bonus B6) exists on both clients: the desktop import window ran end to end on
 2026-09-30 (flow 65, at the bundle versions of that day; it needs a bundle of 1.3.1 or higher now), the Android importer is
-covered by unit tests only (no Flutter button, no phone run). Not done: an online test of a model upgrade through a
+covered by unit tests and has an "Import liveness model" button in Settings, Device Settings, shown on the emulator
+on 2026-10-05 (no import run from the button, no phone run). Not done: an online test of a model upgrade through a
 MockSync upgrade endpoint (T-MI-06). MockSync has no client-upgrade endpoint, and the desktop run layout uses
 `environment=LOCAL`, which skips the jar hash check. The verification code that such an update would rely on
 (signature, hashes, minimum version, fail closed) is in place and unit-tested (`ModelRegistryTest`,

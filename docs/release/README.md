@@ -58,7 +58,7 @@ c2ebc8f31af630532e565d5f1d8b1379128342169a4db35640e75402afc8a0bb  liveness-core-
 
 | Part (`--only`) | Steps |
 |---|---|
-| `engine` | `mvn install` of `liveness/` with its tests (365 + 96 + 42 on 2026-10-05; 2 of the 96 are benchmark tests that `-Dliveness.benchmark.frames=0` skips), under the shared `liveness-build` lock, then copies the four jars |
+| `engine` | `mvn install` of `liveness/` with its tests (365 + 109 + 42 on 2026-10-05; 2 of the 109 are benchmark tests that `-Dliveness.benchmark.frames=0` skips), under the shared `liveness-build` lock, then copies the four jars |
 | `desktop` | `scripts/desktop-build.sh --mocksync --run-dir <staging>` (Maven build of `clients/desktop`, fresh Zulu JRE from the checked download, MOSIP mock SDK), then adds the start/stop and MockSync setup scripts, compiles `tools/mock-sync/scripts/MachineKeyTool.java` into `tools/machine-key-tool.jar`, licences and model sources |
 | `android` | `scripts/android-build.sh --release --abis <abi>` once per CPU type (`--android-abis`, default `arm64-v8a,x86_64`) |
 | `mocksync` | copies `tools/mock-sync` sources to a staging folder (the running MockSync keeps its own `target/` jar open), `mvn package` with tests on JDK 11, then the zip |

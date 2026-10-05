@@ -408,7 +408,7 @@ mvn -f liveness/pom.xml -pl liveness-core verify   # the core only
 mvn -f liveness/pom.xml -pl face-match-sdk verify  # the face match SDK only (uses the installed core and onnx jars)
 ```
 
-- Test counts on the last full run (2026-10-04, `install -Dliveness.benchmark.frames=0`): core 351, onnx 96
+- Test counts on the last full run (2026-10-05, `install -Dliveness.benchmark.frames=0`): core 365, onnx 109
   (2 skipped: the latency benchmark when `-Dliveness.benchmark.frames=0`), face-match-sdk 42.
 
 - Needs a full JDK 11 or newer and Maven 3.9. With JDK 12 or newer, `--release 11` keeps the Java 11 API.
