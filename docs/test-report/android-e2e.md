@@ -258,3 +258,22 @@ What could not run, and why:
 
 Raw output of the runs (outside the repository): `run/demo/android-20261005-wp20a/` (results, log, Logcat of the
 login section, screenshots) and `run/demo/android-20261005-wp20b/`.
+
+### 11.1 Emulator session of 2026-10-05, 21:45-21:58 (IST)
+
+- Debug APK rebuilt from the current tree (`scripts/android-build.sh --abis x86_64`, with the exposure correction and
+  screen-pattern check in the engine); emulator started with `ARC_EMULATOR_GPU=host` and `ARC_WEBCAM=emulated`
+  (`scripts/android-run-emulator.sh --headless`). It ran for the whole session without a crash.
+- MockSync was not reachable in this session (its HTTPS port had stopped answering, see
+  [desktop-e2e.md](desktop-e2e.md); after a restart attempt nothing answered on 8080), so `scripts/demo-android.sh`
+  could not start (it checks MockSync first). The scripted demo at the shipped defaults is still to run.
+- What ran without the server, in airplane mode (the client works offline):
+  - password sign-in of officer1 from the stored credentials;
+  - "Sign in with face" with an empty replay pack: the positioning state (amber oval and banner "No face detected.
+    Keep your face within the capture area.", progress bar) and the badge "Offline – verification runs on this
+    device"; the attempt ended without using up an attempt ("Attempt 1 of 3");
+  - Settings, Device Settings: the "Import liveness model" button with "Model in use: version 1.3.0".
+- Pictures: [a-p1-positioning-offline.png](../ux/screenshots/android/a-p1-positioning-offline.png),
+  [a-p2-no-face-offline.png](../ux/screenshots/android/a-p2-no-face-offline.png),
+  [a-s1-model-import-button.png](../ux/screenshots/android/a-s1-model-import-button.png). The capture screen shows the
+  masked replay (black preview), never a face.

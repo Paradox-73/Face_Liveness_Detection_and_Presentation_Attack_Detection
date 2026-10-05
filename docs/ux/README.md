@@ -28,7 +28,7 @@ R = resident, L = login, E = end of day).
 
 | State | Desktop | Android |
 |---|---|---|
-| Positioning (oval guide, "Look directly at the camera.") | [d-r1-positioning.png](screenshots/desktop/d-r1-positioning.png) | — |
+| Positioning (oval guide, "Look directly at the camera.") | [d-r1-positioning.png](screenshots/desktop/d-r1-positioning.png) | [a-p1-positioning-offline.png](screenshots/android/a-p1-positioning-offline.png) (amber oval and banner "No face detected. Keep your face within the capture area.", progress bar, offline badge; taken 2026-10-05 in airplane mode with an empty replay pack) |
 | Positioning tip during an attempt (amber banner and oval, "Ensure your face is clearly visible.", attempt 3 of 3) | [d-r8-max-attempts.png](screenshots/desktop/d-r8-max-attempts.png) (the file name says maximum attempts, but the picture was taken before the attempt ended; see section 7) | — |
 | Checking face liveness (passive, no action needed) | — (described in [desktop-liveness.md](desktop-liveness.md) section 2; wireframe row 2) | — (wireframe row 2) |
 | Active challenge, step 1 of 2, icon and progress | [e2e-03-low-confidence-challenge.png](screenshots/desktop/e2e-03-low-confidence-challenge.png) ("Please smile", smile icon) | [e2e-06-low-confidence-challenge.png](screenshots/android/e2e-06-low-confidence-challenge.png) ("Please smile") |
@@ -65,7 +65,7 @@ R = resident, L = login, E = end of day).
 | Retry available, "Attempt n of 3" | [d-r7-pad-fail-retry.png](screenshots/desktop/d-r7-pad-fail-retry.png) | [e2e-05-resident-replay-refused.png](screenshots/android/e2e-05-resident-replay-refused.png) |
 | Maximum attempts, recovery guidance | [e2e-07-max-attempts-guidance.png](screenshots/desktop/e2e-07-max-attempts-guidance.png) | [e2e-08-max-attempts.png](screenshots/android/e2e-08-max-attempts.png) |
 | Capture blocked for the registration after maximum attempts | — | [e2e-09-blocked-under-scan.png](screenshots/android/e2e-09-blocked-under-scan.png), [a-r3-resident-max-attempts.png](screenshots/android/a-r3-resident-max-attempts.png) |
-| No face in view (no attempt used) | [d-r12-no-face.png](screenshots/desktop/d-r12-no-face.png) | — |
+| No face in view (no attempt used) | [d-r12-no-face.png](screenshots/desktop/d-r12-no-face.png) | [a-p2-no-face-offline.png](screenshots/android/a-p2-no-face-offline.png) (still "Attempt 1 of 3" with Retry; offline badge) |
 | Printed photo accepted under the shipped policy (known weakness, kept as evidence) | — | [e2e-14-print-accepted-shipped-policy.png](screenshots/android/e2e-14-print-accepted-shipped-policy.png) |
 | Supervisor override offered after the last resident attempt (policy `SUPERVISOR_OVERRIDE`, no suspected attack) | — | [capture-override-offered-diagnostics.png](screenshots/android/capture-override-offered-diagnostics.png) (run with `max_retries=1`; the picture was taken before the plural fix and reads "after 1 attempts", the app now reads "after 1 attempt"; diagnostic panel on) |
 | Supervisor override confirmation, supervisor user ID | — | [capture-override-supervisor-dialog.png](screenshots/android/capture-override-supervisor-dialog.png) |
@@ -82,7 +82,8 @@ R = resident, L = login, E = end of day).
 
 | State | Desktop | Android |
 |---|---|---|
-| Offline badge "Offline – verification runs on this device" | [d-l1-login-french-offline.png](screenshots/desktop/d-l1-login-french-offline.png) | — (text read from the view tree in the end-to-end run; screen capture failed in airplane mode) |
+| Offline badge "Offline – verification runs on this device" | [d-l1-login-french-offline.png](screenshots/desktop/d-l1-login-french-offline.png) | [a-p1-positioning-offline.png](screenshots/android/a-p1-positioning-offline.png), [a-p2-no-face-offline.png](screenshots/android/a-p2-no-face-offline.png) (badge under the title, next to the debug-build "Replay" label) |
+| Offline model import (bonus B6): Settings, Device Settings, "Import liveness model", version in use | [e2e-15-model-import-verified.png](screenshots/desktop/e2e-15-model-import-verified.png) | [a-s1-model-import-button.png](screenshots/android/a-s1-model-import-button.png) ("Model in use: version 1.3.0") |
 | Arabic, right-to-left | [d-e1-eod-supervisor-arabic.png](screenshots/desktop/d-e1-eod-supervisor-arabic.png) | — (verified in scratch pictures and the widget test `Arabic: translated label and right-to-left layout`) |
 | French | [d-l1-login-french-offline.png](screenshots/desktop/d-l1-login-french-offline.png) | — |
 
@@ -95,9 +96,7 @@ R = resident, L = login, E = end of day).
 | Success on the capture window itself | missing | only the ARC banner | Same |
 | Multiple faces | missing | missing | No two-face frame pack in the client runs (`eval/scenarios/other-two-faces.yaml` runs only in the scenario runner) |
 | Poor quality (too dark, blurred) | missing | missing | Needs a masked run with the dim or blurred pack |
-| Resident positioning | present | missing | Android capture screen goes to checking at once with replay |
 | Device unavailable with its own wording | wrong text | not applicable | Desktop maps a refused stream to the "disconnected" message; fix in the services layer |
-| Offline badge | present | missing | Screen capture returns a stale frame in airplane mode; use `uiautomator` screenshot or a physical device |
 | Supervisor override (resident) | missing | present (text "after 1 attempts" from before the plural fix, see retakes) | Desktop: run section I2 of the desktop report with snapshots on |
 | Packet authentication by face | missing | present | Desktop driver section D3 has no snapshot step |
 | Arabic / Hindi capture screen on Android | missing | missing | Pictures exist only in the scratch folder of the module engineer; re-take with the masked replay |

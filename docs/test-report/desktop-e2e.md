@@ -29,6 +29,21 @@ answer about 3 of 10 challenge pairs, so those flows would log "FOLLOW no pack f
 demo script was rewritten for the PS04 passive-first flow (it switches `policy.registration` to
 `PASSIVE_THEN_ACTIVE`, then back) and has not been run either.
 
+**Attempt of 2026-10-05, 21:26-21:32 (IST), at the shipped defaults** (output `run/demo/desktop-wp23-screens`, outside
+git):
+
+- The run layout `run/desktop` was rebuilt with `scripts/desktop-build.sh --mocksync` (database and keys kept); it now
+  carries the engine of this commit and the signed model bundle 1.3.0 (before, its models jar held bundle 1.0.1,
+  which the minimum version 1.3.0 refuses).
+- The client started from the golden snapshot (`--restore-golden`), and officer1's face sign-in (`login_auth`,
+  challenges on every capture) passed on attempt 1 with the frame pack `s3`.
+- The next step, Synchronize Data, failed: MockSync's HTTPS port 8443 accepted connections but never completed the
+  TLS handshake (the client logged "No Internet Access", read time-out on `/v1/syncdata/actuator/health`; port 8080
+  still answered). The run stopped there. The full demo, the new section `tools/mock-sync/e2e/flows/95-screens.flow`
+  (checking, challenge, action detected, hold still, success, two faces, supervisor override refused for the
+  logged-in officer and granted for supervisor1, with snapshots) and the screen-sized window check are still to run
+  once MockSync answers on 8443 (`tools/mock-sync/scripts/run-mock-sync.sh`).
+
 ## 1. Set-up
 
 | Part | What was used |
