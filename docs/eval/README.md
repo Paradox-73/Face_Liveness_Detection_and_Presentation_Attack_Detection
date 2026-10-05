@@ -5,7 +5,7 @@ Tools and data descriptions for testing the face liveness engine automatically a
 - [protocol.md](protocol.md): the in-house evaluation with real people and real artefacts (who, what, how many, consent, metrics).
 - [team-self-test.md](team-self-test.md): how the team tests the real clients with their own faces and home-made attacks, and turns the hand-filled sheet into APCER / BPCER (`tools/eval/sheet-to-attempts.py`).
 - [calibration-notes.md](calibration-notes.md): results of the automated suite on the shipped engine and the parameter changes they support.
-- [results/](results/): the reports of the runs quoted in the calibration notes; the latest are the three suites of 2026-10-05 ([results/20261005-shipped/README.md](results/20261005-shipped/README.md)).
+- [results/](results/): the reports of the runs quoted in the calibration notes; the latest are the suites of 2026-10-05 evening, after the exposure correction and the screen-pattern check ([results/20261005b-shipped/README.md](results/20261005b-shipped/README.md), with the morning run before them).
 
 The automated suite replays recorded frames into the engine. That is an injection path in itself, and the attack frames are made in software, so its results are **technology regression results, not an ISO/IEC 30107-3 evaluation**.
 
@@ -125,7 +125,7 @@ notes: free text
 
 Unknown keys are errors, so a typo cannot silently change a test.
 
-The 75 committed scenarios (10 `bf-*`, 58 `atk-*`, 7 `other-*`) are named `bf-*` (bona fide, per subject and policy), `atk-*` (one attack species and subject each; the `-login`, `-packet-auth`, `-exception-auth` and `-eod-auth` ones replay the same packs on those workflows, and the `-2s`, `-4s` and `-8s` ones are the long loops) and `other-*` (quality and behaviour cases that count in neither APCER nor BPCER). Their 275 transactions are the suites quoted in [results/20261005-shipped/README.md](results/20261005-shipped/README.md).
+The 75 committed scenarios (10 `bf-*`, 58 `atk-*`, 7 `other-*`) are named `bf-*` (bona fide, per subject and policy), `atk-*` (one attack species and subject each; the `-login`, `-packet-auth`, `-exception-auth` and `-eod-auth` ones replay the same packs on those workflows, and the `-2s`, `-4s` and `-8s` ones are the long loops) and `other-*` (quality and behaviour cases that count in neither APCER nor BPCER). Their 275 transactions are the suites quoted in [results/20261005b-shipped/README.md](results/20261005b-shipped/README.md) (and, before the PAD additions, [results/20261005-shipped/README.md](results/20261005-shipped/README.md)).
 
 **How prompts are answered.** The runner listens for the engine's "challenge issued" audit event (REG-EVT-LV04). After `reaction_ms` it switches from the main pack to the pack chosen by `on_prompt`, plays it once, and resumes the main pack. `match` is a genuine person, or an adaptive replay attacker who holds a clip of every action; `mismatch` plays a clip of a different action; `fixed` always plays one pack; `ignore` never reacts (a still photo, or a person who ignores the prompt).
 

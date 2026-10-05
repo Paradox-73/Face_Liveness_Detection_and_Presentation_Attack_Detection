@@ -19,6 +19,35 @@ Read this first:
   metrics), `summary.md` (one row per transaction) and `run.json` (models, parameters, platform). The frame
   measurements quoted below come from the `inspect` command of the runner (`inspect --all`, one CSV row per frame).
 
+## Update 2026-10-05 (evening): exposure correction and screen-pattern check
+
+Two additions to the passive PAD in `liveness-onnx` (`MiniFasPassivePad`; design: [../design/engine.md](../design/engine.md)
+section 4), measured with the full shipped suite before and after
+([results/20261005b-shipped/README.md](results/20261005b-shipped/README.md)):
+
+- **Exposure correction** (`SceneExposure`) answers F5 (section 4.5): when the whole frame is dark (mean grey below
+  90), the PAD crop is brightened by `160 / mean`, at most 2.5x. `bf-s3-dim` goes from passive score 3 (rejected
+  4 of 4) to 55 (accepted 4 of 4 on the first attempt). The trigger is the frame, not the face, because the
+  darker-skinned S1 in normal light (face grey 66, frame 105) lost score when its face was brightened in a test
+  (48 to 6); S1 is untouched and still scores 64.
+- **Screen-pattern check** (`ScreenPatternMeter`) answers F9 (section 4.9): the 64x64 centre of the face box is
+  searched for isolated frequency peaks (pixel grid, moire). Per-frame peak ratio on the packs: live faces median
+  15-55, largest single frame 748; screen packs median 436-5,990; prints at live values. The ratio maps to a live
+  probability of 1 up to 600 and 0 from 1,500 and caps the MiniFASNet score. `atk-s3-adaptive-screen` now ends at
+  passive PAD with score 0 in 4 of 4 seeds.
+- Checked before keeping them: every other bona fide passive score is unchanged (S1 64, S2 94, S3 100); the 19
+  desktop/Android parity cases re-recorded with no change (`eval/interop/liveness-parity.json` identical); the
+  MockMDS stock photo measures 494, below the 600 limit.
+- Shipped suite after the change: APCER 0.0% per transaction and on the first attempt for every species and
+  workflow (SYN-A7 was 50.0%, 4/8); BPCER `registration` 0.0% (0/28; was 14.3%), `login_auth` 0.0% (0/12); 1 of 275
+  transactions misses its expectation (was 9).
+- Legacy configuration (passive first everywhere): screen replay SYN-A6 and adaptive replay SYN-A7 on `registration`
+  50.0% to 0.0% each; BPCER `registration` 21.4% to 7.1% per transaction; prints and looped clips still pass a
+  passive-only check (APCER_max 100%), so the shipped defaults keep challenges on every workflow.
+- Cost: the PAD step of the latency suite stays at p50 18.7 ms per scored frame.
+- Limits: the screens and the dim clip are software-made, so neither result is shown on real artefacts or real dim
+  rooms; frames enlarged by 1.5x or a whole number before the engine show screen-like peaks (pixel repetition).
+
 ## Update 2026-10-05: current defaults and results
 
 The sections below keep the dated studies of 2026-09-29 and 2026-09-30. Since then the defaults and the engine changed again (2026-10-04 and 2026-10-05), and the three suites were re-run; their numbers are copied from [results/20261005-shipped/README.md](results/20261005-shipped/README.md) and the `report.md` files next to it.
@@ -293,7 +322,7 @@ Two facts explain most of the table:
 - Proposal P2: `quality.min_sharpness` 10 to 40. The measure depends on the analyser's scale (variance of the
   Laplacian on the face crop), so re-check the value if the analyser changes.
 
-### 4.5 Synthetic dim light collapses the passive score (F5, no change proposed)
+### 4.5 Synthetic dim light collapses the passive score (F5; exposure correction adopted 2026-10-05, see the update at the top)
 
 - `s3-dim-*` is S3 scaled to 45% brightness with extra noise (mean brightness 66-69 of 255). The quality gate
   (`quality.min_brightness` 50) passes it, MiniFASNet scores 3-4, below `pad.reject_threshold` 20, and every
@@ -342,7 +371,7 @@ Two facts explain most of the table:
   the turn. A real user stops near the prompt's 20 degrees, so the effect is smaller than in these clips, which
   turn to a full profile.
 
-### 4.9 The S3 adaptive screen replay passes every layer (F9)
+### 4.9 The S3 adaptive screen replay passes every layer (F9; screen-pattern check adopted 2026-10-05, see the update at the top)
 
 - `atk-s3-adaptive-screen` is accepted in all suites: passive 73-82, active PAD 69-77, and the blink and smile
   clips answer the prompts within the onset and hold rules. It is the only attack that survives the strict
