@@ -41,7 +41,8 @@
 #                   see scripts/desktop-build.sh)
 #   MAVEN_ARGS      extra Maven arguments; when it names no settings file, scripts/release/maven-settings.xml
 #                   (retired MOSIP repositories routed to Maven Central) is used
-#   MOSIP_LOCK_DIR  folder for the shared build locks (default: <repo>/../toolchain/locks when it exists)
+#   MOSIP_LOCK_DIR  folder for shared build locks, for machines where several people build at once
+#                   (default: unset, no locking)
 #   SOURCE_DATE_EPOCH  timestamp for every zip entry (default: the last commit's time), for repeatable zips
 set -euo pipefail
 
@@ -133,7 +134,6 @@ mkdir -p "$STAGE"
 # ---------------------------------------------------------------- helpers
 
 LOCK_DIR="${MOSIP_LOCK_DIR:-}"
-[ -n "$LOCK_DIR" ] || { [ -d "$REPO_ROOT/../toolchain/locks" ] && LOCK_DIR="$REPO_ROOT/../toolchain/locks"; } || true
 HELD_LOCKS=()
 release_locks() { local l; for l in "${HELD_LOCKS[@]:-}"; do [ -n "$l" ] && rmdir "$l" 2>/dev/null; done; return 0; }
 trap release_locks EXIT

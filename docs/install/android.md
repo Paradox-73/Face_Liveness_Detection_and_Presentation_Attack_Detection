@@ -95,7 +95,7 @@ cd android && ./gradlew :clientmanager:testDebugUnitTest
 | Release APK (`flutter build apk --release`, debug-signed because no `key.properties`) | 149,398,259 bytes, Gradle 248 s |
 | Debug APK with the liveness module (2026-09-30; arm64-v8a and x86_64) | 326,405,878 bytes |
 | Release APK with the liveness module, arm64-v8a only (`--release --abis arm64-v8a`, 2026-09-30) | 152,997,540 bytes with uncompressed native libraries; 120,856,656 bytes after release builds store them compressed (`androidComponents` block in `android/app/build.gradle`). Content: dex 58.6 MB (not shrunk; upstream keeps `minifyEnabled false`), native libraries 53.1 MB before compression, liveness models 23.6 MB, ICU data 10.5 MB. The x86_64 release build (123,142,904 bytes) started on the emulator and loaded the engine ("Liveness engine ready ... in 1069 ms"). |
-| `:clientmanager:testDebugUnitTest` | 1184 tests in 63 classes: 1184 passed, 0 failed, 0 errors, 0 skipped (Gradle task 2 min 23 s) |
+| `:clientmanager:testDebugUnitTest` | 1184 tests in 63 classes: 1184 passed, 0 failed, 0 errors, 0 skipped (Gradle task 2 min 23 s); 1,186 tests in the 2026-10-05 verification run |
 | `flutter test` (Dart tests in `test/`, not run by upstream CI) | 27 passed; `test/widget_test.dart` does not compile (line 166: required parameter `onTapForgotPassword` of `PasswordComponent` missing). Upstream problem, left unchanged. |
 
 Why the debug APK is large (compressed sizes): native libraries for four CPU

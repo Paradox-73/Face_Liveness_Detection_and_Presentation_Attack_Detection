@@ -33,24 +33,38 @@ changes).
 The engine jars keep their Maven file names, because the clients' builds and other Maven projects
 use them under those coordinates (`io.mosip.liveness:*:1.0.0-SNAPSHOT`).
 
-### Checksums of the tested build
+### Checksums of the v1.0.0 build
 
-Build `c959af4-dirty` (commit `c959af4`, plus the uncommitted release scripts), made on 2026-09-30
-and used for the clean-install test below. Each new build has its own `SHA256SUMS.txt`.
-This build predates the changes of 2026-10-04 and 2026-10-05 (model bundle 1.3.0, challenges on every capture for the supervisor workflows, the shared session driver, ONNX Runtime 1.20.0 on Android, Android model import); no release has been built since, so the checksums and sizes below describe the old build.
+Built on 2026-10-06 from commit `ffe6f01` (the tree then held the lock-free `release.sh` and the README
+changes of this release) with `scripts/release.sh --version 1.0.0`; model bundle 1.3.0, ONNX Runtime 1.20.0.
+Each new build has its own `SHA256SUMS.txt`. The clean-install test below used the earlier build `c959af4-dirty`.
 
 ```
-8f37bb4d691b46e92b1293c3f0399d25fb7e7fd68099493d74abfe106e5d44f7  mosip-liveness-desktop-client-c959af4-dirty-win-x64.zip
-6b755eb83509b5c9bff36e262ca4fc933829c8bc7ac2da984e03b15240947ed3  mosip-liveness-mockmds-c959af4-dirty-win-x64.zip
-4431bfcf943e1f0dd3bfb9c1e30e0befe70ff1b373172a9526a4c3cbb57461b7  mosip-liveness-mocksync-c959af4-dirty-win-x64.zip
-74c1b851600a6a6b706aa53dfadb1464e5de3f32587856a32b72699b9ffdf2dd  mosip-liveness-android-c959af4-dirty-arm64-v8a.apk
-0d2e6363b09cc7c297e8e7c1e64d4c27a05815f15ffd9350323bdd8800cc265e  mosip-liveness-android-c959af4-dirty-x86_64.apk
-7a9d14794b46fb4ee3f012a8a2ca0ef296d6abfb6118e9fdf06da554a80b9221  face-match-sdk-1.0.0-SNAPSHOT.jar
-c2ebc8f31af630532e565d5f1d8b1379128342169a4db35640e75402afc8a0bb  liveness-core-1.0.0-SNAPSHOT.jar
-5d550a924229ab9d87d4fb2b6a3c4c79f3ad18a3de6fc50e7a2141bdeb1277a8  liveness-onnx-1.0.0-SNAPSHOT.jar
-57f65e956d3f60a8670f4d04028788bdc026a39bcab978e80d6b26fb72002eb3  liveness-onnx-1.0.0-SNAPSHOT-models.jar
-7d30312150f3c04849257bf9f01fd7583f1f6e003d46113ade2b1c65886c91a1  mock-sync-c959af4-dirty.jar
+7bbbca14adfedc7a025cfdf882176219a4a8d4560b33245b6ad857bef9e6b7a8  mosip-liveness-desktop-client-1.0.0-win-x64.zip
+7e5cb053ba5a9406b547f463bf3afb2185837a3cec3142a05d0bbea45a4e1363  mosip-liveness-mockmds-1.0.0-win-x64.zip
+0e5beed2e8068006aabdde34a9d366ab56693ef78ca7adf0d8e00e7a111b6fc8  mosip-liveness-mocksync-1.0.0-win-x64.zip
+5efe0e1fe336c2745c4ef7c72d1ef09b7c21a130846b111fc1a74fc8150822f0  mosip-liveness-android-1.0.0-arm64-v8a.apk
+99c44a3c5fb5c4576124b58eaf59497eef11fe6f9ac859190b1b05c0dbc2d839  mosip-liveness-android-1.0.0-x86_64.apk
+3c4f87f014625e5143127371166da6c6d4fea958dc5a1abe0f1ce95dc029d7e4  face-match-sdk-1.0.0-SNAPSHOT.jar
+18d5593745573a93f7edda271a975c1fc78c3d7fa24204ec57e650c29ca65ce0  liveness-core-1.0.0-SNAPSHOT.jar
+68ea62273f60ad359589bf8281dafb5216aa5c29edbb42968dd4211526484187  liveness-onnx-1.0.0-SNAPSHOT.jar
+37f207bd4e401d659be3393ecca7e110ccefe97b70878356191651ecf3f282d9  liveness-onnx-1.0.0-SNAPSHOT-models.jar
+0e4f07c9700edc51883f957f83ed26e0547557e21a50448e62b8de5065b5e8fe  mock-sync-1.0.0.jar
 ```
+
+Check a download: put the files and `SHA256SUMS.txt` in one folder and run `sha256sum -c SHA256SUMS.txt`.
+
+## Download and publish
+
+- Users: open the Releases page of the repository, download the files for your machine (desktop zip for Windows,
+  the `arm64-v8a` APK for tablets, the `x86_64` APK for the emulator), verify the checksums, then follow
+  [INSTALL.md](INSTALL.md).
+- Maintainers: build with `scripts/release.sh --version 1.0.0 --out dist/v1.0.0`, then create the release as a draft
+  with `gh release create v1.0.0 --draft --title "v1.0.0" dist/v1.0.0/*.zip dist/v1.0.0/*.apk dist/v1.0.0/*.jar
+  dist/v1.0.0/SHA256SUMS.txt dist/v1.0.0/manifest.json`. Publish it only when the repository is public.
+- Signed sample model bundles (`valid`, `tampered`, `older`) are made with
+  `bash scripts/make-sample-model-bundles.sh --key <publishing-key.pem> --out sample-model-bundles` and zipped
+  into the release; the key stays outside the repository.
 
 ## How the build works
 

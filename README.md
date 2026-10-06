@@ -98,6 +98,35 @@ Known limits, stated in the linked documents:
   or vendor face device on Android, no second device vendor, no volunteer evaluation with real artefacts.
 - Model updates: offline signed import on both clients; no download through sync.
 
+## Team
+
+Team **Badmosip**, MOSIP Decode 2026, Problem Statement 04.
+
+| Member | GitHub account | Role | Modules owned |
+|---|---|---|---|
+| `<full name>` | `@<github-account>` | Engine: liveness and PAD core, ONNX models, model signing | `liveness/`, `models/` |
+| `<full name>` | `@<github-account>` | Desktop client: Registration Client liveness services and screens | `clients/desktop/` |
+| `<full name>` | `@<github-account>` | Android client: Android Registration Client liveness module and Flutter screens | `clients/android/` |
+| `<full name>` | `@<github-account>` | Evaluation, mock tools and CI: scenario runner, frame packs, MockMDS, MockSync, workflows | `eval/`, `tools/`, `devices/mock-mds/`, `.github/` |
+| `<full name>` | `@<github-account>` | Docs, pitch, UX and coordination | `docs/`, `README.md` |
+
+**How the first commit history was produced:** `<one true sentence: who wrote the first version of the code and docs, with which tools, and why the commits before <date> come from one account>`
+
+From `<date>` on, each member commits their own work from their own account, with sign-off, through reviewed pull
+requests.
+
+## Download
+
+Release `v1.0.0` carries the built artefacts: the desktop Registration Client zip (Windows x64, with Java runtime),
+Android release APKs (`arm64-v8a` for tablets, `x86_64` for the emulator), the MockSync and MockMDS zips, the
+engine jars, three signed sample model bundles, `SHA256SUMS.txt` and `manifest.json`.
+
+- Download from the Releases page of this repository, then check the files: `sha256sum -c SHA256SUMS.txt`.
+- Unzip the desktop client, run `setup-mocksync.bat` once, then `start-client.bat`; the zip's `README.txt` has the steps.
+- Install an APK with `adb install -r <file>.apk`.
+- Build everything yourself with `bash scripts/release.sh --version 1.0.0` (about 9 minutes); see
+  [docs/release/README.md](docs/release/README.md).
+
 ## Repository map
 
 | Path | What it is | Licence |
