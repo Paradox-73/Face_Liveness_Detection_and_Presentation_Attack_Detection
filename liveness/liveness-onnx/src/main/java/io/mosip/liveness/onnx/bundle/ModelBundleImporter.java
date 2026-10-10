@@ -4,9 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-package io.mosip.registration.livenessmanager.engine;
-
-import android.util.Log;
+package io.mosip.liveness.onnx.bundle;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -47,11 +45,10 @@ import io.mosip.liveness.onnx.model.ModelTrustAnchors;
 import io.mosip.liveness.onnx.model.SemanticVersion;
 
 /**
- * Secure offline model update (bonus B6) on Android: imports a signed model bundle from a folder or a {@code .zip}
- * file the app can read (for example copied from a USB drive into the app's import folder) and switches the
- * running liveness engine to it, without an app update. Same checks, store layout and audits as the desktop
- * client's {@code LivenessModelImporter}; signature, hash and version checks are the engine's own
- * {@link ModelRegistry}.
+ * Secure offline model update (bonus B6) for both clients: imports a signed model bundle from a folder or a
+ * {@code .zip} file (for example copied from a USB drive) and switches the running liveness engine to it, without a
+ * client update. Signature, hash and version checks are the engine's own {@link ModelRegistry}; the client plugs in
+ * its engine through {@link Engines} and its logger through {@link Log}.
  *
  * <p>Checks, in order; the first failure stops the import and the running models stay active (fail closed):
  * <ol>
@@ -69,13 +66,11 @@ import io.mosip.liveness.onnx.model.SemanticVersion;
  *
  * <p>Audits: a refused bundle writes {@code REG-EVT-LV14} (signature, hash or version failure) or
  * {@code REG-EVT-LV13} (the models could not start); a successful switch writes {@code REG-EVT-LV15} with the old
- * and new bundle versions. ARC's audit service adds the user ID. No file content is logged.
+ * and new bundle versions. The client's audit service adds the user ID. No file content is logged.
  *
  * <p>Thread-safe: imports are serialised.
  */
 public final class ModelBundleImporter {
-
-    private static final String TAG = "Liveness";
 
     /** Roles allowed to import models. */
     public static final List<String> ALLOWED_ROLES = Collections
@@ -105,7 +100,7 @@ public final class ModelBundleImporter {
         LOAD_FAILED
     }
 
-    /** The running engine, as the importer needs it ({@link #over(EngineLoader)} for the app's loader). */
+    /** The running engine, as the importer needs it. */
     public interface Engines {
 
         /**
@@ -140,63 +135,53 @@ public final class ModelBundleImporter {
         void switchModels(ModelSource source) throws EngineException;
     }
 
+    /** The client's logger. Messages hold versions, user IDs and error codes, never file content. */
+    public interface Log {
+
+        /**
+         * Logs an import step.
+         *
+         * @param message the message
+         */
+        void info(String message);
+
+        /**
+         * Logs a refused or failed import.
+         *
+         * @param message the message
+         */
+        void error(String message);
+    }
+
     private final ConfigSource config;
-    private final ModelBundleStore store;
+    private final Supplier<ModelBundleStore> store;
     private final Supplier<ModelSource> shipped;
     private final Engines engines;
     private final AuditSink audit;
     private final Clock clock;
+    private final Log log;
     private List<PublicKey> trustAnchors = Collections.emptyList();
 
     /**
      * Creates the importer.
      *
      * @param config  liveness configuration ({@code model.min_version})
-     * @param store   store of imported bundles, the one the engine loader reads
-     * @param shipped the bundle in the APK, used while nothing was imported
+     * @param store   store of imported bundles, the one the engine loader reads (read at each call)
+     * @param shipped the bundle installed with the client, used while nothing was imported
      * @param engines the running engine
      * @param audit   audit sink
      * @param clock   clock of the audit events
+     * @param log     the client's logger
      */
-    public ModelBundleImporter(ConfigSource config, ModelBundleStore store, Supplier<ModelSource> shipped,
-                               Engines engines, AuditSink audit, Clock clock) {
+    public ModelBundleImporter(ConfigSource config, Supplier<ModelBundleStore> store, Supplier<ModelSource> shipped,
+                               Engines engines, AuditSink audit, Clock clock, Log log) {
         this.config = Objects.requireNonNull(config, "config");
         this.store = Objects.requireNonNull(store, "store");
         this.shipped = Objects.requireNonNull(shipped, "shipped");
         this.engines = Objects.requireNonNull(engines, "engines");
         this.audit = Objects.requireNonNull(audit, "audit");
         this.clock = Objects.requireNonNull(clock, "clock");
-    }
-
-    /**
-     * Adapts the app's engine loader.
-     *
-     * @param loader the loader
-     * @return the adapter
-     */
-    public static Engines over(EngineLoader loader) {
-        Objects.requireNonNull(loader, "loader");
-        return new Engines() {
-            @Override
-            public boolean supportsModelImport() {
-                return loader.supportsModelImport();
-            }
-
-            @Override
-            public boolean captureInProgress() {
-                return loader.captureInProgress();
-            }
-
-            @Override
-            public Optional<String> bundleVersion() {
-                return loader.bundleVersion();
-            }
-
-            @Override
-            public void switchModels(ModelSource source) throws EngineException {
-                loader.switchModels(source);
-            }
-        };
+        this.log = Objects.requireNonNull(log, "log");
     }
 
     /**
@@ -204,7 +189,7 @@ public final class ModelBundleImporter {
      *
      * @param anchors accepted signing keys; empty means the configured keys ({@code model.trust_anchor_pem})
      */
-    void setTrustAnchors(List<PublicKey> anchors) {
+    public void setTrustAnchors(List<PublicKey> anchors) {
         this.trustAnchors = new ArrayList<>(anchors);
     }
 
@@ -214,7 +199,7 @@ public final class ModelBundleImporter {
      * @return the store
      */
     public ModelBundleStore store() {
-        return store;
+        return store.get();
     }
 
     /**
@@ -223,7 +208,7 @@ public final class ModelBundleImporter {
      * @return name, version and whether it was imported; empty when no bundle can be read
      */
     public Optional<Result> current() {
-        Optional<ModelBundleStore.Installed> imported = store.active();
+        Optional<ModelBundleStore.Installed> imported = store().active();
         try {
             ModelRegistry reg = open(activeSource(), ANY_VERSION);
             return Optional.of(new Result(Status.IMPORTED, reg.bundleName(), reg.bundleVersion(), "", reg.models(),
@@ -239,18 +224,18 @@ public final class ModelBundleImporter {
      *
      * @param location folder with {@code manifest.json}, {@code manifest.jws} and the model files, or a {@code .zip}
      *                 file with the same content
-     * @param userId   user who imports (for Logcat; ARC's audit service records the session user)
+     * @param userId   user who imports (for the log; the client's audit service records the session user)
      * @param roles    roles of that user
      * @return the result; never throws for a bad bundle
      */
     public synchronized Result importBundle(Path location, String userId, Collection<String> roles) {
         Objects.requireNonNull(location, "location");
         if (roles == null || Collections.disjoint(roles, ALLOWED_ROLES)) {
-            Log.i(TAG, "Liveness model import refused for " + userId + ": role not allowed");
+            log.info("Liveness model import refused for " + userId + ": role not allowed");
             return Result.of(Status.NOT_ALLOWED);
         }
         if (engines.captureInProgress()) {
-            Log.i(TAG, "Liveness model import refused for " + userId + ": a capture is in progress");
+            log.info("Liveness model import refused for " + userId + ": a capture is in progress");
             return Result.of(Status.BUSY);
         }
         if (!engines.supportsModelImport()) {
@@ -271,7 +256,7 @@ public final class ModelBundleImporter {
             }
             return install(source, previous, userId);
         } catch (IOException e) {
-            Log.e(TAG, "Liveness model import: bundle could not be read (" + e.getClass().getSimpleName() + ")");
+            log.error("Liveness model import: bundle could not be read (" + e.getClass().getSimpleName() + ")");
             return Result.of(Status.NOT_FOUND);
         } finally {
             if (staging != null) {
@@ -287,12 +272,13 @@ public final class ModelBundleImporter {
         } catch (EngineException e) {
             return refused(e, "bundle");
         }
+        ModelBundleStore store = store();
         String floor = highest(previous, store.floor().orElse(null));
         SemanticVersion version = SemanticVersion.parse(incoming.bundleVersion());
         boolean belowMinimum = !version.isAtLeast(minimumVersion());
         if (belowMinimum || (floor != null && version.compareTo(SemanticVersion.parse(floor)) <= 0)) {
             floor = belowMinimum ? configuredMinimum() : floor;
-            Log.e(TAG, "Liveness model import refused: bundle " + incoming.bundleVersion() + " is not newer than "
+            log.error("Liveness model import refused: bundle " + incoming.bundleVersion() + " is not newer than "
                     + floor);
             auditIntegrity(incoming.bundleName());
             return new Result(Status.TOO_OLD, incoming.bundleName(), incoming.bundleVersion(), floor,
@@ -318,7 +304,7 @@ public final class ModelBundleImporter {
             audit.emit(new AuditPayloadBuilder(Workflow.REGISTRATION, "", clock).configApplied("model.bundle="
                     + stored.bundleName() + ":" + (previous == null ? "none" : previous) + "->"
                     + stored.bundleVersion()));
-            Log.i(TAG, "Liveness models " + stored.bundleName() + " " + stored.bundleVersion() + " imported by "
+            log.info("Liveness models " + stored.bundleName() + " " + stored.bundleVersion() + " imported by "
                     + userId + " (previous " + previous + ")");
             return new Result(Status.IMPORTED, stored.bundleName(), stored.bundleVersion(),
                     previous == null ? "" : previous, stored.models(), true);
@@ -326,7 +312,7 @@ public final class ModelBundleImporter {
             if (e.getErrorCode().isModelIntegrityFailure()) {
                 return refused(e, incoming.bundleName());
             }
-            Log.e(TAG, "Liveness model import: verified models could not start (" + e.getErrorCode() + ")");
+            log.error("Liveness model import: verified models could not start (" + e.getErrorCode() + ")");
             audit.emit(new AuditPayloadBuilder(Workflow.REGISTRATION, "", clock).engineError(e.getErrorCode(),
                     e.getClass().getSimpleName()));
             return new Result(Status.LOAD_FAILED, incoming.bundleName(), incoming.bundleVersion(),
@@ -342,7 +328,7 @@ public final class ModelBundleImporter {
     }
 
     private Result refused(EngineException e, String bundle) {
-        Log.e(TAG, "Liveness model import refused: " + e.getErrorCode() + " (" + e.getMessage() + ")");
+        log.error("Liveness model import refused: " + e.getErrorCode() + " (" + e.getMessage() + ")");
         auditIntegrity(bundle);
         if (e.getErrorCode() == EngineErrorCode.MODEL_VERSION) {
             return Result.of(Status.TOO_OLD);
@@ -367,7 +353,7 @@ public final class ModelBundleImporter {
     }
 
     private ModelSource activeSource() {
-        Optional<ModelBundleStore.Installed> imported = store.active();
+        Optional<ModelBundleStore.Installed> imported = store().active();
         return imported.isPresent() ? ModelSources.directory(imported.get().folder().toFile()) : shipped.get();
     }
 
@@ -563,7 +549,7 @@ public final class ModelBundleImporter {
         }
 
         /**
-         * Tells whether the bundle comes from the model store rather than the APK.
+         * Tells whether the bundle comes from the model store rather than the client installation.
          *
          * @return {@code true} for an imported bundle
          */

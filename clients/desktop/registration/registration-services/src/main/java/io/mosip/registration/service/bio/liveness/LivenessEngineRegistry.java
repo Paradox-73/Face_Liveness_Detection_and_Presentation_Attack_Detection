@@ -37,9 +37,9 @@ import io.mosip.liveness.core.image.PixelFormat;
 import io.mosip.liveness.core.vision.FaceBox;
 import io.mosip.liveness.onnx.OnnxLivenessEngine;
 import io.mosip.liveness.onnx.OnnxLivenessEngines;
+import io.mosip.liveness.onnx.bundle.ModelBundleStore;
 import io.mosip.liveness.onnx.model.ModelSources;
 import io.mosip.liveness.onnx.model.ModelTrustAnchors;
-import io.mosip.liveness.onnx.model.SemanticVersion;
 import io.mosip.registration.config.AppConfig;
 
 /**
@@ -99,7 +99,7 @@ public class LivenessEngineRegistry {
 	private List<LivenessEngineProvider> providerBeans = Collections.emptyList();
 
 	private volatile ModelSource modelSource = ModelSources.classpath(LivenessEngineRegistry.class.getClassLoader());
-	private volatile LivenessModelStore modelStore;
+	private volatile ModelBundleStore modelStore;
 	private volatile Status status = Status.NOT_LOADED;
 	private volatile LivenessEngine engine;
 	private volatile EngineException failure;
@@ -338,9 +338,9 @@ public class LivenessEngineRegistry {
 	 *
 	 * @return the store in {@link LivenessConfig#modelStoreDirectory()}, unless a test replaced it
 	 */
-	public LivenessModelStore modelStore() {
-		LivenessModelStore s = modelStore;
-		return s != null ? s : new LivenessModelStore(config.modelStoreDirectory());
+	public ModelBundleStore modelStore() {
+		ModelBundleStore s = modelStore;
+		return s != null ? s : new ModelBundleStore(config.modelStoreDirectory());
 	}
 
 	/**
@@ -348,7 +348,7 @@ public class LivenessEngineRegistry {
 	 *
 	 * @param store the store
 	 */
-	void setModelStore(LivenessModelStore store) {
+	void setModelStore(ModelBundleStore store) {
 		this.modelStore = Objects.requireNonNull(store, "store");
 	}
 
@@ -358,7 +358,7 @@ public class LivenessEngineRegistry {
 	 * bundle: the engine fails closed instead.
 	 */
 	ModelSource activeModelSource() {
-		Optional<LivenessModelStore.Installed> imported = modelStore().active();
+		Optional<ModelBundleStore.Installed> imported = modelStore().active();
 		if (imported.isPresent()) {
 			LOGGER.info("Liveness models: imported bundle {} {}", imported.get().bundle(), imported.get().version());
 			return ModelSources.directory(imported.get().folder().toFile());
@@ -373,17 +373,7 @@ public class LivenessEngineRegistry {
 	 * @return {@code MAJOR.MINOR.PATCH}
 	 */
 	String minimumModelVersion() {
-		String configured = config.modelMinVersion();
-		Optional<String> floor = modelStore().floor();
-		if (!floor.isPresent()) {
-			return configured;
-		}
-		try {
-			return SemanticVersion.parse(floor.get()).compareTo(SemanticVersion.parse(configured)) > 0 ? floor.get()
-					: configured;
-		} catch (IllegalArgumentException e) {
-			return configured; // the builder reports an invalid min_version as CONFIG_INVALID
-		}
+		return modelStore().minimumVersion(config.modelMinVersion());
 	}
 
 	private LivenessEngine buildDefault(ModelSource source) throws EngineException {

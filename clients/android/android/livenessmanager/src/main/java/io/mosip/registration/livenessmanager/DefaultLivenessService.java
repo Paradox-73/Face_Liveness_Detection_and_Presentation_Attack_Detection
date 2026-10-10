@@ -15,8 +15,8 @@ import java.util.Optional;
 
 import io.mosip.liveness.core.Workflow;
 import io.mosip.liveness.core.config.LivenessPolicy;
+import io.mosip.liveness.onnx.bundle.ModelBundleImporter;
 import io.mosip.registration.livenessmanager.device.FaceDeviceSelection;
-import io.mosip.registration.livenessmanager.engine.ModelBundleImporter;
 import io.mosip.registration.livenessmanager.ui.LivenessCaptureActivity;
 
 /**

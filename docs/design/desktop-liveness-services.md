@@ -32,7 +32,7 @@ All new classes are in `io.mosip.registration.service.bio.liveness` unless state
 | `DesktopDiagnosticSink` | Writes `LIVENESS-DIAG` lines to `logs/registration.log` when diagnostics are on. |
 | `DiagnosticTap` | Sits in front of the diagnostic sink of each run and keeps the latest record, so the liveness window can show it (`LivenessRun.lastDiagnostic()`). |
 | `DiagnosticModeAudit` | Writes `REG-EVT-LV17` when `diagnostic.enable` is found in a new position at the start of a run (section 6). |
-| `LivenessModelImporter`, `LivenessModelStore` | Secure offline model update (bonus B6): verify a signed bundle from a folder or `.zip`, store it, switch the engine (section 6.1). |
+| `LivenessModelImporter` | Secure offline model update (bonus B6): Spring wiring of the shared `ModelBundleImporter` / `ModelBundleStore` (`liveness-onnx` package `bundle`, also used by Android) to verify a signed bundle from a folder or `.zip`, store it, switch the engine (section 6.1). |
 | `LivenessAccountLock` | `on_max_failure=BLOCK_AND_LOCK` for the authentications inside a session: counts a used-up transaction as a failed login (section 2.3). |
 | `LivenessMeterBinder` | Publishes the anonymised liveness counters and timers through the client's Micrometer registry (`logs/metrics.log`). |
 | `io.mosip.registration.mdm.dto.LivenessContext` | Workflow, subject and pass token carried on `MDMRequestDto.livenessContext`. |
@@ -251,7 +251,7 @@ header menu, "Import liveness models" (shown only to `REGISTRATION_SUPERVISOR` a
 folder or `.zip` file that holds `manifest.json`, `manifest.jws` and the model files (the layout of `models/` in
 the repository, produced by `ModelSigner update` and `ModelSigner sign`).
 
-`LivenessModelImporter.importBundle(location, userId, roles)` checks, and stops at the first failure:
+`LivenessModelImporter.importBundle(location, userId, roles)` calls the shared `ModelBundleImporter` (`liveness-onnx`), which checks, and stops at the first failure:
 
 | Step | Check | Result when it fails | Audit |
 |---|---|---|---|
@@ -262,7 +262,7 @@ the repository, produced by `ModelSigner update` and `ModelSigner sign`).
 | 5 | version at least `model.min_version` and **newer** than the running bundle and the store's version floor (anti-rollback) | `TOO_OLD` | `LV14` |
 | 6 | size and SHA-256 of every listed model file | `INVALID` | `LV14` |
 | 7 | only the listed files are copied into `<model.store_dir>/<bundle>-<version>-<millis>/`, and the copy is verified again (it is what the engine loads) | `INVALID` | `LV14` |
-| 8 | `active.properties` is replaced atomically; a new engine is built from the copy and passes the start-up self-test; only then is it swapped in and the old one closed (`LivenessEngineRegistry.switchModels`) | `LOAD_FAILED`: pointer restored, copy deleted, old engine keeps running | `LV13` |
+| 8 | `active.properties` is replaced atomically; a new engine is built from the copy and passes the start-up self-test; only then is it swapped in and the old one closed (`LivenessEngineRegistry.switchModels`); the bundle that ran before is kept for rollback, older imported folders are deleted | `LOAD_FAILED`: pointer restored, copy deleted, old engine keeps running | `LV13` |
 | - | success | `IMPORTED` | `LV15` with `model.bundle=<name>:<old>-><new>` |
 
 The client's audit service adds the logged-in user to every row. The result window shows the running bundle,

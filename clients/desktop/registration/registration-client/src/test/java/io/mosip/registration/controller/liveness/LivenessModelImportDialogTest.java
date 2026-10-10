@@ -19,7 +19,8 @@ import java.util.ResourceBundle;
 import org.junit.Test;
 
 import io.mosip.liveness.core.api.ModelInfo;
-import io.mosip.registration.service.bio.liveness.LivenessModelImporter.Status;
+import io.mosip.liveness.onnx.bundle.ModelBundleImporter.Status;
+import io.mosip.registration.service.bio.liveness.LivenessModelImporter;
 
 /**
  * Texts of the model import window (B6): every import status has a text in every language, the result texts fill
@@ -34,7 +35,7 @@ public class LivenessModelImportDialogTest {
 		for (String lang : Arrays.asList("en", "fr", "ar")) {
 			LivenessTexts texts = new LivenessTexts(ResourceBundle.getBundle("labels", new Locale(lang)), null);
 			for (Status s : Status.values()) {
-				assertTrue(lang + " " + s, texts.hasOwnText(s.messageKey()));
+				assertTrue(lang + " " + s, texts.hasOwnText(LivenessModelImporter.messageKey(s)));
 			}
 			for (String key : Arrays.asList(LivenessModelImportDialog.TITLE, LivenessModelImportDialog.MENU,
 					LivenessModelImportDialog.CURRENT, LivenessModelImportDialog.IMPORT,
@@ -48,9 +49,9 @@ public class LivenessModelImportDialogTest {
 	public void resultTextsNameTheVersions() {
 		assertEquals("Import refused: version 1.0.0 is not newer than version 1.1.0. Older models cannot be installed "
 				+ "(rollback protection). The current models stay in use.",
-				english.text(Status.TOO_OLD.messageKey(), "b", "1.0.0", "1.1.0"));
+				english.text(LivenessModelImporter.messageKey(Status.TOO_OLD), "b", "1.0.0", "1.1.0"));
 		assertEquals("Models mosip-liveness-models version 1.0.1 verified and now in use (previous version 1.0.0).",
-				english.text(Status.IMPORTED.messageKey(), "mosip-liveness-models", "1.0.1", "1.0.0"));
+				english.text(LivenessModelImporter.messageKey(Status.IMPORTED), "mosip-liveness-models", "1.0.1", "1.0.0"));
 	}
 
 	@Test

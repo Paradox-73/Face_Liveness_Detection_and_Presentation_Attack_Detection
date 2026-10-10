@@ -42,9 +42,10 @@ import io.mosip.liveness.core.vision.FaceBox;
 import io.mosip.liveness.onnx.OnnxLivenessEngine;
 import io.mosip.liveness.onnx.OnnxLivenessEngines;
 import io.mosip.liveness.onnx.OnnxModelSet;
+import io.mosip.liveness.onnx.bundle.ModelBundleImporter;
+import io.mosip.liveness.onnx.bundle.ModelBundleStore;
 import io.mosip.liveness.onnx.model.ModelSources;
 import io.mosip.liveness.onnx.model.ModelTrustAnchors;
-import io.mosip.liveness.onnx.model.SemanticVersion;
 import io.mosip.liveness.onnx.runtime.OnnxRuntimeOptions;
 
 /**
@@ -70,7 +71,7 @@ import io.mosip.liveness.onnx.runtime.OnnxRuntimeOptions;
  *
  * <p>Thread-safe.
  */
-public final class EngineLoader implements AutoCloseable {
+public final class EngineLoader implements AutoCloseable, ModelBundleImporter.Engines {
 
     private static final String TAG = "Liveness";
 
@@ -391,16 +392,7 @@ public final class EngineLoader implements AutoCloseable {
      */
     static String minimumModelVersion(ConfigSource config, ModelBundleStore store) {
         String configured = new PolicyResolver(config).resolve(Workflow.REGISTRATION).policy().modelMinVersion();
-        Optional<String> floor = store == null ? Optional.empty() : store.floor();
-        if (!floor.isPresent()) {
-            return configured;
-        }
-        try {
-            return SemanticVersion.parse(floor.get()).compareTo(SemanticVersion.parse(configured.trim())) > 0
-                    ? floor.get() : configured;
-        } catch (IllegalArgumentException e) {
-            return configured;
-        }
+        return store == null ? configured : store.minimumVersion(configured);
     }
 
     private static LivenessEngine buildOnnx(ModelSource source, String minimumVersion, List<PublicKey> anchors,

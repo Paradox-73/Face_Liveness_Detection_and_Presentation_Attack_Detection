@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-package io.mosip.registration.livenessmanager.engine;
+package io.mosip.liveness.onnx.bundle;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,12 +19,14 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.mosip.liveness.onnx.model.SemanticVersion;
 
 /**
- * The folder of the app that holds model bundles imported without an app update (bonus B6), and the pointer to the
- * active one. Same layout and rules as the desktop client's {@code LivenessModelStore}.
+ * The folder that holds model bundles imported without a client update (bonus B6), and the pointer to the active
+ * one. Used by both clients.
  *
  * <p>Layout: {@code <root>/<bundle>-<version>-<millis>/} holds the files of one verified bundle
  * ({@code manifest.json}, {@code manifest.jws} and the model files); {@code <root>/active.properties} names the
@@ -34,7 +36,9 @@ import io.mosip.liveness.onnx.model.SemanticVersion;
  *
  * <p>The pointer file is replaced atomically, so a crash leaves either the old or the new pointer. The store holds
  * only data that the engine verifies again at every load (signature, hashes, version); it is not a trust anchor.
- * It lives in the app's private files folder, which other apps cannot write.
+ * It lives in a folder only the client can write (the app's private files folder on Android). A missing or
+ * unreadable pointer is rebuilt from the bundle folders, so deleting it neither drops the floor nor falls back to
+ * the shipped bundle.
  *
  * <p>Not thread-safe; {@link ModelBundleImporter} serialises imports.
  */
@@ -50,6 +54,9 @@ public final class ModelBundleStore {
     static final String KEY_PREVIOUS_DIRECTORY = "previous.directory";
     static final String KEY_PREVIOUS_VERSION = "previous.version";
     static final String KEY_PREVIOUS_BUNDLE = "previous.bundle";
+
+    /** Folder name written by {@link #newBundleFolder}: {@code <bundle>-<version>-<epoch ms>}. */
+    private static final Pattern FOLDER = Pattern.compile("(.+)-(\\d+\\.\\d+\\.\\d+)-\\d+");
 
     private final Path root;
 
@@ -77,7 +84,7 @@ public final class ModelBundleStore {
      * @return the bundle; empty when nothing was imported or the pointer is unreadable or points outside the store
      */
     public Optional<Installed> active() {
-        Properties p = readPointer();
+        Properties p = pointer();
         return installed(p.getProperty(KEY_DIRECTORY), p.getProperty(KEY_BUNDLE, ""), p.getProperty(KEY_VERSION));
     }
 
@@ -99,7 +106,7 @@ public final class ModelBundleStore {
      * @return the floor; empty when nothing was imported
      */
     public Optional<String> floor() {
-        String floor = readPointer().getProperty(KEY_FLOOR);
+        String floor = pointer().getProperty(KEY_FLOOR);
         if (floor == null) {
             return Optional.empty();
         }
@@ -108,6 +115,26 @@ public final class ModelBundleStore {
             return Optional.of(floor);
         } catch (IllegalArgumentException e) {
             return Optional.empty();
+        }
+    }
+
+    /**
+     * Returns the lowest bundle version the engine may load: the configured {@code model.min_version} or the
+     * floor, whichever is higher (anti-rollback).
+     *
+     * @param configured the configured minimum ({@code MAJOR.MINOR.PATCH})
+     * @return the minimum; {@code configured} when it cannot be compared (the engine builder reports it)
+     */
+    public String minimumVersion(String configured) {
+        Optional<String> floor = floor();
+        if (!floor.isPresent()) {
+            return configured;
+        }
+        try {
+            return SemanticVersion.parse(floor.get()).compareTo(SemanticVersion.parse(configured.trim())) > 0
+                    ? floor.get() : configured;
+        } catch (IllegalArgumentException e) {
+            return configured;
         }
     }
 
@@ -201,7 +228,7 @@ public final class ModelBundleStore {
      *
      * @param folder folder to delete
      */
-    static void deleteTree(Path folder) {
+    public static void deleteTree(Path folder) {
         if (!Files.exists(folder)) {
             return;
         }
@@ -219,11 +246,15 @@ public final class ModelBundleStore {
         }
     }
 
+    /** Kept: the folders the pointer file names. Not the rebuilt pointer, which would keep a failed import. */
     private boolean isKept(Path folder) {
-        Optional<Installed> active = active();
-        Optional<Installed> previous = previous();
-        return (active.isPresent() && active.get().folder().equals(folder))
-                || (previous.isPresent() && previous.get().folder().equals(folder));
+        Properties p = readPointer();
+        for (String dir : new String[] {p.getProperty(KEY_DIRECTORY), p.getProperty(KEY_PREVIOUS_DIRECTORY)}) {
+            if (dir != null && root.resolve(dir).normalize().equals(folder)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Optional<Installed> installed(String dir, String bundle, String version) {
@@ -250,6 +281,47 @@ public final class ModelBundleStore {
         } catch (IllegalArgumentException e) {
             return version;
         }
+    }
+
+    /** The pointer file, or the pointer rebuilt from the bundle folders when the file is missing or unreadable. */
+    private Properties pointer() {
+        Properties p = readPointer();
+        boolean usable = !p.getProperty(KEY_DIRECTORY, "").isEmpty() && !p.getProperty(KEY_VERSION, "").isEmpty();
+        return usable ? p : recoverPointer();
+    }
+
+    /**
+     * Rebuilds a missing or unreadable pointer from the bundle folders: the highest version is active and is the
+     * floor. The engine still verifies the folder at load and fails closed if it is not a valid bundle.
+     */
+    private Properties recoverPointer() {
+        Properties p = new Properties();
+        String bestDir = null;
+        SemanticVersion best = null;
+        if (Files.isDirectory(root)) {
+            try (DirectoryStream<Path> children = Files.newDirectoryStream(root, Files::isDirectory)) {
+                for (Path child : children) {
+                    Matcher m = FOLDER.matcher(child.getFileName().toString());
+                    if (!m.matches()) {
+                        continue;
+                    }
+                    SemanticVersion v = SemanticVersion.parse(m.group(2));
+                    if (best == null || v.compareTo(best) > 0) {
+                        best = v;
+                        bestDir = child.getFileName().toString();
+                        p.setProperty(KEY_BUNDLE, m.group(1));
+                    }
+                }
+            } catch (IOException | UncheckedIOException | IllegalArgumentException e) {
+                return new Properties();
+            }
+        }
+        if (bestDir != null) {
+            p.setProperty(KEY_DIRECTORY, bestDir);
+            p.setProperty(KEY_VERSION, best.toString());
+            p.setProperty(KEY_FLOOR, best.toString());
+        }
+        return p;
     }
 
     private Properties readPointer() {

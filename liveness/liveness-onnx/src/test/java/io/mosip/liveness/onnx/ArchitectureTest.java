@@ -32,8 +32,15 @@ class ArchitectureTest {
     @Test
     void noPlatformSpecificApis() {
         noClasses().should().dependOnClassesThat().resideInAnyPackage("javafx..", "android..", "androidx..", "java.awt..",
-                "javax.imageio..", "javax.swing..", "java.net..", "java.sql..", "java.nio.file..")
+                "javax.imageio..", "javax.swing..", "java.net..", "java.sql..")
                 .check(main);
+    }
+
+    /** Both clients import model bundles from local folders; only that shared code may touch the file system. */
+    @Test
+    void onlyTheBundlePackageUsesTheFileSystem() {
+        noClasses().that().resideOutsideOfPackage("io.mosip.liveness.onnx.bundle..").should().dependOnClassesThat()
+                .resideInAPackage("java.nio.file..").check(main);
     }
 
     @Test

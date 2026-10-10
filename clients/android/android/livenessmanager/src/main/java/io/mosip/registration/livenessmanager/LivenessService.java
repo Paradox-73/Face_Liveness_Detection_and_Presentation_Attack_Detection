@@ -14,7 +14,7 @@ import java.util.Optional;
 
 import io.mosip.liveness.core.Workflow;
 import io.mosip.liveness.core.config.LivenessPolicy;
-import io.mosip.registration.livenessmanager.engine.ModelBundleImporter;
+import io.mosip.liveness.onnx.bundle.ModelBundleImporter;
 
 /**
  * Face liveness for the rest of ARC: resident face capture, operator onboarding and packet authentication, and

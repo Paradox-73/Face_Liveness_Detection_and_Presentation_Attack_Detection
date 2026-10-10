@@ -17,12 +17,12 @@ import java.util.Optional;
 
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.liveness.core.api.ModelInfo;
+import io.mosip.liveness.onnx.bundle.ModelBundleImporter.Result;
+import io.mosip.liveness.onnx.bundle.ModelBundleImporter.Status;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.service.bio.liveness.LivenessModelImporter;
-import io.mosip.registration.service.bio.liveness.LivenessModelImporter.Result;
-import io.mosip.registration.service.bio.liveness.LivenessModelImporter.Status;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -139,7 +139,7 @@ public final class LivenessModelImportDialog {
 	 * @return the message
 	 */
 	static String resultText(Result r, LivenessTexts texts) {
-		return texts.text(r.status().messageKey(), orNone(r.bundle()), orNone(r.version()),
+		return texts.text(LivenessModelImporter.messageKey(r.status()), orNone(r.bundle()), orNone(r.version()),
 				orNone(r.previousVersion()));
 	}
 
@@ -293,7 +293,7 @@ public final class LivenessModelImportDialog {
 		busy.setVisible(false);
 		importButton.setDisable(false);
 		if (r == null) {
-			showResult(texts.text(Status.LOAD_FAILED.messageKey(), NONE, NONE, NONE), false);
+			showResult(texts.text(LivenessModelImporter.messageKey(Status.LOAD_FAILED), NONE, NONE, NONE), false);
 			return;
 		}
 		showResult(resultText(r, texts), r.isImported());

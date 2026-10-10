@@ -224,9 +224,10 @@ tasks.withType(Test).configureEach {
 }
 
 dependencies {
-    // api: LivenessService and the Dagger module expose core types (Workflow, LivenessPolicy, AuditSink).
+    // api: LivenessService and the Dagger module expose core types (Workflow, LivenessPolicy, AuditSink) and the
+    // shared model import result (liveness-onnx ModelBundleImporter.Result).
     api "io.mosip.liveness:liveness-core:${rootProject.ext.livenessEngineVersion}"
-    implementation "io.mosip.liveness:liveness-onnx:${rootProject.ext.livenessEngineVersion}"
+    api "io.mosip.liveness:liveness-onnx:${rootProject.ext.livenessEngineVersion}"
     implementation "com.microsoft.onnxruntime:onnxruntime-android:${rootProject.ext.onnxruntimeAndroidVersion}"
     // One-to-one face matching for operator and supervisor face authentication (the SFaceMatcher core of the
     // desktop client's SFace SDK). Not transitive: liveness-core and liveness-onnx come from the lines above, the

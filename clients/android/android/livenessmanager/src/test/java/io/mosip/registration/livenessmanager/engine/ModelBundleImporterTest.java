@@ -59,8 +59,10 @@ import io.mosip.liveness.onnx.model.ModelEntry;
 import io.mosip.liveness.onnx.model.ModelManifest;
 import io.mosip.liveness.onnx.model.ModelRegistry;
 import io.mosip.liveness.onnx.model.ModelSources;
-import io.mosip.registration.livenessmanager.engine.ModelBundleImporter.Result;
-import io.mosip.registration.livenessmanager.engine.ModelBundleImporter.Status;
+import io.mosip.liveness.onnx.bundle.ModelBundleImporter;
+import io.mosip.liveness.onnx.bundle.ModelBundleImporter.Result;
+import io.mosip.liveness.onnx.bundle.ModelBundleImporter.Status;
+import io.mosip.liveness.onnx.bundle.ModelBundleStore;
 
 /**
  * Secure offline model update on Android (bonus B6). The bundles are built the way
@@ -131,7 +133,7 @@ public class ModelBundleImporterTest {
         runningVersion = "1.3.0";
         store = new ModelBundleStore(tmp.newFolder("store").toPath());
         ModelSource builtIn = ModelSources.directory(shipped.toFile());
-        importer = new ModelBundleImporter(ConfigSource.of(values), store, () -> builtIn,
+        importer = new ModelBundleImporter(ConfigSource.of(values), () -> store, () -> builtIn,
                 new ModelBundleImporter.Engines() {
                     @Override
                     public boolean supportsModelImport() {
@@ -157,7 +159,15 @@ public class ModelBundleImporterTest {
                         runningVersion = ModelRegistry.builder(source).trustAnchor(trusted.getPublic()).open()
                                 .bundleVersion();
                     }
-                }, audits::add, Clock.system());
+                }, audits::add, Clock.system(), new ModelBundleImporter.Log() {
+                    @Override
+                    public void info(String message) {
+                    }
+
+                    @Override
+                    public void error(String message) {
+                    }
+                });
         importer.setTrustAnchors(Collections.singletonList(trusted.getPublic()));
     }
 

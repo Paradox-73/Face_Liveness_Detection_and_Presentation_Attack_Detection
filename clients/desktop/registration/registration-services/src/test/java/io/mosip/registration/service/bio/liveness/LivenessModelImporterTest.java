@@ -40,6 +40,9 @@ import io.mosip.liveness.core.EngineException;
 import io.mosip.liveness.core.api.ModelSource;
 import io.mosip.liveness.core.audit.AuditEventId;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.onnx.bundle.ModelBundleImporter.Result;
+import io.mosip.liveness.onnx.bundle.ModelBundleImporter.Status;
+import io.mosip.liveness.onnx.bundle.ModelBundleStore;
 import io.mosip.liveness.onnx.model.ManifestSignature;
 import io.mosip.liveness.onnx.model.ModelEntry;
 import io.mosip.liveness.onnx.model.ModelManifest;
@@ -49,11 +52,9 @@ import io.mosip.liveness.onnx.model.ModelTrustAnchors;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.service.bio.liveness.LivenessFakes.RecordingAudit;
 import io.mosip.registration.service.bio.liveness.LivenessFakes.TestClock;
-import io.mosip.registration.service.bio.liveness.LivenessModelImporter.Result;
-import io.mosip.registration.service.bio.liveness.LivenessModelImporter.Status;
 
 /**
- * Tests {@link LivenessModelImporter} and {@link LivenessModelStore} (secure offline model update, B6) with small
+ * Tests {@link LivenessModelImporter} and {@link ModelBundleStore} (secure offline model update, B6) with small
  * synthetic bundles signed by a key generated for the test: signature, hash and version checks, anti-rollback,
  * zip handling, atomic switch and roll back when the new engine cannot start, and the audits.
  */
@@ -70,7 +71,7 @@ public class LivenessModelImporterTest {
 	private final RecordingAudit audit = new RecordingAudit();
 	private final List<ModelSource> switched = new ArrayList<>();
 	private LivenessEngineRegistry registry;
-	private LivenessModelStore store;
+	private ModelBundleStore store;
 	private LivenessModelImporter importer;
 	private EngineException switchFailure;
 
@@ -90,7 +91,7 @@ public class LivenessModelImporterTest {
 		registry = new LivenessEngineRegistry(config, new DesktopImageDecoder(),
 				new DesktopAuditSink(Mockito.mock(AuditManagerService.class), Runnable::run),
 				new DesktopDiagnosticSink());
-		store = new LivenessModelStore(tmp.newFolder("store").toPath());
+		store = new ModelBundleStore(tmp.newFolder("store").toPath());
 		registry.setModelStore(store);
 		registry.setModelSource(ModelSources.directory(bundle("builtin", "1.0.0", trusted).toFile()));
 		importer = new LivenessModelImporter(config, registry, null, audit, new TestClock(), source -> {
@@ -259,12 +260,12 @@ public class LivenessModelImporterTest {
 
 	@Test
 	public void unreadablePointerIsIgnoredAndRestoreRemovesIt() throws Exception {
-		Files.write(store.root().resolve(LivenessModelStore.ACTIVE_FILE),
+		Files.write(store.root().resolve(ModelBundleStore.ACTIVE_FILE),
 				"directory=../../elsewhere\nversion=9.9.9\nfloor=bad".getBytes(StandardCharsets.UTF_8));
 		assertFalse("a pointer outside the store is ignored", store.active().isPresent());
 		assertFalse("an invalid floor is ignored", store.floor().isPresent());
 		store.restore(new java.util.Properties());
-		assertFalse(Files.exists(store.root().resolve(LivenessModelStore.ACTIVE_FILE)));
+		assertFalse(Files.exists(store.root().resolve(ModelBundleStore.ACTIVE_FILE)));
 	}
 
 	private void assertRefused(Result r, Status expected) {

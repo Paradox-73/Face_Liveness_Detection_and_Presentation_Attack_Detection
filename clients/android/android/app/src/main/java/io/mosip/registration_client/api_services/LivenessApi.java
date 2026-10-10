@@ -22,12 +22,12 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import io.mosip.liveness.core.Workflow;
+import io.mosip.liveness.onnx.bundle.ModelBundleImporter;
 import io.mosip.registration.clientmanager.constant.AuditEvent;
 import io.mosip.registration.clientmanager.constant.Components;
 import io.mosip.registration.clientmanager.spi.AuditManagerService;
 import io.mosip.registration.livenessmanager.LivenessService;
 import io.mosip.registration.livenessmanager.auth.FaceAuthOutcome;
-import io.mosip.registration.livenessmanager.engine.ModelBundleImporter;
 import io.mosip.registration_client.liveness.CaptureOutcome;
 import io.mosip.registration_client.liveness.FaceAuthFlow;
 import io.mosip.registration_client.liveness.FaceCaptureLivenessGate;

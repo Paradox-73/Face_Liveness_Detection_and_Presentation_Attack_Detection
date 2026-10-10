@@ -26,8 +26,9 @@ source below with the Mermaid CLI ([README.md](README.md), "Diagrams"); edit the
   adapters and the model bundle can be replaced behind `LivenessEngineProvider` without a client change.
 - The dotted lines are the only network links. Every liveness decision runs on the registration machine, online or
   offline.
-- The desktop client can also import a newer signed model bundle without a client upgrade
-  (`LivenessModelImporter`, [desktop-liveness-services.md](desktop-liveness-services.md) section 6.1); Android takes models from the APK.
+- Both clients can also import a newer signed model bundle without a client upgrade, through the same
+  `ModelBundleImporter` in `liveness-onnx` ([desktop-liveness-services.md](desktop-liveness-services.md) section 6.1,
+  [android-liveness.md](android-liveness.md) section 14).
 
 ```mermaid
 flowchart TB

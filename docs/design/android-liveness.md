@@ -37,7 +37,7 @@ Package `io.mosip.registration.livenessmanager` (module folder `clients/android/
 | `image.PixelOrientation` | Rotation, optional mirror flip and channel order in one pass; pure Java, tested on the JVM. |
 | `engine.EngineLoader` | Loads the engine once per process on a background thread (`preload()`, `await(ms)`); a model integrity failure is kept until restart (fail closed, `REG-EVT-LV14`). `fromConfig(...)` picks the engine by `mosip.registration.liveness.engine`: blank or `mosip-onnx-default` gives the built-in Android ONNX engine (assets, accelerator, warm-up), any other ID is looked up with `ServiceLoader<LivenessEngineProvider>`; no provider with that ID gives `CONFIG_INVALID` (fails closed, retried). |
 | `engine.AssetModelSource` | `ModelSource` over `assets/liveness/models/` for the engine's `ModelRegistry`. |
-| `engine.ModelBundleImporter` / `engine.ModelBundleStore` | Offline import of a signed model bundle by a supervisor, and the store of imported bundles (section 14). |
+| `liveness-onnx` `bundle.ModelBundleImporter` / `bundle.ModelBundleStore` (shared with the desktop) | Offline import of a signed model bundle by a supervisor, and the store of imported bundles (section 14). |
 | `config.GlobalParamConfigSource` | `ConfigSource` over ARC's `GlobalParamRepository` (section 4). |
 | `config.OverlayConfigSource` | Debug-only overrides passed to the screen from adb. |
 | `audit.ArcAuditSink` | Writes `REG-EVT-LV01..17` through ARC's `AuditManagerService.auditWithArguments` on one background thread. |
@@ -585,14 +585,15 @@ puts every changed key back by value, because ARC keeps a synchronised value whe
 ## 14. Offline model update (bonus B6)
 
 A supervisor can replace the liveness models without an app update, from a signed bundle copied to the tablet
-(for example from a USB drive). Same checks, store layout and audits as the desktop client's
-`LivenessModelImporter`; the signature, hash and version checks are the engine's own `ModelRegistry`
-(`liveness-onnx`), not a second copy.
+(for example from a USB drive). The importer and the store are the same classes the desktop client runs
+(`io.mosip.liveness.onnx.bundle` in `liveness-onnx`); the signature, hash and version checks are the engine's own
+`ModelRegistry`, not a second copy. `EngineLoader` is the importer's `Engines` hook, `LivenessRuntime` passes
+Logcat as its `Log`.
 
 | Class | Role |
 |---|---|
-| `engine.ModelBundleImporter` | Checks a bundle (folder or `.zip`), copies it into the store, verifies the copy, activates it and switches the engine; refuses and audits otherwise. Imports are serialised. |
-| `engine.ModelBundleStore` | `files/liveness/model-store/` in the app's private storage: one folder per imported bundle and `active.properties` (active folder, version, previous folder, version floor), replaced atomically. |
+| `bundle.ModelBundleImporter` (`liveness-onnx`) | Checks a bundle (folder or `.zip`), copies it into the store, verifies the copy, activates it and switches the engine; refuses and audits otherwise. Imports are serialised. |
+| `bundle.ModelBundleStore` (`liveness-onnx`) | `files/liveness/model-store/` in the app's private storage: one folder per imported bundle and `active.properties` (active folder, version, previous folder, version floor), replaced atomically; a missing pointer is rebuilt from the bundle folders, so the floor survives its deletion. |
 | `engine.EngineLoader` | Loads the active imported bundle when there is one, else the APK bundle; minimum version is `model.min_version` or the store's floor, whichever is higher. `switchModels(source)` builds a new engine, self-tests it (ready, face detector and passive PAD on a blank frame) and only then swaps it in and closes the old one. |
 | app `LivenessApi.importModelBundle(path)` / `getModelBundle()` | Pigeon calls (`pigeon/liveness.dart`) for Flutter; the import runs on a background thread and answers on the main thread. An empty path reads `Android/data/<app>/files/liveness-models/`. |
 

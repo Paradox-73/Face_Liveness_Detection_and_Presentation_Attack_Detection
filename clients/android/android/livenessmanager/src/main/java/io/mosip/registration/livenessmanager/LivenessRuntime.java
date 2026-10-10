@@ -30,6 +30,8 @@ import io.mosip.liveness.core.engine.AuditPayloadBuilder;
 import io.mosip.liveness.core.engine.LivenessMetrics;
 import io.mosip.liveness.core.policy.PolicyResolution;
 import io.mosip.liveness.core.policy.PolicyResolver;
+import io.mosip.liveness.onnx.bundle.ModelBundleImporter;
+import io.mosip.liveness.onnx.bundle.ModelBundleStore;
 import io.mosip.registration.livenessmanager.audit.DiagnosticModeTracker;
 import io.mosip.registration.livenessmanager.audit.LogcatSinks;
 import io.mosip.registration.livenessmanager.config.GlobalParamConfigSource;
@@ -38,8 +40,6 @@ import io.mosip.registration.livenessmanager.device.DeviceSigner;
 import io.mosip.registration.livenessmanager.engine.AcceleratorCustomizer;
 import io.mosip.registration.livenessmanager.engine.AssetModelSource;
 import io.mosip.registration.livenessmanager.engine.EngineLoader;
-import io.mosip.registration.livenessmanager.engine.ModelBundleImporter;
-import io.mosip.registration.livenessmanager.engine.ModelBundleStore;
 import io.mosip.registration.livenessmanager.image.AndroidImageDecoder;
 import io.mosip.registration.livenessmanager.metrics.MetricsLog;
 import io.mosip.registration.livenessmanager.metrics.MetricsReport;
@@ -91,8 +91,19 @@ public final class LivenessRuntime {
         this.engines = EngineLoader.fromConfig(this.context.getAssets(), config, decoder, metrics,
                 AcceleratorCustomizer.ortProviders(), modelStore);
         this.clock = Clock.system();
-        this.modelImporter = new ModelBundleImporter(config, modelStore,
-                () -> new AssetModelSource(this.context.getAssets()), ModelBundleImporter.over(engines), audit, clock);
+        this.modelImporter = new ModelBundleImporter(config, () -> modelStore,
+                () -> new AssetModelSource(this.context.getAssets()), engines, audit, clock,
+                new ModelBundleImporter.Log() {
+                    @Override
+                    public void info(String message) {
+                        Log.i(LogcatSinks.TAG, message);
+                    }
+
+                    @Override
+                    public void error(String message) {
+                        Log.e(LogcatSinks.TAG, message);
+                    }
+                });
         this.isStandalone = isStandalone;
         this.metricsLog = new MetricsLog(new File(new File(this.context.getFilesDir(), "liveness"), "metrics.log"),
                 MetricsLog.DEFAULT_MAX_BYTES, e -> Log.w(METRICS_TAG, "Metrics not written: " + e.getMessage()));
