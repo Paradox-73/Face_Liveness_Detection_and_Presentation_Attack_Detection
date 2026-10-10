@@ -271,8 +271,11 @@ the result text in the display language and the models (identifier, version, sta
 **At every engine load** the registry prefers the active imported bundle to the one on the class path, and raises
 the minimum version to the store's floor (the highest version ever activated), so a validly signed older bundle
 is refused even if the pointer file is edited. A stored bundle that fails its checks makes the engine fail closed
-(`LV14`); the client does not fall back to the older bundle of the installation. To go back to the installed
-models, an administrator deletes the `liveness-models` folder while the client is stopped.
+(`LV14`); the client does not fall back to the older bundle of the installation. A missing or unreadable
+`active.properties` is rebuilt from the bundle folders (newest version active, and the floor), so deleting the file
+alone does not lower the floor (since 2026-10-10). To go back to the installed models, an administrator deletes the
+whole `liveness-models` folder while the client is stopped; bundles older than the installed one stay refused because
+an import must be newer than the running bundle.
 
 **Trust:** the store is not trusted: signature, hashes and version are checked again at every load. The trust
 anchor is the key built into `liveness-onnx` (`ModelTrustAnchors`); a production deployment replaces it
