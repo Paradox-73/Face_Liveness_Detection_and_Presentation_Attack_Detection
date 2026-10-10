@@ -157,6 +157,21 @@ bash scripts/mockmds-run.sh --build                               # JDK 21 from 
 JAVA_HOME="$JAVA21_HOME" bash scripts/android-build.sh            # JDK 21 as JAVA_HOME, Flutter 3.10.4: Android debug APK
 ```
 
+To build and test the engine, MockSync, MockMDS, the scenario runner and the Python evaluation tools in one command
+(stops at the first failed step; needs `JAVA11_HOME` and `JAVA21_HOME`): `bash scripts/test-all.sh`
+(`--only engine,mocksync,mockmds,runner,eval` picks steps).
+
+Host systems:
+
+- Any OS with JDK 11/21, Maven and Python 3: the engine (`liveness/`), `tools/mock-sync`, `devices/mock-mds`,
+  `tools/eval`, and `scripts/test-all.sh`.
+- Windows only (tested on Windows 11 with Git Bash): `scripts/desktop-run.ps1`, `scripts/desktop-build.sh` (the client
+  ships a Windows Java runtime and `.bat` launchers), `scripts/demo-desktop.sh`, `scripts/release.sh` for the desktop
+  package, and the `.ps1` files in `tools/mock-sync/scripts`.
+- Windows tested, not tried on Linux or macOS: the Android scripts (`scripts/android-*.sh`, `scripts/demo-android.sh`);
+  they call `cygpath` when it exists.
+- Shared helpers for the shell scripts: `scripts/lib.sh` (`log`, `die`).
+
 Then: register the machine with MockSync and start the desktop client with `scripts\desktop-run.ps1`
 ([docs/install/desktop.md](docs/install/desktop.md)); or boot the emulator with `scripts/android-run-emulator.sh`
 and run `scripts/android-mocksync-setup.sh --login` ([docs/install/android.md](docs/install/android.md)).

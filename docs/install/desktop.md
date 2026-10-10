@@ -11,7 +11,7 @@ host or against the local MockSync server in `tools/`.
 |---|---|---|
 | Windows | 11 x64 | The client ships with a Windows-only Java runtime and `run.bat`. |
 | Git Bash | any | Runs `scripts/desktop-build.sh`. Needs `curl`, `unzip`, `sha256sum` (all bundled with Git for Windows). |
-| Windows PowerShell | 5.1 | Runs `scripts/desktop-run.ps1` and `scripts/desktop-machine-keys.ps1`. |
+| Windows PowerShell | 5.1 | Runs `scripts/desktop-run.ps1`. |
 | Maven | 3.9.9 | Must be on `PATH`. |
 | JDK 11 with `javac` | Azul Zulu 11.0.8 with JavaFX (`zulu11.41.23-ca-fx-jdk11.0.8-win_x64`) | Optional: if `JAVA11_HOME`/`JAVA_HOME` do not point at a complete JDK 11, the build script downloads this one (267 MB, SHA-256 checked). |
 | Disk | about 1.5 GB | Maven repository about 630 MB (build plus unit tests), run layout about 550 MB, downloads about 340 MB. |
@@ -100,7 +100,7 @@ Notes:
 ## 3. Run layout
 
 `scripts/desktop-build.sh` writes this folder outside the git tree
-(default `<run root>/desktop`, here `E:\Projects\MOSIP\run\desktop`):
+(default `<run root>/desktop`, for example `D:\mosip\run\desktop`):
 
 | Path | Content |
 |---|---|
@@ -166,18 +166,18 @@ The client signs and decrypts with a machine key pair:
   key, key index) into `.mosipkeys\` under the working directory (the run layout
   folder).
 
-To print the values in both cases:
+To print the values in both cases, run `tools/mock-sync/scripts/MachineKeyTool.java` with a JDK 11 (Java's
+source-file mode needs the compiler, which the bundled JRE lacks), from the run layout folder:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\desktop-machine-keys.ps1 -OutFile E:\Projects\MOSIP\run\desktop\machine-keys.txt
+cd <run root>\desktop
+& "$env:JAVA11_HOME\bin\java.exe" -cp "lib\*" <repo>\tools\mock-sync\scripts\MachineKeyTool.java machine-keys.json
 ```
 
-Output fields: `KeyType` (TPM or LOCAL), `MachineName` (lower-case host name, as
-the client reports it), `PublicKey` and `SignPublicKey` (URL-safe Base64),
-`KeyIndex` (the value the client sends in `GET /v1/syncdata/configs/{key_index}`).
-For LOCAL keys the script prints `readme.txt`. The script runs
-`scripts/DesktopMachineKeys.java` with a JDK 11, because Java's source-file mode
-needs the compiler, which the bundled JRE lacks.
+It prints one JSON object (also written to `machine-keys.json`) with `clientType` (TPM or LOCAL), `name` (lower-case
+host name, as the client reports it), `publicKey` and `signPublicKey` (URL-safe Base64) and `keyIndex` (the value the
+client sends in `GET /v1/syncdata/configs/{key_index}`). `tools/mock-sync/scripts/register-machine.ps1` runs the same
+tool and posts the result to a running MockSync.
 
 TPM keys are the same for every run folder on one machine, so `-Reset` does not
 change them. Local keys are regenerated after `-Reset`, and the server must

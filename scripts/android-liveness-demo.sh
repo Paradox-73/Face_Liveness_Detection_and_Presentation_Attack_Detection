@@ -45,8 +45,7 @@ INTERVAL=2
 OUT_DIR="$REPO_ROOT/clients/android/build/liveness-demo"
 CONFIG=()
 
-log() { printf '[liveness-demo] %s\n' "$*"; }
-die() { printf '[liveness-demo] ERROR: %s\n' "$*" >&2; exit 1; }
+LOG_TAG=liveness-demo; . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 while [ $# -gt 0 ]; do
   case "$1" in

@@ -183,7 +183,7 @@ Status codes (the same numbers as MOSIP's mock SDK):
 ## Build and test
 
 ```bash
-. /e/Projects/MOSIP/toolchain/env.sh
+export JAVA11_HOME=<JDK 11 with JavaFX> JAVA21_HOME=<JDK 21>
 with_lock liveness-build mvn -f liveness/pom.xml -pl face-match-sdk verify
 ```
 

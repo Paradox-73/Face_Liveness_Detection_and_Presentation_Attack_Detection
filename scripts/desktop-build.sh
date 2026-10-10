@@ -59,8 +59,7 @@ FAST=0
 DO_BUILD=1
 DO_ASSEMBLE=1
 
-log() { echo "[desktop-build $(date +%H:%M:%S)] $*"; }
-die() { echo "[desktop-build] ERROR: $*" >&2; exit 1; }
+LOG_TAG=desktop-build; . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 # Prints the header comment of this file (everything up to the first code line).
 usage() { awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "${BASH_SOURCE[0]}"; }

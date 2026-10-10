@@ -8,7 +8,7 @@
 #
 # What it does:
 #   1. keytool creates an RSA 3072 key pair with a self-signed certificate valid 30 years in a PKCS#12 keystore
-#      (default E:/Projects/MOSIP/secrets/android-release.jks, i.e. ../secrets next to the repository), with a
+#      (default ../secrets/android-release.jks, next to the repository), with a
 #      random 32-character store/key password. An existing keystore is never overwritten.
 #   2. The password and alias are written next to the keystore (<keystore>.properties, same folder, not in git)
 #      so the key can be backed up and reused on another build machine or as CI secrets.
@@ -34,8 +34,7 @@ KEYSTORE="${ARC_RELEASE_KEYSTORE:-$(cd "$REPO_ROOT/.." && pwd)/secrets/android-r
 ALIAS="arc-release"
 SHOW_ONLY=0
 
-log() { printf '[android-release-keystore] %s\n' "$*"; }
-die() { printf '[android-release-keystore] ERROR: %s\n' "$*" >&2; exit 1; }
+LOG_TAG=android-release-keystore; . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 while [ $# -gt 0 ]; do
   case "$1" in

@@ -196,7 +196,7 @@ engine.close();                           // at shutdown, after the last session
 ## Build and test
 
 ```sh
-. /e/Projects/MOSIP/toolchain/env.sh
+export JAVA11_HOME=<JDK 11 with JavaFX> JAVA21_HOME=<JDK 21>
 mvn -f liveness/pom.xml verify                     # both modules; needs a full JDK 11+ (JDK 21 works)
 mvn -f liveness/pom.xml -pl liveness-onnx verify   # this module only, against the installed liveness-core
 mvn -f liveness/pom.xml -pl liveness-onnx test -Djacoco.skip=true -Dtest=PerformanceBenchmarkTest -Dliveness.benchmark.frames=500

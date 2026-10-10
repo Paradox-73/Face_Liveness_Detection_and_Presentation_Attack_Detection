@@ -41,8 +41,6 @@
 #                   see scripts/desktop-build.sh)
 #   MAVEN_ARGS      extra Maven arguments; when it names no settings file, scripts/release/maven-settings.xml
 #                   (retired MOSIP repositories routed to Maven Central) is used
-#   MOSIP_LOCK_DIR  folder for shared build locks, for machines where several people build at once
-#                   (default: unset, no locking)
 #   SOURCE_DATE_EPOCH  timestamp for every zip entry (default: the last commit's time), for repeatable zips
 set -euo pipefail
 
@@ -60,8 +58,7 @@ PREFIX="mosip-liveness"
 # Modules of the bundled Java 21 runtime: Java SE plus what Spring Boot, Tomcat and the crypto code load.
 RUNTIME_MODULES="java.se,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported,jdk.zipfs,jdk.management,jdk.naming.dns,jdk.localedata,jdk.charsets,jdk.httpserver,jdk.net"
 
-log() { echo "[release $(date +%H:%M:%S)] $*"; }
-die() { echo "[release] ERROR: $*" >&2; exit 1; }
+LOG_TAG=release; . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 usage() { awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "${BASH_SOURCE[0]}"; }
 
 while [ $# -gt 0 ]; do
@@ -133,30 +130,6 @@ mkdir -p "$STAGE"
 
 # ---------------------------------------------------------------- helpers
 
-LOCK_DIR="${MOSIP_LOCK_DIR:-}"
-HELD_LOCKS=()
-release_locks() { local l; for l in "${HELD_LOCKS[@]:-}"; do [ -n "$l" ] && rmdir "$l" 2>/dev/null; done; return 0; }
-trap release_locks EXIT
-
-# Runs a command while holding the shared lock NAME (a directory in $LOCK_DIR), so parallel builds of the
-# same module on this machine do not overwrite each other's output. Without a lock folder it just runs.
-locked() {
-	local name="$1"; shift
-	if [ -z "$LOCK_DIR" ]; then "$@"; return; fi
-	local dir="$LOCK_DIR/$name" waited=0
-	until mkdir "$dir" 2>/dev/null; do
-		[ "$waited" = 0 ] && log "waiting for build lock '$name'"
-		sleep 15; waited=$((waited + 15))
-		[ "$waited" -lt 3600 ] || die "build lock '$name' still held after 60 min ($dir)"
-	done
-	HELD_LOCKS+=("$dir")
-	local rc=0
-	"$@" || rc=$?
-	rmdir "$dir"
-	HELD_LOCKS=("${HELD_LOCKS[@]/$dir}")
-	return "$rc"
-}
-
 # Copies source folders (tracked and untracked files, without build output) into $STAGE/src with the same
 # relative paths, so modules whose target/ folder is in use by a running server are built elsewhere.
 stage_sources() {
@@ -219,7 +192,7 @@ build_engine() {
 	log "== engine (liveness-core, liveness-onnx, face-match-sdk)"
 	rm -f "$OUT"/liveness-core-*.jar "$OUT"/liveness-onnx-*.jar "$OUT"/face-match-sdk-*.jar
 	if [ "$BUILD" = 1 ]; then
-		locked liveness-build with_java21 "${MVN[@]}" -f "$REPO_ROOT/liveness/pom.xml" install \
+		with_java21 "${MVN[@]}" -f "$REPO_ROOT/liveness/pom.xml" install \
 			-Dliveness.benchmark.frames=0 "${TEST_ARGS[@]}"
 	fi
 	local jar found=0
@@ -241,7 +214,7 @@ build_desktop() {
 	mkdir -p "$STAGE/desktop"
 	local args=(--mocksync --run-dir "$pkg")
 	[ "$BUILD" = 1 ] || args+=(--skip-build)
-	locked desktop-build bash "$REPO_ROOT/scripts/desktop-build.sh" "${args[@]}"
+	bash "$REPO_ROOT/scripts/desktop-build.sh" "${args[@]}"
 
 	copy_text "$REPO_ROOT/scripts/desktop-run.ps1" "$pkg/scripts/desktop-run.ps1"
 	copy_text "$TEMPLATES/desktop/scripts/setup-mocksync.ps1" "$pkg/scripts/setup-mocksync.ps1"
@@ -273,7 +246,7 @@ build_android() {
 		local args=(--release --abis "$abi")
 		[ "$first" = 1 ] || args+=(--skip-codegen)
 		rm -f "$apk"
-		locked android-build with_java21 bash "$REPO_ROOT/scripts/android-build.sh" "${args[@]}"
+		with_java21 bash "$REPO_ROOT/scripts/android-build.sh" "${args[@]}"
 		[ -f "$apk" ] || die "no APK at $apk"
 		cp "$apk" "$OUT/$PREFIX-android-$VERSION-$abi.apk"
 		log "wrote $PREFIX-android-$VERSION-$abi.apk ($(du -h "$apk" | cut -f1))"

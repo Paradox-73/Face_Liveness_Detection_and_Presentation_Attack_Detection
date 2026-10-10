@@ -71,8 +71,7 @@ CSR=0
 REPLACE_CA=false
 TIMEOUT=120
 
-log() { printf '[device-cert] %s\n' "$*"; }
-die() { printf '[device-cert] ERROR: %s\n' "$*" >&2; exit 1; }
+LOG_TAG=device-cert; . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 native_path() { if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s' "$1"; fi; }
 
 while [ $# -gt 0 ]; do

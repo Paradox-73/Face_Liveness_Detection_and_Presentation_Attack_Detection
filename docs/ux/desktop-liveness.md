@@ -71,8 +71,8 @@ the Android screen: [wireframes.svg](wireframes.svg).
 
 1. Build: `bash scripts/desktop-build.sh --mocksync --fast`.
 2. MockSync running on 8443; MockMDS on 4501 with `mosip.mock.sbi.face.source.allowed.roots` including the frame
-   pack folder (`E:/Projects/MOSIP/run/frame-packs` here, made by `tools/eval/fetch-frame-packs.py`).
-3. From the run layout (`E:\Projects\MOSIP\run\desktop`), with the full Zulu 11 FX JDK:
+   pack folder (`<run root>/frame-packs`, made by `tools/eval/fetch-frame-packs.py`).
+3. From the run layout (`<run root>\desktop`), with the full Zulu 11 FX JDK:
 
 ```sh
 java -Djavax.net.ssl.trustStore=<repo>/tools/mock-sync/work/keys/client-truststore.p12 \

@@ -62,8 +62,7 @@ OUT_DIR=""
 SERIAL="${ANDROID_SERIAL:-}"
 DRY_RUN=0
 
-log() { printf '[android-perf] %s\n' "$*"; }
-die() { printf '[android-perf] ERROR: %s\n' "$*" >&2; exit 1; }
+LOG_TAG=android-perf; . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 while [ $# -gt 0 ]; do
   case "$1" in

@@ -3,7 +3,7 @@
 One command builds every release artefact into `dist/` (gitignored, never committed):
 
 ```bash
-. /e/Projects/MOSIP/toolchain/env.sh     # this project's workstation; elsewhere set JAVA11_HOME and JAVA21_HOME
+export JAVA11_HOME=<JDK 11 with JavaFX> JAVA21_HOME=<JDK 21>   # the engine, mocks and clients read these two
 bash scripts/release.sh                  # about 9 minutes on the project laptop
 ```
 
@@ -109,7 +109,7 @@ same release by hand.
 
 ## Clean-install test (2026-09-30)
 
-Done on the project laptop (Windows 11, TPM 2.0), in `E:/Projects/MOSIP/cleaninstall/`, outside the
+Done on the project laptop (Windows 11, TPM 2.0), in a `cleaninstall` folder next to the repository, outside the
 repository, following only [INSTALL.md](INSTALL.md):
 
 | Step | Result |

@@ -67,8 +67,7 @@ INSTALL=1
 STOP=0
 SCREENSHOT=""
 
-log() { printf '[android-emulator] %s\n' "$*"; }
-die() { printf '[android-emulator] ERROR: %s\n' "$*" >&2; exit 1; }
+LOG_TAG=android-emulator; . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 while [ $# -gt 0 ]; do
   case "$1" in

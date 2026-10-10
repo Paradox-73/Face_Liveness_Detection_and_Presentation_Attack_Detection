@@ -17,7 +17,7 @@ captures and home-made attacks, write down what happened, and turn the notes int
 |---|---|
 | People | 2 at a time: a **tester** (in front of the camera, presents the attacks) and a **recorder** (fills the sheet, reads the screen). Swap roles. |
 | Time | about 45 minutes per person for the desktop list in section 4; the Android list adds about 20 minutes. |
-| Machine | the build laptop (`E:\Projects\MOSIP`), because the onboarded client state only works on the machine that created it (its database key is sealed by that laptop's TPM chip). Another laptop needs the full set-up in [../install/README.md](../install/README.md) first. |
+| Machine | the build laptop, because the onboarded client state only works on the machine that created it (its database key is sealed by that laptop's TPM chip). Another laptop needs the full set-up in [../install/README.md](../install/README.md) first. |
 | Camera | the laptop's built-in webcam (`Integrated Camera`). No virtual cameras (OBS, ManyCam): the mock device refuses them. |
 | Attack material (made from **your own** photos only) | P1: A4 colour print of a frontal photo. P4: the same photo full-screen on a phone at full brightness. P6: a 10 s phone video of you blinking and moving slightly, replayed on a phone or laptop. P7: four short clips of you blinking, smiling, turning left, turning right, to play the one that matches the prompt. Optional P3: the A4 print with the eyes cut out. |
 | Lighting | C1 office light; C2 dim (one lamp); C3 window behind you; C4 strong side light; C5 wearing glasses. |

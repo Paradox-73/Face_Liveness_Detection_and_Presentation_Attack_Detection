@@ -68,6 +68,7 @@
 #   MOCKSYNC_URL       default http://127.0.0.1:8080
 #   ARC_EMULATOR_PORT  emulator console port; serial emulator-<port> (default 5554)
 #   OFFICER, OFFICER_PASSWORD, SUPERVISOR, SUPERVISOR_PASSWORD   accounts (default officer1, supervisor1)
+# No -e on purpose: check() records a failed check and the run goes on. Setup steps below stop the run with die.
 set -uo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -111,7 +112,9 @@ PASSED=0
 FAILED=0
 SECTION=setup
 
-log() { echo "[demo-android $(date +%H:%M:%S)] $*" | tee -a "$OUT/demo.log"; }
+LOG_TAG=demo-android; . "$REPO/scripts/lib.sh"
+log() { printf '[%s %s] %s
+' "$LOG_TAG" "$(date +%H:%M:%S)" "$*" | tee -a "$OUT/demo.log"; }
 
 # check ID DESCRIPTION COMMAND...: runs the command and records PASS or FAIL.
 check() {
@@ -913,7 +916,7 @@ section_offline() {
   ui_tap pending_approval_back_button; sleep 2
   logcat_save
   adb shell cmd connectivity airplane-mode disable
-  adb reverse tcp:8080 tcp:8080 >/dev/null
+  adb reverse tcp:8080 tcp:8080 >/dev/null || die "adb reverse failed"
   sleep 10
   log "online again: airplane mode off, adb reverse restored"
   local n
@@ -949,9 +952,10 @@ main() {
   adb shell settings put global hide_error_dialogs 1 >/dev/null 2>&1 || true
   adb shell settings put secure show_ime_with_hard_keyboard 0 >/dev/null 2>&1 || true
   push_packs || { log "frame packs could not be pushed"; exit 1; }
-  read_shipped
+  read_shipped || die "could not read the shipped settings"
   SECTION=profile
   check A-P0 "replay profile set on MockSync and synchronised" demo_profile
+  [ "$FAILED" -eq 0 ] || die "replay profile could not be set; stopping before the sections"
   local s
   for s in $SECTIONS; do
     SECTION="$s"
@@ -964,7 +968,7 @@ main() {
   # Back to the shipped policy on the tablet, then MockSync without the demo's overrides.
   settings restore "$DEMO_PROFILE"
   app_restart
-  login_password "$OFFICER" "$OFFICER_PASSWORD" && sync_now || log "final synchronisation failed"
+  login_password "$OFFICER" "$OFFICER_PASSWORD" && sync_now || { log "final synchronisation failed"; FAILED=$((FAILED + 1)); }
   settings forget "$DEMO_PROFILE"
   settings forget "$OVERRIDE_SETTINGS"
   settings forget "$CONFIG_SETTINGS"

@@ -79,8 +79,7 @@ START_MOCKSYNC=0
 EMULATOR_ARGS=(--no-install)
 UI_XML=""
 
-log() { printf '[android-mocksync] %s\n' "$*"; }
-die() { printf '[android-mocksync] ERROR: %s\n' "$*" >&2; exit 1; }
+LOG_TAG=android-mocksync; . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 while [ $# -gt 0 ]; do
   case "$1" in

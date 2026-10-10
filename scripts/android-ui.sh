@@ -4,6 +4,8 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # UI helpers for driving the Android Registration Client (ARC) on an emulator or device through adb.
 # Source this file; it defines functions only. Used by scripts/demo-android.sh.
+# It sets no shell options (sourcing must not change the caller's): every helper returns non-zero when it fails,
+# so the caller has to test the result, as demo-android.sh does with check and die.
 #
 # The helpers read the screen through `uiautomator dump`. ARC's Flutter screens expose their labels as
 # content descriptions and the native liveness screen as text, so every lookup matches either.

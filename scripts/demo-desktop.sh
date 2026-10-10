@@ -43,8 +43,7 @@ ADMIN="http://127.0.0.1:8080"
 ACTION=run
 RESTORE=0
 
-log() { echo "[demo-desktop $(date +%H:%M:%S)] $*"; }
-die() { echo "[demo-desktop] ERROR: $*" >&2; exit 1; }
+LOG_TAG=demo-desktop; . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 native() { if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else echo "$1"; fi; }
 
 while [ $# -gt 0 ]; do

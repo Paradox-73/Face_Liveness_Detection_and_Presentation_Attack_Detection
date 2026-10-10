@@ -65,7 +65,7 @@ Frames are identified by SHA-256 only; no image data is returned or logged.
 ```bash
 # 1. The "camera" shows a live frame pack.
 curl -s -X POST http://127.0.0.1:4501/admin/source \
-  -d '{"type":"Face","source":"SEQUENCE","path":"E:/Projects/MOSIP/run/frame-packs/s2-main","fps":15,"loop":true}'
+  -d '{"type":"Face","source":"SEQUENCE","path":"<run root>/frame-packs/s2-main","fps":15,"loop":true}'
 # 2. Drop the connection after 6 frames of every stream.
 curl -s -X POST http://127.0.0.1:4501/admin/fault -d '{"type":"Face","fault":"DISCONNECT","afterFrames":6}'
 #    Client: "The face camera was disconnected. Reconnect it and select Retry." (no attempt used, audit LV12)

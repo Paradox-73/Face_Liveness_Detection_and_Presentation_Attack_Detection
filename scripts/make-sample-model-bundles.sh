@@ -51,12 +51,12 @@ while [ $# -gt 0 ]; do
 done
 
 native() { if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else printf '%s' "$1"; fi; }
-fail() { echo "error: $*" >&2; exit 1; }
+LOG_TAG=make-sample-model-bundles; . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 first_jar() { ls "$1"/$2 2>/dev/null | grep -v -- '-models\|-sources\|-javadoc\|-tests' | head -1 || true; }
 CORE_JAR="${LIVENESS_CORE_JAR:-$(first_jar "$REPO/liveness/liveness-core/target" 'liveness-core-*.jar')}"
 ONNX_JAR="${LIVENESS_ONNX_JAR:-$(first_jar "$REPO/liveness/liveness-onnx/target" 'liveness-onnx-*.jar')}"
-[ -f "$CORE_JAR" ] && [ -f "$ONNX_JAR" ] || fail "engine jars not found: run mvn -f liveness/pom.xml package, or set LIVENESS_CORE_JAR and LIVENESS_ONNX_JAR"
+[ -f "$CORE_JAR" ] && [ -f "$ONNX_JAR" ] || die "engine jars not found: run mvn -f liveness/pom.xml package, or set LIVENESS_CORE_JAR and LIVENESS_ONNX_JAR"
 SEP=":"; command -v cygpath >/dev/null 2>&1 && SEP=";"
 CP="$(native "$CORE_JAR")$SEP$(native "$ONNX_JAR")"
 
@@ -64,9 +64,9 @@ signer() { java -cp "$CP" io.mosip.liveness.onnx.tools.ModelSigner "$@"; }
 
 manifest_version() { sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1; }
 
-[ -f "$MODELS/manifest.json" ] || fail "missing $MODELS/manifest.json"
+[ -f "$MODELS/manifest.json" ] || die "missing $MODELS/manifest.json"
 SHIPPED="$(manifest_version < "$MODELS/manifest.json")"
-[ -n "$SHIPPED" ] || fail "cannot read the bundle version from models/manifest.json"
+[ -n "$SHIPPED" ] || die "cannot read the bundle version from models/manifest.json"
 
 # Previous manifest: the newest revision in git history whose bundle version is below the shipped one.
 previous_manifest() {
@@ -102,8 +102,8 @@ flip_byte() { # FILE OFFSET
 
 build() { # KEY OUT
     local key=$1 out=$2 prev rev prevv
-    [ ! -e "$out" ] || fail "$out already exists; pass a new folder with --out"
-    prev="$(previous_manifest)" || fail "no older manifest version in the git history of models/manifest.json"
+    [ ! -e "$out" ] || die "$out already exists; pass a new folder with --out"
+    prev="$(previous_manifest)" || die "no older manifest version in the git history of models/manifest.json"
     rev="${prev% *}"; prevv="${prev#* }"
     mkdir -p "$out"
 
@@ -154,22 +154,22 @@ verify_all() { # OUT PUBLIC: checks the three outcomes; returns 1 when one is wr
 if [ "$SELF_TEST" -eq 1 ]; then
     TMP="$(mktemp -d)"
     trap 'rm -rf "$TMP"' EXIT
-    case "$(cd "$TMP" && pwd)" in "$REPO"/*) fail "temporary folder is inside the repository" ;; esac
+    case "$(cd "$TMP" && pwd)" in "$REPO"/*) die "temporary folder is inside the repository" ;; esac
     echo "self-test in $TMP (removed afterwards)"
     signer keygen --private "$(native "$TMP/test-key.pem")" --public "$(native "$TMP/test-key.pub.pem")" --bits 2048
     build "$TMP/test-key.pem" "$TMP/bundles"
-    verify_all "$TMP/bundles" "$TMP/test-key.pub.pem" || fail "self-test failed"
+    verify_all "$TMP/bundles" "$TMP/test-key.pub.pem" || die "self-test failed"
     echo "self-test passed"
     exit 0
 fi
 
-[ -n "$KEY" ] || fail "--key PRIVATE.pem is required (or --self-test)"
-[ -f "$KEY" ] || fail "key file not found: $KEY"
+[ -n "$KEY" ] || die "--key PRIVATE.pem is required (or --self-test)"
+[ -f "$KEY" ] || die "key file not found: $KEY"
 OUT="${OUT:-$PWD/sample-model-bundles}"
 build "$KEY" "$OUT"
 echo "bundles in $OUT: valid tampered older"
 if [ -n "$PUBLIC" ]; then
-    verify_all "$OUT" "$PUBLIC" || fail "verification with $PUBLIC failed"
+    verify_all "$OUT" "$PUBLIC" || die "verification with $PUBLIC failed"
 else
     echo "not verified (pass --public with the public half of the key to check the three outcomes)"
 fi

@@ -88,8 +88,7 @@ FORCE_ENGINE=0
 ALLOW_DEBUG_SIGNING=0
 APP_ID_SUFFIX=""
 
-log() { printf '[android-build] %s\n' "$*"; }
-die() { printf '[android-build] ERROR: %s\n' "$*" >&2; exit 1; }
+LOG_TAG=android-build; . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 while [ $# -gt 0 ]; do
   case "$1" in

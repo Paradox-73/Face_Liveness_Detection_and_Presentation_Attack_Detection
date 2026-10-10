@@ -35,8 +35,7 @@ PORT=4501
 ACTION=start
 BUILD=0
 
-log() { echo "[mockmds-run $(date +%H:%M:%S)] $*"; }
-die() { echo "[mockmds-run] ERROR: $*" >&2; exit 1; }
+LOG_TAG=mockmds-run; . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 while [ $# -gt 0 ]; do
 	case "$1" in
