@@ -13,13 +13,13 @@ import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.config.LivenessPolicy;
 import io.mosip.liveness.core.config.NoStreamPolicy;
 import io.mosip.liveness.core.config.OnMaxFailure;
+import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.liveness.core.config.PolicyMode;
 import io.mosip.liveness.core.device.CertificationLevel;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -67,7 +67,7 @@ public final class PolicyResolver {
         Objects.requireNonNull(workflow, "workflow");
         Reader r = new Reader();
         LivenessPolicy.Builder b = LivenessPolicy.builder(workflow);
-        boolean enabled = r.yesNo(LivenessConfigKeys.ENABLE, true);
+        boolean enabled = r.yesNo(PolicyKey.ENABLE);
         PolicyMode mode = r.policyMode(LivenessConfigKeys.policyKey(workflow),
                 LivenessConfigKeys.defaultPolicyMode(workflow));
         b.mode(enabled ? mode : PolicyMode.OFF);
@@ -78,65 +78,49 @@ public final class PolicyResolver {
     }
 
     private static void resolveThresholds(Reader r, Workflow w, LivenessPolicy.Builder b) {
-        int passive = r.integer(r.workflowFirst(w, LivenessConfigKeys.WORKFLOW_PASSIVE_THRESHOLD_SUFFIX,
-                LivenessConfigKeys.PASSIVE_THRESHOLD), LivenessConfigKeys.defaultPassiveThreshold(w),
-                LivenessConfigKeys.PASSIVE_THRESHOLD_FLOOR, 100);
-        int reject = r.integer(LivenessConfigKeys.PAD_REJECT_THRESHOLD, LivenessConfigKeys.DEFAULT_PAD_REJECT_THRESHOLD,
-                LivenessConfigKeys.PAD_REJECT_THRESHOLD_FLOOR, 100);
+        int passive = (int) r.number(r.workflowFirst(w, LivenessConfigKeys.WORKFLOW_PASSIVE_THRESHOLD_SUFFIX,
+                PolicyKey.PASSIVE_THRESHOLD), LivenessConfigKeys.defaultPassiveThreshold(w), PolicyKey.PASSIVE_THRESHOLD);
+        int reject = (int) r.number(PolicyKey.PAD_REJECT_THRESHOLD);
         if (reject > passive) {
-            r.issue(LivenessConfigKeys.PAD_REJECT_THRESHOLD, ConfigIssue.Kind.CLAMPED, Integer.toString(reject),
+            r.issue(PolicyKey.PAD_REJECT_THRESHOLD.key(), ConfigIssue.Kind.CLAMPED, Integer.toString(reject),
                     Integer.toString(passive));
             reject = passive;
         }
         b.passiveThreshold(passive).padRejectThreshold(reject);
-        b.passiveMinFrames(r.integer(LivenessConfigKeys.PASSIVE_MIN_FRAMES,
-                LivenessConfigKeys.DEFAULT_PASSIVE_MIN_FRAMES, 1, 60));
-        b.passiveTimeoutMs(r.longValue(LivenessConfigKeys.PASSIVE_TIMEOUT_MS,
-                LivenessConfigKeys.DEFAULT_PASSIVE_TIMEOUT_MS, 1_000, 60_000));
-        b.bindingMinSimilarity(r.integer(LivenessConfigKeys.BINDING_MIN_SIMILARITY,
-                LivenessConfigKeys.DEFAULT_BINDING_MIN_SIMILARITY, 0, 100));
-        b.bindingMaxGapMs(r.longValue(LivenessConfigKeys.BINDING_MAX_GAP_MS,
-                LivenessConfigKeys.DEFAULT_BINDING_MAX_GAP_MS, 500, 120_000));
+        b.passiveMinFrames((int) r.number(PolicyKey.PASSIVE_MIN_FRAMES));
+        b.passiveTimeoutMs(r.number(PolicyKey.PASSIVE_TIMEOUT_MS));
+        b.bindingMinSimilarity((int) r.number(PolicyKey.BINDING_MIN_SIMILARITY));
+        b.bindingMaxGapMs(r.number(PolicyKey.BINDING_MAX_GAP_MS));
     }
 
     private static void resolveActive(Reader r, Workflow w, LivenessPolicy.Builder b) {
-        b.activeEnabled(r.yesNo(LivenessConfigKeys.ACTIVE_ENABLE, true));
-        b.minChallenges(r.integer(r.workflowFirst(w, LivenessConfigKeys.WORKFLOW_MIN_CHALLENGES_SUFFIX,
-                LivenessConfigKeys.ACTIVE_MIN_CHALLENGES), LivenessConfigKeys.DEFAULT_MIN_CHALLENGES,
-                LivenessConfigKeys.MIN_CHALLENGES_LOWER, LivenessConfigKeys.MIN_CHALLENGES_UPPER));
-        b.challengeTypes(r.challengeTypes(LivenessConfigKeys.ACTIVE_CHALLENGE_TYPES));
-        b.challengeTimeoutMs(r.longValue(LivenessConfigKeys.ACTIVE_CHALLENGE_TIMEOUT_MS,
-                LivenessConfigKeys.DEFAULT_CHALLENGE_TIMEOUT_MS, LivenessConfigKeys.CHALLENGE_TIMEOUT_LOWER_MS,
-                LivenessConfigKeys.CHALLENGE_TIMEOUT_UPPER_MS));
-        b.minOnsetMs(r.longValue(LivenessConfigKeys.ACTIVE_MIN_ONSET_MS, LivenessConfigKeys.DEFAULT_MIN_ONSET_MS, 0, 2_000));
-        b.holdMs(r.longValue(LivenessConfigKeys.ACTIVE_HOLD_MS, LivenessConfigKeys.DEFAULT_HOLD_MS, 0, 3_000));
+        b.activeEnabled(r.yesNo(PolicyKey.ACTIVE_ENABLE));
+        b.minChallenges((int) r.number(r.workflowFirst(w, LivenessConfigKeys.WORKFLOW_MIN_CHALLENGES_SUFFIX,
+                PolicyKey.ACTIVE_MIN_CHALLENGES), PolicyKey.ACTIVE_MIN_CHALLENGES.defaultLong(),
+                PolicyKey.ACTIVE_MIN_CHALLENGES));
+        b.challengeTypes(r.challengeTypes(PolicyKey.ACTIVE_CHALLENGE_TYPES));
+        b.challengeTimeoutMs(r.number(PolicyKey.ACTIVE_CHALLENGE_TIMEOUT_MS));
+        b.minOnsetMs(r.number(PolicyKey.ACTIVE_MIN_ONSET_MS));
+        b.holdMs(r.number(PolicyKey.ACTIVE_HOLD_MS));
     }
 
     private static void resolveOperation(Reader r, Workflow w, LivenessPolicy.Builder b) {
-        b.maxRetries(r.integer(r.workflowFirst(w, LivenessConfigKeys.WORKFLOW_MAX_RETRIES_SUFFIX,
-                LivenessConfigKeys.MAX_RETRIES), LivenessConfigKeys.DEFAULT_MAX_RETRIES,
-                LivenessConfigKeys.MAX_RETRIES_LOWER, LivenessConfigKeys.MAX_RETRIES_UPPER));
+        b.maxRetries((int) r.number(r.workflowFirst(w, LivenessConfigKeys.WORKFLOW_MAX_RETRIES_SUFFIX,
+                PolicyKey.MAX_RETRIES), PolicyKey.MAX_RETRIES.defaultLong(), PolicyKey.MAX_RETRIES));
         b.onMaxFailure(r.onMaxFailure(r.workflowFirst(w, LivenessConfigKeys.WORKFLOW_ON_MAX_FAILURE_SUFFIX,
-                LivenessConfigKeys.ON_MAX_FAILURE), w));
-        b.streamTimeoutMs(r.longValue(LivenessConfigKeys.STREAM_TIMEOUT_MS, LivenessConfigKeys.DEFAULT_STREAM_TIMEOUT_MS,
-                1_000, 600_000));
-        b.frameSampleIntervalMs(r.longValue(LivenessConfigKeys.FRAME_SAMPLE_INTERVAL_MS,
-                LivenessConfigKeys.DEFAULT_FRAME_SAMPLE_INTERVAL_MS, 0, 5_000));
-        b.deviceReconnectAttempts(r.integer(LivenessConfigKeys.DEVICE_RECONNECT_ATTEMPTS,
-                LivenessConfigKeys.DEFAULT_DEVICE_RECONNECT_ATTEMPTS, 0, 10));
-        b.qualityMinIedPx(r.integer(LivenessConfigKeys.QUALITY_MIN_IED_PX, LivenessConfigKeys.DEFAULT_QUALITY_MIN_IED_PX,
-                0, 1_000));
-        b.qualityMaxYawDeg(r.integer(LivenessConfigKeys.QUALITY_MAX_YAW_DEG,
-                LivenessConfigKeys.DEFAULT_QUALITY_MAX_YAW_DEG, 0, 90));
-        b.integrityMaxFrozenFrames(r.integer(LivenessConfigKeys.INTEGRITY_MAX_FROZEN_FRAMES,
-                LivenessConfigKeys.DEFAULT_INTEGRITY_MAX_FROZEN_FRAMES, 1, 100));
-        b.integrityMinFps(r.integer(LivenessConfigKeys.INTEGRITY_MIN_FPS, LivenessConfigKeys.DEFAULT_INTEGRITY_MIN_FPS,
-                1, 60));
-        b.noStreamPolicy(r.noStreamPolicy(LivenessConfigKeys.NO_STREAM_POLICY));
-        b.modelMinVersion(r.version(LivenessConfigKeys.MODEL_MIN_VERSION, LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION));
-        b.diagnosticEnabled(r.yesNo(LivenessConfigKeys.DIAGNOSTIC_ENABLE, false));
-        b.metricsEnabled(r.yesNo(LivenessConfigKeys.METRICS_ENABLE, true));
-        b.allowedCertifications(r.certifications(LivenessConfigKeys.MDS_ALLOWED_CERTIFICATIONS));
+                PolicyKey.ON_MAX_FAILURE), w));
+        b.streamTimeoutMs(r.number(PolicyKey.STREAM_TIMEOUT_MS));
+        b.frameSampleIntervalMs(r.number(PolicyKey.FRAME_SAMPLE_INTERVAL_MS));
+        b.deviceReconnectAttempts((int) r.number(PolicyKey.DEVICE_RECONNECT_ATTEMPTS));
+        b.qualityMinIedPx((int) r.number(PolicyKey.QUALITY_MIN_IED_PX));
+        b.qualityMaxYawDeg((int) r.number(PolicyKey.QUALITY_MAX_YAW_DEG));
+        b.integrityMaxFrozenFrames((int) r.number(PolicyKey.INTEGRITY_MAX_FROZEN_FRAMES));
+        b.integrityMinFps((int) r.number(PolicyKey.INTEGRITY_MIN_FPS));
+        b.noStreamPolicy(r.noStreamPolicy(PolicyKey.NO_STREAM_POLICY));
+        b.modelMinVersion(r.version(PolicyKey.MODEL_MIN_VERSION));
+        b.diagnosticEnabled(r.yesNo(PolicyKey.DIAGNOSTIC_ENABLE));
+        b.metricsEnabled(r.yesNo(PolicyKey.METRICS_ENABLE));
+        b.allowedCertifications(r.certifications(PolicyKey.MDS_ALLOWED_CERTIFICATIONS));
     }
 
     /** Reads and validates values, collecting the issues of one resolution. */
@@ -163,16 +147,17 @@ public final class PolicyResolver {
         }
 
         /** Returns the per-workflow key when it is set, else the global key. */
-        String workflowFirst(Workflow w, String suffix, String globalKey) {
+        String workflowFirst(Workflow w, String suffix, PolicyKey global) {
             String key = LivenessConfigKeys.workflowKey(w, suffix);
-            return raw(key).isPresent() ? key : globalKey;
+            return raw(key).isPresent() ? key : global.key();
         }
 
-        int integer(String key, int def, int min, int max) {
-            return (int) longValue(key, def, min, max);
+        long number(PolicyKey k) {
+            return number(k.key(), k.defaultLong(), k);
         }
 
-        long longValue(String key, long def, long min, long max) {
+        /** Reads {@code key} (the global key or its per-workflow form) within the range of {@code range}. */
+        long number(String key, long def, PolicyKey range) {
             Optional<String> v = raw(key);
             if (!v.isPresent()) {
                 return def;
@@ -184,27 +169,25 @@ public final class PolicyResolver {
                 issue(key, ConfigIssue.Kind.INVALID, v.get(), Long.toString(def));
                 return def;
             }
-            long clamped = Math.max(min, Math.min(max, parsed));
+            long clamped = range.clamp(parsed);
             if (clamped != parsed) {
                 issue(key, ConfigIssue.Kind.CLAMPED, v.get(), Long.toString(clamped));
             }
             return clamped;
         }
 
-        boolean yesNo(String key, boolean def) {
-            Optional<String> v = raw(key);
+        boolean yesNo(PolicyKey k) {
+            boolean def = k.defaultOn();
+            Optional<String> v = raw(k.key());
             if (!v.isPresent()) {
                 return def;
             }
-            String s = v.get().toUpperCase(Locale.ROOT);
-            if ("Y".equals(s) || "YES".equals(s) || "TRUE".equals(s)) {
-                return true;
+            Optional<Boolean> parsed = PolicyKey.parseYesNo(v.get());
+            if (!parsed.isPresent()) {
+                issue(k.key(), ConfigIssue.Kind.INVALID, v.get(), k.defaultValue());
+                return def;
             }
-            if ("N".equals(s) || "NO".equals(s) || "FALSE".equals(s)) {
-                return false;
-            }
-            issue(key, ConfigIssue.Kind.INVALID, v.get(), def ? "Y" : "N");
-            return def;
+            return parsed.get();
         }
 
         PolicyMode policyMode(String key, PolicyMode def) {
@@ -220,8 +203,9 @@ public final class PolicyResolver {
             return m.get();
         }
 
-        NoStreamPolicy noStreamPolicy(String key) {
-            NoStreamPolicy def = LivenessConfigKeys.DEFAULT_NO_STREAM_POLICY;
+        NoStreamPolicy noStreamPolicy(PolicyKey k) {
+            String key = k.key();
+            NoStreamPolicy def = NoStreamPolicy.valueOf(k.defaultValue());
             Optional<String> v = raw(key);
             if (!v.isPresent()) {
                 return def;
@@ -252,7 +236,8 @@ public final class PolicyResolver {
             return m.get();
         }
 
-        Set<CertificationLevel> certifications(String key) {
+        Set<CertificationLevel> certifications(PolicyKey k) {
+            String key = k.key();
             Set<CertificationLevel> def = EnumSet.allOf(CertificationLevel.class);
             Optional<String> v = raw(key);
             if (!v.isPresent()) {
@@ -270,13 +255,14 @@ public final class PolicyResolver {
             }
             if (levels.isEmpty() || unknown) {
                 issue(key, ConfigIssue.Kind.INVALID, v.get(),
-                        levels.isEmpty() ? LivenessConfigKeys.DEFAULT_MDS_ALLOWED_CERTIFICATIONS : levels.toString());
+                        levels.isEmpty() ? k.defaultValue() : levels.toString());
             }
             return levels.isEmpty() ? def : levels;
         }
 
-        Set<ChallengeType> challengeTypes(String key) {
-            Set<ChallengeType> def = parseTypes(LivenessConfigKeys.DEFAULT_CHALLENGE_TYPES);
+        Set<ChallengeType> challengeTypes(PolicyKey k) {
+            String key = k.key();
+            Set<ChallengeType> def = ChallengeType.parseList(k.defaultValue());
             Optional<String> v = raw(key);
             if (!v.isPresent()) {
                 return def;
@@ -292,7 +278,7 @@ public final class PolicyResolver {
                 }
             }
             if (types.isEmpty()) {
-                issue(key, ConfigIssue.Kind.INVALID, v.get(), LivenessConfigKeys.DEFAULT_CHALLENGE_TYPES);
+                issue(key, ConfigIssue.Kind.INVALID, v.get(), k.defaultValue());
                 return def;
             }
             if (unknown) {
@@ -301,7 +287,9 @@ public final class PolicyResolver {
             return types;
         }
 
-        String version(String key, String def) {
+        String version(PolicyKey k) {
+            String key = k.key();
+            String def = k.defaultValue();
             Optional<String> v = raw(key);
             if (!v.isPresent()) {
                 return def;
@@ -313,17 +301,6 @@ public final class PolicyResolver {
             }
             return v.get();
         }
-    }
-
-    private static Set<ChallengeType> parseTypes(String csv) {
-        Set<ChallengeType> types = EnumSet.noneOf(ChallengeType.class);
-        for (String part : csv.split(",")) {
-            Optional<ChallengeType> t = ChallengeType.fromName(part);
-            if (t.isPresent()) {
-                types.add(t.get());
-            }
-        }
-        return types;
     }
 
     private static String join(Set<ChallengeType> types) {

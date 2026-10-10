@@ -14,7 +14,7 @@ import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
 import io.mosip.liveness.core.audit.AuditSink;
-import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.registration.clientmanager.config.SessionManager;
 import io.mosip.registration.clientmanager.repository.GlobalParamRepository;
 import io.mosip.registration.clientmanager.repository.UserBiometricRepository;
@@ -108,9 +108,7 @@ public class LivenessModule {
     @Singleton
     LivenessService provideLivenessService(LivenessRuntime runtime) {
         LivenessService service = new DefaultLivenessService(runtime);
-        boolean enabled = LivenessConfigKeys.YES.equalsIgnoreCase(
-                runtime.config().get(LivenessConfigKeys.ENABLE).orElse(LivenessConfigKeys.DEFAULT_ENABLE));
-        if (enabled) {
+        if (PolicyKey.ENABLE.isOn(runtime.config())) {
             service.preload();
         }
         return service;

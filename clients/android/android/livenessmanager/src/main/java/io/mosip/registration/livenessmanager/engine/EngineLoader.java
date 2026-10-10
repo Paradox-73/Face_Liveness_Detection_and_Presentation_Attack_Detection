@@ -34,6 +34,7 @@ import io.mosip.liveness.core.api.LivenessEngineProvider;
 import io.mosip.liveness.core.api.ModelSource;
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.liveness.core.engine.LivenessMetrics;
 import io.mosip.liveness.core.image.ImageBuffer;
 import io.mosip.liveness.core.image.PixelFormat;
@@ -228,7 +229,7 @@ public final class EngineLoader implements AutoCloseable, ModelBundleImporter.En
         Objects.requireNonNull(context, "context");
         EngineLoader[] self = new EngineLoader[1];
         ModelBuilder models = builtIn.modelBuilder == null ? null : source -> {
-            if (!LivenessConfigKeys.DEFAULT_ENGINE.equals(configuredEngineId(config))) {
+            if (!PolicyKey.ENGINE.defaultValue().equals(configuredEngineId(config))) {
                 throw new EngineException(EngineErrorCode.CONFIG_INVALID, "model import needs the default engine");
             }
             LivenessEngine e = builtIn.modelBuilder.build(source);
@@ -237,7 +238,7 @@ public final class EngineLoader implements AutoCloseable, ModelBundleImporter.En
         };
         self[0] = new EngineLoader(() -> {
             String id = configuredEngineId(config);
-            if (LivenessConfigKeys.DEFAULT_ENGINE.equals(id)) {
+            if (PolicyKey.ENGINE.defaultValue().equals(id)) {
                 LivenessEngine e = builtIn.factory.create();
                 self[0].acceleratorStatus = builtIn.acceleratorStatus;
                 return e;
@@ -258,7 +259,7 @@ public final class EngineLoader implements AutoCloseable, ModelBundleImporter.En
             }
             Log.e(TAG, "No liveness engine provider for " + LivenessConfigKeys.ENGINE + "=" + id);
             throw new EngineException(EngineErrorCode.CONFIG_INVALID, "no liveness engine with ID " + id);
-        }, models, () -> LivenessConfigKeys.DEFAULT_ENGINE.equals(configuredEngineId(config)));
+        }, models, () -> PolicyKey.ENGINE.defaultValue().equals(configuredEngineId(config)));
         return self[0];
     }
 
@@ -271,7 +272,7 @@ public final class EngineLoader implements AutoCloseable, ModelBundleImporter.En
      */
     static String configuredEngineId(ConfigSource config) {
         String id = config.get(LivenessConfigKeys.ENGINE).map(String::trim).orElse("");
-        return id.isEmpty() ? LivenessConfigKeys.DEFAULT_ENGINE : id;
+        return id.isEmpty() ? PolicyKey.ENGINE.defaultValue() : id;
     }
 
     /**

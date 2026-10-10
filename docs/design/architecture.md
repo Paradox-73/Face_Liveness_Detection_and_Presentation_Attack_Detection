@@ -135,7 +135,7 @@ flowchart TB
 | Passive liveness and PAD | `PassivePadAggregator`, `MiniFasPassivePad`, `FrameIntegrityChecker`, `PlanarityChecker` ([engine.md](engine.md)) |
 | Passive-to-active decision | `DecisionPolicy` ([decision-flow.md](decision-flow.md)) |
 | Dynamic challenges, action detection | `ChallengeScheduler`, `ChallengeObserver`, `ActionLevels` ([challenges.md](challenges.md)) |
-| Configurable thresholds and per-workflow policy | `LivenessConfigKeys`, `PolicyResolver` ([configuration.md](configuration.md)) |
+| Configurable thresholds and per-workflow policy | `PolicyKey`, `LivenessConfigKeys`, `PolicyResolver` ([configuration.md](configuration.md)) |
 | Retry and failure handling | `LivenessTransaction`, `FailureReason`, `OnMaxFailure` ([errors.md](errors.md)) |
 | Resident, operator, supervisor integration | [integration-flows.md](integration-flows.md), [sequences.md](sequences.md) |
 | Audit, diagnostics, metrics, packet evidence | `AuditEventId`, `LivenessMetrics`, `DiagnosticLog`, `PacketEvidenceKeys` ([audit-and-evidence.md](audit-and-evidence.md)) |

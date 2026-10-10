@@ -18,13 +18,13 @@ import io.mosip.liveness.onnx.model.ModelTrustAnchors;
 import io.mosip.liveness.onnx.runtime.OnnxRuntimeOptions;
 
 /**
- * {@link LivenessEngineProvider} for the default ONNX engine ({@value OnnxLivenessEngines#ENGINE_ID}), registered
+ * {@link LivenessEngineProvider} for the default ONNX engine ({@code mosip-onnx-default}), registered
  * in {@code META-INF/services/io.mosip.liveness.core.api.LivenessEngineProvider} so a client finds it with
  * {@link java.util.ServiceLoader}:
  *
  * <pre>{@code
  * for (LivenessEngineProvider p : ServiceLoader.load(LivenessEngineProvider.class)) {
- *     if (p.engineId().equals(config.get(LivenessConfigKeys.ENGINE).orElse(LivenessConfigKeys.DEFAULT_ENGINE))) {
+ *     if (p.engineId().equals(config.get(LivenessConfigKeys.ENGINE).orElse(PolicyKey.ENGINE.defaultValue()))) {
  *         engine = p.create(context);   // blocks while the models load
  *     }
  * }

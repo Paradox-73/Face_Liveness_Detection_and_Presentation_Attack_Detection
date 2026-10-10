@@ -17,6 +17,7 @@ import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.config.LivenessPolicy;
 import io.mosip.liveness.core.config.NoStreamPolicy;
 import io.mosip.liveness.core.config.OnMaxFailure;
+import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.liveness.core.config.PolicyMode;
 import io.mosip.liveness.core.device.CertificationLevel;
 import org.junit.jupiter.api.Test;
@@ -133,7 +134,7 @@ class PolicyResolverTest {
         assertEquals(3, reg.minChallenges());
         assertEquals(2_000, reg.challengeTimeoutMs());
         assertEquals(1, reg.maxRetries());
-        assertEquals(LivenessConfigKeys.DEFAULT_HOLD_MS, reg.holdMs());
+        assertEquals(PolicyKey.ACTIVE_HOLD_MS.defaultLong(), reg.holdMs());
         assertEquals(5, resolve(Workflow.PACKET_AUTH).policy().minChallenges());
         assertEquals(5, resolve(Workflow.LOGIN_AUTH).policy().maxRetries());
     }
@@ -208,7 +209,7 @@ class PolicyResolverTest {
         for (String shortVersion : new String[] {"1", "1.2", "1.2.3.4"}) {
             cfg.put(LivenessConfigKeys.MODEL_MIN_VERSION, shortVersion);
             PolicyResolution r = resolve(Workflow.REGISTRATION);
-            assertEquals(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION, r.policy().modelMinVersion(), shortVersion);
+            assertEquals(PolicyKey.MODEL_MIN_VERSION.defaultValue(), r.policy().modelMinVersion(), shortVersion);
             assertEquals(ConfigIssue.Kind.INVALID, r.issues().get(0).kind(), shortVersion);
         }
     }

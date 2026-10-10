@@ -23,8 +23,8 @@ import java.util.Set;
  * effect on the next session. The master switch {@code enable=N} resolves to {@link PolicyMode#OFF}. Units are
  * milliseconds for durations, 0-100 for scores and similarity, pixels for sizes and degrees for angles.
  *
- * <p>{@link Builder#build()} enforces structural rules only (ranges that make a policy meaningless). Floors and
- * configuration ranges such as the 50-point passive floor are applied, and audited, by the policy resolver.
+ * <p>{@link Builder#build()} rejects a number outside the range of its key in {@link PolicyKey}; the policy resolver
+ * clamps a configured value to the same range (for example the 50-point passive floor) and audits the clamp.
  */
 public final class LivenessPolicy {
 
@@ -425,31 +425,31 @@ public final class LivenessPolicy {
         private final Workflow workflow;
         private PolicyMode mode;
         private int passiveThreshold;
-        private int padRejectThreshold = LivenessConfigKeys.DEFAULT_PAD_REJECT_THRESHOLD;
-        private int passiveMinFrames = LivenessConfigKeys.DEFAULT_PASSIVE_MIN_FRAMES;
-        private long passiveTimeoutMs = LivenessConfigKeys.DEFAULT_PASSIVE_TIMEOUT_MS;
-        private boolean activeEnabled = true;
-        private int minChallenges = LivenessConfigKeys.DEFAULT_MIN_CHALLENGES;
-        private Set<ChallengeType> challengeTypes = EnumSet.of(ChallengeType.BLINK, ChallengeType.SMILE,
-                ChallengeType.TURN_LEFT, ChallengeType.TURN_RIGHT, ChallengeType.LOOK_UP);
-        private long challengeTimeoutMs = LivenessConfigKeys.DEFAULT_CHALLENGE_TIMEOUT_MS;
-        private long minOnsetMs = LivenessConfigKeys.DEFAULT_MIN_ONSET_MS;
-        private long holdMs = LivenessConfigKeys.DEFAULT_HOLD_MS;
-        private int maxRetries = LivenessConfigKeys.DEFAULT_MAX_RETRIES;
-        private OnMaxFailure onMaxFailure = LivenessConfigKeys.DEFAULT_ON_MAX_FAILURE;
-        private long streamTimeoutMs = LivenessConfigKeys.DEFAULT_STREAM_TIMEOUT_MS;
-        private long frameSampleIntervalMs = LivenessConfigKeys.DEFAULT_FRAME_SAMPLE_INTERVAL_MS;
-        private int deviceReconnectAttempts = LivenessConfigKeys.DEFAULT_DEVICE_RECONNECT_ATTEMPTS;
-        private int qualityMinIedPx = LivenessConfigKeys.DEFAULT_QUALITY_MIN_IED_PX;
-        private int qualityMaxYawDeg = LivenessConfigKeys.DEFAULT_QUALITY_MAX_YAW_DEG;
-        private int integrityMaxFrozenFrames = LivenessConfigKeys.DEFAULT_INTEGRITY_MAX_FROZEN_FRAMES;
-        private int integrityMinFps = LivenessConfigKeys.DEFAULT_INTEGRITY_MIN_FPS;
-        private int bindingMinSimilarity = LivenessConfigKeys.DEFAULT_BINDING_MIN_SIMILARITY;
-        private long bindingMaxGapMs = LivenessConfigKeys.DEFAULT_BINDING_MAX_GAP_MS;
-        private NoStreamPolicy noStreamPolicy = LivenessConfigKeys.DEFAULT_NO_STREAM_POLICY;
-        private String modelMinVersion = LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION;
-        private boolean diagnosticEnabled;
-        private boolean metricsEnabled = true;
+        private int padRejectThreshold = PolicyKey.PAD_REJECT_THRESHOLD.defaultInt();
+        private int passiveMinFrames = PolicyKey.PASSIVE_MIN_FRAMES.defaultInt();
+        private long passiveTimeoutMs = PolicyKey.PASSIVE_TIMEOUT_MS.defaultLong();
+        private boolean activeEnabled = PolicyKey.ACTIVE_ENABLE.defaultOn();
+        private int minChallenges = PolicyKey.ACTIVE_MIN_CHALLENGES.defaultInt();
+        private Set<ChallengeType> challengeTypes = ChallengeType.parseList(
+                PolicyKey.ACTIVE_CHALLENGE_TYPES.defaultValue());
+        private long challengeTimeoutMs = PolicyKey.ACTIVE_CHALLENGE_TIMEOUT_MS.defaultLong();
+        private long minOnsetMs = PolicyKey.ACTIVE_MIN_ONSET_MS.defaultLong();
+        private long holdMs = PolicyKey.ACTIVE_HOLD_MS.defaultLong();
+        private int maxRetries = PolicyKey.MAX_RETRIES.defaultInt();
+        private OnMaxFailure onMaxFailure;
+        private long streamTimeoutMs = PolicyKey.STREAM_TIMEOUT_MS.defaultLong();
+        private long frameSampleIntervalMs = PolicyKey.FRAME_SAMPLE_INTERVAL_MS.defaultLong();
+        private int deviceReconnectAttempts = PolicyKey.DEVICE_RECONNECT_ATTEMPTS.defaultInt();
+        private int qualityMinIedPx = PolicyKey.QUALITY_MIN_IED_PX.defaultInt();
+        private int qualityMaxYawDeg = PolicyKey.QUALITY_MAX_YAW_DEG.defaultInt();
+        private int integrityMaxFrozenFrames = PolicyKey.INTEGRITY_MAX_FROZEN_FRAMES.defaultInt();
+        private int integrityMinFps = PolicyKey.INTEGRITY_MIN_FPS.defaultInt();
+        private int bindingMinSimilarity = PolicyKey.BINDING_MIN_SIMILARITY.defaultInt();
+        private long bindingMaxGapMs = PolicyKey.BINDING_MAX_GAP_MS.defaultLong();
+        private NoStreamPolicy noStreamPolicy = NoStreamPolicy.valueOf(PolicyKey.NO_STREAM_POLICY.defaultValue());
+        private String modelMinVersion = PolicyKey.MODEL_MIN_VERSION.defaultValue();
+        private boolean diagnosticEnabled = PolicyKey.DIAGNOSTIC_ENABLE.defaultOn();
+        private boolean metricsEnabled = PolicyKey.METRICS_ENABLE.defaultOn();
         private Set<CertificationLevel> allowedCertifications = EnumSet.allOf(CertificationLevel.class);
 
         private Builder(Workflow workflow) {
@@ -818,25 +818,31 @@ public final class LivenessPolicy {
             return new LivenessPolicy(this);
         }
 
+        /** Every number within the range of its key ({@link PolicyKey}), the same range the resolver clamps to. */
         private void checkScores() {
-            require(passiveThreshold >= 0 && passiveThreshold <= 100, "passiveThreshold must be 0-100");
-            require(padRejectThreshold >= 0 && padRejectThreshold <= 100, "padRejectThreshold must be 0-100");
+            PolicyKey.PASSIVE_THRESHOLD.require(passiveThreshold);
+            PolicyKey.PAD_REJECT_THRESHOLD.require(padRejectThreshold);
             require(padRejectThreshold <= passiveThreshold, "padRejectThreshold must not exceed passiveThreshold");
-            require(bindingMinSimilarity >= 0 && bindingMinSimilarity <= 100, "bindingMinSimilarity must be 0-100");
-            require(qualityMaxYawDeg >= 0 && qualityMaxYawDeg <= 90, "qualityMaxYawDeg must be 0-90");
+            PolicyKey.BINDING_MIN_SIMILARITY.require(bindingMinSimilarity);
+            PolicyKey.QUALITY_MAX_YAW_DEG.require(qualityMaxYawDeg);
         }
 
         private void checkCountsAndDurations() {
-            require(passiveMinFrames >= 1, "passiveMinFrames must be at least 1");
-            require(minChallenges >= 1, "minChallenges must be at least 1");
+            PolicyKey.PASSIVE_MIN_FRAMES.require(passiveMinFrames);
+            PolicyKey.PASSIVE_TIMEOUT_MS.require(passiveTimeoutMs);
+            PolicyKey.ACTIVE_MIN_CHALLENGES.require(minChallenges);
             require(!challengeTypes.isEmpty(), "challengeTypes must not be empty");
-            require(maxRetries >= 1, "maxRetries must be at least 1");
-            require(integrityMaxFrozenFrames >= 1, "integrityMaxFrozenFrames must be at least 1");
-            require(integrityMinFps >= 1, "integrityMinFps must be at least 1");
-            require(deviceReconnectAttempts >= 0 && qualityMinIedPx >= 0, "counts must not be negative");
-            require(passiveTimeoutMs > 0 && challengeTimeoutMs > 0 && streamTimeoutMs > 0 && bindingMaxGapMs > 0,
-                    "timeouts must be positive");
-            require(minOnsetMs >= 0 && holdMs >= 0 && frameSampleIntervalMs >= 0, "durations must not be negative");
+            PolicyKey.ACTIVE_CHALLENGE_TIMEOUT_MS.require(challengeTimeoutMs);
+            PolicyKey.ACTIVE_MIN_ONSET_MS.require(minOnsetMs);
+            PolicyKey.ACTIVE_HOLD_MS.require(holdMs);
+            PolicyKey.MAX_RETRIES.require(maxRetries);
+            PolicyKey.STREAM_TIMEOUT_MS.require(streamTimeoutMs);
+            PolicyKey.FRAME_SAMPLE_INTERVAL_MS.require(frameSampleIntervalMs);
+            PolicyKey.DEVICE_RECONNECT_ATTEMPTS.require(deviceReconnectAttempts);
+            PolicyKey.QUALITY_MIN_IED_PX.require(qualityMinIedPx);
+            PolicyKey.INTEGRITY_MAX_FROZEN_FRAMES.require(integrityMaxFrozenFrames);
+            PolicyKey.INTEGRITY_MIN_FPS.require(integrityMinFps);
+            PolicyKey.BINDING_MAX_GAP_MS.require(bindingMaxGapMs);
             require(!modelMinVersion.trim().isEmpty(), "modelMinVersion must not be empty");
         }
 

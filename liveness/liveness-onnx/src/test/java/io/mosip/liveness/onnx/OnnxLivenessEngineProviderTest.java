@@ -13,6 +13,7 @@ import io.mosip.liveness.core.api.LivenessEngine;
 import io.mosip.liveness.core.api.LivenessEngineProvider;
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.liveness.core.engine.EngineParameter;
 import io.mosip.liveness.onnx.model.ModelSources;
 import io.mosip.liveness.onnx.model.ModelTrustAnchors;
@@ -43,7 +44,7 @@ class OnnxLivenessEngineProviderTest {
         }
         assertEquals(1, found.size(), found.toString());
         assertInstanceOf(OnnxLivenessEngineProvider.class, found.get(0));
-        assertEquals(LivenessConfigKeys.DEFAULT_ENGINE, found.get(0).engineId());
+        assertEquals(PolicyKey.ENGINE.defaultValue(), found.get(0).engineId());
     }
 
     @Test

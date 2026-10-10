@@ -6,8 +6,10 @@
  */
 package io.mosip.liveness.core;
 
+import java.util.EnumSet;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * An action the person in front of the camera is asked to perform during active liveness.
@@ -116,5 +118,19 @@ public enum ChallengeType {
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * Parses a comma-separated list of names, skipping unknown ones.
+     *
+     * @param csv names such as {@code "BLINK,SMILE"}
+     * @return the known types, possibly empty
+     */
+    public static Set<ChallengeType> parseList(String csv) {
+        Set<ChallengeType> types = EnumSet.noneOf(ChallengeType.class);
+        for (String part : csv.split(",")) {
+            fromName(part).ifPresent(types::add);
+        }
+        return types;
     }
 }

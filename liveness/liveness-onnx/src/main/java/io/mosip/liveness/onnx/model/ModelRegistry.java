@@ -10,7 +10,7 @@ import io.mosip.liveness.core.EngineErrorCode;
 import io.mosip.liveness.core.EngineException;
 import io.mosip.liveness.core.api.ModelInfo;
 import io.mosip.liveness.core.api.ModelSource;
-import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.config.PolicyKey;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -70,8 +70,8 @@ public final class ModelRegistry {
      * Starts a builder.
      *
      * @param source where the bundle files are read from
-     * @return a builder using the development trust anchor and minimum version
-     *         {@value LivenessConfigKeys#DEFAULT_MODEL_MIN_VERSION}
+     * @return a builder using the development trust anchor and the default minimum version
+     *         ({@link io.mosip.liveness.core.config.PolicyKey#MODEL_MIN_VERSION})
      */
     public static Builder builder(ModelSource source) {
         return new Builder(source);
@@ -201,7 +201,7 @@ public final class ModelRegistry {
 
         private final ModelSource source;
         private final List<PublicKey> trustAnchors = new ArrayList<>();
-        private String minimumVersion = LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION;
+        private String minimumVersion = PolicyKey.MODEL_MIN_VERSION.defaultValue();
 
         private Builder(ModelSource source) {
             this.source = Objects.requireNonNull(source, "source");

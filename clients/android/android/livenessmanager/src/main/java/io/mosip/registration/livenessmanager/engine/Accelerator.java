@@ -8,6 +8,8 @@ package io.mosip.registration.livenessmanager.engine;
 
 import java.util.Locale;
 
+import io.mosip.liveness.core.config.LivenessConfigKeys;
+
 /**
  * ONNX Runtime execution provider for the liveness models on Android, chosen with the synced key
  * {@value #CONFIG_KEY}.
@@ -29,11 +31,10 @@ public enum Accelerator {
     NNAPI;
 
     /**
-     * Configuration key: {@code CPU} (default), {@code XNNPACK} or {@code NNAPI}. The same key and values as the
-     * engine's {@code LivenessConfigKeys.ENGINE_EXECUTION_PROVIDER}, so one synced setting serves both clients;
-     * synced only, never overridable locally.
+     * Configuration key: {@code CPU} (default), {@code XNNPACK} or {@code NNAPI}. The engine's key, so one synced
+     * setting serves both clients; synced only, never overridable locally.
      */
-    public static final String CONFIG_KEY = "mosip.registration.liveness.engine.execution_provider";
+    public static final String CONFIG_KEY = LivenessConfigKeys.ENGINE_EXECUTION_PROVIDER;
 
     /**
      * Parses a configuration value.

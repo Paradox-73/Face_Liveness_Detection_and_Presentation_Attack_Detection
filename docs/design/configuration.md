@@ -4,7 +4,8 @@ PS04 Deliverable 1, bullet 10, and mandatory task 8. Every liveness setting is a
 prefix `mosip.registration.liveness.`, synced from the server like any other registration setting, stored in the
 client's local database and therefore effective offline. Both clients read the same key names.
 
-Source of truth: `io.mosip.liveness.core.config.LivenessConfigKeys` (names, defaults, ranges) and
+Source of truth: `io.mosip.liveness.core.config.PolicyKey` (one row per global key: name, default, range, type),
+`LivenessConfigKeys` (key names, per-workflow defaults) and
 `io.mosip.liveness.core.policy.PolicyResolver` (how values are combined, clamped and reported).
 `LivenessConfigKeys.defaultValues()` returns the 45 shipped defaults (43 under `mosip.registration.liveness.*`, including `login_auth.on_max_failure=BLOCK_AND_LOCK` since 2026-10-10, plus `mosip.registration.mds.allowed_certifications` and `mosip.registration.android.offline_approval.enable`); MockSync serves the same list from
 `tools/mock-sync/data/mock-sync-defaults.properties`.

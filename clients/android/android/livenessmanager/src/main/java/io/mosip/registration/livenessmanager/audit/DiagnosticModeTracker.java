@@ -13,6 +13,7 @@ import io.mosip.liveness.core.Clock;
 import io.mosip.liveness.core.Workflow;
 import io.mosip.liveness.core.audit.AuditSink;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.liveness.core.engine.AuditPayloadBuilder;
 
 /**
@@ -76,7 +77,7 @@ public final class DiagnosticModeTracker {
     public synchronized boolean observe(Workflow workflow, boolean enabled) {
         String value = enabled ? LivenessConfigKeys.YES : LivenessConfigKeys.NO;
         String last = store.load();
-        String previous = last == null ? LivenessConfigKeys.DEFAULT_DIAGNOSTIC_ENABLE : last;
+        String previous = last == null ? PolicyKey.DIAGNOSTIC_ENABLE.defaultValue() : last;
         if (value.equalsIgnoreCase(previous)) {
             if (last == null) {
                 store.save(value);

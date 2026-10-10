@@ -78,7 +78,7 @@ Historic: dated 2026-09-30, folder `results/20260930-engine-fixes/`. The current
 |---|---|---|
 | P1 | `policy.registration`, `policy.onboard_auth`, `policy.login_auth` default to `ALWAYS_ACTIVE`; the three supervisor workflows stayed `PASSIVE_THEN_ACTIVE` at threshold 95 on 2026-09-30 (since 2026-10-04 they are `ALWAYS_ACTIVE` too, see the update above) | `LivenessConfigKeys.defaultPolicyMode`, `tools/mock-sync/data/mock-sync-defaults.properties` |
 | P2 | `quality.min_sharpness` 40 (was 10), set in the signed `engineParams` of model bundle 1.0.1 (bundle 1.3.0 today, with the same value plus `integrity.loop_window_frames` 300), because the sharpness scale belongs to the analyser; the compiled default stays 10 | `models/manifest.json`, `models/manifest.jws` |
-| P3 | `passive.min_frames` default 30 (was 8) | `LivenessConfigKeys.DEFAULT_PASSIVE_MIN_FRAMES`, MockSync defaults |
+| P3 | `passive.min_frames` default 30 (was 8) | `PolicyKey.PASSIVE_MIN_FRAMES`, MockSync defaults |
 | E1 | The smile is unmeasured while the head is turned more than `active.smile_max_yaw_deg` (new engine parameter, 15) from the neutral face, so a head turn can no longer be taken as a smile | `ActionLevels.smile` |
 | E3 | Frames with \|yaw\| above `active.pad_max_yaw_deg` (new, 30) are not scored by PAD during the challenges | `DefaultLivenessSession.scoreActivePad` |
 | new | When `passive.timeout_ms` (4 s) ends before 30 good frames, a session that has at least `passive.timeout_min_frames` (new, 8) decides on those frames instead of failing with `PASSIVE_TIMEOUT`. Needed because the Android emulator analysed passive frames in 57-251 ms (`docs/test-report/android-e2e.md` section 5), too slow for 30 frames in 4 s | `DefaultLivenessSession.onPassiveTimeout` |

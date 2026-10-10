@@ -13,6 +13,7 @@ import io.mosip.liveness.core.api.EngineInfo;
 import io.mosip.liveness.core.api.ImageDecoder;
 import io.mosip.liveness.core.api.ModelSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.liveness.core.engine.DefaultLivenessEngine;
 import io.mosip.liveness.core.engine.EngineParameters;
 import io.mosip.liveness.core.engine.LivenessMetrics;
@@ -42,7 +43,7 @@ import java.util.Set;
  * OnnxLivenessEngine engine = OnnxLivenessEngines
  *         .builder(ModelSources.classpath(getClass().getClassLoader()))
  *         .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION)
- *                 .orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION))
+ *                 .orElse(PolicyKey.MODEL_MIN_VERSION.defaultValue()))
  *         .imageDecoder(clientImageDecoder)   // the client's ImageIO or BitmapFactory decoder
  *         .build();                           // loads 5 models (about 1-2 s); call it off the UI thread
  * LivenessSession session = engine.open(request, listener);
@@ -62,7 +63,7 @@ import java.util.Set;
 public final class OnnxLivenessEngines {
 
     /** Engine identifier, matched against {@code mosip.registration.liveness.engine}. */
-    public static final String ENGINE_ID = LivenessConfigKeys.DEFAULT_ENGINE;
+    public static final String ENGINE_ID = PolicyKey.ENGINE.defaultValue();
     /** Engine version recorded in audits and packet evidence ({@code mosip-onnx-default@1.0.0}). */
     public static final String ENGINE_VERSION = "1.0.0";
     /** Vendor name recorded in {@link EngineInfo#vendor()}. */

@@ -12,6 +12,7 @@ import ai.onnxruntime.OrtProvider;
 import ai.onnxruntime.OrtSession;
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.config.PolicyKey;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -101,7 +102,7 @@ public final class OnnxRuntimeOptions {
     public static Builder fromConfig(ConfigSource config) {
         Objects.requireNonNull(config, "config");
         String value = config.get(LivenessConfigKeys.ENGINE_EXECUTION_PROVIDER)
-                .orElse(LivenessConfigKeys.DEFAULT_ENGINE_EXECUTION_PROVIDER);
+                .orElse(PolicyKey.ENGINE_EXECUTION_PROVIDER.defaultValue());
         ExecutionProvider provider;
         try {
             provider = ExecutionProvider.parse(value);

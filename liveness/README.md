@@ -31,7 +31,7 @@ liveness and presentation attack detection (PAD). Licence: MPL-2.0.
 | `...core.device` | Device adapter contract: `FaceCaptureDevice`, `FaceFrameSource`, `FrameSink`, `FaceFrame`, `StreamRequest`, `StreamStats`, `CaptureRequest`, `PadRequest`, `SignedFaceCapture`, `DeviceDescriptor`, `CertificationLevel`, `DeviceStatus`, `DeviceException` / `DeviceError` / `DeviceErrorCode`, `EndReason` |
 | `...core.image` | `ImageBuffer` (decoded pixels, byte or int backed) and `PixelFormat` |
 | `...core.vision` | Model adapter contract: `FaceAnalyzer` -> `FaceObservation` / `DetectedFace` (box, 5 landmarks, optional 478-point mesh, head pose, eye aspect ratio per eye, mouth ratio, gaze, quality), `PassivePad` -> `PadScore`, `FaceEmbedder` -> `FaceEmbedding` |
-| `...core.config` | `LivenessConfigKeys` (every key, default, floor and range), `LivenessPolicy` (typed per-workflow policy), `PolicyMode`, `OnMaxFailure`, `NoStreamPolicy`, `ConfigSource` |
+| `...core.config` | `PolicyKey` (every global key with its default and range), `LivenessConfigKeys` (key names, per-workflow defaults, local-override rule), `LivenessPolicy` (typed per-workflow policy), `PolicyMode`, `OnMaxFailure`, `NoStreamPolicy`, `ConfigSource` |
 | `...core.audit` | `AuditEventId` (`REG-EVT-LV01..17`), `LivenessAuditEvent` (payload serialised to identical JSON on both clients), `AuditAttributes`, `AuditSink`, `DiagnosticRecord`, `DiagnosticSink` |
 | `...core.ui` | `LivenessUiState` (what both clients render), `UiPhase`, `Severity`, `PromptIcon`, `MessageKeys` (the 41 message keys) |
 | `...core.engine` | The default engine. Public: `DefaultLivenessEngine` (builds sessions from injected model adapters), `EngineParameters` / `EngineParameter` (detection thresholds), `LivenessTransaction` (retry counting), `LivenessUiStateMapper`, `AuditPayloadBuilder`, `LivenessMetrics`, `DiagnosticLog`. Package-private: the session state machine and every algorithm (`QualityGate`, `PassivePadAggregator`, `DecisionPolicy`, `ChallengeScheduler`, `ChallengeObserver`, `FrameIntegrityChecker`, `PlanarityChecker`, `IdentityTracker`, `CaptureBinder`) |
@@ -131,7 +131,7 @@ Face Mesh), `MiniFasPassivePad` and `SFaceEmbedder`, plus the native sessions it
 OnnxLivenessEngine engine = OnnxLivenessEngines
         .builder(ModelSources.classpath(getClass().getClassLoader()))   // Android: a ModelSource over assets/models/
         .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION)
-                .orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION))
+                .orElse(PolicyKey.MODEL_MIN_VERSION.defaultValue()))
         .imageDecoder(clientImageDecoder)                              // the client's ImageDecoder
         .build();                                                      // blocking, about 1-2 s: not on the UI thread
 LivenessSession session = engine.open(request, listener);
@@ -143,7 +143,7 @@ EngineContext context = EngineContext.builder().config(configSource)
         .models(ModelSources.classpath(loader)).imageDecoder(clientImageDecoder)
         .auditSink(auditSink).diagnosticSink(diagnosticSink).build();
 for (LivenessEngineProvider p : ServiceLoader.load(LivenessEngineProvider.class)) {
-    if (p.engineId().equals(config.get(LivenessConfigKeys.ENGINE).orElse(LivenessConfigKeys.DEFAULT_ENGINE))) {
+    if (p.engineId().equals(config.get(LivenessConfigKeys.ENGINE).orElse(PolicyKey.ENGINE.defaultValue()))) {
         engine = p.create(context);   // OnnxLivenessEngineProvider, engine id "mosip-onnx-default"
     }
 }
@@ -341,7 +341,9 @@ else the workflow default. The default policy mode is `ALWAYS_ACTIVE` for every 
 every capture like registration and operator sign-in, because synthetic prints reached passive scores of 99,
 above the authentication threshold of 95. Out-of-range numbers are clamped (floors: passive threshold 50, reject threshold 5)
 and reported for LV15; unparsable values fall back to the default and are reported as diagnostics; `enable=N`
-turns every workflow `OFF`; the reject threshold never exceeds the passive threshold. Ranges applied:
+turns every workflow `OFF`; the reject threshold never exceeds the passive threshold. Every global key's default
+and range is one row of the `PolicyKey` enum (`...core.config`); the resolver clamps to that range and
+`LivenessPolicy.Builder` rejects values outside it. Ranges:
 `passive.min_frames` 1-60, `passive.timeout_ms` 1,000-60,000, `min_challenges` 1-5, `challenge_timeout_ms`
 2,000-15,000, `min_onset_ms` 0-2,000, `hold_ms` 0-3,000, `max_retries` 1-10, `binding.max_gap_ms` 500-120,000,
 `stream.timeout_ms` 1,000-600,000, `quality.max_yaw_deg` 0-90, `integrity.max_frozen_frames` 1-100,

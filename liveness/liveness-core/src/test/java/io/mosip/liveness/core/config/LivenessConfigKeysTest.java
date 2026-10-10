@@ -62,6 +62,60 @@ class LivenessConfigKeysTest {
         assertEquals("Y", d.get("mosip.registration.android.offline_approval.enable"));
     }
 
+    /** All 45 shipped defaults, in the order clients write them; a change here is a change of shipped behaviour. */
+    @Test
+    void fullDefaultMapIsPinned() {
+        List<String> expected = Arrays.asList(
+                "mosip.registration.liveness.enable=Y",
+                "mosip.registration.liveness.engine=mosip-onnx-default",
+                "mosip.registration.liveness.engine.execution_provider=CPU",
+                "mosip.registration.liveness.passive.threshold=80",
+                "mosip.registration.liveness.pad.reject_threshold=20",
+                "mosip.registration.liveness.passive.min_frames=30",
+                "mosip.registration.liveness.passive.timeout_ms=4000",
+                "mosip.registration.liveness.active.enable=Y",
+                "mosip.registration.liveness.active.min_challenges=2",
+                "mosip.registration.liveness.active.challenge_types=BLINK,SMILE,TURN_LEFT,TURN_RIGHT,LOOK_UP",
+                "mosip.registration.liveness.active.challenge_timeout_ms=5000",
+                "mosip.registration.liveness.active.min_onset_ms=200",
+                "mosip.registration.liveness.active.hold_ms=300",
+                "mosip.registration.liveness.max_retries=3",
+                "mosip.registration.liveness.on_max_failure=BLOCK",
+                "mosip.registration.liveness.stream.timeout_ms=60000",
+                "mosip.registration.liveness.frame.sample_interval_ms=0",
+                "mosip.registration.liveness.device.reconnect_attempts=1",
+                "mosip.registration.liveness.quality.min_ied_px=60",
+                "mosip.registration.liveness.quality.max_yaw_deg=15",
+                "mosip.registration.liveness.integrity.max_frozen_frames=5",
+                "mosip.registration.liveness.integrity.min_fps=3",
+                "mosip.registration.liveness.binding.min_similarity=60",
+                "mosip.registration.liveness.binding.max_gap_ms=5000",
+                "mosip.registration.liveness.no_stream_policy=BLOCK",
+                "mosip.registration.liveness.model.min_version=1.3.0",
+                "mosip.registration.liveness.diagnostic.enable=N",
+                "mosip.registration.liveness.metrics.enable=Y",
+                "mosip.registration.mds.allowed_certifications=L0,L1",
+                "mosip.registration.liveness.android.device=BUILTIN",
+                "mosip.registration.liveness.android.block_emulator=N",
+                "mosip.registration.android.offline_approval.enable=Y",
+                "mosip.registration.liveness.policy.registration=ALWAYS_ACTIVE",
+                "mosip.registration.liveness.policy.onboard_auth=ALWAYS_ACTIVE",
+                "mosip.registration.liveness.onboard_auth.passive.threshold=95",
+                "mosip.registration.liveness.policy.login_auth=ALWAYS_ACTIVE",
+                "mosip.registration.liveness.login_auth.passive.threshold=95",
+                "mosip.registration.liveness.login_auth.on_max_failure=BLOCK_AND_LOCK",
+                "mosip.registration.liveness.policy.packet_auth=ALWAYS_ACTIVE",
+                "mosip.registration.liveness.packet_auth.passive.threshold=95",
+                "mosip.registration.liveness.policy.exception_auth=ALWAYS_ACTIVE",
+                "mosip.registration.liveness.exception_auth.passive.threshold=95",
+                "mosip.registration.liveness.policy.eod_auth=ALWAYS_ACTIVE",
+                "mosip.registration.liveness.eod_auth.passive.threshold=95",
+                "mosip.registration.liveness.policy.exception_photo=OFF");
+        List<String> actual = new ArrayList<>();
+        LivenessConfigKeys.defaultValues().forEach((k, v) -> actual.add(k + "=" + v));
+        assertEquals(expected, actual);
+    }
+
     @Test
     void workflowDefaultsMatchTheDesignTable() {
         Map<String, String> d = LivenessConfigKeys.defaultValues();
@@ -190,7 +244,7 @@ class LivenessConfigKeysTest {
     @Test
     void defaultChallengePoolMatchesThePolicyDefault() {
         Set<ChallengeType> parsed = EnumSet.noneOf(ChallengeType.class);
-        for (String name : LivenessConfigKeys.DEFAULT_CHALLENGE_TYPES.split(",")) {
+        for (String name : PolicyKey.ACTIVE_CHALLENGE_TYPES.defaultValue().split(",")) {
             parsed.add(ChallengeType.fromName(name).orElseThrow(IllegalStateException::new));
         }
         assertEquals(parsed, LivenessPolicy.defaults(Workflow.REGISTRATION).challengeTypes());

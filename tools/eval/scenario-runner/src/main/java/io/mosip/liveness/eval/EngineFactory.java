@@ -11,7 +11,7 @@ import io.mosip.liveness.core.EngineException;
 import io.mosip.liveness.core.api.EngineInfo;
 import io.mosip.liveness.core.api.ModelInfo;
 import io.mosip.liveness.core.api.ModelSource;
-import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.liveness.core.engine.DefaultLivenessEngine;
 import io.mosip.liveness.core.engine.EngineParameters;
 import io.mosip.liveness.core.vision.AnalyzerFeature;
@@ -71,7 +71,7 @@ final class EngineFactory implements AutoCloseable {
         ModelSource source = modelsDir == null ? ModelSources.classpath(EngineFactory.class.getClassLoader())
                 : ModelSources.directory(modelsDir);
         ModelRegistry registry = ModelRegistry.builder(source)
-                .minimumVersion(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION).open();
+                .minimumVersion(PolicyKey.MODEL_MIN_VERSION.defaultValue()).open();
         OnnxRuntimeOptions options = OnnxRuntimeOptions.builder().intraOpThreads(threads)
                 .executionProvider(provider).build();
         return new EngineFactory(OnnxModelSet.load(registry, options), registry.bundleVersion(),

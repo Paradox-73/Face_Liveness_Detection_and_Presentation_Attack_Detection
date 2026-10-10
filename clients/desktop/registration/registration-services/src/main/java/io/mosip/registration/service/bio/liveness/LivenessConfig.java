@@ -11,7 +11,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,6 +25,7 @@ import io.mosip.liveness.core.Workflow;
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.config.LivenessPolicy;
+import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.liveness.core.policy.PolicyResolution;
 import io.mosip.liveness.core.policy.PolicyResolver;
 import io.mosip.registration.config.AppConfig;
@@ -277,7 +277,7 @@ public class LivenessConfig implements ConfigSource {
 	 * @return {@code mosip.registration.liveness.engine}, default {@code mosip-onnx-default}
 	 */
 	public String engineId() {
-		return get(LivenessConfigKeys.ENGINE).orElse(LivenessConfigKeys.DEFAULT_ENGINE);
+		return get(LivenessConfigKeys.ENGINE).orElse(PolicyKey.ENGINE.defaultValue());
 	}
 
 	/**
@@ -327,7 +327,7 @@ public class LivenessConfig implements ConfigSource {
 	 * @return {@code mosip.registration.liveness.enable}; an unreadable value keeps the default (on)
 	 */
 	public boolean isMasterSwitchOn() {
-		return yesNo(LivenessConfigKeys.ENABLE, true);
+		return PolicyKey.ENABLE.isOn(this);
 	}
 
 	/**
@@ -336,7 +336,7 @@ public class LivenessConfig implements ConfigSource {
 	 * @return {@code mosip.registration.liveness.diagnostic.enable}, default off
 	 */
 	public boolean isDiagnosticEnabled() {
-		return yesNo(LivenessConfigKeys.DIAGNOSTIC_ENABLE, false);
+		return PolicyKey.DIAGNOSTIC_ENABLE.isOn(this);
 	}
 
 	/**
@@ -345,7 +345,7 @@ public class LivenessConfig implements ConfigSource {
 	 * @return {@code mosip.registration.liveness.metrics.enable}, default on
 	 */
 	public boolean isMetricsEnabled() {
-		return yesNo(LivenessConfigKeys.METRICS_ENABLE, true);
+		return PolicyKey.METRICS_ENABLE.isOn(this);
 	}
 
 	/**
@@ -422,20 +422,5 @@ public class LivenessConfig implements ConfigSource {
 			}
 		}
 		return result;
-	}
-
-	private boolean yesNo(String key, boolean defaultValue) {
-		Optional<String> v = get(key);
-		if (!v.isPresent()) {
-			return defaultValue;
-		}
-		String s = v.get().toUpperCase(Locale.ROOT);
-		if ("Y".equals(s) || "YES".equals(s) || "TRUE".equals(s)) {
-			return true;
-		}
-		if ("N".equals(s) || "NO".equals(s) || "FALSE".equals(s)) {
-			return false;
-		}
-		return defaultValue;
 	}
 }

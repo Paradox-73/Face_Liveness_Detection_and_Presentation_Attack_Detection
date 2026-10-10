@@ -35,7 +35,7 @@ import io.mosip.liveness.core.api.ModelInfo;
 import io.mosip.liveness.core.api.ModelSource;
 import io.mosip.liveness.core.audit.AuditSink;
 import io.mosip.liveness.core.config.ConfigSource;
-import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.liveness.core.engine.AuditPayloadBuilder;
 import io.mosip.liveness.core.policy.PolicyResolver;
 import io.mosip.liveness.onnx.model.ModelEntry;
@@ -348,7 +348,7 @@ public final class ModelBundleImporter {
         try {
             return SemanticVersion.parse(configuredMinimum());
         } catch (IllegalArgumentException e) {
-            return SemanticVersion.parse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION);
+            return SemanticVersion.parse(PolicyKey.MODEL_MIN_VERSION.defaultValue());
         }
     }
 

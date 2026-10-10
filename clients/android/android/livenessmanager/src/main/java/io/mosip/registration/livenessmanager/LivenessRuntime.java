@@ -25,7 +25,7 @@ import io.mosip.liveness.core.Workflow;
 import io.mosip.liveness.core.audit.AuditSink;
 import io.mosip.liveness.core.audit.DiagnosticSink;
 import io.mosip.liveness.core.config.ConfigSource;
-import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.liveness.core.engine.AuditPayloadBuilder;
 import io.mosip.liveness.core.engine.LivenessMetrics;
 import io.mosip.liveness.core.policy.PolicyResolution;
@@ -285,9 +285,7 @@ public final class LivenessRuntime {
      * @return {@code true} if blocked
      */
     public boolean isBlockedEmulator() {
-        boolean block = LivenessConfigKeys.YES.equalsIgnoreCase(config.get(LivenessConfigKeys.ANDROID_BLOCK_EMULATOR)
-                .orElse(LivenessConfigKeys.DEFAULT_ANDROID_BLOCK_EMULATOR));
-        return block && isEmulator();
+        return PolicyKey.ANDROID_BLOCK_EMULATOR.isOn(config) && isEmulator();
     }
 
     /**

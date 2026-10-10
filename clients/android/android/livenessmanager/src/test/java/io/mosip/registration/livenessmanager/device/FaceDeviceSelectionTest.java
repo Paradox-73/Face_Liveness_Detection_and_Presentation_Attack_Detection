@@ -20,6 +20,7 @@ import java.util.Map;
 
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.registration.livenessmanager.device.FaceDeviceSelection.Kind;
 import io.mosip.registration.livenessmanager.device.FaceDeviceSelection.Route;
 
@@ -33,7 +34,7 @@ public class FaceDeviceSelectionTest {
         assertEquals(Kind.BUILTIN, FaceDeviceSelection.kind(config("")));
         assertEquals(Kind.BUILTIN, FaceDeviceSelection.kind(config("   ")));
         assertEquals(Kind.BUILTIN, FaceDeviceSelection.kind(config("BUILTIN")));
-        assertEquals(LivenessConfigKeys.DEFAULT_ANDROID_DEVICE, Kind.BUILTIN.name());
+        assertEquals(PolicyKey.ANDROID_DEVICE.defaultValue(), Kind.BUILTIN.name());
     }
 
     @Test

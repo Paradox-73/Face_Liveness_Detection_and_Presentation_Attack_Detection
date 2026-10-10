@@ -57,7 +57,7 @@ Dependencies between sub-packages have no cycles (checked by `ArchitectureTest`)
 // Android: ModelSource reading assets/models/.
 ModelRegistry registry = ModelRegistry.builder(ModelSources.classpath(getClass().getClassLoader()))
         .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION)
-                .orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION))
+                .orElse(PolicyKey.MODEL_MIN_VERSION.defaultValue()))
         .open();                                   // checks manifest.jws and the minimum version
 try (OnnxModelSet models = OnnxModelSet.load(registry, OnnxRuntimeOptions.defaults())) {
     FaceObservation obs = models.faceAnalyzer().analyze(image, previousSubjectBox);  // hint may be null
@@ -92,7 +92,7 @@ and returns an `OnnxLivenessEngine` (a `DefaultLivenessEngine` with `OnnxFaceAna
 OnnxLivenessEngine engine = OnnxLivenessEngines
         .builder(ModelSources.classpath(getClass().getClassLoader()))   // Android: ModelSource over assets
         .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION)
-                .orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION))
+                .orElse(PolicyKey.MODEL_MIN_VERSION.defaultValue()))
         .imageDecoder(clientImageDecoder)
         .build();                         // blocking (about 1-2 s): not on the UI thread
 LivenessSession session = engine.open(request, listener);
@@ -118,7 +118,7 @@ engine.close();                           // at shutdown, after the last session
   - `model-signing-dev.pub.pem`.
 - **Bundle version:** 1.3.0, re-signed on 2026-10-04 to add the signed engine parameter
   `integrity.loop_window_frames=300` (next to `quality.min_sharpness=40`). The default `model.min_version`
-  (`LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION` and MockSync's `mock-sync-defaults.properties`) is also 1.3.0,
+  (`PolicyKey.MODEL_MIN_VERSION` and MockSync's `mock-sync-defaults.properties`) is also 1.3.0,
   so bundles signed earlier with the development key (1.0.0, 1.0.1, 1.1.0) are refused as rollbacks.
 - **Load sequence (`ModelRegistry`):**
   1. Read `manifest.json` and `manifest.jws`.

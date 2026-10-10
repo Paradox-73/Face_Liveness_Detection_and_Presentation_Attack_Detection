@@ -18,6 +18,7 @@ Design background: [../design/engine-interface.md](../design/engine-interface.md
 
 ```java
 import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.liveness.onnx.OnnxLivenessEngine;
 import io.mosip.liveness.onnx.OnnxLivenessEngines;
 import io.mosip.liveness.onnx.model.ModelSources;
@@ -25,7 +26,7 @@ import io.mosip.liveness.onnx.model.ModelSources;
 OnnxLivenessEngine engine = OnnxLivenessEngines
         .builder(ModelSources.classpath(getClass().getClassLoader()))   // desktop: liveness-onnx-...-models.jar
         .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION)
-                              .orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION))
+                              .orElse(PolicyKey.MODEL_MIN_VERSION.defaultValue()))
         .imageDecoder(clientImageDecoder)      // io.mosip.liveness.core.api.ImageDecoder (ImageIO / BitmapFactory)
         .build();                              // blocking, about 1-2 s: call it off the UI thread
 ```
@@ -45,7 +46,7 @@ EngineContext context = EngineContext.builder()
         .imageDecoder(clientImageDecoder)
         .auditSink(auditSink).diagnosticSink(diagnosticSink)
         .build();
-String wanted = configSource.get(LivenessConfigKeys.ENGINE).orElse(LivenessConfigKeys.DEFAULT_ENGINE);
+String wanted = configSource.get(LivenessConfigKeys.ENGINE).orElse(PolicyKey.ENGINE.defaultValue());
 LivenessEngine engine = null;
 for (LivenessEngineProvider p : ServiceLoader.load(LivenessEngineProvider.class)) {
     if (p.engineId().equals(wanted)) {

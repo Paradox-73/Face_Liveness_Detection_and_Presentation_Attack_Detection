@@ -38,6 +38,7 @@ import io.mosip.liveness.core.api.LivenessSession;
 import io.mosip.liveness.core.api.SessionRequest;
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.liveness.core.device.FaceFrame;
 import io.mosip.liveness.core.image.ImageBuffer;
 import io.mosip.liveness.onnx.OnnxLivenessEngineProvider;
@@ -162,15 +163,15 @@ public class EngineLoaderTest {
 
     @Test
     public void defaultAndBlankEngineIdUseTheBuiltInOnnxEngine() throws Exception {
-        for (String id : Arrays.asList(null, "", "  ", LivenessConfigKeys.DEFAULT_ENGINE,
-                " " + LivenessConfigKeys.DEFAULT_ENGINE + " ")) {
+        for (String id : Arrays.asList(null, "", "  ", PolicyKey.ENGINE.defaultValue(),
+                " " + PolicyKey.ENGINE.defaultValue() + " ")) {
             AtomicInteger builtInCalls = new AtomicInteger();
             AtomicInteger providerCalls = new AtomicInteger();
             // A listed provider for the default ID (the liveness-onnx jar has one) is not used either.
             LivenessEngineProvider onnxJar = new LivenessEngineProvider() {
                 @Override
                 public String engineId() {
-                    return LivenessConfigKeys.DEFAULT_ENGINE;
+                    return PolicyKey.ENGINE.defaultValue();
                 }
 
                 @Override

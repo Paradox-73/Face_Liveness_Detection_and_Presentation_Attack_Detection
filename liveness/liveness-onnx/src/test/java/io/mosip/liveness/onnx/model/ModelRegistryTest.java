@@ -10,7 +10,7 @@ import io.mosip.liveness.core.EngineErrorCode;
 import io.mosip.liveness.core.EngineException;
 import io.mosip.liveness.core.api.ModelInfo;
 import io.mosip.liveness.core.api.ModelSource;
-import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.liveness.onnx.TestSupport;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -163,7 +163,7 @@ class ModelRegistryTest {
 
     @Test
     void bundlesSignedBeforeTheDefaultMinimumAreBlocked() throws Exception {
-        assertEquals("1.3.0", LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION);
+        assertEquals("1.3.0", PolicyKey.MODEL_MIN_VERSION.defaultValue());
         for (String old : Arrays.asList("1.0.0", "1.0.1", "1.1.0", "1.2.0")) {
             assertEquals(EngineErrorCode.MODEL_VERSION, failure(bundle(old)), old);
         }
