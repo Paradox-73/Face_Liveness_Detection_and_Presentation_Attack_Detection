@@ -20,7 +20,9 @@ Design: [../design/desktop-liveness-services.md](../design/desktop-liveness-serv
 |---|---|
 | `boolean isLivenessEnforced(Workflow w)` | Master switch on and the workflow's policy not `OFF`; read on every call |
 | `LivenessDialog openLivenessDialog(Workflow w, String subjectRef, Window owner, LivenessDialog.Callbacks cb)` | Opens the modal liveness window for a resident capture or onboarding |
-| `LivenessDialog authenticateFaceWithLiveness(Workflow w, String userId, Node anchor, Runnable captureAndMatch)` | Liveness first, then the screen's existing capture-and-match task |
+| `void authenticateFace(Workflow w, String userId, Node anchor, Runnable captureAndMatch[, Runnable onLockRequired])` | The one face-authentication entry of the login, packet-authentication and end-of-day screens: liveness first when enforced (then the screen's existing capture-and-match task), else the task at once |
+| `void startFaceStream(Workflow w, Runnable captureFace, Runnable plainStream)` | The Stream button: the liveness window owns the camera when liveness is enforced |
+| `boolean startFaceLiveness(FaceLivenessStep step, Workflow w, String subjectRef, Node anchor, Runnable capture, Runnable onClosed)` | Resident and onboarding face capture: liveness first when enforced; `false` means capture as before. `step.takePass(...)` goes on the capture request |
 | `Workflow faceAuthWorkflow(boolean isPacketAuth, boolean isReviewer)` | `packet_auth`, `exception_auth` or `eod_auth` |
 | `static boolean isLivenessRefusal(Throwable t)` | True when a capture failed with a `REG-LIV-*` refusal (the window already showed the reason) |
 

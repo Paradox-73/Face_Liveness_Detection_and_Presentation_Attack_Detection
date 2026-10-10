@@ -37,7 +37,6 @@ import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.ClientApplication;
 import io.mosip.registration.controller.FXUtils;
 import io.mosip.registration.controller.device.Streamer;
-import io.mosip.registration.controller.liveness.LivenessDialog;
 import io.mosip.registration.controller.reg.HeaderController;
 import io.mosip.registration.controller.reg.Validations;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
@@ -49,10 +48,8 @@ import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
-import io.mosip.registration.mdm.dto.LivenessContext;
 import io.mosip.registration.scheduler.SchedulerUtil;
 import io.mosip.registration.service.bio.BioService;
-import io.mosip.registration.service.bio.liveness.LivenessOutcome;
 import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.operator.UserMachineMappingService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
@@ -204,7 +201,6 @@ public class LoginController extends BaseController implements Initializable {
 	@Autowired
 	private Streamer streamer;
 
-	private LivenessDialog loginLivenessDialog;
 
 	@Autowired
 	private BioService bioService;
@@ -604,12 +600,10 @@ public class LoginController extends BaseController implements Initializable {
 	}
 
 	public void streamFace() {
-		if (isLivenessEnforced(Workflow.LOGIN_AUTH)) {
-			// the liveness window shows the live preview; a plain stream would keep the camera busy
-			captureFace(null);
-			return;
-		}
+		startFaceStream(Workflow.LOGIN_AUTH, () -> captureFace(null), this::streamPlainFace);
+	}
 
+	private void streamPlainFace() {
 		try {
 			streamer.startStream(bioService.getStream(RegistrationConstants.FACE_FULLFACE), faceImage, null);
 		} catch (RegBaseCheckedException regBaseCheckedException) {
@@ -681,41 +675,15 @@ public class LoginController extends BaseController implements Initializable {
 		AuthenticationValidatorDTO authenticationValidatorDTO = new AuthenticationValidatorDTO();
 		authenticationValidatorDTO.setUserId(userId.getText());
 
-		if (isLivenessEnforced(Workflow.LOGIN_AUTH)) {
-			captureFaceWithLiveness(userDTO, authenticationValidatorDTO);
-			return;
-		}
-		executeValidationTask(userDTO, RegistrationConstants.FACE, false, false, authenticationValidatorDTO, facePane,
-				faceProgressIndicator, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.FACE_MATCH), RegistrationConstants.FACE);
-	}
-
-	/**
-	 * Face login with liveness: the liveness window opens, and the existing capture and 1:1 match run only after
-	 * liveness passed. After the last failed attempt the invalid-login rule applies ({@code BLOCK_AND_LOCK}).
-	 */
-	private void captureFaceWithLiveness(UserDTO userDTO, AuthenticationValidatorDTO authenticationValidatorDTO) {
-		if (loginLivenessDialog != null && loginLivenessDialog.isOpen()) {
-			return;
-		}
-		loginLivenessDialog = openLivenessDialog(Workflow.LOGIN_AUTH, userId.getText(),
-				facePane.getScene() != null ? facePane.getScene().getWindow() : null, new LivenessDialog.Callbacks() {
-					@Override
-					public void captureReady(LivenessContext context) {
-						// SessionContext.validateFace picks up the pending pass of this login session
-						executeValidationTask(userDTO, RegistrationConstants.FACE, false, false,
-								authenticationValidatorDTO, facePane, faceProgressIndicator,
-								RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.FACE_MATCH),
-								RegistrationConstants.FACE);
-					}
-
-					@Override
-					public void closedWithoutPass(Optional<LivenessOutcome> lastOutcome) {
-						if (lastOutcome.isPresent() && lastOutcome.get().isLockRequired()) {
-							validateInvalidLogin(userDTO, RegistrationUIConstants
-									.getMessageLanguageSpecific(RegistrationUIConstants.LIVENESS_MAX_ATTEMPTS_AUTH));
-						}
-					}
-				});
+		// with liveness, SessionContext.validateFace picks up the pending pass of this login session; after the last
+		// failed attempt the invalid-login rule applies (BLOCK_AND_LOCK)
+		authenticateFace(Workflow.LOGIN_AUTH, userId.getText(), facePane,
+				() -> executeValidationTask(userDTO, RegistrationConstants.FACE, false, false, authenticationValidatorDTO,
+						facePane, faceProgressIndicator,
+						RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.FACE_MATCH),
+						RegistrationConstants.FACE),
+				() -> validateInvalidLogin(userDTO,
+						RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.LIVENESS_MAX_ATTEMPTS_AUTH)));
 	}
 
 	private void executeValidationTask(UserDTO userDTO, String loginMethod, boolean isInitialSetUp,

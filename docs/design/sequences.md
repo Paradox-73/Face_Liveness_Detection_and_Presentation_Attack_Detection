@@ -105,13 +105,13 @@ sequenceDiagram
   autonumber
   actor Sup as Supervisor
   participant EOD as EODAuthenticationController
-  participant BC as BaseController.authenticateFaceWithLiveness
+  participant BC as BaseController.authenticateFace
   participant DLG as LivenessDialog ("Supervisor verification")
   participant RUN as LivenessRun
   participant CVF as BaseController.captureAndValidateFace
   participant AUTH as AuthenticationServiceImpl
   Sup->>EOD: select packets, Approve, choose face
-  EOD->>BC: authenticateFaceWithLiveness(EOD_AUTH, supervisorId, ...)
+  EOD->>BC: authenticateFace(EOD_AUTH, supervisorId, ...)
   BC->>DLG: open, stream, passive (95) then challenges if needed
   alt replayed video or photo
     RUN-->>DLG: FAILED(PAD or TIMEOUT): generic message, "Attempt 1 of 3", Retry

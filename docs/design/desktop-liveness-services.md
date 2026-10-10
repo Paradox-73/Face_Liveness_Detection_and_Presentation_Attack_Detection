@@ -100,7 +100,7 @@ the context through the static login code.
     counts as one failed login under the client's rule `mosip.registration.invalid_login_count` /
     `invalid_login_time`. The login screen calls its own `validateInvalidLogin`; the authentications inside a
     session (`packet_auth`, `exception_auth`, `eod_auth`) call `LivenessAccountLock.apply(workflow, userId)` from
-    `BaseController.authenticateFaceWithLiveness`, which goes through the same `LoginService.validateInvalidLogin`.
+    `BaseController.authenticateFace`, which goes through the same `LoginService.validateInvalidLogin`.
     When the count is reached the alert says the account is locked for the lock time, and the next login of that
     user is refused until it has passed. Residents have no account: `BLOCK_AND_LOCK` behaves as `BLOCK` for them
     (the core resolver does not allow it for resident workflows).

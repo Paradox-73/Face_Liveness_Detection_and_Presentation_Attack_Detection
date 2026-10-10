@@ -597,11 +597,10 @@ public class EODAuthenticationController extends BaseController implements Initi
 
 	@FXML
 	private void startStream() {
-		if (isLivenessEnforced(Workflow.EOD_AUTH)) {
-			// the liveness window shows the live preview; a plain stream would keep the camera busy
-			validateFace();
-			return;
-		}
+		startFaceStream(Workflow.EOD_AUTH, this::validateFace, this::streamPlainFace);
+	}
+
+	private void streamPlainFace() {
 		faceImage.setImage(null);
 		try {
 			streamer.startStream(bioService.getStream(RegistrationConstants.FACE_FULLFACE), faceImage, null);
@@ -626,13 +625,9 @@ public class EODAuthenticationController extends BaseController implements Initi
 		LOGGER.info("Validating Face for Face based Authentication");
 
 		if (validateInput(faceUserId, null)) {
-			if (isLivenessEnforced(Workflow.EOD_AUTH)) {
-				String userId = faceUserId.getText();
-				authenticateFaceWithLiveness(Workflow.EOD_AUTH, userId, faceBasedLogin,
-						() -> executeFaceValidationTask(userId, faceBasedLogin));
-			} else {
-				executeFaceValidationTask(faceUserId.getText(), faceBasedLogin);
-			}
+			String userId = faceUserId.getText();
+			authenticateFace(Workflow.EOD_AUTH, userId, faceBasedLogin,
+					() -> executeFaceValidationTask(userId, faceBasedLogin));
 		}
 	}
 

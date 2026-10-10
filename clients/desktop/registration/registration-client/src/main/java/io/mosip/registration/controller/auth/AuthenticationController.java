@@ -16,7 +16,6 @@ import org.springframework.stereotype.Controller;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.liveness.core.Workflow;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
@@ -483,11 +482,10 @@ public class AuthenticationController extends BaseController implements Initiali
 
 	@FXML
 	private void startStream() {
-		if (isLivenessEnforced(faceAuthWorkflow(true, isReviewer))) {
-			// the liveness window shows the live preview; a plain stream would keep the camera busy
-			validateFace();
-			return;
-		}
+		startFaceStream(faceAuthWorkflow(true, isReviewer), this::validateFace, this::streamPlainFace);
+	}
+
+	private void streamPlainFace() {
 		faceImage.setImage(null);
 		try {
 			streamer.startStream(bioService.getStream(RegistrationConstants.FACE_FULLFACE), faceImage, null);
@@ -512,14 +510,9 @@ public class AuthenticationController extends BaseController implements Initiali
 		LOGGER.info("Validating Face for Face based Authentication");
 
 		if (validateInput(faceUserId, null)) {
-			Workflow workflow = faceAuthWorkflow(true, isReviewer);
-			if (isLivenessEnforced(workflow)) {
-				String userId = faceUserId.getText();
-				authenticateFaceWithLiveness(workflow, userId, operatorAuthenticationPane,
-						() -> executeFaceValidationTask(userId, operatorAuthenticationPane));
-			} else {
-				executeFaceValidationTask(faceUserId.getText(), operatorAuthenticationPane);
-			}
+			String userId = faceUserId.getText();
+			authenticateFace(faceAuthWorkflow(true, isReviewer), userId, operatorAuthenticationPane,
+					() -> executeFaceValidationTask(userId, operatorAuthenticationPane));
 		}
 
 		authCounter.setText(++faceAuthCount + "");

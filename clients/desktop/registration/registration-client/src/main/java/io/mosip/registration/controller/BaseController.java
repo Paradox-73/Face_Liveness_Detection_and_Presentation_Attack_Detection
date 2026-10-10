@@ -165,6 +165,9 @@ public class BaseController {
 	@Autowired
 	private LivenessAccountLock livenessAccountLock;
 
+	/** The face authentication liveness window of this screen, so a second click does not open another. */
+	private LivenessDialog faceAuthLivenessDialog;
+
 	@Autowired
 	protected FXComponents fXComponents;
 
@@ -1801,42 +1804,161 @@ public class BaseController {
 	}
 
 	/**
-	 * Runs an operator or supervisor face authentication behind face liveness: opens the liveness window, then runs
-	 * the screen's existing capture-and-match task once liveness passed. Authentication is blocked when liveness
-	 * fails; after the last attempt the recovery message is shown.
+	 * Starts the face camera preview of an authentication screen. When liveness is enforced the liveness window
+	 * shows the live preview (a plain stream would keep the camera busy), so the face capture starts instead.
 	 *
-	 * @param workflow        {@code packet_auth}, {@code exception_auth} or {@code eod_auth}
+	 * @param workflow    the liveness workflow of the screen
+	 * @param captureFace the screen's face capture, which opens the liveness window
+	 * @param plainStream the screen's camera stream
+	 */
+	protected void startFaceStream(Workflow workflow, Runnable captureFace, Runnable plainStream) {
+		(isLivenessEnforced(workflow) ? captureFace : plainStream).run();
+	}
+
+	/**
+	 * Runs an operator or supervisor face authentication: behind face liveness when it is enforced for the
+	 * workflow, else at once. With liveness, the window opens (one at a time per screen) and the screen's existing
+	 * capture-and-match task runs once liveness passed; after the last failed attempt the account lock rule of the
+	 * workflow applies.
+	 *
+	 * @param workflow        {@code login_auth}, {@code packet_auth}, {@code exception_auth} or {@code eod_auth}
 	 * @param userId          the user being authenticated
 	 * @param anchor          a node of the calling screen (owner of the window)
 	 * @param captureAndMatch the existing capture and 1:1 match task
-	 * @return the open dialog
 	 */
-	protected LivenessDialog authenticateFaceWithLiveness(Workflow workflow, String userId, Node anchor,
-			Runnable captureAndMatch) {
-		Window owner = anchor != null && anchor.getScene() != null ? anchor.getScene().getWindow() : null;
-		return openLivenessDialog(workflow, userId, owner, new LivenessDialog.Callbacks() {
+	protected void authenticateFace(Workflow workflow, String userId, Node anchor, Runnable captureAndMatch) {
+		authenticateFace(workflow, userId, anchor, captureAndMatch, () -> applyLivenessLock(workflow, userId));
+	}
+
+	/**
+	 * Same as {@link #authenticateFace(Workflow, String, Node, Runnable)} with the screen's own handling of a
+	 * liveness failure that requires the account lock (operator login counts it as a failed login).
+	 *
+	 * @param workflow        the liveness workflow
+	 * @param userId          the user being authenticated
+	 * @param anchor          a node of the calling screen (owner of the window)
+	 * @param captureAndMatch the existing capture and 1:1 match task
+	 * @param onLockRequired  runs when the last attempt failed and {@code on_max_failure} asks for the lock
+	 */
+	protected void authenticateFace(Workflow workflow, String userId, Node anchor, Runnable captureAndMatch,
+			Runnable onLockRequired) {
+		if (!isLivenessEnforced(workflow)) {
+			captureAndMatch.run();
+			return;
+		}
+		if (faceAuthLivenessDialog != null && faceAuthLivenessDialog.isOpen()) {
+			return;
+		}
+		faceAuthLivenessDialog = openLivenessDialog(workflow, userId, windowOf(anchor), new LivenessDialog.Callbacks() {
 			@Override
 			public void captureReady(LivenessContext context) {
-				// captureAndValidateFace picks up the pending pass of this session for the same user
+				// the capture picks up the pending pass of this session for the same user
 				captureAndMatch.run();
 			}
 
 			@Override
 			public void closedWithoutPass(Optional<LivenessOutcome> lastOutcome) {
 				if (lastOutcome.isPresent() && lastOutcome.get().isLockRequired()) {
-					applyLivenessLock(workflow, userId);
+					onLockRequired.run();
 				}
 			}
 		});
 	}
 
 	/**
-	 * Tells whether a capture failed because the face liveness gate refused it ({@code REG-LIV-*}).
+	 * Starts the liveness window before a resident or onboarding face capture, when liveness is enforced for the
+	 * workflow. The screen's capture task runs once liveness passed and sends {@link FaceLivenessStep#takePass}
+	 * with its capture request; the liveness gate binds the capture to the session, so a face is never stored when
+	 * liveness fails.
 	 *
-	 * @param failure the exception of the capture task
-	 * @return {@code true} for a liveness refusal
+	 * @param step       the screen's liveness state
+	 * @param workflow   {@code registration}, {@code exception_photo} or {@code onboard_auth}
+	 * @param subjectRef registration ID (resident) or user ID (operator)
+	 * @param anchor     a node of the calling screen (owner of the window)
+	 * @param capture    the screen's capture task
+	 * @param onClosed   runs when the window closed without a pass (re-enable the screen)
+	 * @return {@code false} when liveness is not enforced: the screen captures as before
 	 */
-	protected static boolean isLivenessRefusal(Throwable failure) {
+	protected boolean startFaceLiveness(FaceLivenessStep step, Workflow workflow, String subjectRef, Node anchor,
+			Runnable capture, Runnable onClosed) {
+		if (!isLivenessEnforced(workflow)) {
+			return false;
+		}
+		LOGGER.info(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
+				"Starting face liveness before the " + workflow.id() + " capture");
+		SessionContext.setAutoLogout(false);
+		step.dialog = openLivenessDialog(workflow, subjectRef, windowOf(anchor), new LivenessDialog.Callbacks() {
+			@Override
+			public void captureReady(LivenessContext context) {
+				step.pass = context;
+				capture.run();
+			}
+
+			@Override
+			public void closedWithoutPass(Optional<LivenessOutcome> lastOutcome) {
+				step.pass = null;
+				SessionContext.setAutoLogout(true);
+				onClosed.run();
+			}
+		});
+		return true;
+	}
+
+	/**
+	 * Shows the alert of a failed face capture task, unless the liveness window is open and shows the failure with
+	 * its Retry button.
+	 *
+	 * @param step    the screen's liveness state
+	 * @param failure the exception of the capture task
+	 */
+	protected void alertCaptureFailure(FaceLivenessStep step, Throwable failure) {
+		if (!step.isOpen()) {
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(
+					isLivenessRefusal(failure) ? RegistrationUIConstants.LIVENESS_CAPTURE_REFUSED
+							: RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
+		}
+	}
+
+	/** The liveness window and its pass of one capture screen ({@link #startFaceLiveness}). */
+	protected static final class FaceLivenessStep {
+
+		private LivenessDialog dialog;
+		private volatile LivenessContext pass;
+
+		/** Creates the state of one capture screen. */
+		public FaceLivenessStep() {
+			// no window yet, no pass
+		}
+
+		/**
+		 * Tells whether the liveness window is open.
+		 *
+		 * @return {@code true} while it is shown
+		 */
+		public boolean isOpen() {
+			return dialog != null && dialog.isOpen();
+		}
+
+		/**
+		 * Returns the pass of the liveness session once, for the capture request.
+		 *
+		 * @param workflow   the workflow of the capture
+		 * @param subjectRef the subject of the capture
+		 * @return the pass, or a context without a pass (accepted by the gate only when the policy is {@code OFF})
+		 */
+		public LivenessContext takePass(Workflow workflow, String subjectRef) {
+			LivenessContext context = pass;
+			pass = null;
+			return context != null ? context : LivenessContext.withoutPass(workflow, subjectRef);
+		}
+	}
+
+	private static Window windowOf(Node anchor) {
+		return anchor != null && anchor.getScene() != null ? anchor.getScene().getWindow() : null;
+	}
+
+	/** Tells whether a capture failed because the face liveness gate refused it ({@code REG-LIV-*}). */
+	private static boolean isLivenessRefusal(Throwable failure) {
 		for (Throwable t = failure; t != null; t = t.getCause()) {
 			if (t instanceof RegBaseCheckedException && ((RegBaseCheckedException) t).getErrorCode() != null
 					&& ((RegBaseCheckedException) t).getErrorCode().startsWith("REG-LIV-")) {

@@ -59,7 +59,7 @@ resident's face.
 | Point | Workflow | Desktop | Android |
 |---|---|---|---|
 | Sign-in with face | `login_auth` | `LoginController`: liveness starts when the face pane opens; `SessionContext.validateFace` picks up the pending pass, captures, then 1:1 match | "Sign in with face" on the password step (`FaceAuthPanel`, `LivenessApi.authenticateFace`), then `AuthResponseApi.loginWithFace` with a one-time grant (60 s) |
-| Packet authentication | `packet_auth` | `AuthenticationController.validateFace` through `BaseController.authenticateFaceWithLiveness` | "Authenticate with face" on the Authentication step; the officer's signed face is kept for the packet (`officer_bio_cbeff`) |
+| Packet authentication | `packet_auth` | `AuthenticationController.validateFace` through `BaseController.authenticateFace` | "Authenticate with face" on the Authentication step; the officer's signed face is kept for the packet (`officer_bio_cbeff`) |
 | Onboarding face | `onboard_auth` | `BiometricsController.scan` / `rCapture` | `FaceCaptureLivenessGate` for the onboarding field |
 
 Order of checks in every face authentication:

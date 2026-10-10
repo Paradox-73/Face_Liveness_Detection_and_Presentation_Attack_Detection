@@ -219,7 +219,7 @@ Where it runs:
 
 | ID | PS04 step | Desktop | Android | Evidence | Status | Notes |
 |---|---|---|---|---|---|---|
-| R1 | Start face capture | `RC/controller/device/GenericBiometricsController.scanFaceWithLiveness` opens `RC/controller/liveness/LivenessDialog` | `APP/api_services/BiometricsDetailsApi` → `APP/liveness/LivenessCaptureLauncher` → `LM/ui/LivenessCaptureActivity` | DE-D3, AE-A7 | done | |
+| R1 | Start face capture | `RC/controller/device/GenericBiometricsController.scan` → `BaseController.startFaceLiveness` opens `RC/controller/liveness/LivenessDialog` | `APP/api_services/BiometricsDetailsApi` → `APP/liveness/LivenessCaptureLauncher` → `LM/ui/LivenessCaptureActivity` | DE-D3, AE-A7 | done | |
 | R2 | Receive frames from the L0/L1 device | `FaceStreamSession` + `core/stream/MjpegFrameReader` | `BuiltInCameraL0Device` (CameraX or debug replay) | `FaceStreamSessionTest`, `MjpegFrameReaderTest` | done | Android CameraX path not run (automated runs must not use the webcam); the replay path shares everything after the frame source. |
 | R3 | Passive liveness and PAD | engine | engine | O3 | done | |
 | R4 | Evaluate quality/confidence | `core/engine/QualityGate`, `DecisionPolicy` | same | `QualityAndDecisionTest` | done | |
@@ -234,7 +234,7 @@ Where it runs:
 
 | ID | PS04 requirement | Desktop | Android | Evidence | Status | Notes |
 |---|---|---|---|---|---|---|
-| OP1 | Receive the operator's face stream | `LoginController`, `AuthenticationController`, `BiometricsController` (onboarding) via `BaseController.authenticateFaceWithLiveness` | `lib/ui/login_page.dart` ("Sign in with face"), `lib/ui/process_ui/generic_process.dart` ("Authenticate with face"), `lib/ui/liveness/face_auth_panel.dart` → `APP/liveness/FaceAuthFlow` | DE-D1, DE-D3, DE-I1; AE-A2, AE-A9 | done | Upstream Android has no face sign-in; this project adds it. |
+| OP1 | Receive the operator's face stream | `LoginController`, `AuthenticationController`, `BiometricsController` (onboarding) via `BaseController.authenticateFace` | `lib/ui/login_page.dart` ("Sign in with face"), `lib/ui/process_ui/generic_process.dart` ("Authenticate with face"), `lib/ui/liveness/face_auth_panel.dart` → `APP/liveness/FaceAuthFlow` | DE-D1, DE-D3, DE-I1; AE-A2, AE-A9 | done | Upstream Android has no face sign-in; this project adds it. |
 | OP2 | Passive liveness and PAD | engine, workflows `login_auth`, `packet_auth`, `onboard_auth` | same workflows | DE-D1; AE-A2 | done | |
 | OP3 | Active verification when required | authentication threshold 95 | same | DE-D10 (replay had to answer a blink); AE-A3, AE-A4 | done | |
 | OP4 | Prompt the operator for the action | `LivenessPanel` | `LivenessCaptureActivity` | AE-A3 | done | |
@@ -333,7 +333,7 @@ Where it runs:
 
 | ID | Bullet | Desktop | Android | Evidence | Status | Notes |
 |---|---|---|---|---|---|---|
-| 5.1 | Liveness in resident face capture | `GenericBiometricsController.scanFaceWithLiveness`; rCapture only after the pass | `BiometricsDetailsApi` → `FaceCaptureLivenessGate` | DE-D3, DE-D4; AE-A7 | done | |
+| 5.1 | Liveness in resident face capture | `GenericBiometricsController.scan` → `BaseController.startFaceLiveness`; rCapture only after the pass | `BiometricsDetailsApi` → `FaceCaptureLivenessGate` | DE-D3, DE-D4; AE-A7 | done | |
 | 5.2 | Never accept a face that fails | `LivenessGate` in `BioServiceImpl.captureModality` | only PASS stored | DE-D6, AE-A10 | done | On Android, faces from earlier passing attempts of the same registration stay stored after a later block (upstream attempt model). |
 | 5.3 | Prompt the resident automatically | `LivenessDialog` | `LivenessCaptureActivity` | DE-D4, AE-A7 | done | |
 | 5.4 | Retry after a failure | Retry button, attempt counter | same | DE-D6, AE-A6 | done | |

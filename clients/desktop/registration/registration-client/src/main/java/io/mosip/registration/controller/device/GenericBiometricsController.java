@@ -34,7 +34,6 @@ import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
-import io.mosip.registration.controller.liveness.LivenessDialog;
 import io.mosip.registration.dao.UserDetailDAO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.entity.UserBiometric;
@@ -48,7 +47,6 @@ import io.mosip.registration.mdm.dto.MdmBioDevice;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.bio.BioService;
-import io.mosip.registration.service.bio.liveness.LivenessOutcome;
 import io.mosip.registration.util.control.FxControl;
 import io.mosip.registration.util.control.impl.BiometricFxControl;
 import javafx.concurrent.Service;
@@ -207,10 +205,8 @@ public class GenericBiometricsController extends BaseController {
 
 	private Service<MdmBioDevice> deviceSearchTask;
 
-	private LivenessDialog livenessDialog;
-
-	/** Pass issued by the liveness session for the next face capture; set on the UI thread, read by the capture task. */
-	private volatile LivenessContext livenessContext;
+	/** Liveness window and pass of the face capture (pass set on the UI thread, read by the capture task). */
+	private final FaceLivenessStep faceLiveness = new FaceLivenessStep();
 
 	public Modality getCurrentModality() {
 		return currentModality;
@@ -443,8 +439,9 @@ public class GenericBiometricsController extends BaseController {
 
 		disableEnableBiometricPane(true);
 
-		if (isLivenessCapture(currentModality)) {
-			scanFaceWithLiveness();
+		if ((isFace(currentModality) || isExceptionPhoto(currentModality)) && startFaceLiveness(faceLiveness,
+				livenessWorkflow(currentModality), livenessSubjectRef(), biometric, this::rCaptureTaskService,
+				() -> disableEnableBiometricPane(false))) {
 			return;
 		}
 
@@ -549,38 +546,9 @@ public class GenericBiometricsController extends BaseController {
 		return isExceptionPhoto(modality) ? Workflow.EXCEPTION_PHOTO : Workflow.REGISTRATION;
 	}
 
-	private boolean isLivenessCapture(Modality modality) {
-		return (isFace(modality) || isExceptionPhoto(modality)) && isLivenessEnforced(livenessWorkflow(modality));
-	}
-
 	private String livenessSubjectRef() {
 		String rid = getRegistrationDTOFromSession() != null ? getRegistrationDTOFromSession().getRegistrationId() : null;
 		return rid == null || rid.trim().isEmpty() ? fxControl.getUiSchemaDTO().getId() : rid;
-	}
-
-	/**
-	 * Face capture with liveness: stream, liveness session (passive, then active challenges if needed), and the
-	 * signed capture only after the session passed. The liveness gate binds the capture to the session, so a face is
-	 * never stored when liveness fails.
-	 */
-	private void scanFaceWithLiveness() {
-		LOGGER.info("Starting face liveness before the {} capture", currentModality);
-		SessionContext.setAutoLogout(false);
-		livenessDialog = openLivenessDialog(livenessWorkflow(currentModality), livenessSubjectRef(),
-				biometric.getScene() != null ? biometric.getScene().getWindow() : null, new LivenessDialog.Callbacks() {
-					@Override
-					public void captureReady(LivenessContext context) {
-						livenessContext = context;
-						rCaptureTaskService();
-					}
-
-					@Override
-					public void closedWithoutPass(Optional<LivenessOutcome> lastOutcome) {
-						livenessContext = null;
-						SessionContext.setAutoLogout(true);
-						disableEnableBiometricPane(false);
-					}
-				});
 	}
 
 	/**
@@ -591,13 +559,7 @@ public class GenericBiometricsController extends BaseController {
 		if (!isFace(modality) && !isExceptionPhoto(modality)) {
 			return null;
 		}
-		LivenessContext context = livenessContext;
-		livenessContext = null;
-		return context != null ? context : LivenessContext.withoutPass(livenessWorkflow(modality), livenessSubjectRef());
-	}
-
-	private boolean isLivenessDialogOpen() {
-		return livenessDialog != null && livenessDialog.isOpen();
+		return faceLiveness.takePass(livenessWorkflow(modality), livenessSubjectRef());
 	}
 
 	private List<String> getSelectedExceptionsByBioType()
@@ -650,11 +612,7 @@ public class GenericBiometricsController extends BaseController {
 			@Override
 			public void handle(WorkerStateEvent t) {
 				LOGGER.debug("RCapture task failed");
-				if (!isLivenessDialogOpen()) {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(
-							isLivenessRefusal(rCaptureTaskService.getException()) ? RegistrationUIConstants.LIVENESS_CAPTURE_REFUSED
-									: RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
-				} // else the liveness window shows the failure and the Retry button
+				alertCaptureFailure(faceLiveness, rCaptureTaskService.getException());
 
 				LOGGER.debug("Enabling LogOut");
 				// Enable Auto-Logout
