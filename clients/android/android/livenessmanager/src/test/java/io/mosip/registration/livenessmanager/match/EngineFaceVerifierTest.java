@@ -8,17 +8,22 @@ package io.mosip.registration.livenessmanager.match;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import io.mosip.liveness.core.EngineErrorCode;
 import io.mosip.liveness.core.EngineException;
+import io.mosip.liveness.core.api.LivenessEngine;
 
 public class EngineFaceVerifierTest {
 
@@ -63,6 +68,32 @@ public class EngineFaceVerifierTest {
         assertEquals(100, v.threshold());
         config.put(EngineFaceVerifier.MATCH_THRESHOLD_KEY, "high");
         assertEquals(EngineFaceVerifier.DEFAULT_THRESHOLD, v.threshold());
+    }
+
+    @Test
+    public void matcherIsRebuiltWhenAModelImportReplacesTheEngine() throws Exception {
+        LivenessEngine first = engine();
+        LivenessEngine second = engine();
+        LivenessEngine[] current = {first};
+        List<LivenessEngine> builds = new ArrayList<>();
+        EngineFaceVerifier.MatcherSource source = EngineFaceVerifier.perEngine(() -> current[0], e -> {
+            builds.add(e);
+            return null;
+        });
+        source.get();
+        source.get();
+        assertEquals(1, builds.size());
+        current[0] = second;
+        source.get();
+        assertEquals(2, builds.size());
+        assertSame(second, builds.get(1));
+    }
+
+    private static LivenessEngine engine() {
+        return (LivenessEngine) Proxy.newProxyInstance(LivenessEngine.class.getClassLoader(),
+                new Class<?>[] {LivenessEngine.class}, (proxy, method, args) -> {
+                    throw new UnsupportedOperationException(method.getName());
+                });
     }
 
     @Test

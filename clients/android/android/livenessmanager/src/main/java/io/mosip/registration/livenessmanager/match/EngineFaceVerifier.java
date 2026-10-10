@@ -56,6 +56,18 @@ public final class EngineFaceVerifier implements FaceVerifier {
         SFaceMatcher get() throws EngineException;
     }
 
+    /** Supplies the current engine. */
+    @FunctionalInterface
+    interface EngineSource {
+        LivenessEngine get() throws EngineException;
+    }
+
+    /** Builds a matcher over one engine's model sessions. */
+    @FunctionalInterface
+    interface MatcherFactory {
+        SFaceMatcher build(LivenessEngine engine) throws EngineException;
+    }
+
     private final MatcherSource source;
     private final ConfigSource config;
 
@@ -70,24 +82,36 @@ public final class EngineFaceVerifier implements FaceVerifier {
     public static EngineFaceVerifier over(EngineLoader engines, ImageDecoder decoder, ConfigSource config) {
         Objects.requireNonNull(engines, "engines");
         FaceImageDecoder faceDecoder = FaceImageDecoder.of(Objects.requireNonNull(decoder, "decoder"));
-        return new EngineFaceVerifier(new MatcherSource() {
+        return new EngineFaceVerifier(perEngine(() -> engines.await(ENGINE_WAIT_MS), engine -> {
+            if (!(engine instanceof OnnxLivenessEngine)) {
+                throw new EngineException(EngineErrorCode.UNSUPPORTED, "face matching needs the ONNX engine");
+            }
+            OnnxModelSet set = ((OnnxLivenessEngine) engine).modelSet();
+            // The engine owns the model sessions; the matcher must not close them.
+            return new SFaceMatcher(set.faceAnalyzer(), set.faceEmbedder(), set.faceEmbedder().modelId(),
+                    faceDecoder, set.models(), null);
+        }), config);
+    }
+
+    /**
+     * Keeps one matcher per engine. A model import loads a new engine and closes the old one's sessions, so a
+     * matcher kept from the old engine would run on closed sessions.
+     */
+    static MatcherSource perEngine(EngineSource engines, MatcherFactory factory) {
+        return new MatcherSource() {
+            private LivenessEngine engine;
             private SFaceMatcher matcher;
 
             @Override
             public synchronized SFaceMatcher get() throws EngineException {
-                if (matcher == null) {
-                    LivenessEngine engine = engines.await(ENGINE_WAIT_MS);
-                    if (!(engine instanceof OnnxLivenessEngine)) {
-                        throw new EngineException(EngineErrorCode.UNSUPPORTED, "face matching needs the ONNX engine");
-                    }
-                    OnnxModelSet set = ((OnnxLivenessEngine) engine).modelSet();
-                    // The engine owns the model sessions; the matcher must not close them.
-                    matcher = new SFaceMatcher(set.faceAnalyzer(), set.faceEmbedder(),
-                            set.faceEmbedder().modelId(), faceDecoder, set.models(), null);
+                LivenessEngine current = engines.get();
+                if (current != engine) {
+                    matcher = factory.build(current);
+                    engine = current;
                 }
                 return matcher;
             }
-        }, config);
+        };
     }
 
     /**
