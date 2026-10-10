@@ -19,6 +19,8 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.mosip.liveness.onnx.model.SemanticVersion;
 
@@ -46,6 +48,9 @@ public final class LivenessModelStore {
 	static final String KEY_FLOOR = "floor";
 	static final String KEY_IMPORTED_AT = "importedAt";
 
+	/** Folder name written by {@link #newBundleFolder}: {@code <bundle>-<version>-<epoch ms>}. */
+	private static final Pattern FOLDER = Pattern.compile("(.+)-(\\d+\\.\\d+\\.\\d+)-\\d+");
+
 	private final Path root;
 
 	/**
@@ -72,7 +77,7 @@ public final class LivenessModelStore {
 	 * @return the bundle; empty when nothing was imported or the pointer is unreadable or points outside the store
 	 */
 	public Optional<Installed> active() {
-		Properties p = readPointer();
+		Properties p = pointer();
 		String dir = p.getProperty(KEY_DIRECTORY);
 		String version = p.getProperty(KEY_VERSION);
 		if (dir == null || version == null) {
@@ -91,7 +96,7 @@ public final class LivenessModelStore {
 	 * @return the floor; empty when nothing was imported
 	 */
 	public Optional<String> floor() {
-		String floor = readPointer().getProperty(KEY_FLOOR);
+		String floor = pointer().getProperty(KEY_FLOOR);
 		if (floor == null) {
 			return Optional.empty();
 		}
@@ -159,8 +164,9 @@ public final class LivenessModelStore {
 	 */
 	public void discard(Path folder) {
 		Path f = folder.toAbsolutePath().normalize();
-		Optional<Installed> active = active();
-		if (!f.startsWith(root) || f.equals(root) || (active.isPresent() && active.get().folder().equals(f))) {
+		String activeDir = readPointer().getProperty(KEY_DIRECTORY);
+		if (!f.startsWith(root) || f.equals(root)
+				|| (activeDir != null && root.resolve(activeDir).normalize().equals(f))) {
 			return;
 		}
 		deleteTree(f);
@@ -210,6 +216,48 @@ public final class LivenessModelStore {
 			p.load(in);
 		} catch (IOException | IllegalArgumentException e) {
 			return new Properties();
+		}
+		return p;
+	}
+
+	/** The pointer file, or the pointer rebuilt from the bundle folders when the file is missing or unreadable. */
+	private Properties pointer() {
+		Properties p = readPointer();
+		boolean usable = !p.getProperty(KEY_DIRECTORY, "").isEmpty() && !p.getProperty(KEY_VERSION, "").isEmpty();
+		return usable ? p : recoverPointer();
+	}
+
+	/**
+	 * Rebuilds a missing or unreadable pointer from the bundle folders: the highest version is active and is the
+	 * floor. Deleting the pointer file therefore neither drops the floor nor falls back to the shipped bundle. The
+	 * engine still verifies the folder at load and fails closed if it is not a valid bundle.
+	 */
+	private Properties recoverPointer() {
+		Properties p = new Properties();
+		String bestDir = null;
+		SemanticVersion best = null;
+		if (Files.isDirectory(root)) {
+			try (DirectoryStream<Path> children = Files.newDirectoryStream(root, Files::isDirectory)) {
+				for (Path child : children) {
+					Matcher m = FOLDER.matcher(child.getFileName().toString());
+					if (!m.matches()) {
+						continue;
+					}
+					SemanticVersion v = SemanticVersion.parse(m.group(2));
+					if (best == null || v.compareTo(best) > 0) {
+						best = v;
+						bestDir = child.getFileName().toString();
+						p.setProperty(KEY_BUNDLE, m.group(1));
+					}
+				}
+			} catch (IOException | UncheckedIOException | IllegalArgumentException e) {
+				return new Properties();
+			}
+		}
+		if (bestDir != null) {
+			p.setProperty(KEY_DIRECTORY, bestDir);
+			p.setProperty(KEY_VERSION, best.toString());
+			p.setProperty(KEY_FLOOR, best.toString());
 		}
 		return p;
 	}
