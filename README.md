@@ -63,9 +63,9 @@ decision flow picture: [docs/design/img/decision-flow.svg](docs/design/img/decis
 | Evaluation (`tools/eval`, `eval/`) | Scenario runner (31 tests) and analysis (102 pytest tests) with ISO/IEC 30107-3-style metrics; 275 transactions at the shipped defaults, synthetic attacks and three openly licensed clips; APCER 0.0% per transaction for every species and workflow (SYN-A7, the adaptive screen replay, was 50.0% (4/8) before the screen-pattern check); `registration` BPCER 0.0% (0/28; was 14.3%, all from the dim-light clip, before the exposure correction), `login_auth` BPCER 0.0% (0/12) | [docs/eval/results/20261005b-shipped/README.md](docs/eval/results/20261005b-shipped/README.md) (before and after); `docs/eval/calibration-notes.md` |
 | Requirements | Every PS04 bullet mapped to code, test and status | `docs/traceability.md` |
 
-Tests: 2,647 tests passed with 0 failures and 0 errors in the verification run of 2026-10-10, 21:50-21:56 (all suites
+Tests: 2,653 tests passed with 0 failures and 0 errors in the verification run of 2026-10-10, 23:14-23:20 (all suites
 above, Android unit tests, Flutter tests); about 1,361 of them are upstream MOSIP tests (Android `clientmanager` 1,186
-and about 175 in MockMDS), so about 1,286 are written by this team. Per-suite table and commands:
+and about 175 in MockMDS), so about 1,292 are written by this team. Per-suite table and commands:
 [docs/test-report/README.md](docs/test-report/README.md).
 
 ### Bonus items

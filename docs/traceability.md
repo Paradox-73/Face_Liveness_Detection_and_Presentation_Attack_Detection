@@ -65,8 +65,8 @@ its status on 2026-10-05. Rows were first checked against the code on 2026-09-30
 
 **Test counts**
 
-- Verification run of 2026-10-10, 21:50-21:56: all suites pass, 2,647 tests, 0 failures, 0 errors (logs in the team's run folder, not in git).
-- Per suite, all in one verification run (2026-10-10, 21:50-21:56, 2,647 tests, 0 failures): `liveness-core` 371, `liveness-onnx` 111 (2 benchmark tests skipped), `face-match-sdk` 44, MockSync 40, MockMDS 226, scenario runner 31, `pytest tools/eval/tests` 103, desktop `registration-services` 156 and `registration-client` 63, Android `clientmanager` 1,186, `livenessmanager` 212, `app` 72, Flutter `test/liveness` 32.
+- Verification run of 2026-10-10, 23:14-23:20: all suites pass, 2,653 tests, 0 failures, 0 errors (logs in the team's run folder, not in git).
+- Per suite, all in one verification run (2026-10-10, 23:14-23:20, 2,653 tests, 0 failures): `liveness-core` 375, `liveness-onnx` 115 (2 benchmark tests skipped), `face-match-sdk` 44, MockSync 40, MockMDS 226, scenario runner 31, `pytest tools/eval/tests` 103, desktop `registration-services` 154 and `registration-client` 63, Android `clientmanager` 1,186, `livenessmanager` 212, `app` 72, Flutter `test/liveness` 32.
 - About 1,361 of the total are upstream tests (Android `clientmanager` 1,186 and about 175 in MockMDS, counted at the audit of 2026-10-04); the rest were written for this project.
 - Details and commands: [test-report/README.md](test-report/README.md) section 2.
 

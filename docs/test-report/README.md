@@ -20,7 +20,7 @@ stay in the linked reports; requirement-by-requirement status is in [../traceabi
 
 | Area | Result |
 |---|---|
-| Unit and component tests | **2,647 tests, 0 failures, 0 errors** in the verification run of 2026-10-10 over 13 test suites (section 2) |
+| Unit and component tests | **2,653 tests, 0 failures, 0 errors** in the verification run of 2026-10-10 (23:14) over 13 test suites (section 2) |
 | Automated liveness and attack scenarios | re-run on 2026-10-05 evening at the shipped defaults, after the exposure correction and the screen-pattern check: 275 transactions, 755 attempt records (section 3.0). **APCER 0.0% per transaction for every species and workflow (SYN-A7 on `registration` was 50.0%, 4/8, in the morning run). Bona fide: `registration` 0.0% (0/28; was 14.3%, all from the dim clip), `login_auth` 0.0% (0/12)** |
 | Desktop end-to-end | reference run 2026-09-30: 41 of 41 checks passed **at the old defaults** (all workflows passive first); not re-run at the shipped defaults (section 4) |
 | Android end-to-end | reference run 2026-09-30: 58 of 58 checks passed **at the old defaults**; a repeat run found one real weakness; the full demo was not repeated at the shipped defaults (section 4) |
@@ -43,10 +43,10 @@ code and still pass with this project's changes.
 
 | Module | What it tests | Command | Tests | Failures / errors | Skipped | CI job |
 |---|---|---|---|---|---|---|
-| `liveness/liveness-core` | engine: session state machine, passive decision, challenges, action detection, integrity, planarity, capture binding, policy, audit, UI states, MJPEG reader | `mvn -B -f liveness/pom.xml install -Dliveness.benchmark.frames=0` (the job runs `verify`; `install` also puts the engine in `~/.m2`, which the rows below need) | 371 | 0 | 0 | `liveness` |
-| `liveness/liveness-onnx` | ONNX adapters, golden outputs of the 5 models, signed model registry, engine factory, execution providers, exposure correction and screen-pattern check | same run | 111 | 0 | 2 | `liveness` |
+| `liveness/liveness-core` | engine: session state machine, passive decision, challenges, action detection, integrity, planarity, capture binding, policy, audit, UI states, MJPEG reader | `mvn -B -f liveness/pom.xml install -Dliveness.benchmark.frames=0` (the job runs `verify`; `install` also puts the engine in `~/.m2`, which the rows below need) | 375 | 0 | 0 | `liveness` |
+| `liveness/liveness-onnx` | ONNX adapters, golden outputs of the 5 models, signed model registry, engine factory, execution providers, exposure correction and screen-pattern check, shared model-bundle importer and store | same run | 115 | 0 | 2 | `liveness` |
 | `liveness/face-match-sdk` | SFace face-match SDK behind MOSIP's `IBioApiV2`, ISO 19794-5 records, MOSIP loader | same run | 44 | 0 | 0 | `liveness` |
-| desktop `registration-services` (liveness and audit tests) | capture and authentication gates, stream session, orchestrator, config, audit sink, packet evidence, pass tokens, model import, behaviour on repeated failure, account lock | after the engine install: `mvn -B -f clients/desktop/registration/pom.xml test -pl registration-services,registration-client -am -Dgpg.skip -Djacoco.skip=true -DfailIfNoTests=false "-Dtest=io/mosip/registration/service/bio/liveness/*Test.java,**/AuditFactoryTest.java,io/mosip/registration/controller/liveness/*Test.java"` (on Linux, put `xvfb-run -a` in front: the JavaFX tests need a display) | 156 | 0 | 0 | `desktop-liveness` |
+| desktop `registration-services` (liveness and audit tests) | capture and authentication gates, stream session, orchestrator, config, audit sink, packet evidence, pass tokens, model import wiring, behaviour on repeated failure, account lock | after the engine install: `mvn -B -f clients/desktop/registration/pom.xml test -pl registration-services,registration-client -am -Dgpg.skip -Djacoco.skip=true -DfailIfNoTests=false "-Dtest=io/mosip/registration/service/bio/liveness/*Test.java,**/AuditFactoryTest.java,io/mosip/registration/controller/liveness/*Test.java"` (on Linux, put `xvfb-run -a` in front: the JavaFX tests need a display) | 154 | 0 | 0 | `desktop-liveness` |
 | desktop `registration-client` (liveness tests) | liveness panel view model, texts and replacement texts, bundle parity (en/fr/ar), JavaFX listener, diagnostic lines, model import window | same run | 63 | 0 | 0 | `desktop-liveness` |
 | Android `livenessmanager` | engine loader, config, audit sink, face authenticator, capture screen (Robolectric), image decoding, SBI codec, replay, supervisor override, metrics, diagnostic mode, execution provider | with JDK 21 as `JAVA_HOME`, Flutter 3.10.4 and the Android SDK of [../install/README.md](../install/README.md) section 1: `bash scripts/android-build.sh --test-only` (installs the engine, generates the code a fresh clone lacks, runs the three `testDebugUnitTest` tasks) | 212 | 0 | 0 | `android-unit` |
 | Android `app` | capture gate, face-auth flow, capture launcher, Flutter bridge, supervisor override flow | same run | 72 | 0 | 0 | `android-unit` |
@@ -56,23 +56,27 @@ code and still pass with this project's changes.
 | `devices/mock-mds` (upstream + extensions) | frame sources, capture from the streamed frame, faults, renewed FTM keys | with JDK 21: `mvn -B -f devices/mock-mds/pom.xml package -Dgpg.skip=true` | 226 | 0 | 0 | `mock-mds` |
 | `tools/eval/scenario-runner` | scenario loading, playlists, classification, output | after the engine install: `mvn -B -f tools/eval/scenario-runner/pom.xml package` | 31 | 0 | 0 | `scenario-runner` |
 | `tools/eval` Python | APCER/BPCER, confidence intervals, frame-pack manifests | `pip install -r tools/eval/requirements.txt`, then `python -m pytest -q tools/eval/tests` | 103 | 0 | 0 | `eval-python` |
-| **Total** | | | **2,647, verified together on 2026-10-10** | **0** | **2** | |
+| **Total** | | | **2,653, verified together on 2026-10-10** | **0** | **2** | |
 
-**Totals.** The verification run of 2026-10-10 (21:50-21:56, logs `PS04-fixes/verify/w1-*.log` outside the
-repository, after the security and correctness fixes of that day) ran every suite of the table together and found
-**2,647 tests, 0 failures, 0 errors**, 2 benchmark tests skipped. The run of 2026-10-05 evening found 2,619. The earlier runs of that day found 2,542 (morning) and 2,606 (04:20, before the exposure correction and the
+**Totals.** The verification run of 2026-10-10 (23:14-23:20, logs `PS04-fixes/verify/w3-*.log` outside the
+repository, after the maintainability restructuring of that evening: shared model-bundle importer, `PolicyKey`
+table, one liveness entry point per client, file splits) ran every suite of the table together and found
+**2,653 tests, 0 failures, 0 errors**, 2 benchmark tests skipped. The run earlier that day (21:50, after the
+security and correctness fixes) found 2,647; the 2 store tests moved from the desktop to `liveness-onnx`, and 6
+tests were added (default map pinned, `PolicyKey` ranges, store pruning, file-system rule). The run of 2026-10-05 evening found 2,619. The earlier runs of that day found 2,542 (morning) and 2,606 (04:20, before the exposure correction and the
 screen-pattern check added 13 `liveness-onnx` tests).
 
 **Upstream and team-written.** About 1,361 of the tests are upstream: the Android `clientmanager` suite (1,186, all upstream
 tests, passing with this project's changes) and about 175 in MockMDS (an estimate from the first audit count; the 226 in the
-table also include the tests added for the mock face device). The remaining 1,286 or so of the 2,647 are team-written (an
+table also include the tests added for the mock face device). The remaining 1,292 or so of the 2,653 are team-written (an
 approximate figure).
 
 When each count was taken:
 
 - 2026-10-05: all rows, verification run (engine installed first, then every suite with the commands above; Android tests forced with `--rerun`).
 - 2026-10-05 evening: every row again in one run (2,619 tests), after the exposure correction and the screen-pattern check. JDK 11 for the engine, desktop, MockSync and runner; JDK 21 for Android and MockMDS.
-- 2026-10-10: every row again in one run (2,647 tests), after the security and correctness fixes (retry counts saved across restarts, configurable model-signing key, certification-level check, and others). Android unit tests: Gradle reused the results of the same sources from a run 7 minutes earlier with the same counts.
+- 2026-10-10, 23:14: every row again in one run (2,653 tests), after the maintainability restructuring.
+- 2026-10-10, 21:50: every row again in one run (2,647 tests), after the security and correctness fixes (retry counts saved across restarts, configurable model-signing key, certification-level check, and others). Android unit tests: Gradle reused the results of the same sources from a run 7 minutes earlier with the same counts.
 - The CI jobs of `.github/workflows/ci.yml` have run only as local commands so far; the first run on GitHub after the push checks the Linux-only steps.
 
 Not re-run for this page (results from the engineers' reports of the same day):
