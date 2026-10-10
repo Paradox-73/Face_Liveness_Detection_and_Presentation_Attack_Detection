@@ -622,14 +622,21 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
     private String livenessSubject() {
         try {
             if (fieldId.equals(OPERATOR_BIOMETRICS)) {
-                return activity.getSharedPreferences(
-                        activity.getString(io.mosip.registration.clientmanager.R.string.app_name),
-                        android.content.Context.MODE_PRIVATE).getString(SessionManager.USER_ID, OPERATOR_BIOMETRICS);
+                String user = signedInUserId();
+                return user.isEmpty() ? OPERATOR_BIOMETRICS : user;
             }
             return registrationService.getRegistrationDto().getRId();
         } catch (Exception e) {
             return fieldId;
         }
+    }
+
+    /** The signed-in operator's user ID, or an empty string. */
+    private String signedInUserId() {
+        String user = activity.getSharedPreferences(
+                activity.getString(io.mosip.registration.clientmanager.R.string.app_name),
+                android.content.Context.MODE_PRIVATE).getString(SessionManager.USER_ID, "");
+        return user == null ? "" : user.trim();
     }
 
     /**
@@ -684,8 +691,8 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
             completeCapture(CaptureOutcome.Status.BLOCKED.name());
             return;
         }
-        livenessOverride.run(FaceCaptureLivenessGate.workflowFor(gateField), subject, supervisorId, evidence,
-                new SupervisorOverrideFlow.Callback() {
+        livenessOverride.run(FaceCaptureLivenessGate.workflowFor(gateField), subject, signedInUserId(), supervisorId,
+                evidence, new SupervisorOverrideFlow.Callback() {
                     @Override
                     public void onPhoto(LivenessCaptureResult photo) {
                         CaptureOutcome outcome = livenessGate.recordOverride(subject, gateField, photo);

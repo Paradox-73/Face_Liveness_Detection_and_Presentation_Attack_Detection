@@ -144,6 +144,18 @@ public class SupervisorOverrideFlowTest {
     }
 
     @Test
+    public void operatorCannotApproveTheirOwnOverride() {
+        start("officer9", " OFFICER9 ");
+        supervisors.add("officer9");
+        start("officer9", "officer9");
+        start("", "supervisor1");
+        assertEquals(3, refusals.size());
+        assertEquals(FaceAuthStatus.NOT_SUPERVISOR, refusals.get(1).status());
+        assertTrue(liveness.requests.isEmpty());
+        assertTrue(photos.isEmpty());
+    }
+
+    @Test
     public void unverifiableSupervisorWorkflowRefuses() {
         liveness.enforced.remove(Workflow.EXCEPTION_AUTH);
         start("supervisor1");
@@ -153,7 +165,11 @@ public class SupervisorOverrideFlowTest {
     }
 
     private void start(String supervisor) {
-        flow.run(Workflow.REGISTRATION, "rid-1", supervisor, FAILED, new SupervisorOverrideFlow.Callback() {
+        start("officer9", supervisor);
+    }
+
+    private void start(String operator, String supervisor) {
+        flow.run(Workflow.REGISTRATION, "rid-1", operator, supervisor, FAILED, new SupervisorOverrideFlow.Callback() {
             @Override
             public void onPhoto(LivenessCaptureResult photo) {
                 photos.add(photo);

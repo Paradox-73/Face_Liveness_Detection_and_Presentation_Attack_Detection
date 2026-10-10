@@ -34,8 +34,9 @@ import io.mosip.registration.livenessmanager.auth.FaceAuthStatus;
  *       {@code REG-EVT-LV16} naming the supervisor.</li>
  * </ol>
  *
- * <p>No photo is taken when the supervisor is refused (not a supervisor, face mismatch, liveness failure, or
- * {@code exception_auth} not enforced, which would leave the supervisor unverified).
+ * <p>No photo is taken when the supervisor is refused (the signed-in operator or no operator, not a supervisor,
+ * face mismatch, liveness failure, or {@code exception_auth} not enforced, which would leave the supervisor
+ * unverified).
  */
 @Singleton
 public class SupervisorOverrideFlow {
@@ -84,13 +85,20 @@ public class SupervisorOverrideFlow {
      *
      * @param workflow       the resident workflow ({@code registration})
      * @param subject        registration ID
+     * @param operatorId     signed-in operator, who may not approve the override
      * @param supervisorId   user ID entered on the capture screen
      * @param failedEvidence packet evidence of the failed transaction
      * @param done           receives the end of the flow
      */
-    public void run(Workflow workflow, String subject, String supervisorId, Map<String, String> failedEvidence,
-                    Callback done) {
+    public void run(Workflow workflow, String subject, String operatorId, String supervisorId,
+                    Map<String, String> failedEvidence, Callback done) {
         Objects.requireNonNull(done, "done");
+        String operator = operatorId == null ? "" : operatorId.trim();
+        if (operator.isEmpty() || supervisorId == null || operator.equalsIgnoreCase(supervisorId.trim())) {
+            Log.i(TAG, "Supervisor override refused: the operator cannot approve it");
+            done.onRefused(FaceAuthOutcome.early(SUPERVISOR_WORKFLOW, FaceAuthStatus.NOT_SUPERVISOR, null));
+            return;
+        }
         SupervisorOverride grant;
         try {
             grant = new SupervisorOverride(supervisorId, failedEvidence);

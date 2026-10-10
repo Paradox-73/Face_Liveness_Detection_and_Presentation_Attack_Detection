@@ -551,8 +551,8 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
     }
 
     /**
-     * Asks the operator to confirm the override and to enter the supervisor's user ID (the signed-in user is
-     * suggested). The supervisor's face is verified by the caller before any photo is taken.
+     * Asks the operator to confirm the override and to enter the second supervisor's user ID (empty: the signed-in
+     * operator may not approve it). The supervisor's face is verified by the caller before any photo is taken.
      */
     private void askForOverride() {
         LivenessCaptureResult failed = lastResult;
@@ -563,7 +563,6 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
         supervisor.setSingleLine(true);
         supervisor.setHint(ui.getString(R.string.liveness_ui_supervisor_id));
         supervisor.setContentDescription(ui.getString(R.string.liveness_ui_supervisor_id));
-        supervisor.setText(runtime.currentUserId());
         float density = getResources().getDisplayMetrics().density;
         supervisor.setMinHeight((int) (48 * density));
         android.widget.FrameLayout field = new android.widget.FrameLayout(ui);
