@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.catalina.connector.Connector;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -54,17 +55,22 @@ public class MockSyncApplication {
 	}
 
 	/**
-	 * Adds the plain HTTP connector ({@code mocksync.http-port}) next to the HTTPS one.
+	 * Adds the plain HTTP connector ({@code mocksync.http-port}) next to the HTTPS one, on the same address.
 	 *
 	 * @param properties MockSync settings
+	 * @param address {@code server.address}, empty for every interface
 	 * @return customizer
 	 */
 	@Bean
-	public WebServerFactoryCustomizer<TomcatServletWebServerFactory> httpConnector(MockSyncProperties properties) {
+	public WebServerFactoryCustomizer<TomcatServletWebServerFactory> httpConnector(MockSyncProperties properties,
+			@Value("${server.address:}") String address) {
 		return factory -> {
 			if (properties.getHttpPort() > 0) {
 				Connector connector = new Connector(TomcatServletWebServerFactory.DEFAULT_PROTOCOL);
 				connector.setPort(properties.getHttpPort());
+				if (!address.isEmpty()) {
+					connector.setProperty("address", address);
+				}
 				factory.addAdditionalTomcatConnectors(connector);
 			}
 		};
