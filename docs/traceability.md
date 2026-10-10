@@ -65,8 +65,8 @@ its status on 2026-10-05. Rows were first checked against the code on 2026-09-30
 
 **Test counts**
 
-- Verification run of 2026-10-05 evening: all suites pass, 2,619 tests, 0 failures, 0 errors (logs in the team's run folder, not in git).
-- Per suite, all in one verification run (2026-10-05 evening, 2,619 tests, 0 failures): `liveness-core` 365, `liveness-onnx` 109 (2 benchmark tests skipped), `face-match-sdk` 42, MockSync 38, MockMDS 226, scenario runner 31, `pytest tools/eval/tests` 102, desktop `registration-services` 150 and `registration-client` 63, Android `clientmanager` 1,186, `livenessmanager` 211, `app` 64, Flutter `test/liveness` 32.
+- Verification run of 2026-10-10, 21:50-21:56: all suites pass, 2,647 tests, 0 failures, 0 errors (logs in the team's run folder, not in git).
+- Per suite, all in one verification run (2026-10-10, 21:50-21:56, 2,647 tests, 0 failures): `liveness-core` 371, `liveness-onnx` 111 (2 benchmark tests skipped), `face-match-sdk` 44, MockSync 40, MockMDS 226, scenario runner 31, `pytest tools/eval/tests` 103, desktop `registration-services` 156 and `registration-client` 63, Android `clientmanager` 1,186, `livenessmanager` 212, `app` 72, Flutter `test/liveness` 32.
 - About 1,361 of the total are upstream tests (Android `clientmanager` 1,186 and about 175 in MockMDS, counted at the audit of 2026-10-04); the rest were written for this project.
 - Details and commands: [test-report/README.md](test-report/README.md) section 2.
 
@@ -249,7 +249,7 @@ Where it runs:
 
 | ID | PS04 requirement | Desktop | Android | Evidence | Status | Notes |
 |---|---|---|---|---|---|---|
-| C1 | Configurable at Registration Client level | `RS/service/bio/liveness/LivenessConfig` over `ApplicationContext.map()` (MOSIP global params) | `LM/config/GlobalParamConfigSource` over `GlobalParamRepository` | `LivenessConfigTest`, `GlobalParamConfigSourceTest` | done | Same key names on both clients: `mosip.registration.liveness.*` (`core/config/LivenessConfigKeys`, 44 defaults, 42 of them under that prefix). |
+| C1 | Configurable at Registration Client level | `RS/service/bio/liveness/LivenessConfig` over `ApplicationContext.map()` (MOSIP global params) | `LM/config/GlobalParamConfigSource` over `GlobalParamRepository` | `LivenessConfigTest`, `GlobalParamConfigSourceTest` | done | Same key names on both clients: `mosip.registration.liveness.*` (`core/config/LivenessConfigKeys`, 45 defaults, 43 of them under that prefix). |
 | C2-C10 | Enable/disable, passive threshold, active enablement, minimum challenges, challenge types, timeout, max retries, per-workflow policies, behaviour on repeated failure | see mandatory task 8 below | | | done | |
 | C11 | Configuration applies online and offline | values cached in the client database after sync | same | DE-D10, AE-A13 | done | |
 | OF1 | Liveness works online and offline | engine and models run locally; no network code in the core (ArchUnit rule) | same | `ArchitectureTest`; DE-D10; AE-A13 | done | Offline was simulated: desktop by routing the client's HTTPS calls to a closed port, Android by removing `adb reverse` plus airplane mode. MockSync logged no request in both windows. |
@@ -526,4 +526,4 @@ Closed on 2026-09-30: prints and looped clips passing the passive check (O16; de
 (9.6), desktop replacement texts (G4), diagnostic mode (G5), Android metrics (G7, G8), Android supervisor
 override (8.9), desktop offline model import (B6, desktop part), the technology evaluation (E5).
 
-Closed on 2026-10-04 and 2026-10-05: challenges on every capture for the supervisor workflows (O6), the retry counters kept across Cancel, reopened windows and client restarts on both clients (5.5), the override refused after any attack and needing a second, different supervisor on both clients (SV2), binding that fails closed (T-CORE-TX-03 and `CaptureBinder`), long loops caught by the 300-frame window (O18), the local-settings allow-list (7.8), the dim-light and multiple-face endings (9.5, 9.6), Android model import with its Device Settings button (B6), one ONNX Runtime release on both clients with a parity test (B4), a phone measurement kit (B7, B8, measurement pending).
+Closed on 2026-10-04 and 2026-10-05: challenges on every capture for the supervisor workflows (O6), the retry counters kept across Cancel and reopened windows (5.5; across client restarts since 2026-10-10), the override refused after any attack and needing a second, different supervisor on both clients (SV2), binding that fails closed (T-CORE-TX-03 and `CaptureBinder`), long loops caught by the 300-frame window (O18), the local-settings allow-list (7.8), the dim-light and multiple-face endings (9.5, 9.6), Android model import with its Device Settings button (B6), one ONNX Runtime release on both clients with a parity test (B4), a phone measurement kit (B7, B8, measurement pending).
