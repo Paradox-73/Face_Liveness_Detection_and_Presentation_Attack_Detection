@@ -398,7 +398,7 @@ and user in `FaceAuthFlow`):
   offers the supervisor override, even when its own failures were timeouts.
 - `liveness.prior_low_light` (`LivenessCaptureRequest.priorLowLight`): the uncounted dim-light results since the
   last counted failure. `LivenessRunner` always turns on the engine's low-light rule
-  (`LivenessSessionDriver.Builder.trackLowLight(true)`, with the carried count through
+  (`LivenessSessionDriverBuilder.trackLowLight(true)`, with the carried count through
   `priorFailures(attempts, attack, lowLight)`): a PAD rejection of a dark face ends as "We could not verify face
   liveness. Please try again." with "Improve lighting", not counted, at most `passive.low_light_max_uncounted` (3)
   times; the next one counts. Each result reports the count (`LivenessCaptureResult.lowLightRetries()`, extra

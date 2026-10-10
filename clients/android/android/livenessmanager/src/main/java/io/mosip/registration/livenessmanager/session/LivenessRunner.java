@@ -55,6 +55,7 @@ import io.mosip.liveness.core.image.ImageDecodeException;
 import io.mosip.liveness.core.run.AttemptOutcome;
 import io.mosip.liveness.core.run.CaptureHandOff;
 import io.mosip.liveness.core.run.LivenessSessionDriver;
+import io.mosip.liveness.core.run.LivenessSessionDriverBuilder;
 import io.mosip.liveness.core.stream.FrameHandOff;
 import io.mosip.liveness.core.ui.LivenessUiState;
 import io.mosip.registration.livenessmanager.LivenessCaptureResult;
@@ -89,7 +90,7 @@ import io.mosip.registration.livenessmanager.engine.EngineLoader;
  * {@code REG-EVT-LV11} is written once and the result reports {@code on_max_failure}.
  *
  * <p><b>Dim light</b>. The runner always passes the transaction's dim-light count to each session
- * ({@code LivenessSessionDriver.Builder#trackLowLight}), which turns on the engine's low-light rule: a PAD rejection
+ * ({@code LivenessSessionDriverBuilder#trackLowLight}), which turns on the engine's low-light rule: a PAD rejection
  * of a dark face ends as {@code QUALITY} with {@code LOW_LIGHT} ("Improve lighting"), not counted, up to
  * {@code passive.low_light_max_uncounted} times since the last counted failure; the next one counts. The count of
  * earlier screens ({@code priorLowLight}) continues here, so closing and reopening the screen gives no new
@@ -253,7 +254,7 @@ public final class LivenessRunner implements CaptureRunner {
         boolean blocked = blockedMessageKey != null;
         int prior = Math.max(0, Math.min(priorAttempts, policy.maxRetries() - 1));
         int lowLight = Math.max(0, Math.min(priorLowLight, LivenessTransaction.maxPriorLowLightRetries()));
-        LivenessSessionDriver.Builder b = LivenessSessionDriver.builder(policy, subjectRef)
+        LivenessSessionDriverBuilder b = LivenessSessionDriver.builder(policy, subjectRef)
                 .engine(blocked ? () -> BlockedEngine.INSTANCE : () -> awaitEngine(engines))
                 .device(() -> {
                     if (blocked) {

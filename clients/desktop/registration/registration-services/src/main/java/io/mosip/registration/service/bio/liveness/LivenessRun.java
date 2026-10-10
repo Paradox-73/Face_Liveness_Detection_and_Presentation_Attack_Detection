@@ -36,6 +36,7 @@ import io.mosip.liveness.core.image.ImageBuffer;
 import io.mosip.liveness.core.run.AttemptOutcome;
 import io.mosip.liveness.core.run.CaptureHandOff;
 import io.mosip.liveness.core.run.LivenessSessionDriver;
+import io.mosip.liveness.core.run.LivenessSessionDriverBuilder;
 import io.mosip.liveness.core.ui.LivenessUiState;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
@@ -69,7 +70,7 @@ import io.mosip.registration.mdm.dto.LivenessContext;
  * forbids the supervisor override.
  *
  * <p><b>Low light.</b> The run turns on the engine's low-light ending
- * ({@link LivenessSessionDriver.Builder#trackLowLight(boolean)}): a passive PAD failure on a face lit too weakly ends
+ * ({@link LivenessSessionDriverBuilder#trackLowLight(boolean)}): a passive PAD failure on a face lit too weakly ends
  * {@code QUALITY} with {@code LOW_LIGHT}, "Improve lighting.", without using up an attempt and without
  * {@code REG-EVT-LV08}, up to {@code passive.low_light_max_uncounted} times since the last counted failure; the next
  * one counts as {@code PAD}. The count starts at the low-light results of earlier windows ({@link AttemptHistory}),
@@ -142,7 +143,7 @@ public final class LivenessRun implements AutoCloseable {
 		this.clock = Objects.requireNonNull(clock, "clock");
 		this.operatorId = Objects.requireNonNull(operatorId, "operatorId");
 		this.photoModels = Objects.requireNonNull(photoModels, "photoModels");
-		LivenessSessionDriver.Builder b = LivenessSessionDriver.builder(policy, request.subjectRef()).engine(engines)
+		LivenessSessionDriverBuilder b = LivenessSessionDriver.builder(policy, request.subjectRef()).engine(engines)
 				.device(Objects.requireNonNull(devices, "devices")).audit(audit).listener(new DriverListener())
 				.captureHandler(this::onCaptureReady).clock(clock).diagnosticSink(this.diagnostics)
 				.previewListener(listener::onPreviewFrame)

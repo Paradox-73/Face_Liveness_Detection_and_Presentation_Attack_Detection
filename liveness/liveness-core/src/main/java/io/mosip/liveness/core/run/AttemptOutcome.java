@@ -241,7 +241,7 @@ public final class AttemptOutcome {
      * Returns the uncounted low-light results of the transaction after this attempt
      * ({@link LivenessTransaction#lowLightRetries()}): the sessions that ended {@code LOW_LIGHT} since the last
      * counted failure, earlier screens included. The client keeps this with the counted failures and passes it to
-     * {@link LivenessSessionDriver.Builder#priorFailures(int, boolean, int)} when it reopens the window for the
+     * {@link LivenessSessionDriverBuilder#priorFailures(int, boolean, int)} when it reopens the window for the
      * same subject.
      *
      * @return 0 or more; 0 after a counted failure

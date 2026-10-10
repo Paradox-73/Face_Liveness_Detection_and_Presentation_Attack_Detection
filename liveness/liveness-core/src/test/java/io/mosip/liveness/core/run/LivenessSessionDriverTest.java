@@ -86,7 +86,7 @@ class LivenessSessionDriverTest {
         }
     }
 
-    private LivenessSessionDriver.Builder builder(LivenessPolicy policy, LivenessSessionDriver.CaptureHandler handler) {
+    private LivenessSessionDriverBuilder builder(LivenessPolicy policy, LivenessSessionDriver.CaptureHandler handler) {
         return LivenessSessionDriver.builder(policy, "10001100010001").engine(() -> engine).device(() -> device)
                 .audit(audit).listener(recorder).captureHandler(handler)
                 .errorReporter((what, error) -> reported.add(error));
@@ -474,7 +474,7 @@ class LivenessSessionDriverTest {
 
     @Test
     void priorFailuresMustLeaveAnAttempt() {
-        LivenessSessionDriver.Builder b = builder(RESIDENT, bindAtOnce());
+        LivenessSessionDriverBuilder b = builder(RESIDENT, bindAtOnce());
         assertThrows(IllegalArgumentException.class, () -> b.priorFailures(3, false));
         assertThrows(IllegalArgumentException.class, () -> b.priorFailures(-1, false));
         assertThrows(NullPointerException.class,
@@ -583,7 +583,7 @@ class LivenessSessionDriverTest {
 
     @Test
     void priorLowLightCountOutsideItsRangeIsRefused() throws Exception {
-        LivenessSessionDriver.Builder b = builder(RESIDENT, bindAtOnce());
+        LivenessSessionDriverBuilder b = builder(RESIDENT, bindAtOnce());
         int max = LivenessTransaction.maxPriorLowLightRetries();
         assertThrows(IllegalArgumentException.class, () -> b.priorFailures(0, false, -1));
         assertThrows(IllegalArgumentException.class, () -> b.priorFailures(0, false, max + 1));
