@@ -71,6 +71,7 @@ import io.mosip.registration_client.api_services.LivenessApi;
 import io.mosip.registration_client.liveness.FaceAuthFlow;
 import io.mosip.registration_client.liveness.FaceCaptureLivenessGate;
 import io.mosip.registration_client.liveness.LivenessCaptureLauncher;
+import io.mosip.registration_client.liveness.SavedAttempts;
 import io.mosip.registration_client.liveness.SupervisorOverrideFlow;
 import io.mosip.registration_client.model.LivenessPigeon;
 import io.mosip.registration.livenessmanager.di.LivenessModule;
@@ -444,6 +445,9 @@ public class MainActivity extends FlutterActivity {
         secureScreenApi.setCallbackActivity(this);
         // Face liveness: capture screen for resident and onboarding faces, face authentication for staff
         livenessCaptureLauncher.attach(this);
+        // Counted failures and blocks survive an app restart.
+        faceCaptureLivenessGate.persistTo(new SavedAttempts(getApplicationContext(), "liveness_capture_attempts"));
+        faceAuthFlow.persistTo(new SavedAttempts(getApplicationContext(), "liveness_auth_attempts"));
         biometricsDetailsApi.setLivenessGate(faceCaptureLivenessGate, livenessCaptureLauncher);
         biometricsDetailsApi.setSupervisorOverrideFlow(supervisorOverrideFlow);
         authenticationApi.setFaceAuthFlow(faceAuthFlow);

@@ -108,13 +108,18 @@ audit (LV09 with a reason code) carry the code.
 | `registration` | `BLOCK`: no face stored for this registration | `SUPERVISOR_OVERRIDE` (desktop only; Android treats it as `BLOCK`) | Supervisor follows the centre's recovery process (for example the exception path, or a new appointment); with override: supervisor confirms, packet flagged `OVERRIDE` |
 | `exception_photo` | policy `OFF`: no liveness | — | — |
 | `onboard_auth` | `BLOCK` | `BLOCK_AND_LOCK` | Onboarding cannot finish with a spoofed face; retry later or onboard with another method |
-| `login_auth` | `BLOCK` | `BLOCK_AND_LOCK` | Password sign-in, or wait for the lock time |
+| `login_auth` | `BLOCK_AND_LOCK` (since 2026-10-10): also counts a failed login, so the client's saved account lock applies | `BLOCK` | Password sign-in, or wait for the lock time |
 | `packet_auth` | `BLOCK` | `BLOCK_AND_LOCK` | Password authentication (MOSIP's existing option) |
 | `exception_auth`, `eod_auth` | `BLOCK` | `BLOCK_AND_LOCK` | Another supervisor, or password authentication |
 
-Counted failures, the suspected-attack mark and the uncounted low-light count are remembered in memory per workflow
-and person (desktop `AttemptHistory`, Android `FaceCaptureLivenessGate`), so closing and reopening the screen does not
-give new attempts; this was found and fixed in the end-to-end runs.
+Counted failures, the suspected-attack mark and the uncounted low-light count are remembered per workflow and person
+(desktop `AttemptHistory`, Android `FaceCaptureLivenessGate` and `FaceAuthFlow`), so closing and reopening the screen
+does not give new attempts; this was found and fixed in the end-to-end runs. Since 2026-10-10 they are also saved, so a
+client restart keeps them: desktop in the local Derby table `local_preferences` (config type `LIVENESS_ATTEMPTS`,
+`LocalAttemptStore`), Android in private SharedPreferences written with `commit()` (`SavedAttempts`, kept 12 hours
+after the last change). On Android, a `BLOCK_AND_LOCK` whose account lock did not take (ARC's invalid-login limit
+unset) keeps the block instead of clearing the count. A resident's count is keyed by the registration ID, so a new
+registration of the same person still starts a new count.
 
 ## 5. Evidence from the end-to-end runs
 

@@ -100,8 +100,8 @@ transactions in the morning run of 2026-10-05 and in 0 of 8 after the screen-pat
 |---|---|---|---|---|---|
 | `mosip.registration.liveness.max_retries` | int | 3 | 1-10 | yes | Attempts per transaction (one workflow, one person) |
 | `mosip.registration.liveness.<workflow>.max_retries` | int | unset | 1-10 | yes | Per-workflow attempts |
-| `mosip.registration.liveness.on_max_failure` | `BLOCK` / `SUPERVISOR_OVERRIDE` / `BLOCK_AND_LOCK` | `BLOCK` | allowed per workflow (rule 6) | no | Behaviour after the last failed attempt |
-| `mosip.registration.liveness.<workflow>.on_max_failure` | same | unset (global) | same | no | Per-workflow behaviour. MockSync demo profile: `registration.on_max_failure=SUPERVISOR_OVERRIDE` |
+| `mosip.registration.liveness.on_max_failure` | `BLOCK` / `SUPERVISOR_OVERRIDE` / `BLOCK_AND_LOCK` | `BLOCK`; `BLOCK_AND_LOCK` for `login_auth` when neither this key nor `login_auth.on_max_failure` is set (since 2026-10-10) | allowed per workflow (rule 6) | no | Behaviour after the last failed attempt |
+| `mosip.registration.liveness.<workflow>.on_max_failure` | same | unset (global) | same | no | Per-workflow behaviour. MockSync demo profile: `registration.on_max_failure=SUPERVISOR_OVERRIDE`, `login_auth.on_max_failure=BLOCK_AND_LOCK` |
 
 `BLOCK_AND_LOCK` also applies the client's existing `mosip.registration.invalid_login_count` and
 `mosip.registration.invalid_login_time` rule.

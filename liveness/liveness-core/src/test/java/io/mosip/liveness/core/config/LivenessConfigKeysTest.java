@@ -71,7 +71,8 @@ class LivenessConfigKeysTest {
             String threshold = d.get("mosip.registration.liveness." + w.id() + ".passive.threshold");
             assertEquals(w.isAuth() ? "95" : null, threshold);
         }
-        assertEquals(LivenessConfigKeys.globalKeys().size() + Workflow.values().length + 5, d.size());
+        assertEquals("BLOCK_AND_LOCK", d.get("mosip.registration.liveness.login_auth.on_max_failure"));
+        assertEquals(LivenessConfigKeys.globalKeys().size() + Workflow.values().length + 6, d.size());
     }
 
     /** Proposal P1 of the calibration notes: every workflow that checks liveness always runs challenges. */

@@ -443,6 +443,7 @@ public final class LivenessPolicy {
             this.workflow = Objects.requireNonNull(workflow, "workflow");
             this.mode = LivenessConfigKeys.defaultPolicyMode(workflow);
             this.passiveThreshold = LivenessConfigKeys.defaultPassiveThreshold(workflow);
+            this.onMaxFailure = LivenessConfigKeys.defaultOnMaxFailure(workflow);
         }
 
         private Builder(LivenessPolicy p) {

@@ -139,6 +139,16 @@ class PolicyResolverTest {
 
     /** T-CORE-TX-02 input: {@code on_max_failure} per workflow. */
     @Test
+    void loginLocksTheAccountByDefault() {
+        assertEquals(OnMaxFailure.BLOCK_AND_LOCK, resolve(Workflow.LOGIN_AUTH).policy().onMaxFailure());
+        assertEquals(OnMaxFailure.BLOCK, resolve(Workflow.PACKET_AUTH).policy().onMaxFailure());
+        assertEquals(OnMaxFailure.BLOCK, resolve(Workflow.REGISTRATION).policy().onMaxFailure());
+        cfg.put(LivenessConfigKeys.ON_MAX_FAILURE, "BLOCK");
+        assertEquals(OnMaxFailure.BLOCK, resolve(Workflow.LOGIN_AUTH).policy().onMaxFailure(), "set explicitly");
+        assertEquals(OnMaxFailure.BLOCK_AND_LOCK, LivenessPolicy.defaults(Workflow.LOGIN_AUTH).onMaxFailure());
+    }
+
+    @Test
     void onMaxFailurePerWorkflow() {
         cfg.put(LivenessConfigKeys.ON_MAX_FAILURE, "SUPERVISOR_OVERRIDE");
         cfg.put(LivenessConfigKeys.workflowKey(Workflow.LOGIN_AUTH, LivenessConfigKeys.WORKFLOW_ON_MAX_FAILURE_SUFFIX),

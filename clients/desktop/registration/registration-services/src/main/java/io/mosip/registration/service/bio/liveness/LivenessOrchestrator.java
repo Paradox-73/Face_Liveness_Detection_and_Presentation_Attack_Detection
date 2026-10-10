@@ -39,6 +39,7 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.dto.LivenessContext;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
+import io.mosip.registration.repositories.LocalPreferencesRepository;
 
 /**
  * Entry point of the screens into face liveness: the UI-agnostic service a JavaFX controller calls.
@@ -65,7 +66,8 @@ import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
  * starts with the failures that earlier windows used up, so "fail twice, Cancel, open again" continues at the third
  * attempt. Once {@code max_retries} is reached the same person cannot start a new run in the same workflow for a
  * while ({@code REG-LIV-014}, see {@link LivenessConfig#exhaustedBlockMinutes(Workflow)}). A pass clears the count;
- * quality, device and engine errors and cancellation never lower it. A suspected attack (PAD, integrity or binding)
+ * quality, device and engine errors and cancellation never lower it. The counts are saved in the local database
+ * ({@link LocalAttemptStore}) and survive a restart. A suspected attack (PAD, integrity or binding)
  * in any window forbids the supervisor override for that person in that workflow.
  *
  * <p>Uncounted low-light results ("Improve lighting.") are kept the same way: a new run starts with the low-light
@@ -122,6 +124,17 @@ public class LivenessOrchestrator {
 		this.deviceFactory = deviceFactory;
 		this.clock = Objects.requireNonNull(clock, "clock");
 		this.diagnosticMode = new DiagnosticModeAudit(this.audit, this.clock);
+	}
+
+	/**
+	 * Keeps the counted failures and blocks in the client's local database, so a restart does not give a fresh set of
+	 * attempts.
+	 *
+	 * @param localPreferences the {@code local_preferences} table
+	 */
+	@Autowired
+	public void setAttemptStore(LocalPreferencesRepository localPreferences) {
+		history.persistTo(new LocalAttemptStore(localPreferences));
 	}
 
 	/**

@@ -233,7 +233,7 @@ public final class PolicyResolver {
         }
 
         OnMaxFailure onMaxFailure(String key, Workflow w) {
-            OnMaxFailure def = LivenessConfigKeys.DEFAULT_ON_MAX_FAILURE;
+            OnMaxFailure def = LivenessConfigKeys.defaultOnMaxFailure(w);
             Optional<String> v = raw(key);
             if (!v.isPresent()) {
                 return def;

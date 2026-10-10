@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -72,6 +73,7 @@ public class FaceCaptureLivenessGate {
     private final Map<String, Map<String, String>> overrideEvidence = new HashMap<>();
     private final Set<String> suspectedAttack = new HashSet<>();
     private final Map<String, Integer> lowLightRetries = new HashMap<>();
+    private SavedAttempts saved;
 
     /**
      * Creates the gate.
@@ -81,6 +83,49 @@ public class FaceCaptureLivenessGate {
     @Inject
     public FaceCaptureLivenessGate(LivenessService liveness) {
         this.liveness = liveness;
+    }
+
+    /**
+     * Reads the saved counts (failed attempts, suspected attack, dim-light count) and saves every later change, so
+     * an app restart keeps them. The override evidence is not saved: after a restart the field stays blocked.
+     *
+     * @param saved where the counts are saved
+     */
+    public synchronized void persistTo(SavedAttempts saved) {
+        this.saved = Objects.requireNonNull(saved, "saved");
+        for (Map.Entry<String, String> e : saved.load(System.currentTimeMillis()).entrySet()) {
+            try {
+                String[] p = e.getValue().split(",", -1);
+                int failed = Integer.parseInt(p[0]);
+                int lowLight = Integer.parseInt(p[2]);
+                if (failed > 0) {
+                    failedAttempts.put(e.getKey(), failed);
+                }
+                if (Boolean.parseBoolean(p[1])) {
+                    suspectedAttack.add(e.getKey());
+                }
+                if (lowLight > 0) {
+                    lowLightRetries.put(e.getKey(), lowLight);
+                }
+            } catch (RuntimeException ignored) {
+                // An unreadable entry is dropped.
+            }
+        }
+    }
+
+    /** Saves the counts of one key, or removes the saved entry when none is left. */
+    private void save(String key) {
+        if (saved == null) {
+            return;
+        }
+        int failed = failedAttempts.getOrDefault(key, 0);
+        boolean attack = suspectedAttack.contains(key);
+        int lowLight = lowLightRetries.getOrDefault(key, 0);
+        if (failed > 0 || attack || lowLight > 0) {
+            saved.put(key, failed + "," + attack + "," + lowLight, System.currentTimeMillis());
+        } else {
+            saved.remove(key);
+        }
     }
 
     /**
@@ -237,6 +282,7 @@ public class FaceCaptureLivenessGate {
                         failed, max);
             }
         }
+        save(key);
         lastOutcome.put(fieldId, outcome);
         return outcome;
     }
@@ -277,6 +323,7 @@ public class FaceCaptureLivenessGate {
         } else {
             outcome = blocked(fieldId, failedAttempts.getOrDefault(key, max), max);
         }
+        save(key);
         lastOutcome.put(fieldId, outcome);
         return outcome;
     }

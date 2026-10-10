@@ -111,6 +111,16 @@ public final class FaceAuthenticator {
     }
 
     /**
+     * Tells whether the user's account is locked now.
+     *
+     * @param userId user ID
+     * @return {@code true} while ARC's login lock lasts
+     */
+    public boolean isLocked(String userId) {
+        return directory.isLocked(userId);
+    }
+
+    /**
      * Finishes an authentication with the capture screen's result.
      *
      * @param userId   user ID the capture was made for

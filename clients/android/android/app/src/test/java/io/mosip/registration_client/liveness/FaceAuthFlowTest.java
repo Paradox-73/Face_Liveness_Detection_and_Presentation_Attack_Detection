@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.RuntimeEnvironment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,6 +45,10 @@ public class FaceAuthFlowTest {
     private final FakeLivenessService liveness = new FakeLivenessService();
     private final List<FaceAuthOutcome> outcomes = new ArrayList<>();
     private final List<String> supervisors = new ArrayList<>();
+    private final List<String> locked = new ArrayList<>();
+    /** ARC locks the account; false when its invalid-login limit is unset. */
+    private boolean lockTakes = true;
+    private FaceAuthenticator authenticator;
     private FaceMatch match = FaceMatch.compared(75, 40);
     private LivenessCaptureLauncher launcher;
     private FaceAuthFlow flow;
@@ -65,7 +70,7 @@ public class FaceAuthFlowTest {
 
             @Override
             public boolean isLocked(String userId) {
-                return false;
+                return locked.contains(userId);
             }
 
             @Override
@@ -74,9 +79,12 @@ public class FaceAuthFlowTest {
 
             @Override
             public void lock(String userId) {
+                if (lockTakes) {
+                    locked.add(userId);
+                }
             }
         };
-        FaceAuthenticator authenticator = new FaceAuthenticator(liveness, directory, (probe, gallery) -> match);
+        authenticator = new FaceAuthenticator(liveness, directory, (probe, gallery) -> match);
         launcher = new LivenessCaptureLauncher(liveness);
         launcher.attach(Robolectric.buildActivity(Activity.class).setup().get());
         flow = new FaceAuthFlow(authenticator, launcher);
@@ -177,8 +185,37 @@ public class FaceAuthFlowTest {
         // The account lock refuses the user while it lasts; afterwards the count starts again.
         assertEquals(0, flow.usedAttempts("officer1", Workflow.LOGIN_AUTH));
         flow.authenticate("officer1", Workflow.LOGIN_AUTH, outcomes::add);
+        assertEquals(FaceAuthStatus.USER_LOCKED, outcomes.get(1).status());
+        locked.clear();
+        flow.authenticate("officer1", Workflow.LOGIN_AUTH, outcomes::add);
         assertEquals(2, liveness.requests.size());
         assertEquals(0, liveness.requests.get(1).priorAttempts());
+    }
+
+    @Test
+    public void lockThatDidNotTakeKeepsTheBlock() throws Exception {
+        lockTakes = false;
+        flow.authenticate("officer1", Workflow.LOGIN_AUTH, outcomes::add);
+        deliver(failure(Workflow.LOGIN_AUTH, FailureReason.PAD, 3, false).toBuilder().lockRequired(true).build());
+
+        flow.authenticate("officer1", Workflow.LOGIN_AUTH, outcomes::add);
+        assertEquals(FaceAuthStatus.MAX_ATTEMPTS, outcomes.get(1).status());
+        assertEquals("no camera: the attempts are used up", 1, liveness.requests.size());
+    }
+
+    @Test
+    public void blockSurvivesAnAppRestart() throws Exception {
+        flow.persistTo(new SavedAttempts(RuntimeEnvironment.getApplication(), "test_auth_attempts"));
+        flow.authenticate("officer1", Workflow.PACKET_AUTH, outcomes::add);
+        deliver(failure(Workflow.PACKET_AUTH, FailureReason.PAD, 3, false));
+
+        FaceAuthFlow restarted = new FaceAuthFlow(authenticator, launcher);
+        restarted.persistTo(new SavedAttempts(RuntimeEnvironment.getApplication(), "test_auth_attempts"));
+        restarted.authenticate("officer1", Workflow.PACKET_AUTH, outcomes::add);
+        assertEquals(FaceAuthStatus.MAX_ATTEMPTS, outcomes.get(1).status());
+        assertEquals(3, restarted.usedAttempts("officer1", Workflow.PACKET_AUTH));
+        assertTrue(restarted.isSuspectedAttack("officer1", Workflow.PACKET_AUTH));
+        assertEquals(1, liveness.requests.size());
     }
 
     @Test

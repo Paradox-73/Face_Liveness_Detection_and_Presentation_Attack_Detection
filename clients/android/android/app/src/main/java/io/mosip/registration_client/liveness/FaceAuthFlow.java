@@ -12,6 +12,7 @@ import android.util.Log;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -43,10 +44,13 @@ import io.mosip.registration.livenessmanager.auth.FaceAuthenticator;
  * screen reports the configured block ({@code on_max_failure}):
  * <ul>
  *   <li>{@code BLOCK}: face authentication of that user in that workflow stays refused without opening the camera
- *       until the app restarts (the workflow's other authentication methods still apply);</li>
+ *       (the workflow's other authentication methods still apply);</li>
  *   <li>{@code BLOCK_AND_LOCK}: the account is locked by {@code FaceAuthenticator}, the precheck refuses the user
- *       while the lock lasts, and the count starts again after it.</li>
+ *       while the lock lasts, and the count starts again after it. When the lock did not take (ARC's invalid-login
+ *       limit unset), the block of {@code BLOCK} applies instead.</li>
  * </ul>
+ * With {@link #persistTo} the counts and blocks are saved ({@link SavedAttempts}), so an app restart keeps them for
+ * up to 12 hours.
  * This applies to operator and supervisor face authentication alike (sign-in, packet, exception, end of day and the
  * supervisor of a resident override).
  *
@@ -73,6 +77,7 @@ public class FaceAuthFlow {
     private final Handler main = new Handler(Looper.getMainLooper());
     private final Map<String, Long> loginGrants = new HashMap<>();
     private final Map<String, AttemptCount> attempts = new HashMap<>();
+    private SavedAttempts saved;
 
     /**
      * Creates the flow.
@@ -84,6 +89,21 @@ public class FaceAuthFlow {
     public FaceAuthFlow(FaceAuthenticator authenticator, LivenessCaptureLauncher launcher) {
         this.authenticator = authenticator;
         this.launcher = launcher;
+    }
+
+    /**
+     * Reads the saved counts and saves every later change.
+     *
+     * @param saved where the counts are saved
+     */
+    public synchronized void persistTo(SavedAttempts saved) {
+        this.saved = Objects.requireNonNull(saved, "saved");
+        for (Map.Entry<String, String> e : saved.load(System.currentTimeMillis()).entrySet()) {
+            AttemptCount count = AttemptCount.parse(e.getValue());
+            if (count != null) {
+                attempts.put(e.getKey(), count);
+            }
+        }
     }
 
     /**
@@ -138,6 +158,10 @@ public class FaceAuthFlow {
         }
         if (outcome.isSuccess() && workflow == Workflow.LOGIN_AUTH) {
             grantLogin(userId);
+        }
+        if (result.isLockRequired() && !authenticator.isLocked(userId)) {
+            // No account lock took effect: without this block the attempts would never run out.
+            keepBlocked(userId, workflow, result);
         }
         FaceAuthOutcome finalOutcome = outcome;
         main.post(() -> done.accept(finalOutcome));
@@ -199,7 +223,7 @@ public class FaceAuthFlow {
     synchronized void recordAttempts(String userId, Workflow workflow, LivenessCaptureResult result) {
         String key = attemptKey(userId, workflow);
         if (result.isPass() || result.isLockRequired()) {
-            attempts.remove(key);
+            store(key, null);
             return;
         }
         AttemptCount stored = attempts.get(key);
@@ -215,11 +239,30 @@ public class FaceAuthFlow {
         int lowLight = counts || blocked ? 0
                 : result.attemptsUsed() > storedUsed ? result.lowLightRetries()
                 : Math.max(storedLowLight, result.lowLightRetries());
-        if (used > 0 || blocked || attack || lowLight > 0) {
-            attempts.put(key, new AttemptCount(blocked ? Math.max(used, max) : used, max, blocked, attack,
-                    lowLight));
-        } else {
+        store(key, used > 0 || blocked || attack || lowLight > 0
+                ? new AttemptCount(blocked ? Math.max(used, max) : used, max, blocked, attack, lowLight) : null);
+    }
+
+    private synchronized void keepBlocked(String userId, Workflow workflow, LivenessCaptureResult result) {
+        int max = Math.max(result.maxAttempts(), result.attemptsUsed());
+        FailureReason reason = result.failureReason();
+        store(attemptKey(userId, workflow),
+                new AttemptCount(max, max, true, reason != null && !reason.allowsOverride(), 0));
+    }
+
+    /** Keeps one count in memory and in the saved set; {@code null} removes it. */
+    private void store(String key, AttemptCount count) {
+        if (count == null) {
             attempts.remove(key);
+        } else {
+            attempts.put(key, count);
+        }
+        if (saved != null) {
+            if (count == null) {
+                saved.remove(key);
+            } else {
+                saved.put(key, count.format(), System.currentTimeMillis());
+            }
         }
     }
 
@@ -270,6 +313,20 @@ public class FaceAuthFlow {
             this.blocked = blocked;
             this.attack = attack;
             this.lowLight = lowLight;
+        }
+
+        String format() {
+            return used + "," + max + "," + blocked + "," + attack + "," + lowLight;
+        }
+
+        static AttemptCount parse(String text) {
+            try {
+                String[] p = text.split(",", -1);
+                return new AttemptCount(Integer.parseInt(p[0]), Integer.parseInt(p[1]), Boolean.parseBoolean(p[2]),
+                        Boolean.parseBoolean(p[3]), Integer.parseInt(p[4]));
+            } catch (RuntimeException e) {
+                return null;
+            }
         }
     }
 }

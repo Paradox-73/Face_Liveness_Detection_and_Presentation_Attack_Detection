@@ -318,6 +318,19 @@ public final class LivenessConfigKeys {
     }
 
     /**
+     * Returns the default behaviour after the last failed attempt of a workflow.
+     *
+     * @param workflow the workflow
+     * @return {@code BLOCK_AND_LOCK} for {@code login_auth}, {@code BLOCK} otherwise
+     */
+    public static OnMaxFailure defaultOnMaxFailure(Workflow workflow) {
+        // Operator login also counts a failed login: that lock is kept in the client's database, so a restart does
+        // not give a fresh set of attempts.
+        return Objects.requireNonNull(workflow, "workflow") == Workflow.LOGIN_AUTH ? OnMaxFailure.BLOCK_AND_LOCK
+                : DEFAULT_ON_MAX_FAILURE;
+    }
+
+    /**
      * Returns the default passive threshold of a workflow.
      *
      * @param workflow the workflow
@@ -353,6 +366,9 @@ public final class LivenessConfigKeys {
             m.put(policyKey(w), defaultPolicyMode(w).name());
             if (w.isAuth()) {
                 m.put(workflowKey(w, WORKFLOW_PASSIVE_THRESHOLD_SUFFIX), Integer.toString(DEFAULT_AUTH_PASSIVE_THRESHOLD));
+            }
+            if (defaultOnMaxFailure(w) != DEFAULT_ON_MAX_FAILURE) {
+                m.put(workflowKey(w, WORKFLOW_ON_MAX_FAILURE_SUFFIX), defaultOnMaxFailure(w).name());
             }
         }
         return Collections.unmodifiableMap(m);
