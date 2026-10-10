@@ -382,3 +382,13 @@ def test_shipped_run_reproduces_the_audit_figures():
     first = analyze.compute(reg, "first_attempt").species["SYN-A7"]
     assert (first.accept, first.decided) == (4, 8)
     assert "SYN-A9" not in analyze.compute(records, "transaction").species
+
+
+def test_bpcer20_uses_the_worst_species_not_the_pool():
+    # 95 easy attacks score 0, 5 hard ones score 99: pooled APCER at threshold 50 is 5%, the hard species' is 100%.
+    bona = [90.0] * 10
+    attacks = {"EASY": [0.0] * 95, "HARD": [99.0] * 5}
+    pooled = analyze.det_points(bona, attacks["EASY"] + attacks["HARD"])
+    assert analyze.bpcer_at_apcer(pooled, 0.05) == (0.0, 90.0)
+    worst = analyze.det_points_worst_species(bona, attacks)
+    assert analyze.bpcer_at_apcer(worst, 0.05) == (1.0, 101.0)

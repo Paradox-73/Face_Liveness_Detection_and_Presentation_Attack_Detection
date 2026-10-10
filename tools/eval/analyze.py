@@ -554,6 +554,19 @@ def det_points(bona_scores: Sequence[float], attack_scores: Sequence[float]) -> 
     return out
 
 
+def det_points_worst_species(bona_scores: Sequence[float], attacks: Dict[str, List[float]]
+                             ) -> List[Tuple[float, float, float]]:
+    """Like ``det_points`` but APCER is the highest APCER over the attack species at each threshold.
+
+    ISO/IEC 30107-3 defines BPCER at a given APCER_AP, the worst species; pooling species hides a hard one
+    behind many easy ones.
+    """
+    species = [v for v in attacks.values() if v]
+    pooled = [s for v in species for s in v]
+    return [(t, max(sum(1 for s in v if s >= t) / len(v) for v in species), bpcer)
+            for t, _, bpcer in det_points(bona_scores, pooled)]
+
+
 def bpcer_at_apcer(points: Sequence[Tuple[float, float, float]], target_apcer: float) -> Optional[Tuple[float, float]]:
     """Lowest BPCER among thresholds whose APCER is at or below ``target_apcer`` (BPCER20: target 5%).
 
@@ -931,13 +944,13 @@ def _det_summary(records: Sequence[Record], bona_conditions: Optional[Sequence[s
         if not bona or not scores:
             rows.append((wf, len(bona), len(scores), "-", "-"))
             continue
-        pts = det_points(bona, scores)
+        pts = det_points_worst_species(bona, attacks)
         b20, b10 = bpcer_at_apcer(pts, 0.05), bpcer_at_apcer(pts, 0.10)
         rows.append((wf, len(bona), len(scores),
                      f"{pct(b20[0])} at threshold {b20[1]:g}" if b20 else "not reached",
                      f"{pct(b10[0])} at threshold {b10[1]:g}" if b10 else "not reached"))
     return _table(["workflow", "bona fide transactions", "attack transactions",
-                   "BPCER20 (BPCER at APCER 5%, passive score only)", "BPCER10"], rows)
+                   "BPCER20 (BPCER at APCER 5% of the worst species, passive score only)", "BPCER10"], rows)
 
 
 def build_report(records: Sequence[Record], det_file: Optional[str], det_ok: bool, retries: int,

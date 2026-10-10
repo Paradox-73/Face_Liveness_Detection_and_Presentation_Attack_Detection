@@ -133,7 +133,7 @@ All computed by `tools/eval/analyze.py`, separately for evaluation types (a) and
 - **Challenge usability:** bona fide completion rate per challenge type and median time to complete.
 - **Retry amplification:** with per-attempt APCER p and r allowed attempts, attacker success per transaction = 1 - (1 - p)^r; the per-transaction table measures it directly.
 - **Processing time:** PAD time per decision and full-system time, median and p95, on the named hardware, for desktop and Android.
-- **DET curve** of the passive score per species, normal-deviate axes, with the frozen operating point marked; **BPCER20** (BPCER at APCER 5%) and BPCER10. BPCER100 is not reported: with 60 attacks per species the APCER resolution is 1.7%.
+- **DET curve** of the passive score per species, normal-deviate axes, with the frozen operating point marked; **BPCER20** (BPCER at the APCER of the worst species being 5%, not pooled) and BPCER10. BPCER100 is not reported: with 60 attacks per species the APCER resolution is 1.7%.
 - **Never the headline:** ACER, HTER or EER (averaged error rates).
 
 ## 10. Consent and data handling
