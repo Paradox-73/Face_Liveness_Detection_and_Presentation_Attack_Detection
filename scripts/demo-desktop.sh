@@ -129,13 +129,22 @@ STORE="$MOCKSYNC_DIR/work/keys/client-truststore.p12"
 
 # ---------------------------------------------------------------------------------------------- run
 mkdir -p "$OUT"
+# The driver is several source files, so it is compiled first (single-file source mode cannot see the others).
+DRIVER_SRC="$MOCKSYNC_DIR/e2e"
+log "compiling the flow driver"
+DRIVER_SRCS=()
+for f in DesktopFlowDriver FlowContext FlowDb FlowHttp FlowInterpreter FlowWatcher FxNodes PromptFollower; do
+	DRIVER_SRCS+=("$(native "$DRIVER_SRC/$f.java")")
+done
+(cd "$CLIENT_DIR" && "$JDK/bin/javac" -encoding UTF-8 -cp "lib/*" -d "$(native "$OUT/driver-classes")" "${DRIVER_SRCS[@]}") \
+	|| die "the flow driver did not compile"
 log "running $(basename "$FLOW"); output in $OUT"
 set +e
 (cd "$CLIENT_DIR" && "$JDK/bin/java" -Xmx1400m -Dfile.encoding=UTF-8 \
 	-Dframe.packs="$(native "$PACKS")" \
 	-Djavax.net.ssl.trustStore="$(native "$STORE")" -Djavax.net.ssl.trustStorePassword=changeit \
 	-Djavax.net.ssl.trustStoreType=PKCS12 \
-	-cp "lib/*" "$(native "$MOCKSYNC_DIR/e2e/DesktopFlowDriver.java")" "$(native "$OUT")" "$(native "$FLOW")" \
+	-cp "lib/*;$(native "$OUT/driver-classes")" DesktopFlowDriver "$(native "$OUT")" "$(native "$FLOW")" \
 	>"$OUT/stdout.log" 2>&1)
 status=$?
 set -e

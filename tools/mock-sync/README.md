@@ -84,7 +84,7 @@ Run it twice on a fresh client directory: the first run ends at the restart aler
 
 ### Scripted demo of every face liveness flow (desktop)
 
-`e2e/DesktopFlowDriver.java` runs flow scripts (`e2e/flows/*.flow`, one command per line: click, fill, wait,
+`e2e/DesktopFlowDriver.java` (with its helper classes `FlowInterpreter`, `FxNodes`, `FlowContext`, `FlowHttp`, `FlowDb`, `PromptFollower` and `FlowWatcher` in the same folder; compiled by the script) runs flow scripts (`e2e/flows/*.flow`, one command per line: click, fill, wait,
 expect, switch the MockMDS face source, inject a device fault, query the client database, call an HTTP API, save a
 snapshot). `scripts/demo-desktop.sh` (repository root) starts MockSync and MockMDS when needed and runs
 `e2e/flows/demo-desktop.flow`: operator face login, registration with passive pass, device disconnect and
