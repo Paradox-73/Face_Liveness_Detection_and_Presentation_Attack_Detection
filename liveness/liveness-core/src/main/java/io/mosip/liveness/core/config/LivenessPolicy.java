@@ -8,6 +8,7 @@ package io.mosip.liveness.core.config;
 
 import io.mosip.liveness.core.ChallengeType;
 import io.mosip.liveness.core.Workflow;
+import io.mosip.liveness.core.device.CertificationLevel;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -54,6 +55,7 @@ public final class LivenessPolicy {
     private final String modelMinVersion;
     private final boolean diagnosticEnabled;
     private final boolean metricsEnabled;
+    private final Set<CertificationLevel> allowedCertifications;
 
     private LivenessPolicy(Builder b) {
         this.workflow = b.workflow;
@@ -83,6 +85,7 @@ public final class LivenessPolicy {
         this.modelMinVersion = b.modelMinVersion;
         this.diagnosticEnabled = b.diagnosticEnabled;
         this.metricsEnabled = b.metricsEnabled;
+        this.allowedCertifications = Collections.unmodifiableSet(EnumSet.copyOf(b.allowedCertifications));
     }
 
     /**
@@ -367,6 +370,15 @@ public final class LivenessPolicy {
         return metricsEnabled;
     }
 
+    /**
+     * Returns the face device certification levels accepted ({@code mosip.registration.mds.allowed_certifications}).
+     *
+     * @return non-empty set; default L0 and L1
+     */
+    public Set<CertificationLevel> allowedCertifications() {
+        return allowedCertifications;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -388,7 +400,7 @@ public final class LivenessPolicy {
                 && integrityMinFps == p.integrityMinFps && bindingMinSimilarity == p.bindingMinSimilarity
                 && bindingMaxGapMs == p.bindingMaxGapMs && noStreamPolicy == p.noStreamPolicy
                 && modelMinVersion.equals(p.modelMinVersion) && diagnosticEnabled == p.diagnosticEnabled
-                && metricsEnabled == p.metricsEnabled;
+                && metricsEnabled == p.metricsEnabled && allowedCertifications.equals(p.allowedCertifications);
     }
 
     @Override
@@ -397,7 +409,7 @@ public final class LivenessPolicy {
                 activeEnabled, minChallenges, challengeTypes, challengeTimeoutMs, minOnsetMs, holdMs, maxRetries,
                 onMaxFailure, streamTimeoutMs, frameSampleIntervalMs, deviceReconnectAttempts, qualityMinIedPx,
                 qualityMaxYawDeg, integrityMaxFrozenFrames, integrityMinFps, bindingMinSimilarity, bindingMaxGapMs,
-                noStreamPolicy, modelMinVersion, diagnosticEnabled, metricsEnabled);
+                noStreamPolicy, modelMinVersion, diagnosticEnabled, metricsEnabled, allowedCertifications);
     }
 
     @Override
@@ -438,6 +450,7 @@ public final class LivenessPolicy {
         private String modelMinVersion = LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION;
         private boolean diagnosticEnabled;
         private boolean metricsEnabled = true;
+        private Set<CertificationLevel> allowedCertifications = EnumSet.allOf(CertificationLevel.class);
 
         private Builder(Workflow workflow) {
             this.workflow = Objects.requireNonNull(workflow, "workflow");
@@ -482,6 +495,7 @@ public final class LivenessPolicy {
             modelMinVersion = p.modelMinVersion;
             diagnosticEnabled = p.diagnosticEnabled;
             metricsEnabled = p.metricsEnabled;
+            allowedCertifications = EnumSet.copyOf(p.allowedCertifications);
         }
 
         /**
@@ -768,6 +782,18 @@ public final class LivenessPolicy {
          */
         public Builder metricsEnabled(boolean metricsEnabled) {
             this.metricsEnabled = metricsEnabled;
+            return this;
+        }
+
+        /**
+         * Sets the accepted face device certification levels.
+         *
+         * @param levels non-empty set; copied; empty or {@code null} keeps every level
+         * @return this builder
+         */
+        public Builder allowedCertifications(Set<CertificationLevel> levels) {
+            this.allowedCertifications = levels == null || levels.isEmpty() ? EnumSet.allOf(CertificationLevel.class)
+                    : EnumSet.copyOf(levels);
             return this;
         }
 

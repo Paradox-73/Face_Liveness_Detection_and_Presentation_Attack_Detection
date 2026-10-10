@@ -47,6 +47,8 @@ public final class PacketEvidenceKeys {
     public static final String DECISION_FAIL = "FAIL";
     /** Decision value for a capture accepted by supervisor override. */
     public static final String DECISION_OVERRIDE = "OVERRIDE";
+    /** Decision value for a capture stored without a liveness check ({@code no_stream_policy=CAPTURE_ONLY}). */
+    public static final String DECISION_NOT_CHECKED = "NOT_CHECKED";
 
     private PacketEvidenceKeys() {
     }

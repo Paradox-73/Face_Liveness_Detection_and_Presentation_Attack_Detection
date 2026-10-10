@@ -432,6 +432,10 @@ public final class LivenessSessionDriver implements AutoCloseable {
             if (device == null) {
                 device = Objects.requireNonNull(devices.get(), "device");
             }
+            if (!policy.allowedCertifications().contains(device.describe().certification())) {
+                throw new DeviceException(DeviceError.of(DeviceErrorCode.NOT_ALLOWED, "certification "
+                        + device.describe().certification() + " is not in mds.allowed_certifications"));
+            }
         } catch (DeviceException e) {
             deviceUnavailable(attempt, e.getErrorCode());
             return;
@@ -450,7 +454,8 @@ public final class LivenessSessionDriver implements AutoCloseable {
         Attempt a = new Attempt(attempt);
         try {
             SessionRequest.Builder request = SessionRequest.builder(policy, subjectRef, device.describe())
-                    .attempt(attempt).clock(clock).diagnosticSink(diagnostics);
+                    .attempt(attempt).priorSuspectedAttack(transaction.isSuspectedAttack()).clock(clock)
+                    .diagnosticSink(diagnostics);
             if (trackLowLight) {
                 request.lowLightRetries(transaction.lowLightRetries());
             }
@@ -485,7 +490,7 @@ public final class LivenessSessionDriver implements AutoCloseable {
     }
 
     private void deviceUnavailable(int attempt, DeviceErrorCode code) {
-        boolean blocked = code == DeviceErrorCode.EMULATOR_BLOCKED;
+        boolean blocked = code == DeviceErrorCode.EMULATOR_BLOCKED || code == DeviceErrorCode.NOT_ALLOWED;
         noSession(attempt, FailureReason.DEVICE, code, null, UiPhase.DEVICE_ERROR,
                 LivenessUiStateMapper.deviceMessageKey(code), blocked ? PromptIcon.LOCKED : PromptIcon.CAMERA_OFF,
                 events("").deviceError(code), !blocked);

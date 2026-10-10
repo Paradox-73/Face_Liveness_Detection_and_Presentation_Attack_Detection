@@ -61,7 +61,7 @@ map of every face record that passed liveness (resident, officer, supervisor):
 
 | Key | Values | Example |
 |---|---|---|
-| `LIVENESS_DECISION` | `PASS`, `OVERRIDE` | `PASS` |
+| `LIVENESS_DECISION` | `PASS`, `OVERRIDE`, `NOT_CHECKED` (Android vendor app with `no_stream_policy=CAPTURE_ONLY`: stored without a liveness check; since 2026-10-10, before it was `PASS`) | `PASS` |
 | `LIVENESS_METHOD` | `PASSIVE`, `PASSIVE_ACTIVE`, `ACTIVE`, `NONE` | `PASSIVE_ACTIVE` |
 | `LIVENESS_SCORE` | passive score 0-100 | `74` |
 | `LIVENESS_CHALLENGES` | type:outcome list | `SMILE:OK,BLINK:OK` |

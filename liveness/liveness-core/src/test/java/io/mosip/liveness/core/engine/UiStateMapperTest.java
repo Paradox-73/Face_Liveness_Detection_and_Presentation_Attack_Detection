@@ -112,6 +112,22 @@ class UiStateMapperTest {
                 ReasonCode.BLURRY), Collections.<ReasonCode>emptyList()).messageKey());
     }
 
+    /** PAD on attempt 1, a timeout on attempt 3: the screen offers no override, as the transaction refuses it. */
+    @Test
+    void earlierAttackHidesTheOverrideLikeTheTransaction() {
+        LivenessPolicy p = REG.toBuilder().onMaxFailure(OnMaxFailure.SUPERVISOR_OVERRIDE).build();
+        LivenessTransaction tx = new LivenessTransaction(p);
+        tx.record(failed(Workflow.REGISTRATION, 1, FailureReason.PAD));
+        tx.record(failed(Workflow.REGISTRATION, 2, FailureReason.ACTIVE));
+        boolean priorAttack = tx.isSuspectedAttack();
+        LivenessResult last = failed(Workflow.REGISTRATION, 3, FailureReason.TIMEOUT);
+        LivenessUiState s = new LivenessUiStateMapper(p, 3, priorAttack).forResult(last, NONE);
+        tx.record(last);
+        assertEquals(UiPhase.MAX_ATTEMPTS, s.phase());
+        assertFalse(tx.isOverrideAllowed());
+        assertEquals(tx.isOverrideAllowed(), s.isOverrideAvailable());
+    }
+
     @Test
     void maxAttemptsResidentWithOverride() {
         LivenessPolicy p = REG.toBuilder().onMaxFailure(OnMaxFailure.SUPERVISOR_OVERRIDE).build();

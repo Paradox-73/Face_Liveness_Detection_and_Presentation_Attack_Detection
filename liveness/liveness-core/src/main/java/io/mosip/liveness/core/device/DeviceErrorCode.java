@@ -40,6 +40,8 @@ public enum DeviceErrorCode {
     CAMERA_IN_USE,
     /** Android: running on an emulator while {@code android.block_emulator} is on. */
     EMULATOR_BLOCKED,
+    /** The device's certification level is not in {@code mosip.registration.mds.allowed_certifications}. */
+    NOT_ALLOWED,
     /** Any other device failure. */
     UNKNOWN
 }

@@ -18,6 +18,7 @@ import io.mosip.liveness.core.config.LivenessPolicy;
 import io.mosip.liveness.core.config.NoStreamPolicy;
 import io.mosip.liveness.core.config.OnMaxFailure;
 import io.mosip.liveness.core.config.PolicyMode;
+import io.mosip.liveness.core.device.CertificationLevel;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -187,6 +188,18 @@ class PolicyResolverTest {
         assertEquals("1.3.0", bad.policy().modelMinVersion());
         assertFalse(bad.policy().isDiagnosticEnabled());
         assertEquals(4, bad.issues().size(), bad.issues().toString());
+    }
+
+    @Test
+    void allowedCertificationsAreParsed() {
+        assertEquals(EnumSet.allOf(CertificationLevel.class),
+                resolve(Workflow.REGISTRATION).policy().allowedCertifications());
+        cfg.put(LivenessConfigKeys.MDS_ALLOWED_CERTIFICATIONS, " l1 ");
+        assertEquals(EnumSet.of(CertificationLevel.L1), resolve(Workflow.LOGIN_AUTH).policy().allowedCertifications());
+        cfg.put(LivenessConfigKeys.MDS_ALLOWED_CERTIFICATIONS, "L2");
+        PolicyResolution bad = resolve(Workflow.REGISTRATION);
+        assertEquals(EnumSet.allOf(CertificationLevel.class), bad.policy().allowedCertifications());
+        assertEquals(ConfigIssue.Kind.INVALID, bad.issues().get(0).kind());
     }
 
     /** The model registry needs MAJOR.MINOR.PATCH; a shorter value must not reach it and stop the engine. */

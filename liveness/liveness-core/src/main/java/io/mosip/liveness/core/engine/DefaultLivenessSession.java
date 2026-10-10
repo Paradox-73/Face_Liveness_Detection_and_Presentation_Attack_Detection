@@ -128,7 +128,7 @@ final class DefaultLivenessSession implements LivenessSession {
         this.audit = new AuditPayloadBuilder(policy.workflow(), sessionId, clock);
         this.diagnostics = new DiagnosticLog(request.diagnosticSink(), policy.isDiagnosticEnabled(), sessionId,
                 engine.info());
-        this.ui = new LivenessUiStateMapper(policy, request.attempt());
+        this.ui = new LivenessUiStateMapper(policy, request.attempt(), request.priorSuspectedAttack());
         this.integrity = new FrameIntegrityChecker(policy, params);
         this.gate = new QualityGate(policy, params);
         this.tracker = new FaceTracker(params);

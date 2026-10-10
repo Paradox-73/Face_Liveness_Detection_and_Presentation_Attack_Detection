@@ -44,6 +44,7 @@ import java.util.Optional;
 
 import io.mosip.liveness.core.Decision;
 import io.mosip.liveness.core.Workflow;
+import io.mosip.liveness.core.api.PacketEvidenceKeys;
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.config.LivenessPolicy;
@@ -278,6 +279,29 @@ public class BiometricsDetailsApiLivenessOffTest {
         awaitFlutter();
         assertEquals(Collections.singletonList(CaptureOutcome.Status.FAILED.name()), flutter);
         assertNull("no rCapture after a refused device info", sbiIntent());
+    }
+
+    @Test
+    public void sbiDeviceBelowTheAllowedCertificationIsRefused() throws Exception {
+        config.put(LivenessConfigKeys.ANDROID_DEVICE, "SBI");
+        config.put(LivenessConfigKeys.NO_STREAM_POLICY, "CAPTURE_ONLY");
+        config.put(LivenessConfigKeys.MDS_ALLOWED_CERTIFICATIONS, "L1");
+        installSbiApp();
+
+        api.invokeDiscoverSbi(FIELD, "Face", result());
+        awaitSbiIntent();
+        api.parseDiscoverResponse(sbiAnswer(discoverResponse()));
+        awaitFlutter();
+
+        assertEquals(Collections.singletonList(CaptureOutcome.Status.FAILED.name()), flutter);
+        assertNull("the L0 device gets no device info or capture call", sbiIntent());
+    }
+
+    @Test
+    public void captureOnlyEvidenceIsNeverAPass() {
+        Map<String, String> evidence = BiometricsDetailsApi.captureOnlyEvidence("tx-1", "L0");
+        assertEquals(PacketEvidenceKeys.DECISION_NOT_CHECKED, evidence.get(PacketEvidenceKeys.DECISION));
+        assertEquals("CAPTURE_ONLY", evidence.get(PacketEvidenceKeys.METHOD));
     }
 
     @Test

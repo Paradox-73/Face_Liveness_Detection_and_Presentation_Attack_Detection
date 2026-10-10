@@ -143,7 +143,7 @@ transactions in the morning run of 2026-10-05 and in 0 of 8 after the screen-pat
 | `mosip.registration.liveness.android.block_emulator` | Android | Y/N | `N` (Y recommended in production) | `LivenessRuntime` | Refuse to run liveness on an emulator (`EMULATOR_BLOCKED`, audit LV12) |
 | `mosip.registration.android.offline_approval.enable` | Android | Y/N | `Y` | `approve_packet_ui.dart` | Supervisor approval without a network connection |
 | `mosip.registration.liveness.face_auth.match_threshold` | Android | int 0-100 | 40 (floor 20) | `EngineFaceVerifier` | 1:1 match threshold for face authentication on the tablet |
-| `mosip.registration.mds.allowed_certifications` | Android | CSV | `L0,L1` | defined, not read yet | Meant to make `Biometrics095Service.isDeviceValid` accept L0 SBI devices; not implemented. The built-in camera does not go through that check. |
+| `mosip.registration.mds.allowed_certifications` | both | CSV of `L0`, `L1` | `L0,L1` | unknown levels reported as invalid; none valid gives the default | Face device levels accepted for liveness (since 2026-10-10). The session driver refuses any other device before a session starts (`DeviceErrorCode.NOT_ALLOWED`, "Face verification is not allowed on this device.", no retry, no attempt used); the Android vendor-app path refuses it before the capture. The level is the one the device reports at discovery (L0 when missing). ARC's own `Biometrics095Service.isDeviceValid` (L1 only) is unchanged. |
 | JVM property `mosip.liveness.preload` | Desktop | true/false | true | `LivenessEngineRegistry` | `false` loads the models at first use instead of at start-up (set for the unit tests) |
 
 ## 11. Face match SDK keys (MOSIP keys, not liveness keys)

@@ -14,6 +14,7 @@ import io.mosip.liveness.core.config.LivenessPolicy;
 import io.mosip.liveness.core.config.NoStreamPolicy;
 import io.mosip.liveness.core.config.OnMaxFailure;
 import io.mosip.liveness.core.config.PolicyMode;
+import io.mosip.liveness.core.device.CertificationLevel;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -135,6 +136,7 @@ public final class PolicyResolver {
         b.modelMinVersion(r.version(LivenessConfigKeys.MODEL_MIN_VERSION, LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION));
         b.diagnosticEnabled(r.yesNo(LivenessConfigKeys.DIAGNOSTIC_ENABLE, false));
         b.metricsEnabled(r.yesNo(LivenessConfigKeys.METRICS_ENABLE, true));
+        b.allowedCertifications(r.certifications(LivenessConfigKeys.MDS_ALLOWED_CERTIFICATIONS));
     }
 
     /** Reads and validates values, collecting the issues of one resolution. */
@@ -248,6 +250,29 @@ public final class PolicyResolver {
                 return def;
             }
             return m.get();
+        }
+
+        Set<CertificationLevel> certifications(String key) {
+            Set<CertificationLevel> def = EnumSet.allOf(CertificationLevel.class);
+            Optional<String> v = raw(key);
+            if (!v.isPresent()) {
+                return def;
+            }
+            Set<CertificationLevel> levels = EnumSet.noneOf(CertificationLevel.class);
+            boolean unknown = false;
+            for (String part : v.get().split(",")) {
+                Optional<CertificationLevel> l = CertificationLevel.fromCode(part);
+                if (l.isPresent()) {
+                    levels.add(l.get());
+                } else {
+                    unknown = unknown || !part.trim().isEmpty();
+                }
+            }
+            if (levels.isEmpty() || unknown) {
+                issue(key, ConfigIssue.Kind.INVALID, v.get(),
+                        levels.isEmpty() ? LivenessConfigKeys.DEFAULT_MDS_ALLOWED_CERTIFICATIONS : levels.toString());
+            }
+            return levels.isEmpty() ? def : levels;
         }
 
         Set<ChallengeType> challengeTypes(String key) {

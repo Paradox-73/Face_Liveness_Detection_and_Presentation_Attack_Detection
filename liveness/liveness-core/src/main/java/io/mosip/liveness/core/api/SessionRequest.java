@@ -32,6 +32,7 @@ public final class SessionRequest {
     private final DeviceDescriptor device;
     private final int attempt;
     private final int lowLightRetries;
+    private final boolean priorSuspectedAttack;
     private final Clock clock;
     private final RandomSource random;
     private final DiagnosticSink diagnosticSink;
@@ -42,6 +43,7 @@ public final class SessionRequest {
         this.device = b.device;
         this.attempt = b.attempt;
         this.lowLightRetries = b.lowLightRetries;
+        this.priorSuspectedAttack = b.priorSuspectedAttack;
         this.clock = b.clock;
         this.random = b.random;
         this.diagnosticSink = b.diagnosticSink;
@@ -119,6 +121,16 @@ public final class SessionRequest {
     }
 
     /**
+     * Tells whether an earlier session of this transaction failed for a suspected attack, which forbids a supervisor
+     * override after the last attempt.
+     *
+     * @return {@code true} after a PAD, integrity or binding failure
+     */
+    public boolean priorSuspectedAttack() {
+        return priorSuspectedAttack;
+    }
+
+    /**
      * Returns the clock the session uses for every timeout.
      *
      * @return the clock
@@ -159,6 +171,7 @@ public final class SessionRequest {
         private final DeviceDescriptor device;
         private int attempt = 1;
         private int lowLightRetries = LOW_LIGHT_NOT_TRACKED;
+        private boolean priorSuspectedAttack;
         private Clock clock = Clock.system();
         private RandomSource random;
         private DiagnosticSink diagnosticSink = DiagnosticSink.noop();
@@ -197,6 +210,17 @@ public final class SessionRequest {
                 throw new IllegalArgumentException("lowLightRetries must not be negative");
             }
             this.lowLightRetries = lowLightRetries;
+            return this;
+        }
+
+        /**
+         * Sets whether an earlier session of this transaction failed for a suspected attack.
+         *
+         * @param priorSuspectedAttack {@code LivenessTransaction.isSuspectedAttack()} before this session
+         * @return this builder
+         */
+        public Builder priorSuspectedAttack(boolean priorSuspectedAttack) {
+            this.priorSuspectedAttack = priorSuspectedAttack;
             return this;
         }
 

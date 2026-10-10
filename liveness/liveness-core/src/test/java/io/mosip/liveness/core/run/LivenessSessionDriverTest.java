@@ -16,6 +16,7 @@ import io.mosip.liveness.core.api.SessionRequest;
 import io.mosip.liveness.core.audit.AuditEventId;
 import io.mosip.liveness.core.config.LivenessPolicy;
 import io.mosip.liveness.core.config.OnMaxFailure;
+import io.mosip.liveness.core.device.CertificationLevel;
 import io.mosip.liveness.core.device.DeviceErrorCode;
 import io.mosip.liveness.core.device.DeviceException;
 import io.mosip.liveness.core.device.DeviceStatus;
@@ -36,6 +37,7 @@ import io.mosip.liveness.core.ui.UiPhase;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.EnumSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -344,6 +346,21 @@ class LivenessSessionDriverTest {
         assertFalse(driver.retry());
     }
 
+    /** {@code mds.allowed_certifications=L1} refuses the L0 test device before any session or attempt. */
+    @Test
+    void deviceBelowTheAllowedCertificationIsRefusedWithoutRetry() throws Exception {
+        LivenessPolicy l1Only = RESIDENT.toBuilder()
+                .allowedCertifications(EnumSet.of(CertificationLevel.L1))
+                .build();
+        driver = builder(l1Only, bindAtOnce()).build();
+        driver.start();
+        AttemptOutcome o = recorder.next();
+        assertEquals(DeviceErrorCode.NOT_ALLOWED, o.deviceError().get());
+        assertFalse(o.isRetryAllowed());
+        assertEquals(0, o.attemptsUsed());
+        assertEquals(MessageKeys.ERROR_EMULATOR, last(recorder.statesSnapshot()).messageKey());
+    }
+
     @Test
     void engineErrorsNeverUseAnAttemptAndModelIntegrityEndsTheRetries() throws Exception {
         AtomicReference<EngineErrorCode> failure = new AtomicReference<>(EngineErrorCode.NOT_READY);
@@ -527,6 +544,15 @@ class LivenessSessionDriverTest {
         assertEquals(FailureReason.PAD, fourth.failureReason().get(), "a new window gives no new allowance");
         assertEquals(1, fourth.attemptsUsed());
         assertEquals(0, fourth.lowLightRetries());
+    }
+
+    /** The engine's screen state follows the transaction's override rule, earlier windows included. */
+    @Test
+    void sessionsLearnOfAnEarlierSuspectedAttack() throws Exception {
+        engine.then(Script.pass(2));
+        started(builder(RESIDENT, bindAtOnce()).priorFailures(1, true, 0).build());
+        recorder.next();
+        assertTrue(engine.requests.get(0).priorSuspectedAttack());
     }
 
     @Test

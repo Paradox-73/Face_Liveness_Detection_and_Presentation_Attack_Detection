@@ -295,9 +295,22 @@ public final class LivenessTransaction {
      * @return {@code true} if an override may be offered
      */
     public boolean isOverrideAllowed() {
-        return status == Status.EXHAUSTED && policy.onMaxFailure() == OnMaxFailure.SUPERVISOR_OVERRIDE
-                && policy.workflow().isResident() && !suspectedAttack && lastFailure != null
-                && lastFailure.allowsOverride();
+        return status == Status.EXHAUSTED && overrideAllowed(policy, lastFailure, suspectedAttack);
+    }
+
+    /**
+     * The override rule, once for the transaction and the screen ({@link LivenessUiStateMapper}): a resident
+     * workflow configured with {@code SUPERVISOR_OVERRIDE}, a last failure that allows it, and no suspected attack in
+     * any session of the transaction.
+     *
+     * @param policy          the workflow's policy
+     * @param lastFailure     the last failure, or {@code null}
+     * @param suspectedAttack whether any session failed for PAD, integrity or binding
+     * @return {@code true} if an override may follow the last attempt
+     */
+    static boolean overrideAllowed(LivenessPolicy policy, FailureReason lastFailure, boolean suspectedAttack) {
+        return policy.onMaxFailure() == OnMaxFailure.SUPERVISOR_OVERRIDE && policy.workflow().isResident()
+                && !suspectedAttack && lastFailure != null && lastFailure.allowsOverride();
     }
 
     /**

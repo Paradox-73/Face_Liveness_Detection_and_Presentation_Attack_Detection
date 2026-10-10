@@ -413,6 +413,11 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
             SbiIntentDevice device = SbiIntentDevice.discover(bridge,
                     workflow.isAuth() ? DevicePurpose.AUTH : DevicePurpose.REGISTRATION);
             bridge.useApp(device.callbackId());
+            if (!policy.allowedCertifications().contains(device.describe().certification())) {
+                Log.w(TAG, "SBI face device " + device.describe().serialNumber() + " is "
+                        + device.describe().certification() + ", not in mds.allowed_certifications");
+                return SbiCaptureAttempt.failed(DeviceErrorCode.NOT_ALLOWED);
+            }
             if (policy.noStreamPolicy() != NoStreamPolicy.CAPTURE_ONLY) {
                 Log.w(TAG, "SBI face device " + device.describe().serialNumber()
                         + " cannot stream; no_stream_policy=" + policy.noStreamPolicy());
@@ -420,12 +425,8 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
             }
             SignedFaceCapture capture = device.capture(io.mosip.liveness.core.device.CaptureRequest.builder()
                     .transactionId(UUID.randomUUID().toString()).build());
-            Map<String, String> evidence = new LinkedHashMap<>();
-            evidence.put(PacketEvidenceKeys.DECISION, PacketEvidenceKeys.DECISION_PASS);
-            evidence.put(PacketEvidenceKeys.METHOD, LivenessMethod.CAPTURE_ONLY.name());
-            evidence.put(PacketEvidenceKeys.SESSION, capture.transactionId());
-            evidence.put(PacketEvidenceKeys.DEVICE_LEVEL, device.describe().certification().code());
-            return SbiCaptureAttempt.captured(device.lastResponseJson(), evidence);
+            return SbiCaptureAttempt.captured(device.lastResponseJson(),
+                    captureOnlyEvidence(capture.transactionId(), device.describe().certification().code()));
         } catch (DeviceException e) {
             Log.w(TAG, "SBI face capture failed: " + e.getErrorCode());
             return SbiCaptureAttempt.failed(e.getErrorCode());
@@ -433,6 +434,16 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
             Log.e(TAG, "SBI face capture failed", e);
             return SbiCaptureAttempt.failed(DeviceErrorCode.CAPTURE_FAILED);
         }
+    }
+
+    /** Packet evidence of a vendor capture stored without a liveness check: never recorded as a pass. */
+    static Map<String, String> captureOnlyEvidence(String transactionId, String deviceLevel) {
+        Map<String, String> evidence = new LinkedHashMap<>();
+        evidence.put(PacketEvidenceKeys.DECISION, PacketEvidenceKeys.DECISION_NOT_CHECKED);
+        evidence.put(PacketEvidenceKeys.METHOD, LivenessMethod.CAPTURE_ONLY.name());
+        evidence.put(PacketEvidenceKeys.SESSION, transactionId);
+        evidence.put(PacketEvidenceKeys.DEVICE_LEVEL, deviceLevel);
+        return evidence;
     }
 
     /** Main thread: stores the vendor app's capture, or reports why there is none. */

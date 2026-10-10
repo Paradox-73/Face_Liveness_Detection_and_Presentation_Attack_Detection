@@ -13,7 +13,6 @@ import io.mosip.liveness.core.api.LivenessResult;
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.config.LivenessPolicy;
-import io.mosip.liveness.core.config.OnMaxFailure;
 import io.mosip.liveness.core.device.DeviceErrorCode;
 import io.mosip.liveness.core.ui.LivenessUiState;
 import io.mosip.liveness.core.ui.MessageKeys;
@@ -56,6 +55,7 @@ public final class LivenessUiStateMapper {
 
     private final LivenessPolicy policy;
     private final int attempt;
+    private final boolean priorSuspectedAttack;
 
     /**
      * Creates a mapper for one attempt.
@@ -64,11 +64,23 @@ public final class LivenessUiStateMapper {
      * @param attempt 1-based attempt number, at most {@code max_retries}
      */
     public LivenessUiStateMapper(LivenessPolicy policy, int attempt) {
+        this(policy, attempt, false);
+    }
+
+    /**
+     * Creates a mapper for one attempt of a transaction.
+     *
+     * @param policy               the workflow's policy
+     * @param attempt              1-based attempt number
+     * @param priorSuspectedAttack whether an earlier session of the transaction failed for a suspected attack
+     */
+    public LivenessUiStateMapper(LivenessPolicy policy, int attempt, boolean priorSuspectedAttack) {
         this.policy = Objects.requireNonNull(policy, "policy");
         if (attempt < 1 || attempt > policy.maxRetries()) {
             throw new IllegalArgumentException("attempt must be between 1 and max_retries");
         }
         this.attempt = attempt;
+        this.priorSuspectedAttack = priorSuspectedAttack;
     }
 
     private LivenessUiState.Builder state(UiPhase phase, String key) {
@@ -227,7 +239,7 @@ public final class LivenessUiStateMapper {
         if (resident) {
             b.args(Integer.toString(policy.maxRetries()));
         }
-        boolean override = resident && policy.onMaxFailure() == OnMaxFailure.SUPERVISOR_OVERRIDE && r.allowsOverride();
+        boolean override = LivenessTransaction.overrideAllowed(policy, r, priorSuspectedAttack);
         return b.overrideAvailable(override).build();
     }
 
@@ -309,6 +321,7 @@ public final class LivenessUiStateMapper {
             case CAMERA_IN_USE:
                 return MessageKeys.ERROR_CAMERA_UNAVAILABLE;
             case EMULATOR_BLOCKED:
+            case NOT_ALLOWED:
                 return MessageKeys.ERROR_EMULATOR;
             default:
                 return MessageKeys.ERROR_DEVICE_UNAVAILABLE;
