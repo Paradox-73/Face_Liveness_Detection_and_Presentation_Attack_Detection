@@ -120,6 +120,8 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
     private byte[] byteArrayTester;
     private List<byte[]> listByteArrayTester1 = new ArrayList<>();
     BiometricsPigeon.Result<String> biometricResult;
+    /** A vendor SBI app capture is running on the worker (main thread only). */
+    private boolean sbiCaptureRunning;
 
     public List<String> OPERATOR_EXCEPTIONS=new ArrayList<>();
 
@@ -260,6 +262,11 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
         if (currentModality != Modality.FACE && !exceptionPhoto) {
             return false;
         }
+        if ((livenessLauncher != null && livenessLauncher.isBusy()) || sbiCaptureRunning) {
+            // A second tap on Scan: answer it, and keep the first call's pending answer for its capture.
+            result.success("BUSY");
+            return true;
+        }
         String gateField = exceptionPhoto ? FaceCaptureLivenessGate.exceptionPhotoField(fieldId) : fieldId;
         boolean required = !exceptionPhoto && livenessGate.isRequired(gateField);
         FaceDeviceSelection.Kind device = FaceDeviceSelection.kind(livenessConfig());
@@ -379,9 +386,13 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
         Workflow workflow = FaceCaptureLivenessGate.workflowFor(gateField);
         LivenessPolicy policy = new PolicyResolver(livenessConfig()).resolve(workflow).policy();
         ArcSbiBridge bridge = new ArcSbiBridge(captureFieldId, captureModality, getExceptionAttributes());
+        sbiCaptureRunning = true;
         sbiWorker().execute(() -> {
             SbiCaptureAttempt attempt = runSbiCapture(bridge, workflow, policy);
-            activity.runOnUiThread(() -> finishSbiCapture(captureFieldId, captureModality, attempt));
+            activity.runOnUiThread(() -> {
+                sbiCaptureRunning = false;
+                finishSbiCapture(captureFieldId, captureModality, attempt);
+            });
         });
     }
 

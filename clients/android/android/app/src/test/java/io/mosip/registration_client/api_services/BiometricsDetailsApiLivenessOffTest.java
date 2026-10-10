@@ -35,6 +35,7 @@ import org.robolectric.shadows.ShadowPackageManager;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -124,6 +125,21 @@ public class BiometricsDetailsApiLivenessOffTest {
         assertEquals(Collections.singletonList(CaptureOutcome.Status.CANCELLED.name()), flutter);
         assertEquals(CaptureOutcome.Status.NOT_REQUIRED, gate.lastOutcome(FIELD).status());
         assertEquals("no attempt counted", 0, gate.usedAttempts(FIELD, FIELD));
+    }
+
+    @Test
+    public void secondScanTapWhileTheScreenIsOpenIsBusyAndTheFirstStillCompletes() {
+        config.put(LivenessConfigKeys.ENABLE, "N");
+        api.invokeDiscoverSbi(FIELD, "Face", result());
+        api.invokeDiscoverSbi(FIELD, "Face", result());
+        assertEquals(Collections.singletonList("BUSY"), flutter);
+        assertEquals(1, screens.size());
+
+        nextScreenResult = LivenessCaptureResult.builder(Workflow.REGISTRATION, Decision.CANCELLED).build();
+        launcher.onActivityResult(LivenessService.REQUEST_CODE, Activity.RESULT_CANCELED, null);
+
+        assertEquals("the first tap gets its answer", Arrays.asList("BUSY", CaptureOutcome.Status.CANCELLED.name()),
+                flutter);
     }
 
     @Test
