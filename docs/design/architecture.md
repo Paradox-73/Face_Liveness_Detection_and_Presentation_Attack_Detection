@@ -93,7 +93,7 @@ The engine contract packages never import the engine implementation packages; `A
 | Vendor SBI 0.9.5 or 1.0 face device on Windows | HTTP on 127.0.0.1:4501-4600 | `SbiFaceCaptureDevice` (desktop) | Existing RC check: JWT signature of the capture, certificate chained to a CA synced in the `DEVICE` domain (`MosipDeviceSpecificationHelper`) | SBI 0.9.5: run end to end with MockMDS L0 and L1 (`docs/test-report/desktop-e2e.md`, D9). SBI 1.0: implemented through the RC's own provider, untested (no 1.0 device or mock was run) |
 | MockMDS (`devices/mock-mds`) | same | same | same; L1 signs the digital ID with the FTM key renewed to 2035 | Used for every desktop test |
 | Tablet camera | in-process CameraX | `BuiltInCameraL0Device` (Android) | Existing ARC check `Biometrics095Service.handleRCaptureResponse`: signature, `DEVICE` trust, time, transaction ID; key in the Android Keystore | Run end to end on the emulator (`docs/test-report/android-e2e.md`) |
-| Vendor SBI face app on Android | Android intents | `SbiIntentDevice` (Android) | Existing ARC checks | Wired through `FaceDeviceSelection` and `BiometricsDetailsApi`; unit tests only (no vendor app run); the app has no preview stream, so `no_stream_policy` applies |
+| Vendor SBI face app on Android | Android intents | `SbiIntentDevice` (Android) | Existing ARC checks | Wired through `FaceDeviceSelection` and `FaceCaptureCoordinator`; unit tests only (no vendor app run); the app has no preview stream, so `no_stream_policy` applies |
 
 Details of the adapters: [device-interface.md](device-interface.md). The SBI calls as the clients send them:
 [../api/sbi-used.md](../api/sbi-used.md).

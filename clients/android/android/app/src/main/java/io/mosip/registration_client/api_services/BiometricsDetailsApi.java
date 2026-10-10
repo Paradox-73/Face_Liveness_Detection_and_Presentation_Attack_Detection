@@ -29,16 +29,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -49,7 +42,6 @@ import javax.inject.Singleton;
 import io.mosip.biometrics.util.face.FaceBDIR;
 import io.mosip.biometrics.util.finger.FingerBDIR;
 import io.mosip.biometrics.util.iris.IrisBDIR;
-import io.mosip.registration.clientmanager.config.SessionManager;
 import io.mosip.registration.clientmanager.constant.AuditEvent;
 import io.mosip.registration.clientmanager.constant.Components;
 import io.mosip.registration.clientmanager.constant.Modality;
@@ -68,31 +60,13 @@ import io.mosip.registration.clientmanager.spi.RegistrationService;
 import io.mosip.registration.clientmanager.util.UserInterfaceHelperService;
 import io.mosip.registration.keymanager.util.CryptoUtil;
 import io.mosip.registration.packetmanager.cbeffutil.jaxbclasses.SingleType;
-import io.mosip.liveness.core.Decision;
-import io.mosip.liveness.core.Workflow;
-import io.mosip.liveness.core.api.LivenessMethod;
-import io.mosip.liveness.core.api.PacketEvidenceKeys;
 import io.mosip.liveness.core.config.ConfigSource;
-import io.mosip.liveness.core.config.LivenessPolicy;
-import io.mosip.liveness.core.config.NoStreamPolicy;
-import io.mosip.liveness.core.device.DeviceErrorCode;
-import io.mosip.liveness.core.device.DeviceException;
-import io.mosip.liveness.core.device.DevicePurpose;
-import io.mosip.liveness.core.device.SignedFaceCapture;
-import io.mosip.liveness.core.engine.LivenessUiStateMapper;
-import io.mosip.liveness.core.policy.PolicyResolver;
-import io.mosip.registration.livenessmanager.LivenessCaptureResult;
-import io.mosip.registration.livenessmanager.config.GlobalParamConfigSource;
-import io.mosip.registration.livenessmanager.device.FaceDeviceSelection;
-import io.mosip.registration.livenessmanager.device.SbiIntentDevice;
-import io.mosip.registration.livenessmanager.ui.MessageResolver;
 import io.mosip.registration_client.MainActivity;
 import io.mosip.registration_client.liveness.CaptureOutcome;
+import io.mosip.registration_client.liveness.FaceCaptureCoordinator;
 import io.mosip.registration_client.liveness.FaceCaptureLivenessGate;
 import io.mosip.registration_client.liveness.LivenessCaptureLauncher;
 import io.mosip.registration_client.liveness.SupervisorOverrideFlow;
-import io.mosip.registration.livenessmanager.LivenessCaptureRequest;
-import io.mosip.registration.livenessmanager.auth.FaceAuthOutcome;
 import io.mosip.registration_client.model.BiometricsPigeon;
 
 @Singleton
@@ -120,8 +94,6 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
     private byte[] byteArrayTester;
     private List<byte[]> listByteArrayTester1 = new ArrayList<>();
     BiometricsPigeon.Result<String> biometricResult;
-    /** A vendor SBI app capture is running on the worker (main thread only). */
-    private boolean sbiCaptureRunning;
 
     public List<String> OPERATOR_EXCEPTIONS=new ArrayList<>();
 
@@ -144,18 +116,8 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
 
     private Modality currentDeviceListModality;
 
-    // Face liveness: FACE captures of residents and onboarding operators go through the liveness capture screen
-    private FaceCaptureLivenessGate livenessGate;
-    private LivenessCaptureLauncher livenessLauncher;
-    private SupervisorOverrideFlow livenessOverride;
-    // Face device (mosip.registration.liveness.android.device): the built-in camera or a vendor SBI face app
-    private ConfigSource livenessConfig;
-    private ExecutorService sbiWorker;
-    private volatile SbiIntentCall pendingSbiCall;
-    private static final long SBI_INTENT_TIMEOUT_MS = 30_000L;
-    private static final int SBI_DISCOVER_REQUEST = 1;
-    private static final int SBI_INFO_REQUEST = 2;
-    private static final int SBI_CAPTURE_REQUEST = 3;
+    // Face liveness: FACE captures and the exception photo go through the liveness path when it applies
+    private final FaceCaptureCoordinator faceCapture;
 
 
 
@@ -172,6 +134,32 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
         this.registrationService = registrationService;
         this.globalParamRepository = globalParamRepository;
         this.userOnboardService = userOnboardService;
+        this.faceCapture = new FaceCaptureCoordinator(() -> activity, new FaceCaptureCoordinator.Host() {
+            @Override
+            public void begin(BiometricsPigeon.Result<String> result) {
+                biometricResult = result;
+            }
+
+            @Override
+            public void complete(String status) {
+                completeCapture(status);
+            }
+
+            @Override
+            public boolean store(String captureFieldId, Modality modality, String response,
+                                 Map<String, String> evidence) {
+                BiometricsDetailsApi.this.fieldId = captureFieldId;
+                BiometricsDetailsApi.this.currentModality = modality;
+                return parseRCaptureResponse(new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8)),
+                        evidence);
+            }
+
+            @Override
+            public List<String> exceptionAttributes() {
+                return getExceptionAttributes();
+            }
+        }, auditManagerService, objectMapper, biometrics095Service, registrationService, globalParamRepository,
+                userOnboardService);
     }
 
     public void setCallbackActivity(MainActivity mainActivity) {
@@ -194,25 +182,16 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
      * @param launcher liveness capture screen launcher
      */
     public void setLivenessGate(FaceCaptureLivenessGate gate, LivenessCaptureLauncher launcher) {
-        this.livenessGate = gate;
-        this.livenessLauncher = launcher;
+        faceCapture.setLivenessGate(gate, launcher);
     }
 
     /**
-     * Replaces the liveness configuration the face device is chosen from (tests); by default the synced global
-     * parameters, the same source as the liveness module's.
+     * Replaces the liveness configuration the face device is chosen from (tests).
      *
      * @param config the configuration
      */
     void setLivenessConfig(ConfigSource config) {
-        this.livenessConfig = config;
-    }
-
-    private ConfigSource livenessConfig() {
-        if (livenessConfig == null) {
-            livenessConfig = new GlobalParamConfigSource(globalParamRepository);
-        }
-        return livenessConfig;
+        faceCapture.setLivenessConfig(config);
     }
 
     /**
@@ -221,7 +200,7 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
      * @param override the override flow (supervisor face authentication, then the resident's photo)
      */
     public void setSupervisorOverrideFlow(SupervisorOverrideFlow override) {
-        this.livenessOverride = override;
+        faceCapture.setSupervisorOverrideFlow(override);
     }
 
     @Override
@@ -230,538 +209,11 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
         auditManagerService.audit(AuditEvent.BIOMETRIC_CAPTURE, Components.REGISTRATION);
         currentModality = getModality(modality);
         this.fieldId = fieldId;
-        if (startLivenessCapture(result)) {
+        if (faceCapture.tryStart(fieldId, currentModality, result)) {
             return;
         }
         discoverSBI();
         biometricResult = result;
-    }
-
-    /**
-     * Takes FACE captures and the exception photo through the face device of
-     * {@code mosip.registration.liveness.android.device} ({@link FaceDeviceSelection}):
-     * <ul>
-     *   <li>built-in camera ({@code BUILTIN}, the default; also for an unknown value): the liveness capture screen
-     *       when liveness is enforced, else the same screen takes a signed photo without a liveness check, so a
-     *       tablet without a face SBI app still has a face device with {@code mosip.registration.liveness.enable=N};
-     *   </li>
-     *   <li>vendor SBI face app ({@code SBI}): {@link SbiIntentDevice} over ARC's SBI intents when liveness is
-     *       enforced, else ARC's upstream SBI capture. Without an installed SBI app the built-in camera is used.</li>
-     * </ul>
-     * The exception photo uses the built-in camera's screen (which applies the {@code exception_photo} policy)
-     * unless the vendor app is the face device.
-     *
-     * @return {@code true} when the liveness path took over (it completes the Flutter call); {@code false} for
-     *         ARC's upstream SBI intents
-     */
-    private boolean startLivenessCapture(BiometricsPigeon.Result<String> result) {
-        if (livenessGate == null) {
-            return false;
-        }
-        boolean exceptionPhoto = currentModality == Modality.EXCEPTION_PHOTO;
-        if (currentModality != Modality.FACE && !exceptionPhoto) {
-            return false;
-        }
-        if ((livenessLauncher != null && livenessLauncher.isBusy()) || sbiCaptureRunning) {
-            // A second tap on Scan: answer it, and keep the first call's pending answer for its capture.
-            result.success("BUSY");
-            return true;
-        }
-        String gateField = exceptionPhoto ? FaceCaptureLivenessGate.exceptionPhotoField(fieldId) : fieldId;
-        boolean required = !exceptionPhoto && livenessGate.isRequired(gateField);
-        FaceDeviceSelection.Kind device = FaceDeviceSelection.kind(livenessConfig());
-        FaceDeviceSelection.Route route = FaceDeviceSelection.route(device, required,
-                device == FaceDeviceSelection.Kind.SBI && isSbiAppInstalled());
-        if (exceptionPhoto) {
-            if (route == FaceDeviceSelection.Route.UPSTREAM_SBI) {
-                return false;
-            }
-            return startBuiltInCapture(result, gateField, true);
-        }
-        switch (route) {
-            case UPSTREAM_SBI:
-                livenessGate.clearOutcome(gateField);
-                return false;
-            case SBI_LIVENESS:
-                startSbiLivenessCapture(result, gateField);
-                return true;
-            case BUILT_IN_PHOTO:
-                startBuiltInPhoto(result, gateField);
-                return true;
-            default:
-                return startBuiltInCapture(result, gateField, false);
-        }
-    }
-
-    /** Tells whether an app answers ARC's SBI discovery intent. */
-    private boolean isSbiAppInstalled() {
-        try {
-            List<?> apps = activity.getPackageManager().queryIntentActivities(
-                    new Intent(RegistrationConstants.DISCOVERY_INTENT_ACTION), 0);
-            return apps != null && !apps.isEmpty();
-        } catch (RuntimeException e) {
-            Log.w(TAG, "SBI apps could not be listed", e);
-            return false;
-        }
-    }
-
-    /**
-     * Opens the liveness capture screen with the built-in camera: a FACE capture that requires liveness, or the
-     * exception photo (a signed photo, with liveness only if the {@code exception_photo} policy asks for it).
-     *
-     * @return {@code true}: the capture screen path completes the Flutter call
-     */
-    private boolean startBuiltInCapture(BiometricsPigeon.Result<String> result, String gateField,
-                                        boolean exceptionPhoto) {
-        biometricResult = result;
-        String subject = livenessSubject();
-        CaptureOutcome blocked = livenessGate.admit(subject, gateField);
-        String captureFieldId = fieldId;
-        Modality captureModality = currentModality;
-        if (blocked != null) {
-            // Attempts used up: a supervisor may still accept the face when the policy allows an override.
-            if (exceptionPhoto || !offerSupervisorOverride(subject, captureFieldId, gateField, captureModality)) {
-                completeCapture(blocked.status().name());
-            }
-            return true;
-        }
-        boolean started = livenessLauncher.launch(livenessGate, subject, gateField, exceptionPhoto,
-                captureResult -> onLivenessCapture(subject, captureFieldId, gateField,
-                        captureModality, captureResult));
-        if (!started) {
-            completeCapture("BUSY");
-        }
-        return true;
-    }
-
-    /**
-     * Liveness does not run for this face ({@code mosip.registration.liveness.enable=N} or policy {@code OFF})
-     * and the built-in camera is the face device: the capture screen takes a signed photo without a liveness
-     * check. No liveness evidence is attached and no attempt is counted.
-     */
-    private void startBuiltInPhoto(BiometricsPigeon.Result<String> result, String gateField) {
-        livenessGate.clearOutcome(gateField);
-        biometricResult = result;
-        String captureFieldId = fieldId;
-        Modality captureModality = currentModality;
-        boolean started = livenessLauncher.launch(FaceCaptureLivenessGate.workflowFor(gateField), livenessSubject(),
-                true, 0, captureResult -> onPhotoCapture(captureFieldId, gateField, captureModality, captureResult));
-        if (!started) {
-            completeCapture("BUSY");
-        }
-    }
-
-    /** Stores the photo of {@link #startBuiltInPhoto}; the field keeps no liveness outcome. */
-    private void onPhotoCapture(String captureFieldId, String gateField, Modality modality,
-                                LivenessCaptureResult captureResult) {
-        livenessGate.clearOutcome(gateField);
-        if (!captureResult.isPass() || captureResult.rCaptureResponse() == null) {
-            completeCapture(captureResult.decision() == Decision.CANCELLED ? CaptureOutcome.Status.CANCELLED.name()
-                    : CaptureOutcome.Status.FAILED.name());
-            return;
-        }
-        storeLivenessCapture(captureFieldId, gateField, modality, captureResult);
-    }
-
-    /**
-     * The vendor SBI face app is the face device ({@code mosip.registration.liveness.android.device=SBI}) and this
-     * face must pass liveness. The app is found and used through {@link SbiIntentDevice} over ARC's SBI intents,
-     * on a worker thread (the intents answer on the main thread). SBI 0.9.5 intents give the client no preview
-     * frames, so {@code mosip.registration.liveness.no_stream_policy} decides, as in the engine for any device
-     * without a stream: {@code BLOCK} (the default) refuses the capture with "This face camera does not support
-     * live verification"; {@code CAPTURE_ONLY} stores the app's signed capture through ARC's checks with
-     * {@code LIVENESS_METHOD=CAPTURE_ONLY}, so reviewers see that no liveness check ran.
-     */
-    private void startSbiLivenessCapture(BiometricsPigeon.Result<String> result, String gateField) {
-        biometricResult = result;
-        String subject = livenessSubject();
-        CaptureOutcome blocked = livenessGate.admit(subject, gateField);
-        if (blocked != null) {
-            completeCapture(blocked.status().name());
-            return;
-        }
-        livenessGate.clearOutcome(gateField);
-        String captureFieldId = fieldId;
-        Modality captureModality = currentModality;
-        Workflow workflow = FaceCaptureLivenessGate.workflowFor(gateField);
-        LivenessPolicy policy = new PolicyResolver(livenessConfig()).resolve(workflow).policy();
-        ArcSbiBridge bridge = new ArcSbiBridge(captureFieldId, captureModality, getExceptionAttributes());
-        sbiCaptureRunning = true;
-        sbiWorker().execute(() -> {
-            SbiCaptureAttempt attempt = runSbiCapture(bridge, workflow, policy);
-            activity.runOnUiThread(() -> {
-                sbiCaptureRunning = false;
-                finishSbiCapture(captureFieldId, captureModality, attempt);
-            });
-        });
-    }
-
-    private synchronized ExecutorService sbiWorker() {
-        if (sbiWorker == null) {
-            sbiWorker = Executors.newSingleThreadExecutor(r -> {
-                Thread t = new Thread(r, "liveness-sbi");
-                t.setDaemon(true);
-                return t;
-            });
-        }
-        return sbiWorker;
-    }
-
-    /** Worker thread: discovery, then the no-stream policy, then the app's capture. */
-    private SbiCaptureAttempt runSbiCapture(ArcSbiBridge bridge, Workflow workflow, LivenessPolicy policy) {
-        try {
-            SbiIntentDevice device = SbiIntentDevice.discover(bridge,
-                    workflow.isAuth() ? DevicePurpose.AUTH : DevicePurpose.REGISTRATION);
-            bridge.useApp(device.callbackId());
-            if (!policy.allowedCertifications().contains(device.describe().certification())) {
-                Log.w(TAG, "SBI face device " + device.describe().serialNumber() + " is "
-                        + device.describe().certification() + ", not in mds.allowed_certifications");
-                return SbiCaptureAttempt.failed(DeviceErrorCode.NOT_ALLOWED);
-            }
-            if (policy.noStreamPolicy() != NoStreamPolicy.CAPTURE_ONLY) {
-                Log.w(TAG, "SBI face device " + device.describe().serialNumber()
-                        + " cannot stream; no_stream_policy=" + policy.noStreamPolicy());
-                return SbiCaptureAttempt.failed(DeviceErrorCode.NO_STREAM);
-            }
-            SignedFaceCapture capture = device.capture(io.mosip.liveness.core.device.CaptureRequest.builder()
-                    .transactionId(UUID.randomUUID().toString()).build());
-            return SbiCaptureAttempt.captured(device.lastResponseJson(),
-                    captureOnlyEvidence(capture.transactionId(), device.describe().certification().code()));
-        } catch (DeviceException e) {
-            Log.w(TAG, "SBI face capture failed: " + e.getErrorCode());
-            return SbiCaptureAttempt.failed(e.getErrorCode());
-        } catch (RuntimeException e) {
-            Log.e(TAG, "SBI face capture failed", e);
-            return SbiCaptureAttempt.failed(DeviceErrorCode.CAPTURE_FAILED);
-        }
-    }
-
-    /** Packet evidence of a vendor capture stored without a liveness check: never recorded as a pass. */
-    static Map<String, String> captureOnlyEvidence(String transactionId, String deviceLevel) {
-        Map<String, String> evidence = new LinkedHashMap<>();
-        evidence.put(PacketEvidenceKeys.DECISION, PacketEvidenceKeys.DECISION_NOT_CHECKED);
-        evidence.put(PacketEvidenceKeys.METHOD, LivenessMethod.CAPTURE_ONLY.name());
-        evidence.put(PacketEvidenceKeys.SESSION, transactionId);
-        evidence.put(PacketEvidenceKeys.DEVICE_LEVEL, deviceLevel);
-        return evidence;
-    }
-
-    /** Main thread: stores the vendor app's capture, or reports why there is none. */
-    private void finishSbiCapture(String captureFieldId, Modality modality, SbiCaptureAttempt attempt) {
-        if (attempt.response == null) {
-            auditManagerService.audit(AuditEvent.R_CAPTURE_FAILED, Components.REGISTRATION, attempt.error.name());
-            showLivenessMessage(LivenessUiStateMapper.deviceMessageKey(attempt.error));
-            completeCapture(CaptureOutcome.Status.FAILED.name());
-            return;
-        }
-        this.fieldId = captureFieldId;
-        this.currentModality = modality;
-        InputStream response = new ByteArrayInputStream(attempt.response.getBytes(StandardCharsets.UTF_8));
-        if (!parseRCaptureResponse(response, attempt.evidence)) {
-            completeCapture(CaptureOutcome.Status.FAILED.name());
-        }
-    }
-
-    private void showLivenessMessage(String key) {
-        try {
-            String language = livenessLauncher != null ? livenessLauncher.language() : null;
-            String text = new MessageResolver(activity.getResources(), livenessConfig(), language)
-                    .text(key, Collections.emptyList());
-            Toast.makeText(activity.getApplicationContext(), text, Toast.LENGTH_LONG).show();
-        } catch (RuntimeException e) {
-            Log.w(TAG, "Liveness message " + key + " could not be shown", e);
-        }
-    }
-
-    /** Result of {@link #runSbiCapture}: the app's rCapture response, or the device error. */
-    private static final class SbiCaptureAttempt {
-        final String response;
-        final Map<String, String> evidence;
-        final DeviceErrorCode error;
-
-        private SbiCaptureAttempt(String response, Map<String, String> evidence, DeviceErrorCode error) {
-            this.response = response;
-            this.evidence = evidence;
-            this.error = error;
-        }
-
-        static SbiCaptureAttempt captured(String response, Map<String, String> evidence) {
-            return new SbiCaptureAttempt(response, evidence, null);
-        }
-
-        static SbiCaptureAttempt failed(DeviceErrorCode error) {
-            return new SbiCaptureAttempt(null, null, error);
-        }
-    }
-
-    /** One SBI intent the worker thread waits for; answered by {@link #deliverSbiAnswer}. */
-    private static final class SbiIntentCall {
-        final int requestCode;
-        final CountDownLatch answered = new CountDownLatch(1);
-        volatile Bundle extras;
-
-        SbiIntentCall(int requestCode) {
-            this.requestCode = requestCode;
-        }
-    }
-
-    /**
-     * Hands an SBI intent result to the waiting {@link ArcSbiBridge} call.
-     *
-     * @return {@code true} when a bridge call was waiting for this request code
-     */
-    private boolean deliverSbiAnswer(int requestCode, Bundle extras) {
-        SbiIntentCall call = pendingSbiCall;
-        if (call == null || call.requestCode != requestCode) {
-            return false;
-        }
-        pendingSbiCall = null;
-        call.extras = extras;
-        call.answered.countDown();
-        return true;
-    }
-
-    /**
-     * {@link SbiIntentDevice.Bridge} over ARC's SBI intents: discovery ({@code io.sbi.device}), device info (ARC
-     * checks the signed device info) and {@code rCapture} with ARC's own capture request and transaction ID.
-     * Runs on the worker thread; each intent is started on the main thread and awaited. A device app that is
-     * closed without an answer (result not OK) ends the wait at the timeout.
-     */
-    private final class ArcSbiBridge implements SbiIntentDevice.Bridge {
-        private final String captureFieldId;
-        private final Modality modality;
-        private final List<String> exceptions;
-        private volatile String app = RegistrationConstants.DISCOVERY_INTENT_ACTION;
-
-        ArcSbiBridge(String captureFieldId, Modality modality, List<String> exceptions) {
-            this.captureFieldId = captureFieldId;
-            this.modality = modality;
-            this.exceptions = exceptions;
-        }
-
-        void useApp(String callbackId) {
-            if (callbackId != null && !callbackId.isEmpty()) {
-                app = callbackId;
-            }
-        }
-
-        @Override
-        public String discover() throws DeviceException {
-            Intent intent = new Intent();
-            intent.setAction(RegistrationConstants.DISCOVERY_INTENT_ACTION);
-            try {
-                DiscoverRequest discoverRequest = new DiscoverRequest();
-                discoverRequest.setType(SingleType.FACE.value());
-                intent.putExtra(RegistrationConstants.SBI_INTENT_REQUEST_KEY,
-                        objectMapper.writeValueAsBytes(discoverRequest));
-            } catch (Exception e) {
-                throw new DeviceException(DeviceErrorCode.NOT_FOUND, "discover request could not be written", e);
-            }
-            Bundle answer = call(intent, SBI_DISCOVER_REQUEST, SBI_INTENT_TIMEOUT_MS, DeviceErrorCode.NOT_FOUND);
-            byte[] bytes = answer.getByteArray(RegistrationConstants.SBI_INTENT_RESPONSE_KEY);
-            if (bytes == null) {
-                throw new DeviceException(DeviceErrorCode.NOT_FOUND, "SBI app returned no discover response");
-            }
-            return new String(bytes, StandardCharsets.UTF_8);
-        }
-
-        @Override
-        public String capture(io.mosip.liveness.core.device.CaptureRequest request) throws DeviceException {
-            Intent info = new Intent();
-            info.setAction(app + RegistrationConstants.D_INFO_INTENT_ACTION);
-            Bundle infoAnswer = call(info, SBI_INFO_REQUEST, SBI_INTENT_TIMEOUT_MS, DeviceErrorCode.NOT_READY);
-            Intent intent = new Intent();
-            try {
-                String[] device = biometricsService.handleDeviceInfoResponse(modality,
-                        infoAnswer.getByteArray(RegistrationConstants.SBI_INTENT_RESPONSE_KEY));
-                CaptureRequest captureRequest = biometricsService.getRCaptureRequest(modality, device[1], exceptions);
-                if (captureFieldId.equals(OPERATOR_BIOMETRICS)) {
-                    userOnboardService.setCaptureTransactionId(captureRequest.getTransactionId());
-                } else {
-                    registrationService.getRegistrationDto().setCaptureTransactionId(
-                            captureRequest.getTransactionId());
-                }
-                auditManagerService.auditWithArguments(AuditEvent.REG_BIO_SCAN, Components.REGISTRATION.getId(),
-                        Components.REGISTRATION.getName(), String.valueOf(modality));
-                intent.setAction(device[0] + RegistrationConstants.R_CAPTURE_INTENT_ACTION);
-                intent.putExtra("input", objectMapper.writeValueAsBytes(captureRequest));
-            } catch (Exception e) {
-                auditManagerService.audit(AuditEvent.DEVICE_INFO_PARSE_FAILED, Components.REGISTRATION,
-                        e.getMessage());
-                throw new DeviceException(DeviceErrorCode.NOT_READY, "SBI device info refused", e);
-            }
-            long timeout = Math.max(2 * SBI_INTENT_TIMEOUT_MS, request.timeoutMs() + SBI_INTENT_TIMEOUT_MS);
-            Bundle answer = call(intent, SBI_CAPTURE_REQUEST, timeout, DeviceErrorCode.CAPTURE_TIMEOUT);
-            try {
-                Uri uri = answer.getParcelable(RegistrationConstants.SBI_INTENT_RESPONSE_KEY);
-                try (InputStream in = activity.getContentResolver().openInputStream(uri)) {
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    byte[] buffer = new byte[8192];
-                    for (int n = in.read(buffer); n >= 0; n = in.read(buffer)) {
-                        out.write(buffer, 0, n);
-                    }
-                    return new String(out.toByteArray(), StandardCharsets.UTF_8);
-                }
-            } catch (Exception e) {
-                auditManagerService.audit(AuditEvent.R_CAPTURE_PARSE_FAILED, Components.REGISTRATION,
-                        e.getMessage());
-                throw new DeviceException(DeviceErrorCode.CAPTURE_FAILED, "rCapture response unreadable", e);
-            }
-        }
-
-        private Bundle call(Intent intent, int requestCode, long timeoutMs, DeviceErrorCode noAnswer)
-                throws DeviceException {
-            SbiIntentCall call = new SbiIntentCall(requestCode);
-            pendingSbiCall = call;
-            activity.runOnUiThread(() -> {
-                try {
-                    activity.startActivityForResult(intent, requestCode);
-                } catch (RuntimeException e) {
-                    Log.e(TAG, "SBI intent " + intent.getAction() + " could not be started", e);
-                    deliverSbiAnswer(requestCode, null);
-                }
-            });
-            try {
-                if (!call.answered.await(timeoutMs, TimeUnit.MILLISECONDS)) {
-                    throw new DeviceException(noAnswer, "SBI app did not answer " + intent.getAction());
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new DeviceException(noAnswer, "interrupted while waiting for the SBI app");
-            } finally {
-                if (pendingSbiCall == call) {
-                    pendingSbiCall = null;
-                }
-            }
-            if (call.extras == null) {
-                throw new DeviceException(noAnswer, "SBI app gave no answer to " + intent.getAction());
-            }
-            return call.extras;
-        }
-    }
-
-    /** The registration ID for a resident, the signed-in operator for onboarding. */
-    private String livenessSubject() {
-        try {
-            if (fieldId.equals(OPERATOR_BIOMETRICS)) {
-                String user = signedInUserId();
-                return user.isEmpty() ? OPERATOR_BIOMETRICS : user;
-            }
-            return registrationService.getRegistrationDto().getRId();
-        } catch (Exception e) {
-            return fieldId;
-        }
-    }
-
-    /** The signed-in operator's user ID, or an empty string. */
-    private String signedInUserId() {
-        String user = activity.getSharedPreferences(
-                activity.getString(io.mosip.registration.clientmanager.R.string.app_name),
-                android.content.Context.MODE_PRIVATE).getString(SessionManager.USER_ID, "");
-        return user == null ? "" : user.trim();
-    }
-
-    /**
-     * Opens the capture screen only to offer the supervisor override again (the resident's attempts were used up
-     * on an earlier screen).
-     *
-     * @return {@code true} when the screen opened (its result completes the Flutter call)
-     */
-    private boolean offerSupervisorOverride(String subject, String captureFieldId, String gateField,
-                                            Modality modality) {
-        if (livenessOverride == null || livenessGate.overrideEvidence(subject, gateField) == null) {
-            return false;
-        }
-        return livenessLauncher.launch(LivenessCaptureRequest.builder(
-                        FaceCaptureLivenessGate.workflowFor(gateField), subject).overrideOffer(true),
-                captureResult -> onLivenessCapture(subject, captureFieldId, gateField, modality, captureResult));
-    }
-
-    /**
-     * Handles the liveness capture screen's result: only a pass is stored, through the same SBI response checks as
-     * an external device (signature, DEVICE trust, timestamp, transaction ID), with the liveness evidence attached.
-     * A request for a supervisor override starts {@link SupervisorOverrideFlow}.
-     */
-    private void onLivenessCapture(String subject, String captureFieldId, String gateField, Modality modality,
-                                   LivenessCaptureResult captureResult) {
-        CaptureOutcome outcome = livenessGate.record(subject, gateField, captureResult);
-        String supervisor = captureResult.overrideRequestedBy();
-        if (supervisor != null && livenessOverride != null) {
-            runSupervisorOverride(subject, captureFieldId, gateField, modality, supervisor);
-            return;
-        }
-        if (!captureResult.isPass() && outcome.status() == CaptureOutcome.Status.CANCELLED) {
-            // Closing the override offer leaves the field blocked.
-            CaptureOutcome blocked = livenessGate.admit(subject, gateField);
-            outcome = blocked != null ? blocked : outcome;
-        }
-        if (!captureResult.isPass() || captureResult.rCaptureResponse() == null) {
-            completeCapture(outcome.status().name());
-            return;
-        }
-        storeLivenessCapture(captureFieldId, gateField, modality, captureResult);
-    }
-
-    /**
-     * Supervisor face authentication, then the resident's photo flagged as an override. A refused supervisor
-     * leaves the field blocked with the refusal's message.
-     */
-    private void runSupervisorOverride(String subject, String captureFieldId, String gateField, Modality modality,
-                                       String supervisorId) {
-        Map<String, String> evidence = livenessGate.overrideEvidence(subject, gateField);
-        if (evidence == null) {
-            completeCapture(CaptureOutcome.Status.BLOCKED.name());
-            return;
-        }
-        livenessOverride.run(FaceCaptureLivenessGate.workflowFor(gateField), subject, signedInUserId(), supervisorId,
-                evidence, new SupervisorOverrideFlow.Callback() {
-                    @Override
-                    public void onPhoto(LivenessCaptureResult photo) {
-                        CaptureOutcome outcome = livenessGate.recordOverride(subject, gateField, photo);
-                        if (!photo.isSupervisorOverride() || photo.rCaptureResponse() == null) {
-                            completeCapture(outcome.status().name());
-                            return;
-                        }
-                        storeLivenessCapture(captureFieldId, gateField, modality, photo);
-                    }
-
-                    @Override
-                    public void onRefused(FaceAuthOutcome supervisorOutcome) {
-                        completeCapture(livenessGate.recordOverrideRefused(subject, gateField, supervisorOutcome)
-                                .status().name());
-                    }
-                });
-    }
-
-    /** Stores a passing capture (or an override photo) through ARC's SBI response checks. */
-    private void storeLivenessCapture(String captureFieldId, String gateField, Modality modality,
-                                      LivenessCaptureResult captureResult) {
-        this.fieldId = captureFieldId;
-        this.currentModality = modality;
-        try {
-            if (captureFieldId.equals(OPERATOR_BIOMETRICS)) {
-                userOnboardService.setCaptureTransactionId(captureResult.transactionId());
-            } else {
-                registrationService.getRegistrationDto().setCaptureTransactionId(captureResult.transactionId());
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "No registration for the face capture", e);
-            completeCapture(CaptureOutcome.Status.FAILED.name());
-            return;
-        }
-        InputStream response = new ByteArrayInputStream(
-                captureResult.rCaptureResponse().getBytes(StandardCharsets.UTF_8));
-        // A photo taken without a liveness check (exception photo, policy OFF) carries no liveness evidence; an
-        // override photo carries the failed transaction's evidence with LIVENESS_DECISION=OVERRIDE.
-        Map<String, String> evidence = captureResult.isLivenessChecked() ? captureResult.evidence() : null;
-        if (!parseRCaptureResponse(response, evidence)) {
-            if (captureResult.isLivenessChecked()) {
-                livenessGate.recordRejected(gateField);
-            } else {
-                livenessGate.clearOutcome(gateField);
-            }
-            completeCapture(CaptureOutcome.Status.FAILED.name());
-        }
     }
 
     /** Completes the pending Flutter capture call once; later calls are ignored. */
@@ -1609,7 +1061,7 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
     }
 
     public void parseDiscoverResponse(Bundle bundle) {
-        if (deliverSbiAnswer(SBI_DISCOVER_REQUEST, bundle)) {
+        if (faceCapture.deliverSbiAnswer(FaceCaptureCoordinator.SBI_DISCOVER_REQUEST, bundle)) {
             return;
         }
         try {
@@ -1623,7 +1075,7 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
     }
 
     public void parseDeviceInfoResponse(Bundle bundle) {
-        if (deliverSbiAnswer(SBI_INFO_REQUEST, bundle)) {
+        if (faceCapture.deliverSbiAnswer(FaceCaptureCoordinator.SBI_INFO_REQUEST, bundle)) {
             return;
         }
         String callbackId = null;
@@ -1704,7 +1156,7 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
     }
 
     public void parseRCaptureResponse(Bundle bundle) {
-        if (deliverSbiAnswer(SBI_CAPTURE_REQUEST, bundle)) {
+        if (faceCapture.deliverSbiAnswer(FaceCaptureCoordinator.SBI_CAPTURE_REQUEST, bundle)) {
             return;
         }
         try {

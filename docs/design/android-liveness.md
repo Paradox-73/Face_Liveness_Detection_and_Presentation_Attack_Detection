@@ -31,7 +31,7 @@ Package `io.mosip.registration.livenessmanager` (module folder `clients/android/
 | `device.SbiCaptureCodec` | Writes and reads the SBI 0.9.5 `rCapture` response JSON (fields of ARC's `CaptureDto`, RS256 JWS with `x5c`). |
 | `device.DeviceSigner` / `AndroidKeystoreSigner` | Device key in the Android Keystore (section 5). |
 | `device.FaceDeviceSelection` | Reads `mosip.registration.liveness.android.device` (`BUILTIN` default, `SBI`; blank or unknown means `BUILTIN`, with a Logcat warning) and routes each face capture (section 4). |
-| `device.SbiIntentDevice` | Adapter for a vendor SBI face app reached through Android intents (ARC's SBI 0.9.5 path), wired through `FaceDeviceSelection` and `BiometricsDetailsApi`. Its `Bridge` has `discover`, `canStream`, `openStream` and `capture`; `discover(bridge, purpose)` parses the SBI 0.9.5 discover JSON (digital ID as base64 or JWS, skips errors and non-face entries, prefers `Ready`; `Not Registered` gives `NOT_READY`, none gives `NOT_FOUND`). The intents carry no preview frames, so `no_stream_policy` decides: `BLOCK` (default) fails the Flutter call and audits `R_CAPTURE_FAILED`, `CAPTURE_ONLY` stores the app's capture after ARC's checks with `LIVENESS_METHOD=CAPTURE_ONLY`. Only a Robolectric run exists; no vendor SBI app has been run on a device or emulator. |
+| `device.SbiIntentDevice` | Adapter for a vendor SBI face app reached through Android intents (ARC's SBI 0.9.5 path), wired through `FaceDeviceSelection` and `FaceCaptureCoordinator`. Its `Bridge` has `discover`, `canStream`, `openStream` and `capture`; `discover(bridge, purpose)` parses the SBI 0.9.5 discover JSON (digital ID as base64 or JWS, skips errors and non-face entries, prefers `Ready`; `Not Registered` gives `NOT_READY`, none gives `NOT_FOUND`). The intents carry no preview frames, so `no_stream_policy` decides: `BLOCK` (default) fails the Flutter call and audits `R_CAPTURE_FAILED`, `CAPTURE_ONLY` stores the app's capture after ARC's checks with `LIVENESS_METHOD=CAPTURE_ONLY`. Only a Robolectric run exists; no vendor SBI app has been run on a device or emulator. |
 | `device.DeviceProvisioning`, `DeviceProvisioningActivity`, `DeviceProvisioningInitializer` | In-app device key provisioning that works on release builds (section 5). |
 | `image.AndroidImageDecoder` | `ImageDecoder` for Android: RGBA camera frames, JPEG/PNG through `BitmapFactory`, JPEG 2000 through JP2ForAndroid, to upright RGB888. |
 | `image.PixelOrientation` | Rotation, optional mirror flip and channel order in one pass; pure Java, tested on the JVM. |
@@ -292,7 +292,9 @@ replaces the first and last bullets of section 10.
 
 ### 11.2 Resident and onboarding face capture
 
-1. Flutter calls `BiometricsApi.invokeDiscoverSbi(field, "Face")` as before. `BiometricsDetailsApi` asks the gate
+1. Flutter calls `BiometricsApi.invokeDiscoverSbi(field, "Face")` as before. `BiometricsDetailsApi` makes one call,
+   `FaceCaptureCoordinator.tryStart(field, modality, result)` (app `liveness` package), which holds the whole liveness
+   path (device choice, capture screen, vendor SBI bridge, override, store through ARC's checks) and asks the gate
    whether the field's workflow is enforced. If not, the upstream SBI discovery runs unchanged.
 2. If the subject has used up its attempts, the call completes with `BLOCKED` and no screen opens.
 3. Otherwise the capture screen runs (the retries of one transaction happen inside it). Only a `PASS` with an
@@ -461,7 +463,7 @@ validity and a checked photo).
 | 2 | `FaceCaptureLivenessGate.record` | Keeps the failed transaction's packet evidence (`overrideEvidence`) while the field is blocked. |
 | 3 | `SupervisorOverrideFlow` (app) | Supervisor face authentication, workflow `exception_auth`: liveness, `REGISTRATION_SUPERVISOR` role, 1:1 match with the supervisor's onboarding face (`FaceAuthFlow`). A refusal (not a supervisor, no match, liveness failed, `exception_auth` not enforced) takes no photo; the field stays blocked with the refusal's message. |
 | 4 | capture screen with `LivenessCaptureRequest.override(SupervisorOverride)` | `session.PhotoCaptureRunner` takes the resident's photo with the built-in device, signed like any capture, without a liveness check. The result is a pass with reason `SUPERVISOR_OVERRIDE` and the evidence of step 2 with `LIVENESS_DECISION=OVERRIDE`. The screen writes `REG-EVT-LV16` (`SupervisorOverride.auditEvent`, supervisor ID, session ID of the failed transaction). |
-| 5 | `BiometricsDetailsApi.storeLivenessCapture` | The photo goes through ARC's SBI checks like every capture and is stored with its evidence in the BIR `others`; `packet_meta_info.json` gets `livenessDecision=OVERRIDE`. The gate resets the count and Flutter shows `liveness.override.used` ("Face stored with a supervisor override. It is flagged for review in the packet.") under Scan. |
+| 5 | `FaceCaptureCoordinator.storeLivenessCapture` | The photo goes through ARC's SBI checks like every capture and is stored with its evidence in the BIR `others`; `packet_meta_info.json` gets `livenessDecision=OVERRIDE`. The gate resets the count and Flutter shows `liveness.override.used` ("Face stored with a supervisor override. It is flagged for review in the packet.") under Scan. |
 
 Pressing Scan again while the field is blocked and an override is still possible opens the capture screen in
 "override offer" mode (`LivenessCaptureRequest.overrideOffer(true)`): it shows the maximum-attempts message and

@@ -27,7 +27,7 @@ PS04 steps 1-10 map to the code as follows.
 
 | PS04 step | Desktop | Android |
 |---|---|---|
-| 1. Start face capture | `GenericBiometricsController.scan` opens `LivenessDialog` when `isLivenessEnforced(REGISTRATION)` | Flutter `BiometricsApi.invokeDiscoverSbi(field, "Face")` reaches `BiometricsDetailsApi`, which asks `FaceCaptureLivenessGate` and starts `LivenessCaptureActivity` (request code 6) |
+| 1. Start face capture | `GenericBiometricsController.scan` opens `LivenessDialog` when `isLivenessEnforced(REGISTRATION)` | Flutter `BiometricsApi.invokeDiscoverSbi(field, "Face")` reaches `BiometricsDetailsApi`, whose one call `FaceCaptureCoordinator.tryStart` asks `FaceCaptureLivenessGate` and starts `LivenessCaptureActivity` (request code 6) |
 | 2. Receive frames from the L0/L1 device | `LivenessRun` opens SBI `STREAM` through `SbiFaceCaptureDevice` | `LivenessRunner` starts `CameraXFrameSource` (built-in L0 device) |
 | 3-4. Passive liveness and PAD, evaluate the score | `DefaultLivenessSession` on the `liveness-worker` thread, driven by the core `LivenessSessionDriver` | same class, same driver, same thread model |
 | 5. Accept when the threshold is met | pass token, then the existing capture task; `LivenessGate` binds the signed capture | the built-in device signs the frame the session selected; `session.bind(...)` |

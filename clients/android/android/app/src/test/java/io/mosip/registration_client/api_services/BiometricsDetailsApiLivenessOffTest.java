@@ -58,6 +58,7 @@ import io.mosip.registration.livenessmanager.LivenessCaptureRequest;
 import io.mosip.registration.livenessmanager.LivenessCaptureResult;
 import io.mosip.registration.livenessmanager.LivenessService;
 import io.mosip.registration_client.liveness.CaptureOutcome;
+import io.mosip.registration_client.liveness.FaceCaptureCoordinator;
 import io.mosip.registration_client.liveness.FaceCaptureLivenessGate;
 import io.mosip.registration_client.liveness.LivenessCaptureLauncher;
 import io.mosip.registration_client.model.BiometricsPigeon;
@@ -299,7 +300,7 @@ public class BiometricsDetailsApiLivenessOffTest {
 
     @Test
     public void captureOnlyEvidenceIsNeverAPass() {
-        Map<String, String> evidence = BiometricsDetailsApi.captureOnlyEvidence("tx-1", "L0");
+        Map<String, String> evidence = FaceCaptureCoordinator.captureOnlyEvidence("tx-1", "L0");
         assertEquals(PacketEvidenceKeys.DECISION_NOT_CHECKED, evidence.get(PacketEvidenceKeys.DECISION));
         assertEquals("CAPTURE_ONLY", evidence.get(PacketEvidenceKeys.METHOD));
     }
