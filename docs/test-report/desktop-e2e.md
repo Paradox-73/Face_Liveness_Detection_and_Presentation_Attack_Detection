@@ -18,8 +18,7 @@ finger and iris devices. The camera was replaced by frame packs (recorded frames
 six workflows (except the exception photo, which is off) set to `PASSIVE_THEN_ACTIVE`: a high passive score passed
 without challenges. Since then the shipped
 defaults changed: `registration`, `login_auth`, `onboard_auth` and the three supervisor workflows (`packet_auth`,
-`exception_auth`, `eod_auth`) are `ALWAYS_ACTIVE` (challenges on every capture), the retry count survives Cancel and
-reopened windows, an override needs a second supervisor's face check and a checked photo, the desktop run uses the
+`exception_auth`, `eod_auth`) are `ALWAYS_ACTIVE` (challenges on every capture), the retry counters survive Cancel, reopened windows and restarts, an override needs a different second supervisor's face check and a checked photo, the desktop run uses the
 shared session driver of `liveness-core`, and the model bundle is 1.3.0. The flow descriptions below for D1, D3, D5, D7
 and D11 (a pass "without challenges" or a passive pass) and the 41 of 41 result are therefore **not a result at the
 shipped defaults**. A re-run of `scripts/demo-desktop.sh` at the shipped defaults is pending: it needs a desktop

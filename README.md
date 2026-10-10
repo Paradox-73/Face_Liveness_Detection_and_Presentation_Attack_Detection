@@ -22,7 +22,7 @@ authentication.
   through intents (unit-tested, no vendor app run); a mock L0/L1 device with fault injection for tests.
 - **Bound to the signed capture:** a single-use pass token and a face-similarity check tie the stored or matched
   face to the stream that passed, enforced in the client's service layer, not in the screens.
-- **Configurable and offline:** 44 `mosip.registration.liveness.*` keys synced from the server, per-workflow
+- **Configurable and offline:** 44 default settings (42 `mosip.registration.liveness.*` keys and 2 other MOSIP keys) synced from the server, per-workflow
   policies; local settings can change only a short allow-list and cannot lower the threshold floors; everything
   runs without a network.
 - **Evidence:** audit events `REG-EVT-LV01..17` and `LIVENESS_*` entries in every face record of the packet.
@@ -56,8 +56,8 @@ decision flow picture: [docs/design/img/decision-flow.svg](docs/design/img/decis
 | Shared engine (`liveness/liveness-core`) | Passive PAD, active challenges, frame integrity (loop window 300 frames), planarity, capture binding that fails closed, policy resolution, audit, metrics, one session driver used by both clients | 365 tests; `liveness/README.md` |
 | ONNX adapters and models (`liveness/liveness-onnx`, `models/`) | YuNet, Face Mesh, MiniFASNet V2 + V1SE, SFace; signed bundle 1.3.0 with rollback protection | 109 tests (2 benchmark tests skipped); `models/SOURCES.md` |
 | Face-match SDK (`liveness/face-match-sdk`) | SFace `IBioApiV2` for FACE 1:1 matching | 42 tests |
-| Desktop client (`clients/desktop`) | Liveness gates resident capture, exception photo, onboarding, face login, packet and reviewer authentication, end-of-day approval; supervisor override (second supervisor with face authentication, checked photo), account lock, retry limit that survives Cancel, diagnostic mode, replacement texts, offline import of a signed model bundle | 150 + 63 liveness unit tests (`registration-services`, `registration-client`); end-to-end run 41 of 41 checks on 2026-09-30 at the earlier defaults, not re-run at the shipped defaults (`docs/test-report/desktop-e2e.md`); diagnostic and model-import flow, 15 of 15 |
-| Android client (`clients/android`) | `livenessmanager` module with the built-in camera device; resident capture, onboarding, face sign-in, packet authentication, supervisor approval; supervisor override, retry limit that survives Cancel, metrics, diagnostic panel, execution provider choice, signed release build with in-app device key provisioning, offline model bundle import (button in Device Settings), vendor SBI face app through intents | 211 `livenessmanager` + 64 `app` unit tests, 32 Flutter tests; end-to-end run 58 of 58 checks on 2026-09-30 at the earlier defaults, not re-run at the shipped defaults: `docs/test-report/android-e2e.md` |
+| Desktop client (`clients/desktop`) | Liveness gates resident capture, exception photo, onboarding, face login, packet and reviewer authentication, end-of-day approval; supervisor override (a second, different supervisor with face authentication; the same user cannot approve their own override; checked photo), account lock, retry counters kept across Cancel, reopened windows and client restarts, diagnostic mode, replacement texts, offline import of a signed model bundle | 150 + 63 liveness unit tests (`registration-services`, `registration-client`); end-to-end run 41 of 41 checks on 2026-09-30 at the earlier defaults, not re-run at the shipped defaults (`docs/test-report/desktop-e2e.md`); diagnostic and model-import flow, 15 of 15 |
+| Android client (`clients/android`) | `livenessmanager` module with the built-in camera device; resident capture, onboarding, face sign-in, packet authentication, supervisor approval; supervisor override (a different supervisor must approve; self-approval refused), retry counters kept across Cancel, reopened screens and app restarts, metrics, diagnostic panel, execution provider choice, signed release build with in-app device key provisioning, offline model bundle import (button in Device Settings), vendor SBI face app through intents | 211 `livenessmanager` + 64 `app` unit tests, 32 Flutter tests; end-to-end run 58 of 58 checks on 2026-09-30 at the earlier defaults, not re-run at the shipped defaults: `docs/test-report/android-e2e.md` |
 | Mock face device (`devices/mock-mds`) | Image sequences, video or webcam; capture signed from the streamed frame; 13 fault types; L0/L1; provisional PAD capability | 226 tests (upstream and extensions); `devices/mock-mds/LIVENESS-EXTENSIONS.md` |
 | Mock MOSIP server (`tools/mock-sync`) | Both real clients log in, sync, onboard and upload against it; live config changes; packet evidence viewer | 38 tests; `tools/mock-sync/README.md` |
 | Evaluation (`tools/eval`, `eval/`) | Scenario runner (31 tests) and analysis (102 pytest tests) with ISO/IEC 30107-3-style metrics; 275 transactions at the shipped defaults, synthetic attacks and three openly licensed clips; APCER 0.0% per transaction for every species and workflow (SYN-A7, the adaptive screen replay, was 50.0% (4/8) before the screen-pattern check); `registration` BPCER 0.0% (0/28; was 14.3%, all from the dim-light clip, before the exposure correction), `login_auth` BPCER 0.0% (0/12) | [docs/eval/results/20261005b-shipped/README.md](docs/eval/results/20261005b-shipped/README.md) (before and after); `docs/eval/calibration-notes.md` |
@@ -102,18 +102,12 @@ Known limits, stated in the linked documents:
 
 Team **Badmosip**, MOSIP Decode 2026, Problem Statement 04.
 
-| Member | GitHub account | Role | Modules owned |
-|---|---|---|---|
-| `<full name>` | `@<github-account>` | Engine: liveness and PAD core, ONNX models, model signing | `liveness/`, `models/` |
-| `<full name>` | `@<github-account>` | Desktop client: Registration Client liveness services and screens | `clients/desktop/` |
-| `<full name>` | `@<github-account>` | Android client: Android Registration Client liveness module and Flutter screens | `clients/android/` |
-| `<full name>` | `@<github-account>` | Evaluation, mock tools and CI: scenario runner, frame packs, MockMDS, MockSync, workflows | `eval/`, `tools/`, `devices/mock-mds/`, `.github/` |
-| `<full name>` | `@<github-account>` | Docs, pitch, UX and coordination | `docs/`, `README.md` |
-
-**How the first commit history was produced:** `<one true sentence: who wrote the first version of the code and docs, with which tools, and why the commits before <date> come from one account>`
-
-From `<date>` on, each member commits their own work from their own account, with sign-off, through reviewed pull
-requests.
+| Member | GitHub account |
+|---|---|
+| Kanav Bhardwaj | [@Paradox-73](https://github.com/Paradox-73) |
+| Ivan Bhargava | [@Ivan825](https://github.com/Ivan825) |
+| Ishaan Sodhi | not listed |
+| Nikunj | not listed |
 
 ## Download
 

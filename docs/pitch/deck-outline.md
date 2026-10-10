@@ -115,7 +115,7 @@ the claim.
 | MOSIP mechanism | What we used it for |
 |---|---|
 | SBI device interface (STREAM, RCAPTURE, L0/L1 certification) | frame stream and the signed capture; L1 digital ID checked against the device CA |
-| Global parameters + sync | 44 `mosip.registration.liveness.*` keys, per workflow; a change on the server reaches the client at the next sync (audit LV15) |
+| Global parameters + sync | 44 default settings (42 `mosip.registration.liveness.*` keys, 2 other), per workflow; a change on the server reaches the client at the next sync (audit LV15) |
 | Packet (CBEFF biometric record `others`) | `LIVENESS_DECISION`, `METHOD`, score bucket, challenges, engine and model hash on every face |
 | Audit framework | 17 events `REG-EVT-LV01..17`, same IDs on desktop and Android, no images or raw scores |
 | Biometric SDK interface (`IBioApiV2`) | SFace face-match SDK loaded by MOSIP's own SDK factory for FACE |
