@@ -281,7 +281,8 @@ public final class PolicyResolver {
             if (!v.isPresent()) {
                 return def;
             }
-            if (!v.get().matches("\\d+(\\.\\d+){0,2}")) {
+            // ModelRegistry parses MAJOR.MINOR.PATCH only; "1.2" would stop the engine with CONFIG_INVALID.
+            if (!v.get().matches("\\d+\\.\\d+\\.\\d+")) {
                 issue(key, ConfigIssue.Kind.INVALID, v.get(), def);
                 return def;
             }

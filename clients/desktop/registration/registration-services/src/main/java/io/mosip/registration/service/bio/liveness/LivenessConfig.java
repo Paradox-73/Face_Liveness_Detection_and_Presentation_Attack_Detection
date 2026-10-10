@@ -283,10 +283,10 @@ public class LivenessConfig implements ConfigSource {
 	/**
 	 * Returns the minimum accepted model bundle version.
 	 *
-	 * @return {@code mosip.registration.liveness.model.min_version}, default {@code 1.0.0}
+	 * @return {@code mosip.registration.liveness.model.min_version} as resolved (an invalid value gives the default)
 	 */
 	public String modelMinVersion() {
-		return get(LivenessConfigKeys.MODEL_MIN_VERSION).orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION);
+		return resolve(Workflow.REGISTRATION).policy().modelMinVersion();
 	}
 
 	/**

@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 
 import io.mosip.liveness.core.EngineErrorCode;
 import io.mosip.liveness.core.EngineException;
+import io.mosip.liveness.core.Workflow;
 import io.mosip.liveness.core.api.EngineContext;
 import io.mosip.liveness.core.api.ImageDecoder;
 import io.mosip.liveness.core.api.LivenessEngine;
@@ -35,6 +36,7 @@ import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.engine.LivenessMetrics;
 import io.mosip.liveness.core.image.ImageBuffer;
 import io.mosip.liveness.core.image.PixelFormat;
+import io.mosip.liveness.core.policy.PolicyResolver;
 import io.mosip.liveness.core.vision.FaceBox;
 import io.mosip.liveness.onnx.OnnxLivenessEngine;
 import io.mosip.liveness.onnx.OnnxLivenessEngines;
@@ -382,12 +384,10 @@ public final class EngineLoader implements AutoCloseable {
      *
      * @param config liveness configuration
      * @param store  imported model bundles, or {@code null}
-     * @return {@code MAJOR.MINOR.PATCH}; an invalid {@code model.min_version} is returned unchanged, so the engine
-     *         reports {@code CONFIG_INVALID}
+     * @return {@code MAJOR.MINOR.PATCH}; an invalid {@code model.min_version} gives the default, as resolved
      */
     static String minimumModelVersion(ConfigSource config, ModelBundleStore store) {
-        String configured = config.get(LivenessConfigKeys.MODEL_MIN_VERSION)
-                .orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION);
+        String configured = new PolicyResolver(config).resolve(Workflow.REGISTRATION).policy().modelMinVersion();
         Optional<String> floor = store == null ? Optional.empty() : store.floor();
         if (!floor.isPresent()) {
             return configured;

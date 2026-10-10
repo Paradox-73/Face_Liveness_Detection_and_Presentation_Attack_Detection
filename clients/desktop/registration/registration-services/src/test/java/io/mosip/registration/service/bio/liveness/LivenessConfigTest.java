@@ -74,6 +74,12 @@ public class LivenessConfigTest {
 	}
 
 	@Test
+	public void shortModelMinVersionFallsBackInsteadOfStoppingTheEngine() {
+		values.put("mosip.registration.liveness.model.min_version", "1.2");
+		assertEquals("1.3.0", config.modelMinVersion());
+	}
+
+	@Test
 	public void masterSwitchOffDisablesEveryWorkflow() {
 		values.put("mosip.registration.liveness.enable", "N");
 		assertFalse(config.isMasterSwitchOn());

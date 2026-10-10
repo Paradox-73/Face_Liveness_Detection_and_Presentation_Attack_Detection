@@ -39,6 +39,7 @@ import io.mosip.liveness.core.audit.AuditSink;
 import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.engine.AuditPayloadBuilder;
+import io.mosip.liveness.core.policy.PolicyResolver;
 import io.mosip.liveness.onnx.model.ModelEntry;
 import io.mosip.liveness.onnx.model.ModelRegistry;
 import io.mosip.liveness.onnx.model.ModelSources;
@@ -353,8 +354,7 @@ public final class ModelBundleImporter {
     }
 
     private String configuredMinimum() {
-        return config.get(LivenessConfigKeys.MODEL_MIN_VERSION).map(String::trim)
-                .orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION);
+        return new PolicyResolver(config).resolve(Workflow.REGISTRATION).policy().modelMinVersion();
     }
 
     private SemanticVersion minimumVersion() {

@@ -155,7 +155,7 @@ class PolicyResolverTest {
     @Test
     void operationalKeys() {
         cfg.put(LivenessConfigKeys.NO_STREAM_POLICY, "capture_only");
-        cfg.put(LivenessConfigKeys.MODEL_MIN_VERSION, "1.2");
+        cfg.put(LivenessConfigKeys.MODEL_MIN_VERSION, "1.2.4");
         cfg.put(LivenessConfigKeys.DIAGNOSTIC_ENABLE, "true");
         cfg.put(LivenessConfigKeys.METRICS_ENABLE, "N");
         cfg.put(LivenessConfigKeys.FRAME_SAMPLE_INTERVAL_MS, "100");
@@ -163,7 +163,7 @@ class PolicyResolverTest {
         cfg.put(LivenessConfigKeys.BINDING_MIN_SIMILARITY, "75");
         LivenessPolicy p = resolve(Workflow.REGISTRATION).policy();
         assertEquals(NoStreamPolicy.CAPTURE_ONLY, p.noStreamPolicy());
-        assertEquals("1.2", p.modelMinVersion());
+        assertEquals("1.2.4", p.modelMinVersion());
         assertTrue(p.isDiagnosticEnabled());
         assertFalse(p.isMetricsEnabled());
         assertEquals(100, p.frameSampleIntervalMs());
@@ -177,6 +177,17 @@ class PolicyResolverTest {
         assertEquals("1.3.0", bad.policy().modelMinVersion());
         assertFalse(bad.policy().isDiagnosticEnabled());
         assertEquals(4, bad.issues().size(), bad.issues().toString());
+    }
+
+    /** The model registry needs MAJOR.MINOR.PATCH; a shorter value must not reach it and stop the engine. */
+    @Test
+    void modelMinVersionNeedsThreeParts() {
+        for (String shortVersion : new String[] {"1", "1.2", "1.2.3.4"}) {
+            cfg.put(LivenessConfigKeys.MODEL_MIN_VERSION, shortVersion);
+            PolicyResolution r = resolve(Workflow.REGISTRATION);
+            assertEquals(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION, r.policy().modelMinVersion(), shortVersion);
+            assertEquals(ConfigIssue.Kind.INVALID, r.issues().get(0).kind(), shortVersion);
+        }
     }
 
     /** T-CORE-POL-01: null-safe reads. */
