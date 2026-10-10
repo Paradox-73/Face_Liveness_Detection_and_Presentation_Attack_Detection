@@ -6,8 +6,6 @@
  */
 package io.mosip.liveness.onnx.image;
 
-import io.mosip.liveness.core.image.ImageBuffer;
-import io.mosip.liveness.core.image.PixelFormat;
 
 import java.util.Objects;
 
@@ -139,21 +137,6 @@ public final class ImageOps {
         }
     }
 
-    /**
-     * Converts a whole image to a planar (CHW) tensor without resizing.
-     *
-     * @param image  a raw image
-     * @param format plane order and normalisation
-     * @return {@code 3 * width * height} values
-     */
-    public static float[] toTensor(ImageBuffer image, TensorFormat format) {
-        Rgb8Image src = Rgb8Image.of(image);
-        float[] tensor = new float[3 * src.width() * src.height()];
-        resizeRegionToTensor(src, 0, 0, src.width() - 1, src.height() - 1, src.width(), src.height(), format, tensor,
-                src.width(), src.height());
-        return tensor;
-    }
-
     // ---------------------------------------------------------------- images
 
     /**
@@ -245,69 +228,6 @@ public final class ImageOps {
             out[i] = (byte) ((sum + 8192) >> 14);
         }
         return out;
-    }
-
-    // ---------------------------------------------------------------- ImageBuffer convenience
-
-    /**
-     * Resizes a raw image buffer (bilinear).
-     *
-     * @param image  raw image
-     * @param width  target width
-     * @param height target height
-     * @return a new RGB888 or BGR888 buffer (BGR888 only if the source is BGR888)
-     */
-    public static ImageBuffer resize(ImageBuffer image, int width, int height) {
-        return resize(Rgb8Image.of(image), width, height).toImageBuffer();
-    }
-
-    /**
-     * Crops a raw image buffer, clamped to the image.
-     *
-     * @param image  raw image
-     * @param x      left edge
-     * @param y      top edge
-     * @param width  width
-     * @param height height
-     * @return a new RGB888 or BGR888 buffer
-     */
-    public static ImageBuffer crop(ImageBuffer image, int x, int y, int width, int height) {
-        return crop(Rgb8Image.of(image), x, y, width, height).toImageBuffer();
-    }
-
-    /**
-     * Warps a raw image buffer.
-     *
-     * @param image    raw image
-     * @param srcToDst mapping from source to output coordinates
-     * @param width    output width
-     * @param height   output height
-     * @return a new RGB888 or BGR888 buffer
-     */
-    public static ImageBuffer warpAffine(ImageBuffer image, AffineTransform srcToDst, int width, int height) {
-        return warpAffine(Rgb8Image.of(image), srcToDst, width, height).toImageBuffer();
-    }
-
-    /**
-     * Converts any raw image buffer to RGB888.
-     *
-     * @param image raw image
-     * @return the same buffer if it is already RGB888, otherwise a converted copy
-     */
-    public static ImageBuffer toRgb888(ImageBuffer image) {
-        return image.format() == PixelFormat.RGB888 ? image
-                : withOrder(Rgb8Image.of(image), ChannelOrder.RGB).toImageBuffer();
-    }
-
-    /**
-     * Converts any raw image buffer to BGR888.
-     *
-     * @param image raw image
-     * @return the same buffer if it is already BGR888, otherwise a converted copy
-     */
-    public static ImageBuffer toBgr888(ImageBuffer image) {
-        return image.format() == PixelFormat.BGR888 ? image
-                : withOrder(Rgb8Image.of(image), ChannelOrder.BGR).toImageBuffer();
     }
 
     // ---------------------------------------------------------------- internals

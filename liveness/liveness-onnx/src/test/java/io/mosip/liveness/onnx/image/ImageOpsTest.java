@@ -128,12 +128,20 @@ class ImageOpsTest {
         // Plane 0 is blue: pixels red, green, blue, white -> 0, 0, 255, 255.
         assertArrayEquals(new float[] {0, 0, 255, 255}, java.util.Arrays.copyOfRange(bgr, 0, 4));
         assertArrayEquals(new float[] {255, 0, 0, 255}, java.util.Arrays.copyOfRange(bgr, 8, 12));
-        float[] unit = ImageOps.toTensor(img.toImageBuffer(), TensorFormat.RGB_UNIT);
+        float[] unit = toTensor(img, TensorFormat.RGB_UNIT);
         assertEquals(1f, unit[0], 1e-6);
         assertEquals(0f, unit[1], 1e-6);
         float[] warped = new float[12];
         ImageOps.warpAffineToTensor(img, AffineTransform.identity(), 2, 2, TensorFormat.RGB_RAW, warped);
-        assertArrayEquals(ImageOps.toTensor(img.toImageBuffer(), TensorFormat.RGB_RAW), warped, 1e-4f);
+        assertArrayEquals(toTensor(img, TensorFormat.RGB_RAW), warped, 1e-4f);
+    }
+
+    /** The whole image as a planar (CHW) tensor without resizing. */
+    private static float[] toTensor(Rgb8Image src, TensorFormat format) {
+        float[] tensor = new float[3 * src.width() * src.height()];
+        ImageOps.resizeRegionToTensor(src, 0, 0, src.width() - 1, src.height() - 1, src.width(), src.height(), format,
+                tensor, src.width(), src.height());
+        return tensor;
     }
 
     @Test
@@ -160,12 +168,10 @@ class ImageOpsTest {
         assertEquals(29, grey[2] & 0xff);
         assertEquals(255, grey[3] & 0xff);
         assertArrayEquals(grey, ImageOps.toGray(bgr));
-        ImageBuffer asBgr = ImageOps.toBgr888(quad().toImageBuffer());
+        ImageBuffer asBgr = ImageOps.withOrder(quad(), ChannelOrder.BGR).toImageBuffer();
         assertEquals(PixelFormat.BGR888, asBgr.format());
-        assertEquals(PixelFormat.RGB888, ImageOps.toRgb888(asBgr).format());
-        assertEquals(PixelFormat.RGB888, ImageOps.resize(quad().toImageBuffer(), 3, 3).format());
-        assertEquals(1, ImageOps.crop(quad().toImageBuffer(), 0, 0, 1, 1).width());
-        assertEquals(5, ImageOps.warpAffine(quad().toImageBuffer(), AffineTransform.identity(), 5, 4).width());
+        assertEquals(PixelFormat.RGB888, ImageOps.withOrder(Rgb8Image.of(asBgr), ChannelOrder.RGB).toImageBuffer()
+                .format());
     }
 
     @Test

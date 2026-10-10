@@ -11,6 +11,7 @@ import io.mosip.liveness.core.image.ImageBuffer;
 import io.mosip.liveness.core.vision.FaceBox;
 import io.mosip.liveness.core.vision.FaceObservation;
 import io.mosip.liveness.onnx.detect.YuNetFaceDetector;
+import io.mosip.liveness.onnx.image.ChannelOrder;
 import io.mosip.liveness.onnx.image.ImageOps;
 import io.mosip.liveness.onnx.image.Rgb8Image;
 import io.mosip.liveness.onnx.mesh.FaceMeshLandmarker;
@@ -131,10 +132,11 @@ class PerformanceBenchmarkTest {
     }
 
     private static byte[] frame640x480Jpeg() throws Exception {
-        ImageBuffer resized = ImageOps.resize(TestSupport.face("mockmds-stream-0.jpeg"), 640, 480);
+        Rgb8Image resized = ImageOps.resize(Rgb8Image.of(TestSupport.face("mockmds-stream-0.jpeg")), 640, 480);
         BufferedImage img = new BufferedImage(640, 480, BufferedImage.TYPE_3BYTE_BGR);
         byte[] target = ((DataBufferByte) img.getRaster().getDataBuffer()).getData();
-        System.arraycopy(ImageOps.toBgr888(resized).bytes(), 0, target, 0, target.length);
+        System.arraycopy(ImageOps.withOrder(resized, ChannelOrder.BGR).toImageBuffer().bytes(), 0, target, 0,
+                target.length);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ImageIO.write(img, "jpg", out);
         return out.toByteArray();
