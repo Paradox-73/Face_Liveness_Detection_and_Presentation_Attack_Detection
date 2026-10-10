@@ -26,6 +26,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static io.mosip.liveness.facematch.SdkTestData.faceBir;
 import static io.mosip.liveness.facematch.SdkTestData.modalities;
@@ -332,6 +337,66 @@ class SFaceBioApiContractTest {
             assertTrue(LivenessStyleDecoder.calls.get() > 0);
         } finally {
             other.close();
+        }
+    }
+
+    /** A reload that replaces the models waits for a running match instead of closing the models under it. */
+    @Test
+    void reloadWaitsForARunningMatch() throws Exception {
+        SFaceBioApi other = new SFaceBioApi();
+        ExecutorService threads = Executors.newFixedThreadPool(2);
+        try {
+            Map<String, String> params = new HashMap<>();
+            params.put(SFaceBioApi.PARAM_MODEL_DIR, SdkTestData.modelsDir().getAbsolutePath());
+            params.put(SFaceBioApi.PARAM_DECODER, BlockingDecoder.class.getName());
+            other.init(params);
+            BiometricRecord face = record(faceBir(SdkTestData.registrationFaceIso(), ProcessedLevelType.RAW));
+            BlockingDecoder.release = new CountDownLatch(1);
+            BlockingDecoder.entered = new CountDownLatch(1);
+            Future<Response<MatchDecision[]>> match = threads.submit(
+                    () -> other.match(face, new BiometricRecord[] {face}, null, null));
+            assertTrue(BlockingDecoder.entered.await(10, TimeUnit.SECONDS));
+
+            Map<String, String> reload = new HashMap<>(params);
+            reload.put(SFaceBioApi.PARAM_DECODER, SFaceBioApi.DEFAULT_DECODER);
+            Future<SDKInfo> init = threads.submit(() -> other.init(reload));
+            // Without the lock the reload swaps and closes the models while the match waits in the decoder.
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3);
+            while (System.nanoTime() < deadline && !other.toString().contains(SFaceBioApi.DEFAULT_DECODER)) {
+                Thread.sleep(20);
+            }
+            BlockingDecoder.release.countDown();
+
+            assertEquals(Match.MATCHED, faceDecision(match.get(30, TimeUnit.SECONDS), 0).getMatch());
+            assertNotNull(init.get(30, TimeUnit.SECONDS));
+        } finally {
+            BlockingDecoder.release.countDown();
+            threads.shutdownNow();
+            other.close();
+        }
+    }
+
+    /** Decoder that holds the first call until the test releases it. */
+    public static final class BlockingDecoder implements FaceImageDecoder {
+
+        static volatile CountDownLatch entered = new CountDownLatch(0);
+        static volatile CountDownLatch release = new CountDownLatch(0);
+        private final FaceImageDecoder delegate = new io.mosip.liveness.facematch.imageio.ImageIoFaceImageDecoder();
+
+        /** Created by name. */
+        public BlockingDecoder() {
+        }
+
+        @Override
+        public io.mosip.liveness.core.image.ImageBuffer decode(byte[] encoded)
+                throws io.mosip.liveness.core.image.ImageDecodeException {
+            entered.countDown();
+            try {
+                release.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return delegate.decode(encoded);
         }
     }
 

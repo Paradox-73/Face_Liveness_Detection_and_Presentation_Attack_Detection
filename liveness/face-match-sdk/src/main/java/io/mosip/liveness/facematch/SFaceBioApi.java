@@ -31,6 +31,8 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
 
 /**
  * MOSIP biometric SDK ({@link IBioApiV2}, API version {@value #API_VERSION}) for FACE, on the SFace embedding
@@ -93,6 +95,8 @@ public class SFaceBioApi implements IBioApiV2 {
     /** Analytics key: embedding model identifier. */
     public static final String ANALYTICS_MODEL = "model";
 
+    /** Calls that use the matcher share the read lock; replacing or closing the matcher takes the write lock. */
+    private final ReentrantReadWriteLock models = new ReentrantReadWriteLock();
     private volatile SFaceMatcher matcher;
     private volatile SdkSettings settings;
 
@@ -113,14 +117,30 @@ public class SFaceBioApi implements IBioApiV2 {
     public synchronized SDKInfo init(Map<String, String> initParams) {
         SdkSettings next = SdkSettings.from(initParams);
         SFaceMatcher previous = matcher;
+        // Loaded outside the lock, so running matches go on with the old models meanwhile.
         SFaceMatcher current = previous == null || settings.needsReload(next) ? load(next) : previous;
-        // Settings first: a reader that sees the new matcher (volatile) also sees its settings.
-        settings = next;
-        matcher = current;
-        if (previous != null && previous != current) {
-            previous.close();
+        models.writeLock().lock();
+        try {
+            // Settings first: a reader that sees the new matcher (volatile) also sees its settings.
+            settings = next;
+            matcher = current;
+            if (previous != null && previous != current) {
+                previous.close();
+            }
+        } finally {
+            models.writeLock().unlock();
         }
         return sdkInfo(current, next);
+    }
+
+    /** Runs a call that uses the matcher; {@link #init} and {@link #close} wait until it ends before closing it. */
+    private <T> T withModels(Supplier<T> call) {
+        models.readLock().lock();
+        try {
+            return call.get();
+        } finally {
+            models.readLock().unlock();
+        }
     }
 
     private static SFaceMatcher load(SdkSettings s) {
@@ -178,6 +198,10 @@ public class SFaceBioApi implements IBioApiV2 {
     @Override
     public Response<QualityCheck> checkQuality(BiometricRecord sample, List<BiometricType> modalitiesToCheck,
                                                Map<String, String> flags) {
+        return withModels(() -> checkQualityNow(sample, modalitiesToCheck));
+    }
+
+    private Response<QualityCheck> checkQualityNow(BiometricRecord sample, List<BiometricType> modalitiesToCheck) {
         SFaceMatcher m = matcher;
         Response<QualityCheck> invalid = checkRequest(m, sample, modalitiesToCheck);
         if (invalid != null) {
@@ -217,6 +241,11 @@ public class SFaceBioApi implements IBioApiV2 {
     @Override
     public Response<MatchDecision[]> match(BiometricRecord sample, BiometricRecord[] gallery,
                                            List<BiometricType> modalitiesToMatch, Map<String, String> flags) {
+        return withModels(() -> matchNow(sample, gallery, modalitiesToMatch));
+    }
+
+    private Response<MatchDecision[]> matchNow(BiometricRecord sample, BiometricRecord[] gallery,
+                                               List<BiometricType> modalitiesToMatch) {
         SFaceMatcher m = matcher;
         if (gallery == null) {
             return failure(SdkStatus.MISSING_INPUT, "gallery");
@@ -285,6 +314,11 @@ public class SFaceBioApi implements IBioApiV2 {
     @Override
     public Response<BiometricRecord> extractTemplate(BiometricRecord sample, List<BiometricType> modalitiesToExtract,
                                                      Map<String, String> flags) {
+        return withModels(() -> extractTemplateNow(sample, modalitiesToExtract));
+    }
+
+    private Response<BiometricRecord> extractTemplateNow(BiometricRecord sample,
+                                                         List<BiometricType> modalitiesToExtract) {
         SFaceMatcher m = matcher;
         Response<BiometricRecord> invalid = checkRequest(m, sample, modalitiesToExtract);
         if (invalid != null) {
@@ -436,9 +470,14 @@ public class SFaceBioApi implements IBioApiV2 {
 
     /** Releases the native model sessions. MOSIP's loaders never call this; it is for tests and tools. */
     public synchronized void close() {
-        if (matcher != null) {
-            matcher.close();
-            matcher = null;
+        models.writeLock().lock();
+        try {
+            if (matcher != null) {
+                matcher.close();
+                matcher = null;
+            }
+        } finally {
+            models.writeLock().unlock();
         }
     }
 

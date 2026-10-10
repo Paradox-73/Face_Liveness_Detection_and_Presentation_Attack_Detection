@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+import java.util.zip.CRC32;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -54,6 +56,21 @@ class ImageIoFaceImageDecoderTest {
         int i = (1 * 8 + 1) * 3;
         assertEquals(200, png.bytes()[i] & 0xff);
         assertEquals(200, png.bytes()[i + 2] & 0xff);
+    }
+
+    /** A tiny PNG whose header claims 30000 x 30000 pixels is refused before any pixel memory is allocated. */
+    @Test
+    void oversizedImageHeaderIsRefused() throws Exception {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ImageIO.write(new BufferedImage(1, 1, BufferedImage.TYPE_3BYTE_BGR), "png", out);
+        byte[] png = out.toByteArray();
+        // IHDR data starts at byte 16 (8 signature + 4 length + 4 type): width, height, then the CRC at 29.
+        ByteBuffer.wrap(png, 16, 8).putInt(30_000).putInt(30_000);
+        CRC32 crc = new CRC32();
+        crc.update(png, 12, 17);
+        ByteBuffer.wrap(png, 29, 4).putInt((int) crc.getValue());
+        ImageDecodeException e = assertThrows(ImageDecodeException.class, () -> decoder.decode(png));
+        assertTrue(e.getMessage().contains("30000 x 30000"), e.getMessage());
     }
 
     @Test
