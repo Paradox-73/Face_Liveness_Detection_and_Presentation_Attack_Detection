@@ -76,6 +76,7 @@ When each count was taken:
 - 2026-10-05: all rows, verification run (engine installed first, then every suite with the commands above; Android tests forced with `--rerun`).
 - 2026-10-05 evening: every row again in one run (2,619 tests), after the exposure correction and the screen-pattern check. JDK 11 for the engine, desktop, MockSync and runner; JDK 21 for Android and MockMDS.
 - 2026-10-10, 23:14: every row again in one run (2,653 tests), after the maintainability restructuring.
+- 2026-10-11, 00:55: `scripts/test-all.sh` (default steps engine, mocksync, mockmds, runner, eval): 375, 44, 40, 226 and 31 Java tests and 103 Python tests, 0 failures. A first run at 00:55 stopped at MockSync packaging because a MockSync started by the demo still held `mock-sync.jar`; it passed after that process was stopped.
 - 2026-10-10, 21:50: every row again in one run (2,647 tests), after the security and correctness fixes (retry counts saved across restarts, configurable model-signing key, certification-level check, and others). Android unit tests: Gradle reused the results of the same sources from a run 7 minutes earlier with the same counts.
 - The CI jobs of `.github/workflows/ci.yml` have run only as local commands so far; the first run on GitHub after the push checks the Linux-only steps.
 

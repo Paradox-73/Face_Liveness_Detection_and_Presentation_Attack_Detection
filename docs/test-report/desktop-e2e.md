@@ -70,6 +70,19 @@ git):
   (about 10 to 20 s of neutral face plus each action, none of them looped) and the turn-right and look-up clips;
   a real person on the webcam route would also do. No clip was made by repeating or editing stills.
 
+**Run of 2026-10-10, 23:22-23:28 (IST), commit `7ddb454`** (after the controller, Android coordinator, model bundle
+module, policy-key and driver-split refactors; `scripts/demo-desktop.sh --restore-golden`, MockSync started by the
+script, output `run/demo/desktop-20261010-232240`, outside git):
+
+- **Result: 0 passed, 1 failed, the demo aborted at the first step**, the same as on 2026-10-05: officer1's face sign-in
+  (`login_auth`) used its 3 attempts. The driver log shows attempt 1 refused after the BLINK/SMILE answers and
+  `FOLLOW no pack for look_up` before attempt 2 (no recorded look-up footage of `s3`).
+- The refactored split driver compiled, started the client and MockMDS, switched face sources, read the failure text
+  and wrote the snapshots; the client's face sign-in path (shared `BaseController` entry points) reached the engine
+  and refused as before. Nothing after the sign-in ran, so the other flows are not measured.
+- `stdout.log` shows `ClassNotFoundException: io.mosip.registration.config.DerbySlf4jBridge` at start; it also
+  appears in the older runs `desktop-run1` to `desktop-run4`.
+
 ## 1. Set-up
 
 | Part | What was used |

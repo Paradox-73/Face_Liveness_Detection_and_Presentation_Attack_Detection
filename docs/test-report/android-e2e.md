@@ -301,3 +301,24 @@ crash), MockSync on 8080 with the shipped pool BLINK, SMILE, TURN_LEFT, TURN_RIG
 - The sections in the tables of 3 and 5 keep the values of the replay profile (2026-09-30); only the attack rows A6 to A8 now also have a
   shipped-policy measurement (11 of 11 above).
 - Not done: every genuine-person flow at the shipped policy; no new Android pictures were taken.
+
+## 13. Re-run after the refactors (2026-10-10 23:44 to 2026-10-11 00:48 IST, commit `7ddb454`)
+
+`scripts/demo-android.sh` with `ARC_EMULATOR_GPU=host` and `ARC_WEBCAM=emulated`; debug APK rebuilt that evening
+(277 MB; the first build attempt ended in `mergeExtDexDebug` and the retry succeeded without code changes), MockSync
+on 8080 with the shipped pool and no policy override. The script ran every section this time (output
+`run/demo/android-20261010-234436`, outside git).
+
+**Total: 36 passed, 36 failed.** Sections the 2026-10-06 run measured give the same checks:
+
+| Section | Checks passed | 2026-10-06 |
+|---|---|---|
+| attacks (A-A1 to A-A7, with A-P0) | 11 of 11 | 11 of 11 |
+| resident (A-R0 to A-R10, with A-P0) | 7 of 12 (A-R6 to A-R10 fail) | 7 of 12 |
+| login (A-P0, A-L1 to A-L10) | 3 of 10 (A-L3 to A-L10 fail) | 3 of 10 |
+
+Sections not run before: override 10 passed, 8 failed (A-V7 to A-V13, A-V16); approval 6 failed (A-E1, E2, E4, E5,
+E6, E8); config 4 passed, 4 failed (A-C3 to A-C6); offline 2 passed, 5 failed (A-O3, O4, O5, O7, O8); latency
+A-P1 passed (16 attempts, 1,293 frames, median 44.7 ms, p95 97.9 ms, worst 888.4 ms). The Logcat shows the same causes
+as before for the failed genuine-person steps (`LOOP` integrity refusals on repeated clips; no turn or look-up
+footage); no `FATAL EXCEPTION` in any saved Logcat.
