@@ -232,7 +232,7 @@ public final class LivenessUiStateMapper {
     }
 
     private LivenessUiState failed(FailureReason r, LivenessResult result, Collection<ReasonCode> qualityProblems) {
-        boolean device = r == FailureReason.DEVICE;
+        boolean device = r == FailureReason.DEVICE || result.deviceError().isPresent();
         boolean retry = r != FailureReason.ENGINE || !result.engineError().isPresent()
                 || !result.engineError().get().isModelIntegrityFailure();
         String key = failureMessageKey(r, result.reasonCodes(), result.deviceError().orElse(null));
@@ -275,6 +275,12 @@ public final class LivenessUiStateMapper {
                 return deviceMessageKey(deviceError);
             case ENGINE:
                 return MessageKeys.ERROR_ENGINE;
+            case TIMEOUT:
+                // A second face or a device error after a challenge was shown also ends as a counted timeout.
+                if (codes.contains(ReasonCode.MULTI_FACE)) {
+                    return MessageKeys.ERROR_MULTIPLE_FACES;
+                }
+                return deviceError != null ? deviceMessageKey(deviceError) : MessageKeys.FAIL_LIVENESS;
             default:
                 return MessageKeys.FAIL_LIVENESS;
         }
@@ -312,7 +318,10 @@ public final class LivenessUiStateMapper {
     private static List<String> failureGuidance(FailureReason r, Set<ReasonCode> codes,
             Collection<ReasonCode> qualityProblems) {
         Set<String> keys = new LinkedHashSet<>();
-        if (r == FailureReason.TIMEOUT) {
+        boolean timedOut = codes.contains(ReasonCode.CHALLENGE_TIMEOUT) || codes.contains(ReasonCode.NEUTRAL_TIMEOUT);
+        if (r == FailureReason.TIMEOUT && codes.contains(ReasonCode.MULTI_FACE)) {
+            keys.add(guidanceKeyFor(ReasonCode.MULTI_FACE));
+        } else if (r == FailureReason.TIMEOUT && timedOut) {
             keys.add(MessageKeys.ERROR_TIMEOUT);
             keys.add(codes.contains(ReasonCode.NEUTRAL_TIMEOUT) ? MessageKeys.GUIDE_LOOK_CAMERA
                     : MessageKeys.GUIDE_FOLLOW_ACTION);

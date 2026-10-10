@@ -89,7 +89,7 @@ Rules, all in `ChallengeObserver`:
 - **Neutral between prompts:** each prompt waits for the face to return to neutral, so one continuous motion
   cannot answer two prompts.
 - **Neutral pitch limit:** 20 degrees (`active.neutral_max_pitch_deg`, equal to `quality.max_pitch_deg`; it was 12, which left faces the quality gate admits stuck in `NEUTRAL_TIMEOUT`). Yaw stays 10 degrees.
-- **Several faces:** more than one face on 3 frames in a row during the active phase ends the session `QUALITY` / `MULTI_FACE`, not counted.
+- **Several faces:** more than one face on 3 frames in a row during the active phase ends the session `TIMEOUT` / `MULTI_FACE` and counts, like a cancel or a device error after a challenge was shown.
 - **Timeout:** `active.challenge_timeout_ms` per challenge (default 5,000 ms, range 2,000-15,000 ms; the upper
   end gives slow movers more time).
 

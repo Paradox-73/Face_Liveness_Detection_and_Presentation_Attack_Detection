@@ -71,8 +71,8 @@ import java.util.function.UnaryOperator;
  * ({@link Builder#priorFailures(int, boolean, int)}). Each attempt
  * opens a session with the transaction's next attempt number, records the result and reports an
  * {@link AttemptOutcome}. Failures for PAD, integrity, challenges, timeouts, below-threshold scores and binding use
- * an attempt; device, engine, quality and cancellation failures never do, and neither does an attempt that could
- * not open a session. After the last attempt audit {@code REG-EVT-LV11} is written exactly once (by the engine, or
+ * an attempt; device, engine, quality and cancellation failures do not, unless a challenge was already shown (the
+ * engine then ends the session as a timeout), and neither does an attempt that could not open a session. After the last attempt audit {@code REG-EVT-LV11} is written exactly once (by the engine, or
  * here for an engine that does not).
  *
  * <p><b>Threading.</b> Every session call runs on one worker thread (the
@@ -295,8 +295,9 @@ public final class LivenessSessionDriver implements AutoCloseable {
     }
 
     /**
-     * Cancels the running attempt, if any; it ends with {@code CANCELLED}, which does not use an attempt. An attempt
-     * that is still opening its session ends cancelled as soon as it can.
+     * Cancels the running attempt, if any; it ends with {@code CANCELLED}, which does not use an attempt, or with a
+     * counted {@code TIMEOUT} once a challenge was shown. An attempt that is still opening its session ends cancelled
+     * as soon as it can.
      */
     public void cancel() {
         if (opening) {

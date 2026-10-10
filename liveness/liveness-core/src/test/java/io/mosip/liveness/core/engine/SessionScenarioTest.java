@@ -156,11 +156,13 @@ class SessionScenarioTest {
     void timeoutAlsoFiresFromTicksWithoutFrames() {
         SessionHarness h = escalated(registration());
         assertNotNull(h.awaitPrompt());
-        // The stream stalls: the no-frame watchdog ends the session as a device error, not a counted timeout.
+        // The stream stalls: the no-frame watchdog ends the session as a device error. A challenge was shown, so it
+        // counts like a timeout and keeps the device error.
         h.tick(1_000);
         h.tick(1_100);
         assertEquals(SessionState.FAILED, h.state());
-        assertEquals(FailureReason.DEVICE, h.result().failureReason().get());
+        assertEquals(FailureReason.TIMEOUT, h.result().failureReason().get());
+        assertTrue(h.result().deviceError().isPresent());
         assertEquals(ChallengeOutcome.CANCELLED, h.result().challenges().get(0).outcome());
     }
 
@@ -576,7 +578,7 @@ class SessionScenarioTest {
     // ------------------------------------------------------------------ multiple faces (appendix A.1 task 9)
 
     @Test
-    void multiFaceDuringChallengeEndsNotCounted() {
+    void multiFaceDuringChallengeEndsAndCounts() {
         SessionHarness h = escalated(registration());
         assertNotNull(h.awaitPrompt());
         DetectedFace subject = TestFaces.neutral().build();
@@ -586,8 +588,8 @@ class SessionScenarioTest {
         }
         assertEquals(SessionState.FAILED, h.state());
         LivenessResult r = h.result();
-        assertEquals(FailureReason.QUALITY, r.failureReason().get());
-        assertEquals(Decision.FAIL_QUALITY, r.decision());
+        assertEquals(FailureReason.TIMEOUT, r.failureReason().get());
+        assertEquals(Decision.TIMEOUT, r.decision());
         assertTrue(r.reasonCodes().contains(ReasonCode.MULTI_FACE));
         assertEquals(ChallengeOutcome.CANCELLED, r.challenges().get(0).outcome());
         assertNull(h.listener.lastAudit(AuditEventId.LIVENESS_TIMEOUT));
@@ -597,7 +599,7 @@ class SessionScenarioTest {
         assertTrue(ui.isRetryAvailable());
         LivenessTransaction tx = new LivenessTransaction(registration());
         tx.record(r);
-        assertEquals(0, tx.attemptsUsed(), "not counted");
+        assertEquals(1, tx.attemptsUsed(), "a challenge was shown, so it counts");
         assertFalse(tx.isSuspectedAttack());
     }
 
@@ -609,7 +611,7 @@ class SessionScenarioTest {
         for (int i = 0; i < 3 && !h.state().isTerminal(); i++) {
             h.frameWith(subject, other);
         }
-        assertEquals(FailureReason.QUALITY, h.result().failureReason().get());
+        assertEquals(FailureReason.TIMEOUT, h.result().failureReason().get());
         assertTrue(h.result().reasonCodes().contains(ReasonCode.MULTI_FACE));
     }
 

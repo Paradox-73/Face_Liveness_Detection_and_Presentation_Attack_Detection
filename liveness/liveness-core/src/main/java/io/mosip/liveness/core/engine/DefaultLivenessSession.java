@@ -986,6 +986,12 @@ final class DefaultLivenessSession implements LivenessSession {
      * @param codes  reason codes
      */
     private void finish(FailureReason reason, Set<ReasonCode> codes) {
+        if (active != null && (reason == FailureReason.CANCELLED || reason == FailureReason.DEVICE
+                || reason == FailureReason.QUALITY)) {
+            // A challenge is already on screen: a free ending would let an attacker re-draw challenges until one
+            // suits a prepared video. It costs an attempt like a timeout; the reason codes keep the real cause.
+            reason = FailureReason.TIMEOUT;
+        }
         long end = clock.monotonicNanos();
         LivenessResult r = buildResult(reason, codes, end);
         SessionState terminal = reason == null ? SessionState.PASSED

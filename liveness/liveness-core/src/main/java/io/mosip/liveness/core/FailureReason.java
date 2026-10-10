@@ -15,10 +15,10 @@ package io.mosip.liveness.core;
  */
 public enum FailureReason {
 
-    /** The device was unavailable, disconnected, stalled or did not become ready. Not counted. */
+    /** The device was unavailable, disconnected, stalled or did not become ready. Not counted (see {@link #TIMEOUT}). */
     DEVICE(Decision.ERROR, false, true),
 
-    /** No usable face (none, several, poor quality or off pose) before the passive timeout. Not counted. */
+    /** No usable face (none, several, poor quality or off pose) before the passive timeout. Not counted (see {@link #TIMEOUT}). */
     QUALITY(Decision.FAIL_QUALITY, false, true),
 
     /** Passive PAD score below {@code pad.reject_threshold}, or a device PAD block reporting an attack. Counted. */
@@ -30,7 +30,11 @@ public enum FailureReason {
     /** A challenge was answered with the wrong action, too fast, or not held. Counted. */
     ACTIVE(Decision.FAIL_LIVENESS, true, true),
 
-    /** The person did not act before the challenge or neutral-face deadline. Counted. */
+    /**
+     * The person did not act before the challenge or neutral-face deadline. Counted. A session that is cancelled,
+     * loses its device or sees a second face after the first challenge was shown also ends here (its reason codes
+     * name the cause), so cancelling cannot re-draw the random challenges for free.
+     */
     TIMEOUT(Decision.TIMEOUT, true, true),
 
     /** Passive score below the workflow threshold while active checks are disabled by policy. Counted. */
@@ -46,7 +50,7 @@ public enum FailureReason {
     /** The engine could not load its models or run inference (fails closed). Not counted. */
     ENGINE(Decision.ERROR, false, true),
 
-    /** Cancelled by the caller or the user. Not counted. */
+    /** Cancelled by the caller or the user before a challenge was shown. Not counted (see {@link #TIMEOUT}). */
     CANCELLED(Decision.CANCELLED, false, true);
 
     private final Decision decision;

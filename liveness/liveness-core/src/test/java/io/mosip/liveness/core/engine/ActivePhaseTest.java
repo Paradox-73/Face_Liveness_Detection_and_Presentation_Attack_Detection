@@ -65,8 +65,9 @@ class ActivePhaseTest {
         }
         assertEquals(SessionState.CHALLENGE_OBSERVE, h.state(), "no single face, no progress");
         h.frameWith(TestFaces.acting(t).build(), TestFaces.neutral().shiftX(200).build());
-        // The third frame in a row with two faces ends the attempt (not counted) instead of running to the timeout.
-        assertEquals(FailureReason.QUALITY, h.result().failureReason().get());
+        // The third frame in a row with two faces ends the attempt instead of running to the timeout. A challenge was
+        // already shown, so it counts.
+        assertEquals(FailureReason.TIMEOUT, h.result().failureReason().get());
         assertTrue(h.result().reasonCodes().contains(ReasonCode.MULTI_FACE));
         assertEquals(ChallengeOutcome.CANCELLED, h.result().challenges().get(0).outcome(),
                 "an action shown with a second face in view never passes");
@@ -106,15 +107,20 @@ class ActivePhaseTest {
     }
 
     @Test
-    void cancelDuringAChallengeRecordsIt() {
+    void cancelDuringAChallengeRecordsItAndUsesAnAttempt() {
         SessionHarness h = SessionScenarioTest.escalated(REG);
         h.awaitPrompt();
         h.frames(3, TestFaces.neutral());
         h.session.cancel();
         LivenessResult r = h.result();
-        assertEquals(FailureReason.CANCELLED, r.failureReason().get());
+        // Cancelling after seeing the challenge must not re-draw it for free.
+        assertEquals(FailureReason.TIMEOUT, r.failureReason().get());
+        assertTrue(r.reasonCodes().contains(ReasonCode.CANCELLED_BY_USER));
         assertEquals(ChallengeOutcome.CANCELLED, r.challenges().get(0).outcome());
         assertTrue(r.activeMs() > 0);
+        LivenessTransaction tx = new LivenessTransaction(REG);
+        tx.record(r);
+        assertEquals(1, tx.attemptsUsed());
     }
 
     @Test

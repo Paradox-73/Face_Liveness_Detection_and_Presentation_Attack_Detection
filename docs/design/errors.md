@@ -6,6 +6,10 @@ The reason decides three things in one place, so both clients behave the same:
 - whether the attempt counts towards `max_retries` (`FailureReason.countsAsAttempt()`);
 - whether a supervisor override may follow (`FailureReason.allowsOverride()`).
 
+Since 2026-10-10 a session that is cancelled, loses its device or sees a second face after the first challenge was shown
+ends as a counted `TIMEOUT` (the reason codes and the message keep the real cause). Otherwise cancelling would draw new
+random challenges for free. The "Attempt used? No" entries below hold only before the first challenge.
+
 ## 1. The PS04 error list
 
 | PS04 error | Detected by | Result (`FailureReason` / code) | Message shown (English) | Audit | Attempt used? | Recovery |

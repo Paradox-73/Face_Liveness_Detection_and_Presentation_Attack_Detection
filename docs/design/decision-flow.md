@@ -117,8 +117,10 @@ under the legacy policy and refused under `ALWAYS_ACTIVE` (desktop D8, Android A
   the camera and hold still." (`liveness.feedback.look_straight`) until a frame passes the quality gate (yaw 15 and
   pitch 20 degrees at most, eyes open, no smile or blink, held 300 ms). The stored frame comes only from those frames;
   none within `active.challenge_timeout_ms` fails `TIMEOUT` / `NEUTRAL_TIMEOUT` and counts.
-- **Several faces:** more than one face for 3 frames in a row during the active phase ends `FAILED(QUALITY, MULTI_FACE)`,
-  not counted.
+- **Several faces:** more than one face for 3 frames in a row during the active phase ends `FAILED(TIMEOUT, MULTI_FACE)`
+  with the "More than one face" message, and counts.
+- **Endings after a challenge was shown:** cancel, a device error or several faces end as a counted `TIMEOUT` (the
+  reason codes keep the cause), so a cancel cannot re-draw the random challenges.
 
 ## 7. Case with no possible challenge
 
