@@ -39,11 +39,13 @@ import io.mosip.liveness.core.EngineErrorCode;
 import io.mosip.liveness.core.EngineException;
 import io.mosip.liveness.core.api.ModelSource;
 import io.mosip.liveness.core.audit.AuditEventId;
+import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.onnx.model.ManifestSignature;
 import io.mosip.liveness.onnx.model.ModelEntry;
 import io.mosip.liveness.onnx.model.ModelManifest;
 import io.mosip.liveness.onnx.model.ModelRegistry;
 import io.mosip.liveness.onnx.model.ModelSources;
+import io.mosip.liveness.onnx.model.ModelTrustAnchors;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.service.bio.liveness.LivenessFakes.RecordingAudit;
 import io.mosip.registration.service.bio.liveness.LivenessFakes.TestClock;
@@ -98,6 +100,17 @@ public class LivenessModelImporterTest {
 			switched.add(source);
 		});
 		importer.setTrustAnchors(Collections.singletonList(trusted.getPublic()));
+	}
+
+	@Test
+	public void configuredProductionKeyIsTheOnlyTrustedKey() throws Exception {
+		values.put(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM, ModelTrustAnchors.toPem(trusted.getPublic()));
+		importer.setTrustAnchors(Collections.emptyList());
+
+		assertEquals(Status.INVALID, importer.importBundle(bundle("other", "1.1.0", untrusted), "supervisor1",
+				SUPERVISOR).status());
+		assertEquals(Status.IMPORTED, importer.importBundle(bundle("v110", "1.1.0", trusted), "supervisor1",
+				SUPERVISOR).status());
 	}
 
 	@Test

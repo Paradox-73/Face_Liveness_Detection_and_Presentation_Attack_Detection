@@ -9,6 +9,7 @@ package io.mosip.registration.livenessmanager.engine;
 import android.content.res.AssetManager;
 import android.util.Log;
 
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -42,6 +43,7 @@ import io.mosip.liveness.onnx.OnnxLivenessEngine;
 import io.mosip.liveness.onnx.OnnxLivenessEngines;
 import io.mosip.liveness.onnx.OnnxModelSet;
 import io.mosip.liveness.onnx.model.ModelSources;
+import io.mosip.liveness.onnx.model.ModelTrustAnchors;
 import io.mosip.liveness.onnx.model.SemanticVersion;
 import io.mosip.liveness.onnx.runtime.OnnxRuntimeOptions;
 
@@ -336,10 +338,11 @@ public final class EngineLoader implements AutoCloseable {
         ModelBuilder models = source -> {
             Accelerator accelerator = Accelerator.parse(config.get(Accelerator.CONFIG_KEY).orElse(null));
             String minimum = minimumModelVersion(config, store);
+            List<PublicKey> anchors = ModelTrustAnchors.configured(config);
             long start = System.nanoTime();
             LivenessEngine e;
             try {
-                e = buildOnnx(source, minimum, decoder, metrics, accelerator, providers, self[0]);
+                e = buildOnnx(source, minimum, anchors, decoder, metrics, accelerator, providers, self[0]);
             } catch (EngineException | RuntimeException | LinkageError failure) {
                 boolean integrity = failure instanceof EngineException
                         && ((EngineException) failure).getErrorCode().isModelIntegrityFailure();
@@ -348,7 +351,7 @@ public final class EngineLoader implements AutoCloseable {
                 }
                 Log.w(TAG, "Liveness engine did not load with " + accelerator + " ("
                         + failure.getClass().getSimpleName() + "); loading it on the CPU");
-                e = buildOnnx(source, minimum, decoder, metrics, Accelerator.CPU, providers, self[0]);
+                e = buildOnnx(source, minimum, anchors, decoder, metrics, Accelerator.CPU, providers, self[0]);
                 self[0].acceleratorStatus = "CPU (" + accelerator + " failed to load)";
             }
             Log.i(TAG, "Liveness engine ready: " + e.info().tag() + " in "
@@ -400,7 +403,8 @@ public final class EngineLoader implements AutoCloseable {
         }
     }
 
-    private static LivenessEngine buildOnnx(ModelSource source, String minimumVersion, ImageDecoder decoder,
+    private static LivenessEngine buildOnnx(ModelSource source, String minimumVersion, List<PublicKey> anchors,
+                                            ImageDecoder decoder,
                                             LivenessMetrics metrics, Accelerator accelerator,
                                             AcceleratorCustomizer.ExecutionProviders providers,
                                             EngineLoader loader) throws EngineException {
@@ -411,12 +415,15 @@ public final class EngineLoader implements AutoCloseable {
                 outcomes.add(outcome);
             }
         });
-        LivenessEngine e = OnnxLivenessEngines.builder(source)
+        OnnxLivenessEngines.Builder b = OnnxLivenessEngines.builder(source)
                 .minimumVersion(minimumVersion)
                 .runtimeOptions(OnnxRuntimeOptions.builder().intraOpThreads(threads).customizer(customizer).build())
                 .imageDecoder(decoder)
-                .metrics(metrics)
-                .build();
+                .metrics(metrics);
+        for (PublicKey key : anchors) {
+            b.trustAnchor(key);
+        }
+        LivenessEngine e = b.build();
         synchronized (outcomes) {
             loader.acceleratorStatus = describe(accelerator, outcomes);
         }

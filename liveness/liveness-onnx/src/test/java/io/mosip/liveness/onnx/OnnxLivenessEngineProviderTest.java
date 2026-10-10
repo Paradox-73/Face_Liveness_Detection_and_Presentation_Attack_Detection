@@ -15,11 +15,15 @@ import io.mosip.liveness.core.config.ConfigSource;
 import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.engine.EngineParameter;
 import io.mosip.liveness.onnx.model.ModelSources;
+import io.mosip.liveness.onnx.model.ModelTrustAnchors;
 import org.junit.jupiter.api.Test;
 
+import java.security.KeyPairGenerator;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -65,14 +69,40 @@ class OnnxLivenessEngineProviderTest {
         EngineException tooOld = assertThrows(EngineException.class,
                 () -> new OnnxLivenessEngineProvider().create(context("1.4.0")));
         assertEquals(EngineErrorCode.MODEL_VERSION, tooOld.getErrorCode());
+    }
+
+    @Test
+    void invalidMinimumVersionKeepsTheDefaultInsteadOfStoppingTheEngine() throws Exception {
+        LivenessEngine engine = new OnnxLivenessEngineProvider().create(context("one"));
+        engine.close();
+    }
+
+    /** A production key replaces the development key: the development-signed test bundle is then refused. */
+    @Test
+    void configuredTrustAnchorReplacesTheDevelopmentKey() throws Exception {
+        KeyPairGenerator g = KeyPairGenerator.getInstance("RSA");
+        g.initialize(2048);
+        Map<String, String> config = new HashMap<>();
+        config.put(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM, ModelTrustAnchors.toPem(g.generateKeyPair().getPublic()));
+        EngineException refused = assertThrows(EngineException.class,
+                () -> new OnnxLivenessEngineProvider().create(context(config)));
+        assertTrue(refused.getErrorCode().isModelIntegrityFailure(), refused.getErrorCode().name());
+
+        config.put(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM, ModelTrustAnchors.DEVELOPMENT_KEY_PEM.replace("\n", "\\n"));
+        new OnnxLivenessEngineProvider().create(context(config)).close();
+
+        config.put(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM, "not a key");
         EngineException invalid = assertThrows(EngineException.class,
-                () -> new OnnxLivenessEngineProvider().create(context("one")));
+                () -> new OnnxLivenessEngineProvider().create(context(config)));
         assertEquals(EngineErrorCode.CONFIG_INVALID, invalid.getErrorCode());
     }
 
     private static EngineContext context(String minimumVersion) {
-        return EngineContext.builder()
-                .config(ConfigSource.of(Collections.singletonMap(LivenessConfigKeys.MODEL_MIN_VERSION, minimumVersion)))
+        return context(Collections.singletonMap(LivenessConfigKeys.MODEL_MIN_VERSION, minimumVersion));
+    }
+
+    private static EngineContext context(Map<String, String> config) {
+        return EngineContext.builder().config(ConfigSource.of(config))
                 .models(ModelSources.directory(TestSupport.modelsDir())).imageDecoder(new TestImageDecoder()).build();
     }
 }

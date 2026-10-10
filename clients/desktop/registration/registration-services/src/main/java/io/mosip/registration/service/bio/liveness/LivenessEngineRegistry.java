@@ -6,6 +6,7 @@
  */
 package io.mosip.registration.service.bio.liveness;
 
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +38,7 @@ import io.mosip.liveness.core.vision.FaceBox;
 import io.mosip.liveness.onnx.OnnxLivenessEngine;
 import io.mosip.liveness.onnx.OnnxLivenessEngines;
 import io.mosip.liveness.onnx.model.ModelSources;
+import io.mosip.liveness.onnx.model.ModelTrustAnchors;
 import io.mosip.liveness.onnx.model.SemanticVersion;
 import io.mosip.registration.config.AppConfig;
 
@@ -385,8 +387,12 @@ public class LivenessEngineRegistry {
 	}
 
 	private LivenessEngine buildDefault(ModelSource source) throws EngineException {
-		return OnnxLivenessEngines.builder(source).minimumVersion(minimumModelVersion()).imageDecoder(imageDecoder)
-				.metrics(metrics).build();
+		OnnxLivenessEngines.Builder b = OnnxLivenessEngines.builder(source).minimumVersion(minimumModelVersion())
+				.imageDecoder(imageDecoder).metrics(metrics);
+		for (PublicKey key : ModelTrustAnchors.configured(config)) {
+			b.trustAnchor(key);
+		}
+		return b.build();
 	}
 
 	private List<LivenessEngineProvider> providers() {

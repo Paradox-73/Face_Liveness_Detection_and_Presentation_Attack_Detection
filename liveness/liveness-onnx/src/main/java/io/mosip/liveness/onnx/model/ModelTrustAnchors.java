@@ -10,8 +10,17 @@ import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+
+import io.mosip.liveness.core.EngineErrorCode;
+import io.mosip.liveness.core.EngineException;
+import io.mosip.liveness.core.config.ConfigSource;
+import io.mosip.liveness.core.config.LivenessConfigKeys;
 
 /**
  * Public keys trusted to sign model bundles.
@@ -49,6 +58,39 @@ public final class ModelTrustAnchors {
      */
     public static PublicKey development() {
         return parsePem(DEVELOPMENT_KEY_PEM);
+    }
+
+    /**
+     * Returns the keys a deployment trusts: the PEM blocks of {@code mosip.registration.liveness.model.trust_anchor_pem},
+     * or the development key when that key is unset (the documented fallback for development and demos).
+     *
+     * @param config liveness configuration
+     * @return at least one key
+     * @throws EngineException {@code CONFIG_INVALID} when the key is set but holds no readable RSA public key; the
+     *                         development key is never used in that case
+     */
+    public static List<PublicKey> configured(ConfigSource config) throws EngineException {
+        Optional<String> pem = config.get(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM).map(String::trim)
+                .filter(v -> !v.isEmpty());
+        if (!pem.isPresent()) {
+            return Collections.singletonList(development());
+        }
+        List<PublicKey> keys = new ArrayList<>();
+        try {
+            for (String block : pem.get().replace("\\n", "").split("-----END PUBLIC KEY-----")) {
+                if (!block.trim().isEmpty()) {
+                    keys.add(parsePem(block));
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            throw new EngineException(EngineErrorCode.CONFIG_INVALID,
+                    LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM + " is not a PEM RSA public key", e);
+        }
+        if (keys.isEmpty()) {
+            throw new EngineException(EngineErrorCode.CONFIG_INVALID, LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM
+                    + " holds no key");
+        }
+        return keys;
     }
 
     /**

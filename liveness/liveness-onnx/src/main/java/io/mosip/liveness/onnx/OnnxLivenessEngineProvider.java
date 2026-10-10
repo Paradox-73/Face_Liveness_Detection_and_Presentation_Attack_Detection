@@ -6,11 +6,15 @@
  */
 package io.mosip.liveness.onnx;
 
+import java.security.PublicKey;
+
 import io.mosip.liveness.core.EngineException;
+import io.mosip.liveness.core.Workflow;
 import io.mosip.liveness.core.api.EngineContext;
 import io.mosip.liveness.core.api.LivenessEngine;
 import io.mosip.liveness.core.api.LivenessEngineProvider;
-import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.core.policy.PolicyResolver;
+import io.mosip.liveness.onnx.model.ModelTrustAnchors;
 import io.mosip.liveness.onnx.runtime.OnnxRuntimeOptions;
 
 /**
@@ -28,7 +32,8 @@ import io.mosip.liveness.onnx.runtime.OnnxRuntimeOptions;
  *
  * <p>{@link #create(EngineContext)} reads the bundle from {@link EngineContext#models()}, requires at least
  * {@code mosip.registration.liveness.model.min_version}, uses the ONNX Runtime back end named by
- * {@code mosip.registration.liveness.engine.execution_provider} (default CPU), trusts the built-in development key, and returns an
+ * {@code mosip.registration.liveness.engine.execution_provider} (default CPU), trusts the keys of
+ * {@code mosip.registration.liveness.model.trust_anchor_pem} (the built-in development key when unset), and returns an
  * {@link OnnxLivenessEngine}. It loads synchronously, so the engine is ready when it returns. A bundle that fails
  * verification throws an {@link EngineException} whose code has
  * {@link io.mosip.liveness.core.EngineErrorCode#isModelIntegrityFailure()} set; the client audits
@@ -48,11 +53,15 @@ public final class OnnxLivenessEngineProvider implements LivenessEngineProvider 
 
     @Override
     public LivenessEngine create(EngineContext context) throws EngineException {
-        String minimumVersion = context.config().get(LivenessConfigKeys.MODEL_MIN_VERSION)
-                .orElse(LivenessConfigKeys.DEFAULT_MODEL_MIN_VERSION);
-        return OnnxLivenessEngines.builder(context.models()).minimumVersion(minimumVersion)
+        String minimumVersion = new PolicyResolver(context.config()).resolve(Workflow.REGISTRATION).policy()
+                .modelMinVersion();
+        OnnxLivenessEngines.Builder b = OnnxLivenessEngines.builder(context.models()).minimumVersion(minimumVersion)
                 .runtimeOptions(OnnxRuntimeOptions.fromConfig(context.config()).build())
-                .imageDecoder(context.imageDecoder()).build();
+                .imageDecoder(context.imageDecoder());
+        for (PublicKey key : ModelTrustAnchors.configured(context.config())) {
+            b.trustAnchor(key);
+        }
+        return b.build();
     }
 
     @Override

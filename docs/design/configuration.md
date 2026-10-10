@@ -44,6 +44,7 @@ flowchart LR
 | `mosip.registration.liveness.engine` | string | `mosip-onnx-default` | engine IDs found by `ServiceLoader` | no | Which `LivenessEngineProvider` builds the engine. |
 | `mosip.registration.liveness.engine.execution_provider` | `CPU` / `XNNPACK` / `NNAPI` | `CPU` | unknown value means `CPU` | no | ONNX Runtime back end of the default engine, read when the engine loads (restart needed). A back end the installed runtime lacks falls back to CPU. Android reads it (`livenessmanager/engine/AcceleratorCustomizer`); the desktop Windows runtime has only CPU and does not read it ([calibration notes](../eval/calibration-notes.md) 0.4). |
 | `mosip.registration.liveness.model.min_version` | `MAJOR.MINOR.PATCH` | `1.3.0` | | no | Oldest model bundle version accepted; an older bundle fails to load (rollback protection, audit LV14). Any other form (`1.2`, `latest`) is reported as invalid and the default applies (since 2026-10-10; before, `1.2` stopped the engine). |
+| `mosip.registration.liveness.model.trust_anchor_pem` | PEM `PUBLIC KEY` block(s), RSA | unset: the development key | must parse, else `CONFIG_INVALID` (engine stops, no fallback) | no | Model-signing key(s) a bundle must be signed with, on both clients (engine load and offline import). Synced only. Added 2026-10-10 |
 
 ## 3. Policy per workflow
 

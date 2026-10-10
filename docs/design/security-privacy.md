@@ -99,7 +99,7 @@ Raw passive scores appear only in the packet (`LIVENESS_SCORE`) and, when switch
 
 | Key | Where | Status |
 |---|---|---|
-| Model signing key | Private half kept outside the repository; public half `models/model-signing-dev.pub.pem` and compiled into `ModelTrustAnchors.DEVELOPMENT_KEY_PEM` | Development key (RSA 3,072, kid `sha256:99538367853153c2`). Production must replace the trust anchor (`OnnxLivenessEngines.Builder.trustAnchor(PublicKey)`) with a key MOSIP controls |
+| Model signing key | Private half kept outside the repository; public half `models/model-signing-dev.pub.pem` and compiled into `ModelTrustAnchors.DEVELOPMENT_KEY_PEM` | Development key (RSA 3,072, kid `sha256:99538367853153c2`) is the fallback only while `mosip.registration.liveness.model.trust_anchor_pem` is unset. Since 2026-10-10 that synced key (one or more PEM `PUBLIC KEY` blocks) replaces it on both clients, for the engine load and the offline import alike; an unreadable value stops the engine (`CONFIG_INVALID`) instead of falling back. A production deployment sets it to a key MOSIP controls and ships bundles signed with that key. The face-match SDK still verifies its own jar's bundle with the development key |
 | MockMDS device and FTM keys | `devices/mock-mds/Biometric Devices/` | MOSIP's public mock-device test keys; the FTM root was re-issued with the same key pair (valid to 2035) |
 | MockSync TLS, signing and CA keys | `tools/mock-sync/work/keys/`, generated on first run | Never committed |
 | Android built-in device key | Android Keystore alias `mosip-liveness-face-device` | Imported once from a PKCS#12 file issued by a DEVICE CA; the file is deleted after import |

@@ -206,6 +206,12 @@ public final class LivenessConfigKeys {
     /** Default of {@link #MODEL_MIN_VERSION}. */
     public static final String DEFAULT_MODEL_MIN_VERSION = "1.3.0";
 
+    /**
+     * Model-signing public key(s) a model bundle must be signed with, as PEM {@code PUBLIC KEY} blocks (RSA). Unset:
+     * the built-in development key, which a production deployment must replace. Synced only; never a local value.
+     */
+    public static final String MODEL_TRUST_ANCHOR_PEM = PREFIX + "model.trust_anchor_pem";
+
     /** Diagnostic log lines and supervisor overlay, {@code Y}/{@code N}. */
     public static final String DIAGNOSTIC_ENABLE = PREFIX + "diagnostic.enable";
     /** Default of {@link #DIAGNOSTIC_ENABLE}. */

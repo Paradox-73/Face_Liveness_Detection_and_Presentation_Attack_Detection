@@ -43,6 +43,7 @@ import io.mosip.liveness.core.policy.PolicyResolver;
 import io.mosip.liveness.onnx.model.ModelEntry;
 import io.mosip.liveness.onnx.model.ModelRegistry;
 import io.mosip.liveness.onnx.model.ModelSources;
+import io.mosip.liveness.onnx.model.ModelTrustAnchors;
 import io.mosip.liveness.onnx.model.SemanticVersion;
 
 /**
@@ -201,7 +202,7 @@ public final class ModelBundleImporter {
     /**
      * Replaces the trust anchors (tests sign bundles with a key generated at run time).
      *
-     * @param anchors accepted signing keys; empty means the built-in keys
+     * @param anchors accepted signing keys; empty means the configured keys ({@code model.trust_anchor_pem})
      */
     void setTrustAnchors(List<PublicKey> anchors) {
         this.trustAnchors = new ArrayList<>(anchors);
@@ -372,7 +373,7 @@ public final class ModelBundleImporter {
 
     private ModelRegistry open(ModelSource source, String minimum) throws EngineException {
         ModelRegistry.Builder b = ModelRegistry.builder(source).minimumVersion(minimum);
-        for (PublicKey key : trustAnchors) {
+        for (PublicKey key : trustAnchors.isEmpty() ? ModelTrustAnchors.configured(config) : trustAnchors) {
             b.trustAnchor(key);
         }
         return b.open();
