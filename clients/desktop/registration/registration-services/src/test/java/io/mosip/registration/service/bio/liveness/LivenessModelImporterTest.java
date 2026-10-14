@@ -11,6 +11,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -34,6 +37,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
+
+import com.sun.net.httpserver.HttpServer;
 
 import io.mosip.liveness.core.EngineErrorCode;
 import io.mosip.liveness.core.EngineException;
@@ -245,6 +250,41 @@ public class LivenessModelImporterTest {
 		values.put("mosip.registration.liveness.engine", "vendor-x");
 		assertRefused(importer.importBundle(bundle("v110", "1.1.0", trusted), "supervisor1", SUPERVISOR),
 				Status.NOT_SUPPORTED);
+	}
+
+	@Test
+	public void onlineUpdateDownloadsAndImportsTheSyncedBundle() throws Exception {
+		assertFalse("off while the key is not synced", importer.updateUrl().isPresent());
+		assertRefused(importer.updateFromServer("supervisor1", SUPERVISOR), Status.NOT_FOUND);
+
+		Path tampered = bundle("tampered", "1.2.0", trusted);
+		byte[] a = Files.readAllBytes(tampered.resolve("a.onnx"));
+		a[0] ^= 1;
+		Files.write(tampered.resolve("a.onnx"), a);
+		byte[][] served = { Files.readAllBytes(zip(tampered, "")) };
+		HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+		server.createContext("/v1/syncdata/liveness/model-bundle", exchange -> {
+			exchange.sendResponseHeaders(200, served[0].length);
+			try (OutputStream out = exchange.getResponseBody()) {
+				out.write(served[0]);
+			}
+		});
+		server.start();
+		try {
+			values.put(LivenessConfigKeys.MODEL_UPDATE_URL,
+					"http://127.0.0.1:" + server.getAddress().getPort() + "/v1/syncdata/liveness/model-bundle");
+			assertRefused(importer.updateFromServer("supervisor1", SUPERVISOR), Status.INVALID);
+			assertTrue(audit.has(AuditEventId.LIVENESS_MODEL_INTEGRITY_FAILED.id()));
+
+			served[0] = Files.readAllBytes(zip(bundle("online", "1.3.0", trusted), "bundle-1.3.0/"));
+			Result r = importer.updateFromServer("supervisor1", SUPERVISOR);
+			assertEquals(Status.IMPORTED, r.status());
+			assertEquals("1.3.0", store.active().get().version());
+			assertTrue(audit.events.stream().anyMatch(e -> e.eventId() == AuditEventId.LIVENESS_CONFIG_APPLIED
+					&& e.descriptionJson().contains("1.0.0->1.3.0")));
+		} finally {
+			server.stop(0);
+		}
 	}
 
 	@Test

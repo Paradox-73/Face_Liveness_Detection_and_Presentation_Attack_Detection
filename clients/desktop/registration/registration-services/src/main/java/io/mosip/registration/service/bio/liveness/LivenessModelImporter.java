@@ -27,7 +27,8 @@ import io.mosip.liveness.onnx.bundle.ModelBundleImporter.Status;
 import io.mosip.registration.config.AppConfig;
 
 /**
- * Secure offline model update (bonus B6) on the desktop: the shared {@link ModelBundleImporter} of
+ * Secure model update (bonus B6) on the desktop, offline from a folder or {@code .zip} and online from the synced
+ * {@code model.update_url}: the shared {@link ModelBundleImporter} of
  * {@code liveness-onnx}, wired to this client's engine registry, face verification state, audit service and log.
  * The checks, store layout and audits are documented there.
  */
@@ -134,5 +135,26 @@ public class LivenessModelImporter {
 	 */
 	public Result importBundle(Path location, String userId, Collection<String> roles) {
 		return importer.importBundle(location, userId, roles);
+	}
+
+	/**
+	 * Returns the synced online update URL ({@code mosip.registration.liveness.model.update_url}).
+	 *
+	 * @return the URL; empty when the online model update is off
+	 */
+	public Optional<String> updateUrl() {
+		return importer.updateUrl();
+	}
+
+	/**
+	 * Online model update: downloads the bundle from {@link #updateUrl()} and imports it with the checks of
+	 * {@link #importBundle}. Blocks for the download and the engine build; call it off the JavaFX thread.
+	 *
+	 * @param userId user who asked for the update
+	 * @param roles  roles of that user
+	 * @return the result; {@code NOT_FOUND} when no URL is set or the download failed
+	 */
+	public Result updateFromServer(String userId, Collection<String> roles) {
+		return importer.updateFromServer(userId, roles);
 	}
 }

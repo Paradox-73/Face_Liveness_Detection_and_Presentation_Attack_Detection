@@ -19,6 +19,7 @@ import java.util.ResourceBundle;
 import org.junit.Test;
 
 import io.mosip.liveness.core.api.ModelInfo;
+import io.mosip.liveness.onnx.bundle.ModelBundleImporter.Result;
 import io.mosip.liveness.onnx.bundle.ModelBundleImporter.Status;
 import io.mosip.registration.service.bio.liveness.LivenessModelImporter;
 
@@ -39,7 +40,8 @@ public class LivenessModelImportDialogTest {
 			}
 			for (String key : Arrays.asList(LivenessModelImportDialog.TITLE, LivenessModelImportDialog.MENU,
 					LivenessModelImportDialog.CURRENT, LivenessModelImportDialog.IMPORT,
-					LivenessModelImportDialog.WORKING, LivenessModelImportDialog.PATH)) {
+					LivenessModelImportDialog.WORKING, LivenessModelImportDialog.PATH, LivenessModelImportDialog.UPDATE,
+					LivenessModelImportDialog.UPDATE_FAILED)) {
 				assertTrue(lang + " " + key, texts.hasOwnText(key));
 			}
 		}
@@ -52,6 +54,14 @@ public class LivenessModelImportDialogTest {
 				english.text(LivenessModelImporter.messageKey(Status.TOO_OLD), "b", "1.0.0", "1.1.0"));
 		assertEquals("Models mosip-liveness-models version 1.0.1 verified and now in use (previous version 1.0.0).",
 				english.text(LivenessModelImporter.messageKey(Status.IMPORTED), "mosip-liveness-models", "1.0.1", "1.0.0"));
+	}
+
+	@Test
+	public void failedDownloadIsNotReportedAsAMissingFolder() {
+		Result notFound = Result.of(Status.NOT_FOUND);
+		assertTrue(LivenessModelImportDialog.resultText(notFound, english, true).startsWith(
+				"The model bundle could not be downloaded from the update server."));
+		assertTrue(LivenessModelImportDialog.resultText(notFound, english).startsWith("No model bundle was found"));
 	}
 
 	@Test

@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.liveness.core.api.ModelInfo;
@@ -45,7 +46,9 @@ import javafx.stage.Window;
 
 /**
  * Supervisor screen for the secure offline model update (bonus B6): shows the running liveness model bundle, lets a
- * supervisor pick a signed bundle (a folder or a {@code .zip} file, for example on a USB stick) and runs
+ * supervisor pick a signed bundle (a folder or a {@code .zip} file, for example on a USB stick), or download it from
+ * the synced {@code mosip.registration.liveness.model.update_url} ("Check for model update", shown only when that
+ * key is set), and runs
  * {@link LivenessModelImporter}, which verifies the signature, the model hashes and the version (anti-rollback)
  * before switching the engine. The result, including a refusal, is shown in the window; the running models stay
  * active unless the new bundle passed every check.
@@ -68,6 +71,8 @@ public final class LivenessModelImportDialog {
 	static final String BROWSE_FOLDER = "liveness.models.browse_folder";
 	static final String BROWSE_ZIP = "liveness.models.browse_zip";
 	static final String IMPORT = "liveness.models.import";
+	static final String UPDATE = "liveness.models.update";
+	static final String UPDATE_FAILED = "liveness.models.update_failed";
 	static final String WORKING = "liveness.models.working";
 
 	private static final String CSS = "/liveness-panel.css";
@@ -79,6 +84,7 @@ public final class LivenessModelImportDialog {
 	private final Label current = new Label();
 	private final TextField path = new TextField();
 	private final Button importButton = new Button();
+	private final Button updateButton = new Button();
 	private final ProgressIndicator busy = new ProgressIndicator();
 	private final Label result = new Label();
 	private final Label models = new Label();
@@ -139,6 +145,21 @@ public final class LivenessModelImportDialog {
 	 * @return the message
 	 */
 	static String resultText(Result r, LivenessTexts texts) {
+		return resultText(r, texts, false);
+	}
+
+	/**
+	 * Returns the text shown for an import result; a {@code NOT_FOUND} of the online update means the download failed.
+	 *
+	 * @param r      the result
+	 * @param texts  text resolver
+	 * @param online {@code true} for "Check for model update"
+	 * @return the message
+	 */
+	static String resultText(Result r, LivenessTexts texts, boolean online) {
+		if (online && r.status() == Status.NOT_FOUND) {
+			return texts.text(UPDATE_FAILED);
+		}
 		return texts.text(LivenessModelImporter.messageKey(r.status()), orNone(r.bundle()), orNone(r.version()),
 				orNone(r.previousVersion()));
 	}
@@ -200,6 +221,13 @@ public final class LivenessModelImportDialog {
 		importButton.getStyleClass().add("liveness-primary-button");
 		importButton.setDefaultButton(true);
 		importButton.setOnAction(e -> runImport());
+		updateButton.setId("livenessModelUpdate");
+		updateButton.setText(texts.text(UPDATE));
+		updateButton.getStyleClass().add("liveness-secondary-button");
+		updateButton.setOnAction(e -> runUpdate());
+		boolean online = importer.updateUrl().isPresent();
+		updateButton.setVisible(online);
+		updateButton.setManaged(online);
 		busy.setVisible(false);
 		busy.setMaxSize(28, 28);
 		Button close = new Button(texts.text(LivenessTexts.UI_CLOSE));
@@ -207,7 +235,7 @@ public final class LivenessModelImportDialog {
 		close.getStyleClass().add("liveness-secondary-button");
 		close.setCancelButton(true);
 		close.setOnAction(e -> stage.close());
-		HBox actions = new HBox(12, importButton, busy, close);
+		HBox actions = new HBox(12, importButton, updateButton, busy, close);
 		actions.setAlignment(Pos.CENTER_LEFT);
 
 		result.setId("livenessModelResult");
@@ -269,34 +297,45 @@ public final class LivenessModelImportDialog {
 			return;
 		}
 		Path location = Paths.get(text);
+		run((userId, roles) -> importer.importBundle(location, userId, roles), false);
+	}
+
+	private void runUpdate() {
+		run(importer::updateFromServer, true);
+	}
+
+	/** Runs an import off the JavaFX thread and shows its result. */
+	private void run(BiFunction<String, List<String>, Result> task, boolean online) {
 		String userId = SessionContext.isSessionContextAvailable() ? SessionContext.userId() : "";
 		List<String> roles = userRoles();
 		importButton.setDisable(true);
+		updateButton.setDisable(true);
 		busy.setVisible(true);
 		showResult(texts.text(WORKING), null);
 		Thread worker = new Thread(() -> {
 			Result r;
 			try {
-				r = importer.importBundle(location, userId, roles);
+				r = task.apply(userId, roles);
 			} catch (RuntimeException e) {
 				LOGGER.error("Liveness model import failed: {}", e.getClass().getSimpleName());
 				r = null;
 			}
 			Result done = r;
-			Platform.runLater(() -> finished(done));
+			Platform.runLater(() -> finished(done, online));
 		}, "liveness-model-import");
 		worker.setDaemon(true);
 		worker.start();
 	}
 
-	private void finished(Result r) {
+	private void finished(Result r, boolean online) {
 		busy.setVisible(false);
 		importButton.setDisable(false);
+		updateButton.setDisable(false);
 		if (r == null) {
 			showResult(texts.text(LivenessModelImporter.messageKey(Status.LOAD_FAILED), NONE, NONE, NONE), false);
 			return;
 		}
-		showResult(resultText(r, texts), r.isImported());
+		showResult(resultText(r, texts, online), r.isImported());
 		if (r.isImported()) {
 			showCurrent();
 		}
