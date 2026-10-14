@@ -151,8 +151,8 @@ Rules for the new calls:
 | `path` | string | `STATIC` JPEG file (omit for the stock image) or `SEQUENCE` folder |
 | `fps` | number | frames per second, above 0 and at most 60; omitted = current value |
 | `loop` | boolean | `SEQUENCE` / video file restart at the end; omitted = current value |
-| `pingpong` | boolean | `SEQUENCE` plays backwards from the last frame to the first, then forwards again, and never ends; omitted = current value |
-| `resume` | boolean | `SEQUENCE`: a folder replaced earlier in the same stream session continues at the frame where it stopped instead of at its first frame; default `false` |
+| `pingpong` | boolean | `SEQUENCE` plays backwards from the last frame to the first, then forwards again, and never ends (it overrides `loop`); default `false`, not carried over from the previous source |
+| `resume` | boolean | `SEQUENCE`: a folder replaced earlier in the same stream session, with the same `fps` and `pingpong`, continues at the frame where it stopped instead of at its first frame; default `false` |
 | `camera` | string | `FFMPEG` webcam name |
 | `file` | string | `FFMPEG` video file |
 | `inputFormat` | string | `dshow`, `v4l2` or `avfoundation` |

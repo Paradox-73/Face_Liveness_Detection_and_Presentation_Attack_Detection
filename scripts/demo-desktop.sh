@@ -148,6 +148,8 @@ done
 if [ "$POLICY_MODE" = recorded ]; then
 	curl -sf -m 5 -X PUT -H "Content-Type: application/json" -d "{\"$RECORDED_POOL\":\"BLINK,SMILE\"}" \
 		"$ADMIN/admin/config" >/dev/null || die "could not set $RECORDED_POOL on MockSync"
+	# MockSync saves overrides to disk, so an interrupted run must still remove this one.
+	trap 'curl -sf -m 5 -X DELETE "$ADMIN/admin/config/$RECORDED_POOL" >/dev/null || true' EXIT
 	log "policy recorded: $RECORDED_POOL=BLINK,SMILE on MockSync for this run"
 fi
 log "running $(basename "$FLOW"); output in $OUT"
@@ -160,9 +162,6 @@ set +e
 	>"$OUT/stdout.log" 2>&1)
 status=$?
 set -e
-if [ "$POLICY_MODE" = recorded ]; then
-	curl -sf -m 5 -X DELETE "$ADMIN/admin/config/$RECORDED_POOL" >/dev/null || log "could not remove $RECORDED_POOL"
-fi
 
 # ---------------------------------------------------------------------------------------------- evidence
 mkdir -p "$OUT/packets"

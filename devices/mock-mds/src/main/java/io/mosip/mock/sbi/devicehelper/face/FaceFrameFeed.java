@@ -137,8 +137,9 @@ public class FaceFrameFeed {
 		LOGGER.info("Face frame source set :: {}", newSettings.describe());
 	}
 
+	/** A parked source resumes only for the same folder, frame rate and ending. */
 	private static String parkKey(FaceSourceSettings s) {
-		return s.getType() == FaceSourceType.SEQUENCE ? s.getPath() : null;
+		return s.getType() == FaceSourceType.SEQUENCE ? s.getPath() + "|" + s.getFps() + "|" + s.isPingpong() : null;
 	}
 
 	/**

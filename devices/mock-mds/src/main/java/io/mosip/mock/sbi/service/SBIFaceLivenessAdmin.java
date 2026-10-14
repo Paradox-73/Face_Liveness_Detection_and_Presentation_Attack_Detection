@@ -233,8 +233,8 @@ public class SBIFaceLivenessAdmin {
 			settings.setFps(body.getFps());
 		if (body.getLoop() != null)
 			settings.setLoop(body.getLoop());
-		if (body.getPingpong() != null)
-			settings.setPingpong(body.getPingpong());
+		// pingpong is not carried over from the previous source: a caller that omits it gets plain loop / once.
+		settings.setPingpong(Boolean.TRUE.equals(body.getPingpong()));
 		if (body.getWidth() != null)
 			settings.setWidth(body.getWidth());
 		String format = body.getInputFormat();

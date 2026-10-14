@@ -59,6 +59,12 @@ class FaceFrameFeedTest {
 		feed.setSource(sequence(tempDir.resolve("main")), false);
 		assertFrame(main.get(0), feed);
 
+		feed.setSource(sequence(tempDir.resolve("action")), true);
+		FaceSourceSettings faster = sequence(tempDir.resolve("main"));
+		faster.setFps(30);
+		feed.setSource(faster, true);
+		assertFrame(main.get(0), feed);
+
 		feed.close();
 		assertTrue(feed.open());
 		feed.setSource(sequence(tempDir.resolve("action")), true);

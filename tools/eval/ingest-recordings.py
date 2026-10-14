@@ -157,9 +157,9 @@ def build_scenarios(clips: List[Clip]) -> Tuple[List[dict], List[str]]:
 
 
 def write_scenarios(scenarios: List[dict], folder: Path) -> None:
-    """Writes each scenario to <folder>/<id>.yaml, after removing the YAML files of an earlier run."""
+    """Writes each scenario to <folder>/<id>.yaml, after removing the rec-*.yaml files of an earlier run."""
     folder.mkdir(parents=True, exist_ok=True)
-    for old in folder.glob("*.yaml"):
+    for old in folder.glob("rec-*.yaml"):
         old.unlink()
     for s in scenarios:
         text = HEADER + yaml.safe_dump(s, sort_keys=False, allow_unicode=True)
