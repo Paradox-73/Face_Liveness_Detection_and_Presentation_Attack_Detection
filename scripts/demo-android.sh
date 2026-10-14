@@ -391,9 +391,10 @@ scan() {
 
 # close_capture_dialog: closes ARC's "Face Capture" / "Exception Capture" dialog that shows the stored image.
 close_capture_dialog() {
-  # The dialog can take several seconds to appear on a loaded emulator.
-  ui_wait_any 15 "attempts left" "attempt left" >/dev/null
-  if ui_has "attempts left" || ui_has "attempt left"; then
+  # The dialog can take several seconds to appear on a loaded emulator. After a capture that answered challenges it
+  # shows only its title and the image, no "attempts left" line.
+  ui_wait_any 15 "attempts left" "attempt left" "=Face Capture" "=Exception Capture" >/dev/null
+  if ui_has "attempts left" || ui_has "attempt left" || ui_has "=Face Capture" || ui_has "=Exception Capture"; then
     adb shell input tap 1090 118
     sleep 2
   fi

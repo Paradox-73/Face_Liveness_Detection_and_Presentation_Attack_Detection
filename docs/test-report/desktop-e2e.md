@@ -83,6 +83,36 @@ script, output `run/demo/desktop-20261010-232240`, outside git):
 - `stdout.log` shows `ClassNotFoundException: io.mosip.registration.config.DerbySlf4jBridge` at start; it also
   appears in the older runs `desktop-run1` to `desktop-run4`.
 
+**Diagnosis and run of 2026-10-14 (IST)** (`scripts/demo-desktop.sh --restore-golden --policy recorded`, output
+`run/demo/desktop-20261014-recorded`, outside git; client build of 2026-10-10, MockMDS and the flow driver of this
+commit):
+
+- **Why the shipped settings never passed:** the engine refused the replayed genuine face with `INTEGRITY` / `LOOP`
+  because the demo replay repeated frames, not because the face failed. MockMDS restarted the neutral pack `s3-main`
+  at its first frame after every answered prompt, so the frames of the passive stage came back in the same session;
+  and it looped the 59-frame pack at its end. With the evaluation runner's playback the end-of-pack loop alone
+  refused 6 of 8 first attempts of S3 (`at_end: loop`) against 0 of 8 with `at_end: pingpong`. The fix (commit
+  "replay frame packs the way the eval runner does"): MockMDS `/admin/source` takes `pingpong` and `resume`, the
+  driver plays `-main` packs pingpong and resumes them after each prompt, and the Android replay does the same.
+- **`--policy recorded`:** the shipped policy (`ALWAYS_ACTIVE`, 30 passive frames, 2 challenges) with the pool cut
+  to `BLINK,SMILE`, the two actions the enrolled face `s3` has footage of. At the shipped pool
+  (`BLINK,SMILE,TURN_LEFT,TURN_RIGHT`) only 1 draw in 6 is a pair `s3` can answer.
+- **Result: 5 passed, 11 failed.** officer1's face sign-in (`login_auth`) passed on attempt 1 (SMILE, then BLINK);
+  the device-disconnect message and the challenge prompt of section 20 passed.
+- **Where it stops:** the resident capture of section 20. Attempt 1 answered SMILE, then failed `INTEGRITY` as the
+  BLINK clip started: `s3-blink` (source frames 62-82) overlaps the end of `s3-main` (10-68), and the desktop
+  session, which runs in real time, had already played those frames from `s3-main`. The 10-second licensed clip
+  of S3 holds too little unrepeated footage for a passive stage plus two challenges. Attempt 2 got "The face camera
+  is not available" and attempt 3 ended `FAILED(ENGINE)` ("Face verification is unavailable on this machine"); the
+  cause of the engine error was not found in the client log.
+- The later sections failed one after the other on screen state left by section 20 (a finger capture that took 34
+  s, a page that was not left), not on liveness decisions; they are not measurements of the shipped settings.
+- **What needs a live face or new recordings:** every capture after the sign-in at the shipped settings: resident
+  registration with challenges (sections 20, 30), the attack section's genuine retries (40), supervisor end of day
+  (50), the config-sync, L1, offline, wrong-person and screens sections (60-95), and any turn challenge. The
+  recording protocol (15-20 s of neutral face, each action as its own clip) is in
+  [../manual-test-checklist.md](../manual-test-checklist.md) section A.
+
 ## 1. Set-up
 
 | Part | What was used |

@@ -322,3 +322,46 @@ E6, E8); config 4 passed, 4 failed (A-C3 to A-C6); offline 2 passed, 5 failed (A
 A-P1 passed (16 attempts, 1,293 frames, median 44.7 ms, p95 97.9 ms, worst 888.4 ms). The Logcat shows the same causes
 as before for the failed genuine-person steps (`LOOP` integrity refusals on repeated clips; no turn or look-up
 footage); no `FATAL EXCEPTION` in any saved Logcat.
+
+## 14. Re-run after the replay fix (2026-10-14, 18:27 to 19:41 IST)
+
+`scripts/demo-android.sh --policy recorded` on a debug APK built that afternoon (x86_64, with the pingpong replay of
+the neutral pack, commit "replay frame packs the way the eval runner does"), emulator `arc_api34` with
+`ARC_EMULATOR_GPU=host` and `ARC_WEBCAM=emulated`, MockSync on 8080. `--policy recorded` keeps the shipped policy
+(`ALWAYS_ACTIVE` for registration and every authentication workflow, 30 passive frames, 2 challenges, 3 attempts)
+and cuts the challenge pool to `BLINK,SMILE`, the actions the enrolled face `s3` has footage of. Output
+`run/demo/android-20261014-recorded`, outside git.
+
+**Total: 55 passed, 20 failed** (2026-10-10: 36 passed, 36 failed).
+
+| Section | 2026-10-14 | 2026-10-10 |
+|---|---|---|
+| profile (A-P0) | 1 of 1 | (counted in each section) |
+| login (A-L1 to A-L10) | **10 of 10** | 3 of 10 |
+| resident (A-R0 to A-R10) | **8 of 11** | 7 of 12 |
+| attacks (A-A1 to A-A7) | 10 of 10 | 11 of 11 |
+| override | 10 of 18 | 10 of 18 |
+| approval | **8 of 9** | 0 of 6 |
+| config | 4 of 8 | 4 of 8 |
+| offline | 3 of 7 | 2 of 7 |
+| latency (A-P1) | 1 of 1: 18 attempts, 1,071 frames, median p50 100.8 ms, median p95 223.9 ms per frame, worst 3,341 ms | 1 of 1 |
+
+What changed: operator face sign-in, the not-enrolled person (liveness pass, then no match), the resident who
+answers challenges on attempt 2 (A-R6, A-R7), supervisor end-of-day approval by face and its replay refusal now
+pass at the shipped policy. The replayed genuine face no longer meets the loop check, because the neutral pack
+plays backwards at its end instead of jumping back to its first frame.
+
+Why the 20 failures are not refusals of the replayed genuine face:
+
+- A-R8 to A-R10, A-C3 to A-C6, A-O3, A-O4, A-O7, A-O8: in the failure screenshots of A-R8 and A-C3 the face had
+  been accepted and ARC's "Face Capture" dialog with the stored image was still open, so the script's next tap
+  (`NEXT`) hit the dialog; the other checks in this list come after the same step and most likely share the cause
+  (not checked one by one). The script closed that dialog only
+  when it showed an "attempts left" line, which a capture that answered challenges does not show. The detector now
+  also matches the dialog title (`scripts/demo-android.sh`, `close_capture_dialog`); these steps have not been run
+  again with that change.
+- A-V7 to A-V13, A-V16 and A-E8 (override): the supervisor dialog had `supervisor1` entered and the step that
+  confirms it did not go through; the same eight checks failed on 2026-10-10. Not diagnosed further.
+
+What still needs a live face or new recordings: any turn challenge (the shipped pool includes `TURN_LEFT` and
+`TURN_RIGHT`; `s3` has no usable turn), and longer neutral footage for sessions with retries.
