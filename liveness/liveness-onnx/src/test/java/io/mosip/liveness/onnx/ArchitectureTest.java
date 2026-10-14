@@ -32,11 +32,18 @@ class ArchitectureTest {
     @Test
     void noPlatformSpecificApis() {
         noClasses().should().dependOnClassesThat().resideInAnyPackage("javafx..", "android..", "androidx..", "java.awt..",
-                "javax.imageio..", "javax.swing..", "java.net..", "java.sql..")
+                "javax.imageio..", "javax.swing..", "java.sql..")
                 .check(main);
     }
 
-    /** Both clients import model bundles from local folders; only that shared code may touch the file system. */
+    /** The engine never waits for a server: only the shared model update code may download a bundle. */
+    @Test
+    void onlyTheBundlePackageUsesTheNetwork() {
+        noClasses().that().resideOutsideOfPackage("io.mosip.liveness.onnx.bundle..").should().dependOnClassesThat()
+                .resideInAPackage("java.net..").check(main);
+    }
+
+    /** Model bundles come from a local folder or a download; only that shared code may touch the file system. */
     @Test
     void onlyTheBundlePackageUsesTheFileSystem() {
         noClasses().that().resideOutsideOfPackage("io.mosip.liveness.onnx.bundle..").should().dependOnClassesThat()

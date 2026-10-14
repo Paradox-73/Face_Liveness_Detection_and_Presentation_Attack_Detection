@@ -138,6 +138,13 @@ public final class LivenessConfigKeys {
     public static final String MODEL_MIN_VERSION = PREFIX + "model.min_version";
 
     /**
+     * Online model update: {@code https://} URL of a signed model bundle ({@code .zip}); {@code http://} only to a
+     * loopback host. Empty (the default) turns the online update off. The downloaded bundle goes through the same
+     * checks as an offline import.
+     */
+    public static final String MODEL_UPDATE_URL = PREFIX + "model.update_url";
+
+    /**
      * Model-signing public key(s) a model bundle must be signed with, as PEM {@code PUBLIC KEY} blocks (RSA). Unset:
      * the built-in development key, which a production deployment must replace. Synced only; never a local value.
      */

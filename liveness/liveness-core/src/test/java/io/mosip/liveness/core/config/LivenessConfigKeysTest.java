@@ -62,7 +62,7 @@ class LivenessConfigKeysTest {
         assertEquals("Y", d.get("mosip.registration.android.offline_approval.enable"));
     }
 
-    /** All 45 shipped defaults, in the order clients write them; a change here is a change of shipped behaviour. */
+    /** All 46 shipped defaults, in the order clients write them; a change here is a change of shipped behaviour. */
     @Test
     void fullDefaultMapIsPinned() {
         List<String> expected = Arrays.asList(
@@ -92,6 +92,7 @@ class LivenessConfigKeysTest {
                 "mosip.registration.liveness.binding.max_gap_ms=5000",
                 "mosip.registration.liveness.no_stream_policy=BLOCK",
                 "mosip.registration.liveness.model.min_version=1.3.0",
+                "mosip.registration.liveness.model.update_url=",
                 "mosip.registration.liveness.diagnostic.enable=N",
                 "mosip.registration.liveness.metrics.enable=Y",
                 "mosip.registration.mds.allowed_certifications=L0,L1",

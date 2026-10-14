@@ -76,6 +76,8 @@ public enum PolicyKey {
     NO_STREAM_POLICY(LivenessConfigKeys.NO_STREAM_POLICY, NoStreamPolicy.BLOCK.name(), Type.TEXT),
     /** Minimum model bundle version, {@code MAJOR.MINOR.PATCH}; blocks rollback. */
     MODEL_MIN_VERSION(LivenessConfigKeys.MODEL_MIN_VERSION, "1.3.0", Type.TEXT),
+    /** URL of the signed model bundle a supervisor can download; empty turns the online model update off. */
+    MODEL_UPDATE_URL(LivenessConfigKeys.MODEL_UPDATE_URL, "", Type.TEXT),
     /** Diagnostic log lines and supervisor overlay. */
     DIAGNOSTIC_ENABLE(LivenessConfigKeys.DIAGNOSTIC_ENABLE, LivenessConfigKeys.NO, Type.YES_NO),
     /** Anonymised metrics. */

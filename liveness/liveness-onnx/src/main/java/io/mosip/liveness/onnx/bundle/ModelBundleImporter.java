@@ -7,7 +7,12 @@
 package io.mosip.liveness.onnx.bundle;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,6 +40,7 @@ import io.mosip.liveness.core.api.ModelInfo;
 import io.mosip.liveness.core.api.ModelSource;
 import io.mosip.liveness.core.audit.AuditSink;
 import io.mosip.liveness.core.config.ConfigSource;
+import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.config.PolicyKey;
 import io.mosip.liveness.core.engine.AuditPayloadBuilder;
 import io.mosip.liveness.core.policy.PolicyResolver;
@@ -48,7 +54,9 @@ import io.mosip.liveness.onnx.model.SemanticVersion;
  * Secure offline model update (bonus B6) for both clients: imports a signed model bundle from a folder or a
  * {@code .zip} file (for example copied from a USB drive) and switches the running liveness engine to it, without a
  * client update. Signature, hash and version checks are the engine's own {@link ModelRegistry}; the client plugs in
- * its engine through {@link Engines} and its logger through {@link Log}.
+ * its engine through {@link Engines} and its logger through {@link Log}. The online model update
+ * ({@link #updateFromServer}) only adds a way to obtain the bundle: it downloads the {@code .zip} named by the synced
+ * key {@code model.update_url} and imports that file with the same checks.
  *
  * <p>Checks, in order; the first failure stops the import and the running models stay active (fail closed):
  * <ol>
@@ -77,6 +85,10 @@ public final class ModelBundleImporter {
             .unmodifiableList(Arrays.asList("REGISTRATION_SUPERVISOR", "REGISTRATION_ADMIN"));
     static final int MAX_ZIP_ENTRIES = 64;
     static final long MAX_ZIP_BYTES = 512L * 1024 * 1024;
+    /** Longest wait to connect to the update server or for the next bytes of the download, in milliseconds. */
+    static final int DOWNLOAD_TIMEOUT_MS = 30_000;
+    /** Longest time for the whole download, in milliseconds. */
+    static final long DOWNLOAD_DEADLINE_MS = 10L * 60 * 1000;
     private static final String ANY_VERSION = "0.0.0";
     private static final Pattern SAFE_ENTRY = Pattern.compile("[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*");
 
@@ -230,16 +242,9 @@ public final class ModelBundleImporter {
      */
     public synchronized Result importBundle(Path location, String userId, Collection<String> roles) {
         Objects.requireNonNull(location, "location");
-        if (roles == null || Collections.disjoint(roles, ALLOWED_ROLES)) {
-            log.info("Liveness model import refused for " + userId + ": role not allowed");
-            return Result.of(Status.NOT_ALLOWED);
-        }
-        if (engines.captureInProgress()) {
-            log.info("Liveness model import refused for " + userId + ": a capture is in progress");
-            return Result.of(Status.BUSY);
-        }
-        if (!engines.supportsModelImport()) {
-            return Result.of(Status.NOT_SUPPORTED);
+        Result refused = precheck(userId, roles);
+        if (refused != null) {
+            return refused;
         }
         String previous = runningVersion();
         Path staging = null;
@@ -262,6 +267,134 @@ public final class ModelBundleImporter {
             if (staging != null) {
                 ModelBundleStore.deleteTree(staging);
             }
+        }
+    }
+
+    /**
+     * Returns the configured online update URL ({@code model.update_url}).
+     *
+     * @return the URL; empty when the online model update is off
+     */
+    public Optional<String> updateUrl() {
+        return config.get(LivenessConfigKeys.MODEL_UPDATE_URL).map(String::trim).filter(u -> !u.isEmpty());
+    }
+
+    /**
+     * Online model update: downloads the bundle {@code .zip} from {@link #updateUrl()} to a temporary file and
+     * imports it with {@link #importBundle}, so it passes exactly the checks of an offline import. The URL must use
+     * HTTPS, or HTTP to a loopback host; redirects are not followed; the download stops after
+     * {@link #DOWNLOAD_TIMEOUT_MS} without data, after {@link #DOWNLOAD_DEADLINE_MS} in total, or beyond
+     * {@link #MAX_ZIP_BYTES}. Blocks; call it off the main thread.
+     *
+     * @param userId user who asked for the update (for the log)
+     * @param roles  roles of that user
+     * @return the import result; {@code NOT_FOUND} when no URL is configured or the download failed, with the running
+     *         models unchanged
+     */
+    public synchronized Result updateFromServer(String userId, Collection<String> roles) {
+        Optional<String> url = updateUrl();
+        if (!url.isPresent()) {
+            log.info("Liveness model update: no " + LivenessConfigKeys.MODEL_UPDATE_URL + " configured");
+            return Result.of(Status.NOT_FOUND);
+        }
+        Result refused = precheck(userId, roles);
+        if (refused != null) {
+            return refused;
+        }
+        Path download = null;
+        try {
+            download = Files.createTempFile("liveness-model-update-", ".zip");
+            download(url.get(), download);
+            log.info("Liveness model update: downloaded " + Files.size(download) + " bytes");
+            return importBundle(download, userId, roles);
+        } catch (IOException e) {
+            log.error("Liveness model update: download failed (" + e.getMessage() + ")");
+            return Result.of(Status.NOT_FOUND);
+        } finally {
+            if (download != null) {
+                try {
+                    Files.deleteIfExists(download);
+                } catch (IOException e) {
+                    log.error("Liveness model update: temporary file not deleted (" + e.getMessage() + ")");
+                }
+            }
+        }
+    }
+
+    /** The role, capture and engine checks of both ways in; {@code null} when the import may go on. */
+    private Result precheck(String userId, Collection<String> roles) {
+        if (roles == null || Collections.disjoint(roles, ALLOWED_ROLES)) {
+            log.info("Liveness model import refused for " + userId + ": role not allowed");
+            return Result.of(Status.NOT_ALLOWED);
+        }
+        if (engines.captureInProgress()) {
+            log.info("Liveness model import refused for " + userId + ": a capture is in progress");
+            return Result.of(Status.BUSY);
+        }
+        if (!engines.supportsModelImport()) {
+            return Result.of(Status.NOT_SUPPORTED);
+        }
+        return null;
+    }
+
+    /** Copies the body of a {@code 200} answer to {@code target}, within the scheme, size and time limits. */
+    static void download(String url, Path target) throws IOException {
+        URL u;
+        try {
+            u = new URL(url);
+        } catch (MalformedURLException e) {
+            throw new IOException("not a URL");
+        }
+        String scheme = u.getProtocol().toLowerCase(Locale.ROOT);
+        if (!"https".equals(scheme) && !("http".equals(scheme) && isLoopback(u.getHost()))) {
+            throw new IOException("the update URL must use https (http only to a loopback host)");
+        }
+        HttpURLConnection c = (HttpURLConnection) u.openConnection();
+        try {
+            c.setInstanceFollowRedirects(false);
+            c.setConnectTimeout(DOWNLOAD_TIMEOUT_MS);
+            c.setReadTimeout(DOWNLOAD_TIMEOUT_MS);
+            int code = c.getResponseCode();
+            if (code != HttpURLConnection.HTTP_OK) {
+                throw new IOException("HTTP " + code);
+            }
+            if (c.getContentLengthLong() > MAX_ZIP_BYTES) {
+                throw new IOException("bundle larger than " + MAX_ZIP_BYTES + " bytes");
+            }
+            long deadline = System.nanoTime() + DOWNLOAD_DEADLINE_MS * 1_000_000L;
+            long total = 0;
+            byte[] buffer = new byte[64 * 1024];
+            try (InputStream in = c.getInputStream(); OutputStream out = Files.newOutputStream(target)) {
+                int n;
+                while ((n = in.read(buffer)) > 0) {
+                    total += n;
+                    if (total > MAX_ZIP_BYTES) {
+                        throw new IOException("bundle larger than " + MAX_ZIP_BYTES + " bytes");
+                    }
+                    if (System.nanoTime() > deadline) {
+                        throw new IOException("download took longer than " + DOWNLOAD_DEADLINE_MS + " ms");
+                    }
+                    out.write(buffer, 0, n);
+                }
+            }
+        } finally {
+            c.disconnect();
+        }
+    }
+
+    /** {@code localhost} or a loopback address literal; other host names are not resolved, so DNS cannot make one. */
+    static boolean isLoopback(String host) {
+        String h = host.startsWith("[") && host.endsWith("]") ? host.substring(1, host.length() - 1) : host;
+        if ("localhost".equalsIgnoreCase(h)) {
+            return true;
+        }
+        if (!h.matches("[0-9.]+") && !h.contains(":")) {
+            return false;
+        }
+        try {
+            return InetAddress.getByName(h).isLoopbackAddress();
+        } catch (IOException e) {
+            return false;
         }
     }
 
