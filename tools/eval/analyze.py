@@ -43,15 +43,13 @@ import argparse
 import sys
 from pathlib import Path
 
-# The code lives in sibling modules; names are re-exported here so ``import analyze`` keeps working.
-from metrics import (GENUINE_WRONG_ACTION_SPECIES, LEVELS, FullSystemCounts, KindCounts, Metrics,  # noqa: F401
-                     bpcer_at_apcer, compute, compute_full_system, det_points, det_points_worst_species,
-                     full_system_outcome, has_match_results, scores_for_det)
-from records import (ACCEPT, NO_RESPONSE, REJECT, SCHEMA, Record, artefact_unit, attempts_by_txn,  # noqa: F401
-                     by_workflow, is_wrong_action, load_records, packs_of, transactions, workflow_of)
+# The code lives in sibling modules; main() and the tests reach these names through ``import analyze``.
+from metrics import (GENUINE_WRONG_ACTION_SPECIES, bpcer_at_apcer, compute, compute_full_system,  # noqa: F401
+                     det_points, det_points_worst_species, has_match_results, scores_for_det)
+from records import SCHEMA, Record, by_workflow, load_records  # noqa: F401
 from report import build_report, plot_det
-from stats import (BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED, CONFIDENCE, Rate, attacker_success,  # noqa: F401
-                   binom_cdf, bootstrap_rate, clopper_pearson, one_sided_upper, pct, percentile)
+from stats import (Rate, attacker_success, bootstrap_rate, clopper_pearson, one_sided_upper,  # noqa: F401
+                   percentile)
 
 
 def main(argv=None) -> int:
