@@ -68,7 +68,7 @@ Design details: `liveness/README.md`, `docs/design/desktop-liveness-services.md`
 | Android client, scripted end-to-end run (16 flows) | 58 of 58 checks passed (same limit) | `docs/test-report/android-e2e.md` |
 | Desktop and Android give the same decision (bonus B4) | 19 replayed cases on desktop, 19 in Android unit tests, 6 on an emulator; one ONNX Runtime release (1.20.0) on both clients | `docs/test-report/interoperability.md` |
 | Automated scenarios (75, 275 transactions) with ISO/IEC 30107-3 metrics | shipped defaults, per transaction: worst species APCER 50.0% (4/8, adaptive screen replay SYN-A7, registration; 1 of 2 source artefacts accepted); every other species 0.0%; registration genuine rejected 14.3% (4/28, all one synthetic dark clip), sign-in 0.0% (0/12). Legacy configuration (passive first everywhere): APCER_max 100.0% (80/80, SYN-A8) | `docs/eval/results/20261005-shipped/README.md` |
-| Per-frame processing, 640x480 | latency run, 1 thread, shared laptop: p50 69.4 ms, p95 162.4 ms; the 2026-09-30 quieter-machine run gave p50 21-23 ms, p95 38-45 ms (desktop JVM); target 20 ms not met | `docs/eval/results/20261005-latency/report.md`, `docs/test-report/README.md` section 5 |
+| Per-frame processing, 640x480 | latency run of 2026-10-14, 1 thread, shared laptop: p50 37.5 ms, p95 115.4 ms; the 2026-09-30 quieter-machine run gave p50 21-23 ms, p95 38-45 ms (desktop JVM); target 20 ms not met | `docs/eval/results/20261014-latency/README.md`, `docs/test-report/README.md` section 5 |
 | Android phone measurement (bonus B7, B8) | measurement kit written; no phone run yet, emulator numbers only | `docs/test-report/android-performance.md` |
 | PS04 requirements | every bullet traced to code and test; open items listed | `docs/traceability.md` |
 

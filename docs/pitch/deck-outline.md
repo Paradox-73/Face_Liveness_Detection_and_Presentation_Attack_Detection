@@ -172,7 +172,7 @@ the claim.
   check: the face is searched for a screen's pixel grid and moire in its frequency spectrum, and that replay now
   scores 0. Say plainly: the screens are software-made, so the real-screen result comes from the volunteer test.
   The pooled per-attempt figure is secondary and never the headline.
-- Per-frame time, latency run at 1 thread on a shared laptop: p50 69.4 ms, p95 162.4 ms, above our own 20 ms
+- Per-frame time, latency run of 2026-10-14 at 1 thread on a shared laptop: p50 37.5 ms, p95 115.4 ms, above our own 20 ms
   target. Android was measured only on an emulator; the phone measurement kit (`docs/test-report/android-performance.md`)
   has not been run on a phone.
 

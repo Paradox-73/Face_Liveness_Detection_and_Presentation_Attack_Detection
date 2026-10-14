@@ -51,23 +51,23 @@ The two clients call one engine contract; every liveness decision runs on the re
 is used only for configuration sync and packet upload. Details: [docs/design/architecture.md](docs/design/architecture.md);
 decision flow picture: [docs/design/img/decision-flow.svg](docs/design/img/decision-flow.svg).
 
-## Status (2026-10-05)
+## Status (2026-10-14)
 
 | Part | State | Evidence |
 |---|---|---|
-| Shared engine (`liveness/liveness-core`) | Passive PAD, active challenges, frame integrity (loop window 300 frames), planarity, capture binding that fails closed, policy resolution, audit, metrics, one session driver used by both clients | 371 tests; `liveness/README.md` |
-| ONNX adapters and models (`liveness/liveness-onnx`, `models/`) | YuNet, Face Mesh, MiniFASNet V2 + V1SE, SFace; signed bundle 1.3.0 with rollback protection | 111 tests (2 benchmark tests skipped); `models/SOURCES.md` |
+| Shared engine (`liveness/liveness-core`) | Passive PAD, active challenges, frame integrity (loop window 300 frames), planarity, capture binding that fails closed, policy resolution, audit, metrics, one session driver used by both clients | 375 tests; `liveness/README.md` |
+| ONNX adapters and models (`liveness/liveness-onnx`, `models/`) | YuNet, Face Mesh, MiniFASNet V2 + V1SE, SFace; signed bundle 1.3.0 with rollback protection; offline import and online update of a signed bundle | 126 tests (2 benchmark tests skipped); `models/SOURCES.md` |
 | Face-match SDK (`liveness/face-match-sdk`) | SFace `IBioApiV2` for FACE 1:1 matching | 44 tests |
-| Desktop client (`clients/desktop`) | Liveness gates resident capture, exception photo, onboarding, face login, packet and reviewer authentication, end-of-day approval; supervisor override (a second, different supervisor with face authentication; the same user cannot approve their own override; checked photo), account lock, retry counters kept across Cancel, reopened windows and client restarts, diagnostic mode, replacement texts, offline import of a signed model bundle | 156 + 63 liveness unit tests (`registration-services`, `registration-client`); end-to-end run 41 of 41 checks on 2026-09-30 at the earlier defaults, not re-run at the shipped defaults (`docs/test-report/desktop-e2e.md`); diagnostic and model-import flow, 15 of 15 |
-| Android client (`clients/android`) | `livenessmanager` module with the built-in camera device; resident capture, onboarding, face sign-in, packet authentication, supervisor approval; supervisor override (a different supervisor must approve; self-approval refused), retry counters kept across Cancel, reopened screens and app restarts, metrics, diagnostic panel, execution provider choice, signed release build with in-app device key provisioning, offline model bundle import (button in Device Settings), vendor SBI face app through intents | 212 `livenessmanager` + 72 `app` unit tests, 32 Flutter tests; end-to-end run 58 of 58 checks on 2026-09-30 at the earlier defaults, not re-run at the shipped defaults: `docs/test-report/android-e2e.md` |
-| Mock face device (`devices/mock-mds`) | Image sequences, video or webcam; capture signed from the streamed frame; 13 fault types; L0/L1; provisional PAD capability | 226 tests (upstream and extensions); `devices/mock-mds/LIVENESS-EXTENSIONS.md` |
-| Mock MOSIP server (`tools/mock-sync`) | Both real clients log in, sync, onboard and upload against it; live config changes; packet evidence viewer | 40 tests; `tools/mock-sync/README.md` |
-| Evaluation (`tools/eval`, `eval/`) | Scenario runner (31 tests) and analysis (102 pytest tests) with ISO/IEC 30107-3-style metrics; 275 transactions at the shipped defaults, synthetic attacks and three openly licensed clips; APCER 0.0% per transaction for every species and workflow (SYN-A7, the adaptive screen replay, was 50.0% (4/8) before the screen-pattern check); `registration` BPCER 0.0% (0/28; was 14.3%, all from the dim-light clip, before the exposure correction), `login_auth` BPCER 0.0% (0/12) | [docs/eval/results/20261005b-shipped/README.md](docs/eval/results/20261005b-shipped/README.md) (before and after); `docs/eval/calibration-notes.md` |
+| Desktop client (`clients/desktop`) | Liveness gates resident capture, exception photo, onboarding, face login, packet and reviewer authentication, end-of-day approval; supervisor override (a second, different supervisor with face authentication; the same user cannot approve their own override; checked photo), account lock, retry counters kept across Cancel, reopened windows and client restarts, diagnostic mode, replacement texts, offline import and online update of a signed model bundle | 155 + 64 liveness unit tests (`registration-services`, `registration-client`); end-to-end run 41 of 41 checks on 2026-09-30 at the earlier defaults; at the shipped policy (2026-10-14, challenge pool cut to the recorded blink and smile) operator face sign-in passes, the resident capture stops on the short recorded clip (`docs/test-report/desktop-e2e.md`) |
+| Android client (`clients/android`) | `livenessmanager` module with the built-in camera device; resident capture, onboarding, face sign-in, packet authentication, supervisor approval; supervisor override (a different supervisor must approve; self-approval refused), retry counters kept across Cancel, reopened screens and app restarts, metrics, diagnostic panel, execution provider choice, signed release build with in-app device key provisioning, offline import and online update of a model bundle (Device Settings), vendor SBI face app through intents | 214 `livenessmanager` + 72 `app` unit tests, 35 Flutter tests; scripted demo at the shipped policy (2026-10-14, pool cut to blink and smile): 55 of 75 checks, face sign-in 10 of 10 and end-of-day approval 8 of 9 (`docs/test-report/android-e2e.md` section 14) |
+| Mock face device (`devices/mock-mds`) | Image sequences, video or webcam; capture signed from the streamed frame; 13 fault types; L0/L1; provisional PAD capability; replay that resumes a pack and plays it back and forth | 228 tests (upstream and extensions); `devices/mock-mds/LIVENESS-EXTENSIONS.md` |
+| Mock MOSIP server (`tools/mock-sync`) | Both real clients log in, sync, onboard and upload against it; live config changes; packet evidence viewer; serves a signed model bundle | 41 tests; `tools/mock-sync/README.md` |
+| Evaluation (`tools/eval`, `eval/`) | Scenario runner (31 tests) and analysis (120 pytest tests) with ISO/IEC 30107-3-style metrics; 275 transactions per run, synthetic attacks and three openly licensed clips; at the shipped defaults (2026-10-14) 0 of 226 attack transactions accepted, APCER 0.0% per transaction for every species and workflow, `registration` BPCER 0.0% (0/28), `login_auth` BPCER 0.0% (0/12); at the passive-first flow of the statement 100 of 226 accepted; `tools/eval/ingest-recordings.py` adds the team's webcam recordings | [docs/eval/results/20261014-shipped/README.md](docs/eval/results/20261014-shipped/README.md); `docs/eval/calibration-notes.md` |
 | Requirements | Every PS04 bullet mapped to code, test and status | `docs/traceability.md` |
 
-Tests: 2,653 tests passed with 0 failures and 0 errors in the verification run of 2026-10-10, 23:14-23:20 (all suites
-above, Android unit tests, Flutter tests); about 1,361 of them are upstream MOSIP tests (Android `clientmanager` 1,186
-and about 175 in MockMDS), so about 1,292 are written by this team. Per-suite table and commands:
+Tests: 2,691 tests passed with 0 failures and 0 errors in the verification run of 2026-10-14, 19:46-20:03 (all suites
+above, Android unit tests, Flutter tests; 2 benchmark tests skipped); about 1,361 of them are upstream MOSIP tests
+(Android `clientmanager` 1,186 and about 175 in MockMDS), so about 1,330 are written by this team. Per-suite table and commands:
 [docs/test-report/README.md](docs/test-report/README.md).
 
 ### Bonus items
@@ -92,12 +92,15 @@ Known limits, stated in the linked documents:
   4 of 4. Real dim-room recordings are missing; the dim-light ending ("Improve lighting", not counted, up to 3 tries)
   stays for faces that still fail.
 - Challenges on every registration and sign-in cost time: the median accepted `registration` attempt takes 11.0 s of
-  replayed stream in the 2026-10-05 latency run (9.7 s against 6.6 s in the 2026-09-30 runs).
-- The per-frame latency target (p95 at most 20 ms) is not met: p95 162.4 ms per frame (decode, analysis, PAD; 1 thread,
-  shared laptop, 2026-10-05), desktop p95 38-45 ms on a quieter machine earlier.
-- Not run yet: no physical Android phone or tablet, no live face or real artefact through either client, no desktop
-  GUI run and no Android scripted demo at the shipped defaults (the 41 of 41 and 58 of 58 runs predate them), no L1
-  or vendor face device on Android, no second device vendor, no volunteer evaluation with real artefacts.
+  replayed stream in the 2026-10-14 latency run (9.7 s against 6.6 s in the 2026-09-30 runs).
+- The per-frame latency target (p95 at most 20 ms) is not met: p95 115.4 ms, p50 37.5 ms per analysed frame (decode,
+  analysis, PAD; shipped engine, 1 thread, 4,410 frames, laptop at about 63% CPU load from other builds, 2026-10-14;
+  [results](docs/eval/results/20261014-latency/README.md)); face analysis is two thirds of it.
+- Not run yet: no physical Android phone or tablet, no live face or real artefact through either client, no L1 or
+  vendor face device on Android, no second device vendor, no volunteer evaluation with real artefacts. The scripted
+  demos ran at the shipped policy on 2026-10-14 only with the challenge pool cut to blink and smile (desktop 5 of 16,
+  Android 55 of 75 checks); turn challenges and the longer desktop flows need a live face or longer recordings
+  ([docs/manual-test-checklist.md](docs/manual-test-checklist.md)).
 - Model updates: offline signed import and online download from the synced `model.update_url` on both clients,
   with the same signature, hash and rollback checks; the download is unit-tested only (no client run against
   MockSync, no phone run) and a supervisor starts it.

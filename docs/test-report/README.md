@@ -36,29 +36,35 @@ row says so, Maven 3.9, and the Maven mirror settings file that the repository s
 Set it once per shell with `export MAVEN_ARGS="-s .github/maven-settings.xml"` (from the repository root). The
 counts below were taken on the project laptop (Windows 11, 12 threads, 16 GB, other builds running at the same time).
 The last column names the job of `.github/workflows/ci.yml` that runs the same command on a clean `ubuntu-latest`
-machine at every push and pull request. As of 2026-10-04 the jobs `mock-mds`, `scenario-runner`, `eval-python`,
-`desktop-liveness` and `android-unit` have been run only as local commands (GitHub runs a workflow after the push);
-the first GitHub run is the check of the Linux-only steps. "Upstream" means tests that came with the imported MOSIP
+machine at every push and pull request. The hosted re-run of 2026-10-14 on `86799c8` passed every job except `android-unit` (see the list below the
+totals); the hosted result for the final commit will be recorded after the push. "Upstream" means tests that came with the imported MOSIP
 code and still pass with this project's changes.
 
 | Module | What it tests | Command | Tests | Failures / errors | Skipped | CI job |
 |---|---|---|---|---|---|---|
 | `liveness/liveness-core` | engine: session state machine, passive decision, challenges, action detection, integrity, planarity, capture binding, policy, audit, UI states, MJPEG reader | `mvn -B -f liveness/pom.xml install -Dliveness.benchmark.frames=0` (the job runs `verify`; `install` also puts the engine in `~/.m2`, which the rows below need) | 375 | 0 | 0 | `liveness` |
-| `liveness/liveness-onnx` | ONNX adapters, golden outputs of the 5 models, signed model registry, engine factory, execution providers, exposure correction and screen-pattern check, shared model-bundle importer and store | same run | 115 | 0 | 2 | `liveness` |
+| `liveness/liveness-onnx` | ONNX adapters, golden outputs of the 5 models, signed model registry, engine factory, execution providers, exposure correction and screen-pattern check, shared model-bundle importer and store | same run | 126 | 0 | 2 | `liveness` |
 | `liveness/face-match-sdk` | SFace face-match SDK behind MOSIP's `IBioApiV2`, ISO 19794-5 records, MOSIP loader | same run | 44 | 0 | 0 | `liveness` |
-| desktop `registration-services` (liveness and audit tests) | capture and authentication gates, stream session, orchestrator, config, audit sink, packet evidence, pass tokens, model import wiring, behaviour on repeated failure, account lock | after the engine install: `mvn -B -f clients/desktop/registration/pom.xml test -pl registration-services,registration-client -am -Dgpg.skip -Djacoco.skip=true -DfailIfNoTests=false "-Dtest=io/mosip/registration/service/bio/liveness/*Test.java,**/AuditFactoryTest.java,io/mosip/registration/controller/liveness/*Test.java"` (on Linux, put `xvfb-run -a` in front: the JavaFX tests need a display) | 154 | 0 | 0 | `desktop-liveness` |
-| desktop `registration-client` (liveness tests) | liveness panel view model, texts and replacement texts, bundle parity (en/fr/ar), JavaFX listener, diagnostic lines, model import window | same run | 63 | 0 | 0 | `desktop-liveness` |
-| Android `livenessmanager` | engine loader, config, audit sink, face authenticator, capture screen (Robolectric), image decoding, SBI codec, replay, supervisor override, metrics, diagnostic mode, execution provider | with JDK 21 as `JAVA_HOME`, Flutter 3.10.4 and the Android SDK of [../install/README.md](../install/README.md) section 1: `bash scripts/android-build.sh --test-only` (installs the engine, generates the code a fresh clone lacks, runs the three `testDebugUnitTest` tasks) | 212 | 0 | 0 | `android-unit` |
+| desktop `registration-services` (liveness and audit tests) | capture and authentication gates, stream session, orchestrator, config, audit sink, packet evidence, pass tokens, model import wiring, behaviour on repeated failure, account lock | after the engine install: `mvn -B -f clients/desktop/registration/pom.xml test -pl registration-services,registration-client -am -Dgpg.skip -Djacoco.skip=true -DfailIfNoTests=false "-Dtest=io/mosip/registration/service/bio/liveness/*Test.java,**/AuditFactoryTest.java,io/mosip/registration/controller/liveness/*Test.java"` (on Linux, put `xvfb-run -a` in front: the JavaFX tests need a display) | 155 | 0 | 0 | `desktop-liveness` |
+| desktop `registration-client` (liveness tests) | liveness panel view model, texts and replacement texts, bundle parity (en/fr/ar), JavaFX listener, diagnostic lines, model import window | same run | 64 | 0 | 0 | `desktop-liveness` |
+| Android `livenessmanager` | engine loader, config, audit sink, face authenticator, capture screen (Robolectric), image decoding, SBI codec, replay, supervisor override, metrics, diagnostic mode, execution provider | with JDK 21 as `JAVA_HOME`, Flutter 3.10.4 and the Android SDK of [../install/README.md](../install/README.md) section 1: `bash scripts/android-build.sh --test-only` (installs the engine, generates the code a fresh clone lacks, runs the three `testDebugUnitTest` tasks) | 214 | 0 | 0 | `android-unit` |
 | Android `app` | capture gate, face-auth flow, capture launcher, Flutter bridge, supervisor override flow | same run | 72 | 0 | 0 | `android-unit` |
 | Android `clientmanager` (upstream + liveness) | packet building with `LIVENESS_*` evidence, meta info; all upstream tests | same run | 1,186 | 0 | 0 | `android-unit` |
-| Android Flutter widgets | face-auth panel, outcome banner, Arabic right-to-left, model import panel | after the Android run above: `cd clients/android && flutter test test/liveness/` | 32 | 0 | 0 | `android-unit` |
-| `tools/mock-sync` | sync endpoints, Android contract (key wrapping), response signatures, packet inspector | `mvn -B -f tools/mock-sync/pom.xml verify` | 40 | 0 | 0 | `mock-sync` |
-| `devices/mock-mds` (upstream + extensions) | frame sources, capture from the streamed frame, faults, renewed FTM keys | with JDK 21: `mvn -B -f devices/mock-mds/pom.xml package -Dgpg.skip=true` | 226 | 0 | 0 | `mock-mds` |
+| Android Flutter widgets | face-auth panel, outcome banner, Arabic right-to-left, model import panel | after the Android run above: `cd clients/android && flutter test test/liveness/` | 35 | 0 | 0 | `android-unit` |
+| `tools/mock-sync` | sync endpoints, Android contract (key wrapping), response signatures, packet inspector | `mvn -B -f tools/mock-sync/pom.xml verify` | 41 | 0 | 0 | `mock-sync` |
+| `devices/mock-mds` (upstream + extensions) | frame sources, capture from the streamed frame, faults, renewed FTM keys | with JDK 21: `mvn -B -f devices/mock-mds/pom.xml package -Dgpg.skip=true` | 228 | 0 | 0 | `mock-mds` |
 | `tools/eval/scenario-runner` | scenario loading, playlists, classification, output | after the engine install: `mvn -B -f tools/eval/scenario-runner/pom.xml package` | 31 | 0 | 0 | `scenario-runner` |
-| `tools/eval` Python | APCER/BPCER, confidence intervals, frame-pack manifests | `pip install -r tools/eval/requirements.txt`, then `python -m pytest -q tools/eval/tests` | 103 | 0 | 0 | `eval-python` |
-| **Total** | | | **2,653, verified together on 2026-10-10** | **0** | **2** | |
+| `tools/eval` Python | APCER/BPCER, confidence intervals, frame-pack manifests | `pip install -r tools/eval/requirements.txt`, then `python -m pytest -q tools/eval/tests` | 120 | 0 | 0 | `eval-python` |
+| **Total** | | | **2,691, verified on 2026-10-14** | **0** | **2** | |
 
-**Totals.** The verification run of 2026-10-10 (23:14-23:20, logs `PS04-fixes/verify/w3-*.log` outside the
+**Totals.** The verification run of 2026-10-14 (19:46-20:03, logs outside the repository) ran every suite of the
+table on the final code of the PS04 completion pass and found **2,691 tests, 0 failures, 0 errors**, 2 benchmark
+tests skipped. New since 2026-10-10: the online model update (`liveness-onnx` 115 to 126, MockSync 40 to 41, desktop
+154 + 63 to 155 + 64, Flutter 32 to 35), the MockMDS replay `pingpong` and `resume` (226 to 228), the Android replay
+and model-update tests (212 to 214) and the recording ingest tests (103 to 120). The first run of that evening failed
+`LivenessParityTest` on desktop and Android: the default pool without `LOOK_UP` changes the seeded challenge draws,
+so the parity file was re-recorded (decisions and reasons unchanged). The Flutter tests needed the Pigeon code
+generated again (`scripts/android-build.sh --test`, not `--test-only`, after a Pigeon change). The verification run of 2026-10-10 (23:14-23:20, logs `PS04-fixes/verify/w3-*.log` outside the
 repository, after the maintainability restructuring of that evening: shared model-bundle importer, `PolicyKey`
 table, one liveness entry point per client, file splits) ran every suite of the table together and found
 **2,653 tests, 0 failures, 0 errors**, 2 benchmark tests skipped. The run earlier that day (21:50, after the
@@ -68,10 +74,12 @@ screen-pattern check added 13 `liveness-onnx` tests).
 
 **Upstream and team-written.** About 1,361 of the tests are upstream: the Android `clientmanager` suite (1,186, all upstream
 tests, passing with this project's changes) and about 175 in MockMDS (an estimate from the first audit count; the 226 in the
-table also include the tests added for the mock face device). The remaining 1,292 or so of the 2,653 are team-written (an
+table also include the tests added for the mock face device). The remaining 1,330 or so of the 2,691 are team-written (an
 approximate figure).
 
 When each count was taken:
+
+- 2026-10-14, 19:46-20:03: every row again (2,691 tests), on the final code of the PS04 completion pass.
 
 - 2026-10-05: all rows, verification run (engine installed first, then every suite with the commands above; Android tests forced with `--rerun`).
 - 2026-10-05 evening: every row again in one run (2,619 tests), after the exposure correction and the screen-pattern check. JDK 11 for the engine, desktop, MockSync and runner; JDK 21 for Android and MockMDS.
@@ -257,7 +265,7 @@ Reference run 7 of 2026-09-30: **58 checks passed, 0 failed, at the old defaults
 | Time to a passive decision | stream clock (replay) | 2.0 s (30 frames, shipped); 0.53 s with the old 8 frames | calibration notes 0.2 |
 | Accepted bona fide attempt, median | stream clock | 9.7 s under the shipped defaults (every registration and sign-in runs 2 challenges); 6.6 s under the old defaults | calibration notes 0.2 |
 | Per analysed frame, shipped suite, two suites in parallel on a loaded machine | desktop JVM | p50 34.1 ms, p95 78.4 ms | calibration notes 0.3 |
-| Per analysed frame, shipped defaults, 1 ONNX Runtime thread, shared laptop (2026-10-05) | desktop JVM (scenario runner) | p50 69.4 ms, p95 162.4 ms, max 482.4 ms (n=4410) | [../eval/results/20261005-shipped/README.md](../eval/results/20261005-shipped/README.md) |
+| Per analysed frame, shipped engine, 1 ONNX Runtime thread, shared laptop at about 63% load (2026-10-14) | desktop JVM (scenario runner) | p50 37.5 ms, p95 115.4 ms, max 558.0 ms (n=4410) | [../eval/results/20261014-latency/README.md](../eval/results/20261014-latency/README.md) |
 | Passive pass, user-visible | Android emulator | 2.2-3.0 s; with 2 challenges 7.4-12.1 s | android-e2e section 5 |
 
 - The design target of p95 at most 20 ms per frame is **not met** on either platform (T-PERF-01). Face analysis (YuNet plus
