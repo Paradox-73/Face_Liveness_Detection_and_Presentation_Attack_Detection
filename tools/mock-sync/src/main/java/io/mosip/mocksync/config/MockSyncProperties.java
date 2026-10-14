@@ -52,6 +52,12 @@ public class MockSyncProperties {
 	private boolean idaAuthStatus = true;
 
 	/**
+	 * Signed liveness model bundle ({@code .zip}) served by {@code GET /v1/syncdata/liveness/model-bundle}; empty
+	 * answers 404.
+	 */
+	private String livenessModelBundle = "";
+
+	/**
 	 * Returns the work directory.
 	 *
 	 * @return path text
@@ -247,5 +253,23 @@ public class MockSyncProperties {
 	 */
 	public void setIdaAuthStatus(boolean idaAuthStatus) {
 		this.idaAuthStatus = idaAuthStatus;
+	}
+
+	/**
+	 * Returns the liveness model bundle file.
+	 *
+	 * @return path text, relative to the start directory; empty when none is served
+	 */
+	public String getLivenessModelBundle() {
+		return livenessModelBundle;
+	}
+
+	/**
+	 * Sets the liveness model bundle file.
+	 *
+	 * @param livenessModelBundle path text; empty serves none
+	 */
+	public void setLivenessModelBundle(String livenessModelBundle) {
+		this.livenessModelBundle = livenessModelBundle;
 	}
 }

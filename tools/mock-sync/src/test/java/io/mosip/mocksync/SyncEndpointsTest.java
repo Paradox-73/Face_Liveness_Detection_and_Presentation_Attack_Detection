@@ -6,6 +6,7 @@
  */
 package io.mosip.mocksync;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -49,8 +50,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.kernel.crypto.jce.core.CryptoCore;
+import io.mosip.mocksync.config.MockSyncProperties;
 import io.mosip.mocksync.crypto.ClientCrypto;
 import io.mosip.mocksync.crypto.KeyMaterial;
+import io.mosip.mocksync.data.ConfigService;
+import io.mosip.mocksync.web.ModelBundleController;
 import io.mosip.mocksync.web.ResponseFactory;
 import io.mosip.mocksync.web.ScriptController;
 import io.mosip.mocksync.web.SyncDataController;
@@ -70,6 +74,12 @@ class SyncEndpointsTest {
 
 	@Autowired
 	private MockMvc mvc;
+
+	@Autowired
+	private MockSyncProperties properties;
+
+	@Autowired
+	private ConfigService configService;
 
 	private final KeyPair machineKeys = KeyMaterial.newRsaKeyPair();
 	private String keyIndex;
@@ -106,6 +116,26 @@ class SyncEndpointsTest {
 		Map<String, Object> info = json(mvc.perform(get("/v1/syncdata/actuator/info")).andReturn().getResponse());
 		assertEquals("1.2.0.2", ((Map<?, ?>) info.get("build")).get("version"));
 		assertNotNull(info.get("git"));
+	}
+
+	@Test
+	void livenessModelBundleIsServedOnlyWhenConfigured() throws Exception {
+		assertEquals("", configService.effectiveValue("mosip.registration.liveness.model.update_url"),
+				"the online model update is off by default");
+		Path bundle = Files.write(workDir.resolve("bundle-1.3.1.zip"), new byte[] { 'P', 'K', 3, 4, 42 });
+		try {
+			properties.setLivenessModelBundle(bundle.toString());
+			MockHttpServletResponse served = mvc.perform(get(ModelBundleController.PATH)).andReturn().getResponse();
+			assertEquals(200, served.getStatus());
+			assertEquals("application/zip", served.getContentType());
+			assertArrayEquals(Files.readAllBytes(bundle), served.getContentAsByteArray());
+
+			properties.setLivenessModelBundle(workDir.resolve("missing.zip").toString());
+			assertEquals(404, mvc.perform(get(ModelBundleController.PATH)).andReturn().getResponse().getStatus());
+		} finally {
+			properties.setLivenessModelBundle("");
+		}
+		assertEquals(404, mvc.perform(get(ModelBundleController.PATH)).andReturn().getResponse().getStatus());
 	}
 
 	@Test
