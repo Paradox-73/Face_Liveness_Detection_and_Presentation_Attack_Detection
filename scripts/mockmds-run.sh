@@ -102,7 +102,8 @@ cd "$RUN_DIR"
 echo $! >"$RUN_DIR/mockmds.pid"
 # $! is the MSYS pid; keep the Windows pid for taskkill.
 if command -v ps >/dev/null 2>&1 && ps -W >/dev/null 2>&1; then
-	winpid="$(ps -p "$(cat "$RUN_DIR/mockmds.pid")" -o winpid= 2>/dev/null | tr -d ' ' || true)"
+	# Git Bash ps has no -o; WINPID is its fourth column.
+	winpid="$(ps | awk -v p="$(cat "$RUN_DIR/mockmds.pid")" '$1 == p { print $4 }')"
 	[ -n "$winpid" ] && echo "$winpid" >"$RUN_DIR/mockmds.pid"
 fi
 
