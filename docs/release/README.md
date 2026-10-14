@@ -35,21 +35,25 @@ use them under those coordinates (`io.mosip.liveness:*:1.0.0-SNAPSHOT`).
 
 ### Checksums of the v1.0.0 build
 
-Built on 2026-10-06 from commit `ffe6f01` (the tree then held the lock-free `release.sh` and the README
-changes of this release) with `scripts/release.sh --version 1.0.0`; model bundle 1.3.0, ONNX Runtime 1.20.0.
-Each new build has its own `SHA256SUMS.txt`. The clean-install test below used the earlier build `c959af4-dirty`.
+Built on 2026-10-14 from commit `6e88071` (the final code of the PS04 completion pass; only documentation commits
+follow it) with `scripts/release.sh --version 1.0.0 --out <folder>`, into `../run/release/v1.0.0` next to the repository,
+outside it; model bundle 1.3.0, ONNX Runtime 1.20.0. The draft GitHub release `v1.0.0` still holds the
+build of 2026-10-06 (`ffe6f01`), from before the fixes of 2026-10-10 and 2026-10-14; replace its files with this
+build before publishing. The engine jars keep Maven's `1.0.0-SNAPSHOT` names: `release.sh` copies Maven's output
+and has no option to rename them. Each new build has its own `SHA256SUMS.txt`. The clean-install test below used the
+earlier build `c959af4-dirty`.
 
 ```
-7bbbca14adfedc7a025cfdf882176219a4a8d4560b33245b6ad857bef9e6b7a8  mosip-liveness-desktop-client-1.0.0-win-x64.zip
-7e5cb053ba5a9406b547f463bf3afb2185837a3cec3142a05d0bbea45a4e1363  mosip-liveness-mockmds-1.0.0-win-x64.zip
-0e5beed2e8068006aabdde34a9d366ab56693ef78ca7adf0d8e00e7a111b6fc8  mosip-liveness-mocksync-1.0.0-win-x64.zip
-5efe0e1fe336c2745c4ef7c72d1ef09b7c21a130846b111fc1a74fc8150822f0  mosip-liveness-android-1.0.0-arm64-v8a.apk
-99c44a3c5fb5c4576124b58eaf59497eef11fe6f9ac859190b1b05c0dbc2d839  mosip-liveness-android-1.0.0-x86_64.apk
-3c4f87f014625e5143127371166da6c6d4fea958dc5a1abe0f1ce95dc029d7e4  face-match-sdk-1.0.0-SNAPSHOT.jar
-18d5593745573a93f7edda271a975c1fc78c3d7fa24204ec57e650c29ca65ce0  liveness-core-1.0.0-SNAPSHOT.jar
-68ea62273f60ad359589bf8281dafb5216aa5c29edbb42968dd4211526484187  liveness-onnx-1.0.0-SNAPSHOT.jar
+b39c66eb3640cf786109be204b60fd690ddce4ab200e8e4cfb6e859d603ecf33  mosip-liveness-desktop-client-1.0.0-win-x64.zip
+01dbfbbf33f6cf7f880a2ac4515e1d2a50fc5fca8615524a9abe36e89d922251  mosip-liveness-mockmds-1.0.0-win-x64.zip
+5a0201ae444fc32b696ba74cb51e397177d11e2dd2cd1655d1548859708fce46  mosip-liveness-mocksync-1.0.0-win-x64.zip
+ca565104efe244a75b775adec3b91a42fbe32987b4385368e04cbfd8cea1466f  mosip-liveness-android-1.0.0-arm64-v8a.apk
+3ef318ddd6989b42199d49b09b1329601ec72baea6448510ac4cc555d34b0973  mosip-liveness-android-1.0.0-x86_64.apk
+df42b201c1e1bd98099bfcfd77854a66f1d9a3005db5275ca171ea78b63e35fb  face-match-sdk-1.0.0-SNAPSHOT.jar
+e4541c8f6717d191af9953fe9b0b576ed5b140b81f7b00d051e5f3426d9fce39  liveness-core-1.0.0-SNAPSHOT.jar
+a8039b3266f826cf4e4bfb9c2a731013b1a1b50215c65dd40ea6a76288cd030f  liveness-onnx-1.0.0-SNAPSHOT.jar
 37f207bd4e401d659be3393ecca7e110ccefe97b70878356191651ecf3f282d9  liveness-onnx-1.0.0-SNAPSHOT-models.jar
-0e4f07c9700edc51883f957f83ed26e0547557e21a50448e62b8de5065b5e8fe  mock-sync-1.0.0.jar
+2726a19792628ce53237f7a5bf272406069f27ae87b81b29eb2eac71978c2627  mock-sync-1.0.0.jar
 ```
 
 Check a download: put the files and `SHA256SUMS.txt` in one folder and run `sha256sum -c SHA256SUMS.txt`.
