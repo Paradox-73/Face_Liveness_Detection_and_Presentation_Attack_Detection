@@ -8,6 +8,8 @@ All of it is technology regression data on synthetic attacks and three openly li
 
 | Folder | What ran | Configuration |
 |---|---|---|
+| `20261014-shipped`, `20261014-passive-first` | all 75 scenarios, 275 transactions each, on the final engine (challenge pool without `LOOK_UP`): 0 of 226 attack transactions accepted at the shipped defaults, 100 of 226 with the passive-first flow; the current results | the shipped defaults, and the same with `PASSIVE_THEN_ACTIVE` for six workflows; start with [20261014-shipped/README.md](20261014-shipped/README.md) |
+| `20261014-latency` | the 6 bona fide registration scenarios, 24 transactions | shipped defaults, 1 ONNX Runtime thread; [20261014-latency/README.md](20261014-latency/README.md) |
 | `20261005b-shipped` | all 75 scenarios, 275 transactions, 755 attempt records, after two PAD additions of 2026-10-05 evening (exposure correction in a dark frame, screen-pattern check); before and after against `20261005-shipped` | the shipped defaults, as `20261005-shipped`; start with [20261005b-shipped/README.md](20261005b-shipped/README.md) |
 | `20261005b-legacy`, `20261005b-latency` | the legacy and latency suites on the same engine | as `20261005-legacy` and `20261005-latency` |
 | `20261005-shipped` | all 75 scenarios, 275 transactions, 755 attempt records, engine and model bundle 1.3.0 after the 2026-10-04 and 2026-10-05 changes; headline per species per transaction and on the first attempt | the shipped defaults: `ALWAYS_ACTIVE` for every workflow except `exception_photo`, `passive.min_frames=30`, loop window 300 and `quality.min_sharpness=40` from the signed bundle; start with [20261005-shipped/README.md](20261005-shipped/README.md) |
