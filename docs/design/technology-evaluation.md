@@ -68,17 +68,13 @@ all open:
 | Active PAD and planarity | MiniFASNet during challenges; homography residual of landmarks on head turns | screen replays (SYN-A6): 0 accepted |
 | Capture binding | SFace (Apache-2.0) similarity between the live session and the signed capture; single-use pass token | a different face captured after a passed session |
 
-Result with the shipped defaults (39 scenarios, 2026-09-30): pooled APCER 1.7% (4/238 attempts), BPCER 29.4%
-(15/51 attempts, 12 of them from one synthetic very dim pack). The one species still accepted is an adaptive screen
-replay that plays the matching clip for each prompt (SYN-A7, 4/16). In the re-run of 2026-10-05 (all workflows `ALWAYS_ACTIVE`,
-counted per transaction) SYN-A7 on `registration` is accepted in 50.0% (4/8) of transactions, every other species 0.0%, and
-BPCER on `registration` is 14.3% (4/28, all from the dim clip). After two PAD additions the same evening (a dark
-frame is brightened before MiniFASNet scores it; a screen-pattern check looks for the pixel grid and moire of a
-screen in the face's frequency spectrum) both are 0.0% (SYN-A7 0/8, BPCER 0/28;
-[../eval/results/20261005b-shipped/README.md](../eval/results/20261005b-shipped/README.md)); the screens in the suite
-are software-made, so the screen check still needs real screens. These are technology regression results on
-synthetic attacks, not an ISO/IEC 30107-3 evaluation ([iso-30107.md](iso-30107.md)). Planarity has no attack evidence and
-cannot be relied on against a screen that replays a real head turn.
+Result with the shipped defaults (2026-10-14): 0 of 226 synthetic attack transactions accepted, BPCER 0.0%
+([../eval/results/20261014-shipped/README.md](../eval/results/20261014-shipped/README.md)). The adaptive screen
+replay (SYN-A7) passed every layer until two PAD additions of 2026-10-05 (exposure correction in a dark frame, and a
+screen-pattern check); the suite's screens are software-made, so the screen check still needs real screens. These
+are technology regression results on synthetic attacks, not an ISO/IEC 30107-3 evaluation; the history and how to
+read it are in [iso-30107.md](iso-30107.md) section 3. Planarity has no attack evidence and cannot be relied on
+against a screen that replays a real head turn.
 
 Total model size: 25.7 MB for five models, signed as one bundle ([security-privacy.md](security-privacy.md)).
 

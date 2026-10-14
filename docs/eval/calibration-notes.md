@@ -20,6 +20,14 @@ Read this first:
   metrics), `summary.md` (one row per transaction) and `run.json` (models, parameters, platform). The frame
   measurements quoted below come from the `inspect` command of the runner (`inspect --all`, one CSV row per frame).
 
+## Current results (2026-10-14)
+
+At the shipped defaults (`ALWAYS_ACTIVE`) 0 of 226 attack transactions are accepted; with the six workflows at
+`PASSIVE_THEN_ACTIVE`, 100 of 226 ([results/20261014-shipped/README.md](results/20261014-shipped/README.md)). The
+median accepted registration attempt takes 11.0 s; per analysed frame p50 37.5 ms, p95 115.4 ms
+([results/20261014-latency/README.md](results/20261014-latency/README.md)). The updates and studies below are the
+dated history behind the thresholds.
+
 ## Update 2026-10-05 (evening): exposure correction and screen-pattern check
 
 Two additions to the passive PAD in `liveness-onnx` (`MiniFasPassivePad`; design: [../design/engine.md](../design/engine.md)
@@ -39,19 +47,13 @@ section 4), measured with the full shipped suite before and after
 - Checked before keeping them: every other bona fide passive score is unchanged (S1 64, S2 94, S3 100); the 19
   desktop/Android parity cases re-recorded with no change (`eval/interop/liveness-parity.json` identical); the
   MockMDS stock photo measures 494, below the 600 limit.
-- Shipped suite after the change: APCER 0.0% per transaction and on the first attempt for every species and
-  workflow (SYN-A7 was 50.0%, 4/8); BPCER `registration` 0.0% (0/28; was 14.3%), `login_auth` 0.0% (0/12); 1 of 275
-  transactions misses its expectation (was 9).
-- Legacy configuration (passive first everywhere): screen replay SYN-A6 and adaptive replay SYN-A7 on `registration`
-  50.0% to 0.0% each; BPCER `registration` 21.4% to 7.1% per transaction; prints and looped clips still pass a
-  passive-only check (APCER_max 100%), so the shipped defaults keep challenges on every workflow.
-- Cost: the PAD step of the latency suite stays at p50 18.7 ms per scored frame.
-- Limits: the screens and the dim clip are software-made, so neither result is shown on real artefacts or real dim
-  rooms; frames enlarged by 1.5x or a whole number before the engine show screen-like peaks (pixel repetition).
+- Suite results before and after (shipped: SYN-A7 50.0% to 0.0%, `registration` BPCER 14.3% to 0.0%; legacy:
+  prints and looped clips still pass a passive-only check), cost and limits:
+  [results/20261005b-shipped/README.md](results/20261005b-shipped/README.md).
 
-## Update 2026-10-05: current defaults and results
+## Update 2026-10-05: defaults and results of that date
 
-The sections below keep the dated studies of 2026-09-29 and 2026-09-30. Since then the defaults and the engine changed again (2026-10-04 and 2026-10-05), and the three suites were re-run; their numbers are copied from [results/20261005-shipped/README.md](results/20261005-shipped/README.md) and the `report.md` files next to it.
+The sections below keep the dated studies of 2026-09-29 and 2026-09-30. Since then the defaults and the engine changed again (2026-10-04 and 2026-10-05), and the three suites were re-run; their results are in [results/20261005-shipped/README.md](results/20261005-shipped/README.md).
 
 What changed in the shipped defaults:
 
@@ -61,17 +63,17 @@ What changed in the shipped defaults:
 - Capture frame: after the last challenge the engine waits for a neutral, frontal, eyes-open frame ("Look directly at the camera and hold still"); `active.neutral_max_pitch_deg` is 20.
 - Local settings can no longer weaken the checks: only the keys on the local allow-list (passive and PAD reject thresholds with floors, challenge timeout, stream timeout, `max_retries`, `diagnostic.enable`, per-workflow threshold and `max_retries`) are read from the client.
 
-Results (275 transactions, 75 scenarios, shipped defaults, no overrides): APCER is 0.0% per transaction and on the first attempt for every species and workflow except `registration` SYN-A7, the adaptive screen replay: **50.0% (4/8)**, source artefacts accepted 1 of 2 (`atk-s3-adaptive-screen` is accepted in 4 of 4 seeds; `atk-s2-adaptive-screen` is rejected in 4 of 4). Replays are refused except this one; the limit is inherent to challenge-response, because a clip of the right action scores like a genuine one, and no threshold separates them. The pooled per-attempt figure is a secondary line only: `registration` 1.7% (4/238) per attempt, 4.9% (4/82) per transaction. BPCER: `registration` 14.3% (4/28) per transaction and on the first attempt, all four from the dim clip `bf-s3-dim` (expected ACCEPT, observed REJECT; still a known mismatch, a later runner check shows 3 `LOW_LIGHT` endings and then a counted `PAD_SCORE` failure); `login_auth` 0.0% (0/12). The report lists 9 of 275 transactions that did not meet their scenario expectation (4 adaptive screen, 4 dim, 1 loop ending on seed 2). Interval columns treat transactions as independent, which they are not (one artefact is replayed in several transactions); read the counts first.
-
-Legacy configuration (`PASSIVE_THEN_ACTIVE` for all six workflows, `passive.min_frames=8`), same 275 transactions, `results/20261005-legacy/`: pooled attack APCER per transaction and on the first attempt `eod_auth` 50.0% (16/32), `exception_auth` 50.0% (16/32), `login_auth` 33.3% (4/12), `packet_auth` 71.4% (40/56), `registration` 63.4% (52/82); APCER_max 100.0% (80/80), species SYN-A8; 136 of 275 transactions did not meet their expectation.
-
-Latency (`results/20261005-latency/`, 24 bona fide `registration` transactions, 1 ONNX Runtime thread, shared laptop): per analysed frame p50 69.4 ms, p95 162.4 ms (n=4410); decode p50 6.7 ms, analyse p50 50.7 ms, PAD p50 18.7 ms. The 2026-09-30 timing figures below came from a quieter machine and are not comparable.
+Results (275 transactions, 75 scenarios): APCER 0.0% per transaction for every species and workflow except
+`registration` SYN-A7, the adaptive screen replay, at 50.0% (4/8); BPCER `registration` 14.3% (4/28), all from the
+dim clip `bf-s3-dim`. The per-species tables, the legacy configuration and the latency run are in
+[results/20261005-shipped/README.md](results/20261005-shipped/README.md). The 2026-09-30 timing figures below came
+from a quieter machine and are not comparable with later runs.
 
 Not measured: real people, real artefacts, a physical phone, a live webcam through the full client. The figures of sections 0.2 and 1-6 (including the 29.4% per-attempt BPCER and 25% worst species) are the historic 2026-09-30 data of `results/20260930-engine-fixes/`; the headline of the protocol is per species and per transaction, never pooled.
 
 ## 0. Adopted changes and before/after results (2026-09-30)
 
-Historic: dated 2026-09-30, folder `results/20260930-engine-fixes/`. The current figures are in the update above.
+Historic: dated 2026-09-30, folder `results/20260930-engine-fixes/`. The current figures are in "Current results" above.
 
 ### 0.1 What changed
 

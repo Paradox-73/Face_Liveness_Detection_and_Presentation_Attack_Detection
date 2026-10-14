@@ -91,23 +91,13 @@ scores 96-100); at `ALWAYS_ACTIVE`, 0 of 226. BPCER was 0.0% in both runs
 Under `ALWAYS_ACTIVE` the passive stage still runs and still decides the attack band (section 3): a score below
 `pad.reject_threshold`, or an integrity flag, fails at once without a challenge.
 
-Measured difference (automated suite, 39 scenarios, per attempt; [calibration notes](../eval/calibration-notes.md)
-section 0): under the legacy defaults the pooled APCER was 17.6% (32/182), with a rigid-motion print (SYN-A3) and a
-looped clip (SYN-A8) accepted passively in all 8 attempts each. Under the shipped defaults of that run the pooled
-APCER was 1.7% (4/238); the only accepted attack was an adaptive screen replay (SYN-A7, 4/16 = 25% per attempt). BPCER per attempt was 29.4%
-(15/51), 12 of those 15 from one synthetic very dim pack. The re-run of 2026-10-05 at the current defaults (all six
-authentication and capture workflows `ALWAYS_ACTIVE`, bundle 1.3.0) counts transactions: 0.0% APCER per transaction
-and on the first attempt for every species and workflow except SYN-A7 on `registration` (50.0%, 4/8; the adaptive
-screen replay is accepted in 4 of 4 seeds of `atk-s3-adaptive-screen`), and BPCER 14.3% (4/28) on `registration`, all
-four from the dim clip `bf-s3-dim`, and 0.0% (0/12) on `login_auth`
-([../eval/results/20261005-shipped/README.md](../eval/results/20261005-shipped/README.md)). A screen replay that answers
-each prompt is the known limit of challenge-response; thresholds do not separate it from a genuine score. Two PAD
-additions of the same evening (exposure correction in a dark frame, screen-pattern check; [engine.md](engine.md)
-section 4) bring both remaining figures to 0.0%: SYN-A7 0/8 and `registration` BPCER 0/28
-([../eval/results/20261005b-shipped/README.md](../eval/results/20261005b-shipped/README.md)); the screen check is
-proven on synthetic screens only. The cost for a genuine user is time: the median stream
-time of an accepted attempt rose from 6.6 s to 9.7 s. The end-to-end runs show a printed photo accepted passively
-under the legacy policy and refused under `ALWAYS_ACTIVE` (desktop D8, Android A12).
+Measured difference: section 3 gives the 2026-10-14 figures (0 of 226 synthetic attack transactions accepted at
+`ALWAYS_ACTIVE`, 100 of 226 at passive first). Per-species results:
+[../eval/results/20261014-shipped/README.md](../eval/results/20261014-shipped/README.md); the earlier runs and how to
+read them: [iso-30107.md](iso-30107.md) section 3. The cost for a genuine user is time, not rejections: the median
+accepted registration attempt takes 11.0 s on the replayed stream
+([../eval/results/20261014-latency/README.md](../eval/results/20261014-latency/README.md)). The end-to-end runs show
+a printed photo accepted passively under the legacy policy and refused under `ALWAYS_ACTIVE` (desktop D8, Android A12).
 
 ## 6. Dim light and the capture pose
 

@@ -126,28 +126,8 @@ driver.start();      // later: driver.retry(), driver.cancel(), driver.close()
 Runtime and returns an `OnnxLivenessEngine`: a `DefaultLivenessEngine` wired with `OnnxFaceAnalyzer` (YuNet +
 Face Mesh), `MiniFasPassivePad` and `SFaceEmbedder`, plus the native sessions it owns.
 
-```java
-// Direct use (desktop: bundle from liveness-onnx-1.0.0-SNAPSHOT-models.jar on the class path).
-OnnxLivenessEngine engine = OnnxLivenessEngines
-        .builder(ModelSources.classpath(getClass().getClassLoader()))   // Android: a ModelSource over assets/models/
-        .minimumVersion(config.get(LivenessConfigKeys.MODEL_MIN_VERSION)
-                .orElse(PolicyKey.MODEL_MIN_VERSION.defaultValue()))
-        .imageDecoder(clientImageDecoder)                              // the client's ImageDecoder
-        .build();                                                      // blocking, about 1-2 s: not on the UI thread
-LivenessSession session = engine.open(request, listener);
-// ... at shutdown, after the last session:
-engine.close();                                                        // closes the engine and the ORT sessions
-
-// Or through the SPI (META-INF/services/io.mosip.liveness.core.api.LivenessEngineProvider):
-EngineContext context = EngineContext.builder().config(configSource)
-        .models(ModelSources.classpath(loader)).imageDecoder(clientImageDecoder)
-        .auditSink(auditSink).diagnosticSink(diagnosticSink).build();
-for (LivenessEngineProvider p : ServiceLoader.load(LivenessEngineProvider.class)) {
-    if (p.engineId().equals(config.get(LivenessConfigKeys.ENGINE).orElse(PolicyKey.ENGINE.defaultValue()))) {
-        engine = p.create(context);   // OnnxLivenessEngineProvider, engine id "mosip-onnx-default"
-    }
-}
-```
+Code for the direct factory and for the service-loader route:
+[docs/api/liveness-engine.md](../docs/api/liveness-engine.md), section 1.
 
 - **Parameters:** shipped defaults, then the manifest's signed `engineParams`, then
   `Builder.parameterOverrides(map)` (calibration and tests only). Bad signed values fail with `MODEL_INTEGRITY`,
@@ -156,9 +136,8 @@ for (LivenessEngineProvider p : ServiceLoader.load(LivenessEngineProvider.class)
 - **Errors:** `MODEL_MISSING`, `MODEL_INTEGRITY` or `MODEL_VERSION` (bundle rejected; the client audits
   `REG-EVT-LV14` with the workflow that needed the engine), `MODEL_LOAD` (ONNX Runtime missing or a model does
   not load), `CONFIG_INVALID` (bad `model.min_version` or override).
-- **Other options:** `trustAnchor(PublicKey)` (production signing key; replaces the built-in development key),
-  `runtimeOptions(OnnxRuntimeOptions)`, `detectorOptions(...)`, `withEmbedder(false)` (no same-person or capture
-  similarity checks), `metrics(LivenessMetrics)`. `builder(ModelRegistry)` starts from an already verified bundle.
+- **Other options:** listed in the API doc, section 1.1; `builder(ModelRegistry)` starts from an already verified
+  bundle.
 - **Accessors:** `info()` (`mosip-onnx-default@1.0.0`, the five models with SHA-256, all 8 challenge types),
   `engine()` (the `DefaultLivenessEngine`), `modelSet()`, `metrics()`, `parameters()`, `bundleVersion()`.
 - **Threads:** one engine serves the whole application. `open` is safe from any thread; each session belongs to
@@ -254,9 +233,9 @@ owning thread (at once when called on it); `close()` cancels and overwrites the 
 - **Continuous PAD**: every 2nd analysed frame; the median of the last `passive.min_frames` scores below the
   reject threshold fails `PAD` at once.
 - **Multiple faces**: more than one face on `active.multi_face_frames` (3) analysed frames in a row anywhere in the
-  active phase ends the session as `FAILED(QUALITY, MULTI_FACE)`, not counted, with "More than one face detected"
-  and "Ensure your face is clearly visible." (before: the frames were skipped and the challenge ran to its
-  timeout). Like Cancel, this gives no extra counted attempt to an attacker; the retry limit is unchanged.
+  active phase ends the session with `MULTI_FACE` and "More than one face detected" / "Ensure your face is clearly
+  visible.". Because a challenge is already on screen it ends as a counted `TIMEOUT`, like a cancel or a device
+  error there, so it cannot be used to re-draw the challenges.
 - **Final checks** after the last challenge: median PAD over the whole active phase at least the reject
   threshold; every head turn's planarity residual at least the minimum.
 - **Capture pose** (appendix A.1 task 5): then "Look directly at the camera and hold still" until a face passes the
@@ -269,15 +248,15 @@ owning thread (at once when called on it); `close()` cancels and overwrites the 
 ### Frame integrity and planarity (section 4.8)
 
 - `FrameIntegrityChecker`: sequence number or timestamp not increasing (`TIMESTAMP_REGRESSION`); source frame
-  rate (from sequence numbers, so frames dropped before the session count) below 90% of `integrity.min_fps` after
+  rate (from sequence numbers, so frames dropped before the session count) below 90% of `integrity.min_fps` (3) after
   2 s (`INVALID_FRAMES`); 10 undecodable frames in a row (`INVALID_FRAMES`); more than
-  `integrity.max_frozen_frames` identical frames in a row, identical meaning equal SHA-256 of the JPEG bytes or a
+  `integrity.max_frozen_frames` (5) identical frames in a row, identical meaning equal SHA-256 of the JPEG bytes or a
   mean absolute difference below 0.5 grey levels between point-sampled 64x64 thumbnails (`FROZEN`); the last 6
-  frames repeating an earlier run of the last 30 by 64-bit difference hash, with real motion inside the run
+  frames repeating an earlier run of the last `integrity.loop_window_frames` (300) by 64-bit difference hash, with real motion inside the run
   (`LOOP`).
 - `FaceTracker`: consecutive boxes must overlap (IoU at least 0.3) and be at most 500 ms apart (2.5 frame
   intervals on slower streams). A broken track restarts score collection in the passive phase; during challenges
-  it triggers a same-person check (`FACE_SWITCH` when similarity drops below `binding.min_similarity`), or fails
+  it triggers a same-person check (`FACE_SWITCH` when similarity drops below `binding.min_similarity`, 60), or fails
   `TRACKING_LOST` when there is no embedder.
 - `IdentityTracker`: the reference is the mean unit embedding of 3 neutral passive frames (yaw and pitch within
   `active.neutral_max_yaw_deg`, 10 degrees). When no good passive frame falls inside that window (for example a
@@ -293,7 +272,8 @@ owning thread (at once when called on it); `close()` cancels and overwrites the 
 ### Capture binding (section 4.10)
 
 `CaptureBinder` checks, and reports every failed check: token present, unused, equal to the one issued (session,
-workflow, subject, device, nonce, times) and not expired; capture signed by the streaming device; echo of the
+workflow, subject, device, nonce of at least 16 characters, `issuedAt`) and not expired
+(`expiresAt = issuedAt + binding.max_gap_ms + 10 s capture timeout`); capture signed by the streaming device; echo of the
 token nonce for `padCapability` devices; capture time within
 `[start - 2 s, start + binding.max_gap_ms + capture timeout]`, where start is the pass for resident workflows and
 the capture start (after device Ready) for authentication workflows; no device PAD FAIL; exactly one face in the

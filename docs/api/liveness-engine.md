@@ -36,6 +36,7 @@ Builder options: `trustAnchor(PublicKey)` (production signing key; default is th
 no same-person or binding similarity checks), `parameterOverrides(Map)` (calibration and tests only),
 `metrics(LivenessMetrics)`. Shortcuts: `OnnxLivenessEngines.create(ModelSource, ImageDecoder)`.
 Android: `ModelSources.directory(File)` or the module's `AssetModelSource`.
+At shutdown, after the last session, `engine.close()` closes the engine and its ONNX Runtime sessions.
 
 ### 1.2 Through the service-provider interface
 

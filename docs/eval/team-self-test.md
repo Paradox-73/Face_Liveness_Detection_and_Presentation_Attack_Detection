@@ -7,11 +7,12 @@ captures and home-made attacks, write down what happened, and turn the notes int
   S1-S4 = team members). Its results are used to check and tune the thresholds.
 - **What it is not:** the volunteer test (subjects S5-S12, thresholds frozen first). Team results are never reported
   as the test result; they go in the report as "development split".
-- **Status on 2026-09-30:** every automated run so far used recorded or synthetic frames. Nobody has yet passed a
-  live face from a webcam through the full client, so the first session is also the first real check of how often
-  genuine people are rejected. The recording protocol and file names for the team are in
-  [../manual-test-checklist.md](../manual-test-checklist.md) section A; `python tools/eval/ingest-recordings.py`
-  turns the recordings into frame packs, runs them and writes the report.
+- **Status on 2026-10-14:** no live face from a webcam has yet been passed through the full client, so the first
+  session is also the first real check of how often genuine people are rejected (what has and has not been run:
+  [../install/README.md](../install/README.md#10-evaluate-in-15-minutes-with-your-own-webcam) section 10). The
+  recording protocol and file names for the team are in [../manual-test-checklist.md](../manual-test-checklist.md)
+  section A; `python tools/eval/ingest-recordings.py` turns the recordings into frame packs, runs them and writes
+  the report.
 
 ## 1. People, time and material
 
@@ -29,38 +30,25 @@ screenshots for the deck need the person's written OK.
 
 ## 2. Start the three programs (Git Bash, repository root)
 
-```bash
-# Java, Maven and Android paths: the environment of docs/install/README.md section 1 (JAVA11_HOME, JAVA21_HOME, MAVEN_ARGS)
+1. MockSync, the local stand-in for the MOSIP server (accepted by the organisers for judging, 2026-09-30 call), and
+2. MockMDS, the mock face device switched to the real webcam: start both as in
+   [../install/README.md](../install/README.md#101-steps) section 10.1, steps 1-4 (the same steps are `MT-DT-02`
+   and `MT-DT-03` in [../manual-test-checklist.md](../manual-test-checklist.md)).
+3. Diagnostic mode: the client writes one line per liveness step (scores, reason) to its log; no images.
 
-# 1. MockSync: the local stand-in for the MOSIP server (accepted by the organisers for judging, 2026-09-30 call)
-curl -s http://127.0.0.1:8080/v1/syncdata/actuator/health  # {"status":"UP"} means it already runs; otherwise:
-(cd tools/mock-sync && scripts/run-mock-sync.sh)            # in its own window
+   ```bash
+   curl -s -X PUT http://127.0.0.1:8080/admin/config -H 'Content-Type: application/json' \
+     -d '{"mosip.registration.liveness.diagnostic.enable":"Y"}'
+   ```
 
-# 2. MockMDS: the mock face camera device, switched to the real webcam
-bash scripts/mockmds-run.sh
-curl -s -X POST http://127.0.0.1:4501/admin/source \
-  -d '{"type":"Face","source":"FFMPEG","camera":"Integrated Camera","fps":15}'
+4. Start the desktop client and log in as `officer1` (section 10.1 step 5, `MT-DT-05`), run a data sync from the
+   home screen so the client downloads the diagnostic-mode setting, then close it (`-Stop`) and start it again so
+   the setting is read. With diagnostic mode on, the liveness window shows extra lines (scores and the reason for a
+   failure).
 
-# 3. Diagnostic mode: the client writes one line per liveness step (scores, reason) to its log; no images
-curl -s -X PUT http://127.0.0.1:8080/admin/config -H 'Content-Type: application/json' \
-  -d '{"mosip.registration.liveness.diagnostic.enable":"Y"}'
-```
-
-- `ffmpeg -list_devices true -f dshow -i dummy` prints the exact webcam name if `Integrated Camera` is refused.
-- The webcam light turns on only while the client is streaming.
-
-Start the desktop client (PowerShell):
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\desktop-run.ps1
-```
-
-- Log in as `officer1` (password in [../test-data.md](../test-data.md)), run a data sync from the home screen so the
-  client downloads the diagnostic-mode setting, then close it (`-Stop`) and start it again so the setting is read.
-- With diagnostic mode on, the liveness window shows extra lines (scores and the reason for a failure).
-- If the client state is lost (login refused, home screen missing), `bash scripts/demo-desktop.sh --restore-golden`
-  puts back the onboarded state and runs the scripted demo once (about 10 minutes); switch MockMDS back to the
-  webcam afterwards, because the demo leaves it on a frame pack.
+If the client state is lost (login refused, home screen missing), `bash scripts/demo-desktop.sh --restore-golden`
+puts back the onboarded state and runs the scripted demo once (about 10 minutes); switch MockMDS back to the webcam
+afterwards, because the demo leaves it on a frame pack.
 
 ## 3. How one test goes
 

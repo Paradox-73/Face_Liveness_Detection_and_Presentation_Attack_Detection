@@ -143,17 +143,11 @@ flowchart TB
 
 ## 6. Repository layout behind the architecture
 
-| Folder | Content | Licence |
-|---|---|---|
-| `liveness/liveness-core` | Engine contract and default engine, no runtime dependencies, checked against Android API 28 | MPL-2.0 |
-| `liveness/liveness-onnx` | ONNX Runtime adapters, signed model loader, engine factory `OnnxLivenessEngines` | MPL-2.0 |
-| `liveness/face-match-sdk` | SFace `IBioApiV2` SDK for FACE matching | MPL-2.0 |
-| `models/` | Signed model bundle | per model, see `models/SOURCES.md` |
-| `clients/desktop` | Upstream `mosip/registration-client` plus the integration | MPL-2.0 |
-| `clients/android` | Upstream `mosip/android-registration-client` plus the `livenessmanager` module | MIT (upstream files); project-added files MPL-2.0 |
-| `devices/mock-mds` | Upstream MockMDS extended with real frame sources, faults, L1 and PAD echo | MPL-2.0 |
-| `tools/mock-sync` | Local stand-in for the MOSIP server | MPL-2.0 |
-| `tools/eval`, `eval/` | Scenario runner and ISO/IEC 30107-3-style metrics | MPL-2.0 |
+Folders, upstream commits and licences: [README.md, "Repository map"](../../README.md#repository-map). In
+`liveness/`, `liveness-core` is the engine contract and default engine (no runtime dependencies, checked against
+Android API 28), `liveness-onnx` holds the ONNX Runtime adapters, the signed model loader and the factory
+`OnnxLivenessEngines`, and `face-match-sdk` is the SFace `IBioApiV2` SDK. `devices/mock-mds` extends upstream
+MockMDS with real frame sources, faults, L1 and PAD echo.
 
 Why one repository and one shared engine: [ADR 0001](../adr/0001-monorepo.md) and
 [ADR 0002](../adr/0002-shared-engine.md).

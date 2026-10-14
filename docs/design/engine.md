@@ -95,15 +95,11 @@ Class: `DefaultLivenessSession` (package-private) behind `LivenessSession`. Test
 
 ## 4. Passive stage
 
-- **Acquisition:** `QualityGate` checks each frame, first failure wins: face count (0 = `NO_FACE`, more than 1 =
-  `MULTI_FACE`), detector confidence (`POOR_QUALITY`), box more than 10% outside the image (`FACE_OUT_OF_AREA`),
-  inter-eye distance below `quality.min_ied_px` (`FACE_TOO_SMALL`), yaw above `quality.max_yaw_deg`, pitch above
-  20 degrees or roll above 25 degrees (`OFF_POSE`), mean grey below 50 (`TOO_DARK`) or above 225 (`TOO_BRIGHT`),
-  sharpness below the minimum (`BLURRY`). Each code maps to one PS04 guidance message ("Look directly at the
-  camera", "Improve lighting", ...).
-- **Score:** `S = round(100 x median(p))` over the last `passive.min_frames` live probabilities `p` of the
-  MiniFASNet ensemble. The 5 acquisition frames count.
-- **Decision:** [decision-flow.md](decision-flow.md).
+The quality gate (first failed check wins; each code maps to one PS04 guidance message), the score
+`S = round(100 x median(p))` over the last `passive.min_frames` MiniFASNet live probabilities (the 5 acquisition
+frames count) and the decision rules are specified in
+[liveness/README.md](../../liveness/README.md#passive-stage-sections-45-and-46); the bands and policies are in
+[decision-flow.md](decision-flow.md).
 
 Model preprocessing (crop scales 2.7 and 4.0, raw 0-255 BGR input, softmax class 1 = live) is pinned by unit tests
 and documented in `models/SOURCES.md`.
@@ -145,16 +141,9 @@ planarity residual at least `planarity.min_residual`; the chosen capture frame i
 
 ## 6. Frame integrity and planarity
 
-| Check | Rule (defaults) | Reason code |
-|---|---|---|
-| Timestamps | sequence number and time must increase | `TIMESTAMP_REGRESSION` |
-| Frame rate | source rate (from sequence numbers) below 90% of `integrity.min_fps` (3) after 2 s | `INVALID_FRAMES` |
-| Undecodable frames | 10 in a row | `INVALID_FRAMES` |
-| Frozen stream | more than `integrity.max_frozen_frames` (5) identical frames: equal SHA-256 of the JPEG bytes, or mean absolute difference below 0.5 grey levels on 64x64 thumbnails | `FROZEN` |
-| Loop | last 6 frames repeat an earlier run in the last 30 by 64-bit difference hash, with real motion inside the run | `LOOP` |
-| Tracking | consecutive boxes overlap (IoU at least 0.3), at most 500 ms apart | `TRACKING_LOST`, or a same-person check |
-| Same person | SFace similarity to the 3-frame neutral reference at least `binding.min_similarity` (60) | `FACE_SWITCH` |
-| Planarity | head turn mapped by a homography (31 Face Mesh points) or affine map (5 points); residual RMS / inter-eye distance below `planarity.min_residual` (0.02) | `PLANAR` |
+Timestamps, frame rate, undecodable and frozen frames, loops (`INTEGRITY`), face tracking (`TRACKING_LOST`), the
+same-person check (`FACE_SWITCH`) and the planarity residual on head turns (`PLANAR`): rules and defaults in
+[liveness/README.md](../../liveness/README.md#frame-integrity-and-planarity-section-48).
 
 A static JPEG re-sent by stock MockMDS is refused by the frozen check (desktop run D6 "injected still stream",
 `docs/test-report/desktop-e2e.md`), although MiniFASNet alone scores it as live (0.548, `models/SOURCES.md`).
@@ -162,18 +151,10 @@ A static JPEG re-sent by stock MockMDS is refused by the frozen check (desktop r
 ## 7. Capture binding
 
 Preview frames are unsigned; only the `RCAPTURE` record is signed by the device. `CaptureBinder` links the two so
-that the stored face is the face that passed liveness:
-
-1. Single-use `LivenessPassToken`: session ID, workflow, subject, device serial, nonce (at least 16 characters),
-   `issuedAt`, `expiresAt = issuedAt + binding.max_gap_ms + 10 s capture timeout`.
-2. The capture is signed by the device that streamed (serial match).
-3. Capture time inside `[start - 2 s, start + binding.max_gap_ms + capture timeout]`; start is the pass
-   (resident) or the device-Ready moment (authentication).
-4. Device PAD block, when present, is not `ATTACK`; the challenge nonce is echoed for `padCapability` devices.
-5. Exactly one face in the captured image; SFace similarity to the session reference at least
-   `binding.min_similarity`; PAD on the captured image at least `pad.reject_threshold`.
-
-Device PAD and capture PAD failures fail as `PAD`; everything else as `BINDING`. Both forbid an override.
+that the stored face is the face that passed liveness. A single-use `LivenessPassToken`, the device serial, the capture time window, the device PAD block, one face, SFace
+similarity and capture PAD are all checked; the rules are in
+[liveness/README.md](../../liveness/README.md#capture-binding-section-410). Device PAD and capture PAD failures
+fail as `PAD`; everything else as `BINDING`. Both forbid an override.
 Client-side token handling: [security-privacy.md](security-privacy.md), section 3.
 
 ## 8. Models
@@ -206,8 +187,8 @@ factory is registered as a `LivenessEngineProvider` with engine ID `mosip-onnx-d
 
 | Where | Measure | Result | Source |
 |---|---|---|---|
-| Desktop JVM, 640x480, decode included | per-frame p50 / p95 on the quieter runs | 21-23 ms / 38-45 ms | `docs/eval/calibration-notes.md` section 5 |
-| Desktop, stream time to the passive decision | 8 frames | 533 ms | same |
+| Desktop JVM, 640x480, decode included, latency suite of 2026-10-14 (shared laptop, 1 ONNX Runtime thread) | per-frame p50 / p95; median accepted registration attempt | 37.5 ms / 115.4 ms; 11.0 s | [../eval/results/20261014-latency/README.md](../eval/results/20261014-latency/README.md) |
+| Desktop JVM, quieter runs of 2026-09-29 (history) | per-frame p50 / p95; stream time to the passive decision at 8 frames (the default then) | 21-23 ms / 38-45 ms; 533 ms | `docs/eval/calibration-notes.md` section 5 |
 | Android emulator (x86_64, CPU only) | per-frame p50, attempts with challenges | 37-45 ms | `docs/test-report/android-e2e.md` section 5 |
 | Android emulator | passive pass, user-visible total | 2.2-3.0 s | same |
 | Model loading | desktop start-up preload / Android emulator | about 1.4 s / 10.7 s | `docs/design/desktop-liveness-services.md`, `docs/design/android-liveness.md` |
