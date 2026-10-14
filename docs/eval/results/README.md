@@ -2,6 +2,8 @@
 
 Outputs of `tools/eval/scenario-runner` and `tools/eval/analyze.py` quoted in [../calibration-notes.md](../calibration-notes.md). Every folder holds `attempts.jsonl` (one JSON line per attempt: decisions, reason codes, scores, timings; never images), `summary.md` (one row per transaction) and `run.json` (models, parameters, platform); the full suites also hold `report.md` (the ISO/IEC 30107-3-style metrics) and `det.png`.
 
+The runs before 2026-10-14 keep only `report.md`, `summary.md`, `run.json` and `det.png`; their `attempts.jsonl` files (8.3 MB) left the tree on 2026-10-15 and stay in git history: `git show a1b5bfa:docs/eval/results/<folder>/attempts.jsonl`. The exception is `20260930-engine-fixes/shipped/attempts.jsonl`, which `tools/eval/tests/test_analyze.py` reads.
+
 All of it is technology regression data on synthetic attacks and three openly licensed clips, not an ISO/IEC 30107-3 evaluation.
 
 | Folder | What ran | Configuration |

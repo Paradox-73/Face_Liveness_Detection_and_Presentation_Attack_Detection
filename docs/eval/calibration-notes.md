@@ -15,7 +15,8 @@ Read this first:
 - Checked: the 2026-09-29 and 2026-09-30 runs of `shipped` and `strict` gave the same outcome, decision, reason
   codes, passive score, active PAD score and binding similarity for every one of the 256 and 312 attempts they
   share, although the second run was three times slower per frame.
-- Raw data: `results/<run>/<suite>/attempts.jsonl` (one JSON line per attempt, no images), `report.md` (the
+- Raw data: `results/<run>/<suite>/attempts.jsonl` (one JSON line per attempt, no images; for runs before
+  2026-10-14 in git history only, see [results/README.md](results/README.md)), `report.md` (the
   metrics), `summary.md` (one row per transaction) and `run.json` (models, parameters, platform). The frame
   measurements quoted below come from the `inspect` command of the runner (`inspect --all`, one CSV row per frame).
 
