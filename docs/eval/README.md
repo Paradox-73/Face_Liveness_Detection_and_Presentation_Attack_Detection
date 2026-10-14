@@ -7,6 +7,8 @@ Tools and data descriptions for testing the face liveness engine automatically a
 - [calibration-notes.md](calibration-notes.md): results of the automated suite on the shipped engine and the parameter changes they support.
 - [results/](results/): the reports of the runs quoted in the calibration notes; the latest are the suites of 2026-10-05 evening, after the exposure correction and the screen-pattern check ([results/20261005b-shipped/README.md](results/20261005b-shipped/README.md), with the morning run before them).
 
+[../manual-test-checklist.md](../manual-test-checklist.md) lists the steps only people can do: webcam recordings of each team member, the volunteer attack session, both clients with a live face, and the video dry run. Results go into [../manual-test-results-template.md](../manual-test-results-template.md). `python tools/eval/ingest-recordings.py` reads the recordings from `../run/recordings/` (names `<subject>_<condition>_<clip>.mp4`, for example `S2_C1_blink.mp4`), cuts them into `rec-*` frame packs, writes one scenario per subject and condition into the output folder, runs the scenario runner and `analyze.py`, and prints the path of `report.md`. Its options and limits are in the script header.
+
 The automated suite replays recorded frames into the engine. That is an injection path in itself, and the attack frames are made in software, so its results are **technology regression results, not an ISO/IEC 30107-3 evaluation**.
 
 ## Layout
@@ -22,6 +24,7 @@ The automated suite replays recorded frames into the engine. That is an injectio
 | `tools/eval/scenario-runner/` | Java 11 command-line runner: the real engine and the real ONNX models over the scenarios |
 | `tools/eval/analyze.py` | APCER, BPCER, APNRR, BPNRR, intervals, DET plot and a Markdown report from the runner's output |
 | `tools/eval/run-suites.sh` | runs the four standard suites and their reports |
+| `tools/eval/ingest-recordings.py` | turns the team's webcam recordings into frame packs and scenarios, runs them and writes the report |
 | `tools/eval/tests/` | pytest tests of the Python tools |
 
 Frame packs and clips live outside git, in `../run/frame-packs/` next to the repository (override with the environment variable `LIVENESS_FRAME_PACKS`). Only manifests are committed.
@@ -153,10 +156,10 @@ Each run folder holds:
 
 ```bash
 mvn -f tools/eval/scenario-runner/pom.xml test     # 31 JUnit 5 tests; a scripted engine stands in for the models
-python -m pytest tools/eval/tests                  # 102 pytest tests
+python -m pytest tools/eval/tests                  # 118 pytest tests
 ```
 
-The Java tests cover the scenario loader (every field and error), the playlist (endings, reaction delay, match, mismatch, fixed), outcome and layer classification, the runner end to end with a scripted engine (bona fide pass, wrong-clip rejection over all retries, retry budget from the scenario, no-face and stream-end non-responses, runner time limit, expectation and layer mismatches, parameter pass-through, the low-light ending and `--no-low-light`, no frame content in records), JSON, latency statistics, CLI options, and that every committed scenario loads and names only packs that have a manifest. The Python tests check the Clopper-Pearson values against published figures, the counting rules (per transaction, first attempt, workflow grouping, source artefacts, IAPAR and FRR, the conversion of a MATCH failure in the hand-filled sheet), DET and BPCER20, the report, the manifest helpers, that every committed manifest is consistent, and the image transforms.
+The Java tests cover the scenario loader (every field and error), the playlist (endings, reaction delay, match, mismatch, fixed), outcome and layer classification, the runner end to end with a scripted engine (bona fide pass, wrong-clip rejection over all retries, retry budget from the scenario, no-face and stream-end non-responses, runner time limit, expectation and layer mismatches, parameter pass-through, the low-light ending and `--no-low-light`, no frame content in records), JSON, latency statistics, CLI options, and that every committed scenario loads and names only packs that have a manifest. The Python tests check the Clopper-Pearson values against published figures, the counting rules (per transaction, first attempt, workflow grouping, source artefacts, IAPAR and FRR, the conversion of a MATCH failure in the hand-filled sheet), DET and BPCER20, the report, the manifest helpers, that every committed manifest is consistent, the image transforms, and the recording names and generated scenarios of `ingest-recordings.py`.
 
 ## Design choices
 
