@@ -131,8 +131,8 @@ public enum EngineParameter {
     /** Frames in a row a non-requested action must show before it fails the challenge. */
     CONTRARY_MIN_FRAMES("active.contrary_min_frames", 2, 1, 10, true),
     /**
-     * Analysed frames in a row with more than one face that end the challenges with {@code MULTI_FACE} (not counted,
-     * "More than one face detected"). A single frame is not enough, so a passing detector glitch does not end it.
+     * Analysed frames in a row with more than one face that end the challenges with {@code MULTI_FACE} (a counted
+     * {@code TIMEOUT}, "More than one face detected"). A single frame is not enough, so a passing detector glitch does not end it.
      */
     ACTIVE_MULTI_FACE_FRAMES("active.multi_face_frames", 3, 1, 30, true),
     /** During challenges, PAD runs on every n-th analysed frame. */

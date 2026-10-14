@@ -570,7 +570,7 @@ final class DefaultLivenessSession implements LivenessSession {
             lastProblem = ReasonCode.MULTI_FACE;
             qualityProblems.add(ReasonCode.MULTI_FACE);
             if (++multiFaceRun >= params.getInt(EngineParameter.ACTIVE_MULTI_FACE_FRAMES)) {
-                // A second person in view: "More than one face detected", not counted, instead of a timeout.
+                // A second person in view: "More than one face detected" now instead of at the timeout; finish() counts it.
                 fail(FailureReason.QUALITY, ReasonCode.MULTI_FACE);
                 return;
             }
