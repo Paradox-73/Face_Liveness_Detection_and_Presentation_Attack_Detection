@@ -146,7 +146,7 @@ the claim.
   - **58 / 58** checks: scripted end-to-end run on the real Android client (earlier defaults; 55 of 75 on 2026-10-14).
   - **75** automated liveness and attack scenarios, 275 transactions, scored with ISO/IEC 30107-3 metrics.
 - One line (synthetic attacks, per transaction, from `docs/eval/results/20261014-shipped/README.md`): shipped
-  defaults **0 of 226** attack transactions accepted, genuine rejected **0.0% (0/28)**; passive first, as the problem
+  defaults **0 of 226** attack transactions accepted, genuine rejected **0.0%** (registration 0/28, face sign-in 0/12); passive first, as the problem
   statement describes: 100 of 226 accepted.
 
 - Printed on the slide: "Synthetic attacks, three people from open clips: regression results, not an ISO/IEC

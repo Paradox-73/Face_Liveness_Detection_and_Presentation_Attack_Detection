@@ -31,7 +31,7 @@ Checked result on 2026-09-28 (Windows 11, TPM 2.0 laptop, desktop client built f
 ## Quick start: desktop client
 
 Commands are for Git Bash from `tools/mock-sync`; every script also exists as `.ps1` for PowerShell except the
-end-to-end runner.
+end-to-end runner and `show-packet.sh` (`fetch-data.py` is Python).
 
 1. **Build and start MockSync.** The first start writes keys and the HTTPS certificate into `work/` (gitignored).
    ```bash

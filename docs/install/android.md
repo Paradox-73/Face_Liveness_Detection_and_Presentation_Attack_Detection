@@ -374,7 +374,7 @@ frame packs as the camera, and checks the results (report: `docs/test-report/and
 ```bash
 ARC_WEBCAM=emulated bash scripts/android-run-emulator.sh --headless   # no webcam attached
 bash scripts/android-build.sh && adb install -r -g clients/android/build/app/outputs/flutter-apk/app-debug.apk
-bash scripts/demo-android.sh                       # about 35 minutes; output in ../run/demo/android-<time>/
+bash scripts/demo-android.sh                       # about 30 minutes; output in ../run/demo/android-<time>/
 bash scripts/demo-android.sh --sections "login resident"   # some sections only
 ```
 

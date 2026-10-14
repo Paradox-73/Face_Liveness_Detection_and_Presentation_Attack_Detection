@@ -488,9 +488,9 @@ Not proposed, with the reason: `planarity.min_residual` (4.6, no data on either 
 ## 7. Reproducing
 
 ```bash
-python tools/eval/fetch-frame-packs.py --verify-only        # 10 bona fide packs match their manifests
-python tools/eval/make-attack-packs.py --verify-only        # 25 synthetic packs match
-mvn -f tools/eval/scenario-runner/pom.xml package           # runner jar + 29 tests
+python tools/eval/fetch-frame-packs.py --verify-only        # 12 bona fide packs match their manifests
+python tools/eval/make-attack-packs.py --verify-only        # 31 synthetic packs match
+mvn -f tools/eval/scenario-runner/pom.xml package           # runner jar + 31 tests
 bash tools/eval/run-suites.sh ../run/eval/mine              # shipped, legacy, legacy-strict, latency
 # "before" suites on an older engine: build that engine's runner, copy target/scenario-runner.jar and target/lib
 # elsewhere, then LIVENESS_RUNNER_JAR=<copy>/scenario-runner.jar bash tools/eval/run-suites.sh <out> legacy
