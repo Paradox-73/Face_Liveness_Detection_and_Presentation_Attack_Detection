@@ -108,6 +108,25 @@ public interface LivenessService {
     }
 
     /**
+     * Online model update: downloads the signed bundle from the synced {@code model.update_url} and imports it for
+     * the signed-in user with the checks of {@link #importModelBundle}. Blocks; call it off the main thread.
+     *
+     * @return the result; {@code NOT_FOUND} when no URL is set or the download failed
+     */
+    default ModelBundleImporter.Result updateModelBundle() {
+        return ModelBundleImporter.Result.of(ModelBundleImporter.Status.NOT_SUPPORTED);
+    }
+
+    /**
+     * Tells whether the online model update is configured ({@code model.update_url} is set).
+     *
+     * @return {@code true} when {@link #updateModelBundle()} can download a bundle
+     */
+    default boolean isModelUpdateConfigured() {
+        return false;
+    }
+
+    /**
      * Describes the model bundle the engine runs or would load.
      *
      * @return name, version and whether it was imported; empty when no bundle can be read

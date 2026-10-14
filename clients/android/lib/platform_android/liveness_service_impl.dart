@@ -89,6 +89,26 @@ class LivenessServiceImpl implements LivenessService {
   }
 
   @override
+  Future<ModelBundleOutcome> updateModelBundle() async {
+    try {
+      return await _api.updateModelBundle();
+    } on PlatformException catch (e) {
+      debugPrint('LivenessApi.updateModelBundle failed: ${e.code}');
+      return _bundleStatus('LOAD_FAILED');
+    }
+  }
+
+  @override
+  Future<bool> isModelUpdateConfigured() async {
+    try {
+      return await _api.isModelUpdateConfigured();
+    } on PlatformException catch (e) {
+      debugPrint('LivenessApi.isModelUpdateConfigured failed: ${e.code}');
+      return false;
+    }
+  }
+
+  @override
   Future<ModelBundleOutcome> getModelBundle() async {
     try {
       return await _api.getModelBundle();

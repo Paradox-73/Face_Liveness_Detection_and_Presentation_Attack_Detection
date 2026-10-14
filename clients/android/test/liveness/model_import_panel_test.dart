@@ -104,6 +104,47 @@ void main() {
         findsOneWidget);
   });
 
+  final update = find.byKey(const ValueKey('liveness-model-update-button'));
+
+  testWidgets('online update: hidden while no update URL is synced',
+      (tester) async {
+    await open(tester);
+
+    expect(update, findsNothing);
+  });
+
+  testWidgets('online update: downloads and shows the new version',
+      (tester) async {
+    final service = FakeLivenessService()..updateConfigured = true;
+    await tester.pumpWidget(_app(ModelImportPanel(service: service)));
+    await tester.pumpAndSettle();
+    service.bundle = _outcome('IMPORTED', version: '1.4.0');
+
+    await tester.tap(update);
+    await tester.pumpAndSettle();
+
+    expect(service.updateCalls, 1);
+    expect(service.importCalls, isEmpty);
+    expect(find.text('Liveness model 1.4.0 is now in use.'), findsOneWidget);
+  });
+
+  testWidgets('online update: a failed download is not a missing file',
+      (tester) async {
+    final service = FakeLivenessService()..updateConfigured = true;
+    await tester.pumpWidget(_app(ModelImportPanel(service: service)));
+    await tester.pumpAndSettle();
+    service.bundle = _outcome('NOT_FOUND');
+
+    await tester.tap(update);
+    await tester.pumpAndSettle();
+
+    expect(
+        find.textContaining(
+            'The model could not be downloaded from the update server.'),
+        findsOneWidget);
+    expect(find.textContaining('Choose a .zip file'), findsNothing);
+  });
+
   testWidgets('no file chosen: nothing is imported', (tester) async {
     final service = await open(tester, picked: null);
 

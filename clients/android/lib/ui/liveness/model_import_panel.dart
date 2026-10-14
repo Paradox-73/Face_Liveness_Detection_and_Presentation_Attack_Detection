@@ -15,6 +15,8 @@ import 'package:registration_client/ui/liveness/liveness_outcome_banner.dart';
 /// (a .zip file) and hands it to the native importer, which checks the
 /// signature, the file hashes and the version before it switches the engine.
 /// Shows the version in use and, after an import, the result in plain words.
+/// When the synced update URL is set, "Check for model update" downloads the
+/// bundle from it and runs the same checks.
 ///
 /// Only a supervisor or administrator may import; for anyone else the native
 /// side answers NOT_ALLOWED and the panel shows that.
@@ -38,6 +40,8 @@ class _ModelImportPanelState extends State<ModelImportPanel> {
       widget.service ?? (_defaultService ??= LivenessService());
   ModelBundleOutcome? _current;
   ModelBundleOutcome? _result;
+  bool _resultOnline = false;
+  bool _online = false;
   bool _busy = false;
 
   @override
@@ -48,8 +52,12 @@ class _ModelImportPanelState extends State<ModelImportPanel> {
 
   Future<void> _loadCurrent() async {
     final current = await _service.getModelBundle();
+    final online = await _service.isModelUpdateConfigured();
     if (!mounted) return;
-    setState(() => _current = current);
+    setState(() {
+      _current = current;
+      _online = online;
+    });
   }
 
   Future<String?> _pick() async {
@@ -65,16 +73,22 @@ class _ModelImportPanelState extends State<ModelImportPanel> {
   Future<void> _import() async {
     final path = await _pick();
     if (path == null || path.isEmpty) return;
+    await _run(() => _service.importModelBundle(path), online: false);
+  }
+
+  Future<void> _run(Future<ModelBundleOutcome> Function() task,
+      {required bool online}) async {
     setState(() {
       _busy = true;
       _result = null;
     });
-    final result = await _service.importModelBundle(path);
+    final result = await task();
     final current = await _service.getModelBundle();
     if (!mounted) return;
     setState(() {
       _busy = false;
       _result = result;
+      _resultOnline = online;
       _current = current;
     });
   }
@@ -109,12 +123,25 @@ class _ModelImportPanelState extends State<ModelImportPanel> {
               : const Icon(Icons.upload_file_outlined),
           label: Text(l10n.liveness_model_import),
         ),
+        if (_online) ...[
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            key: const ValueKey('liveness-model-update-button'),
+            onPressed: _busy
+                ? null
+                : () => _run(_service.updateModelBundle, online: true),
+            icon: const Icon(Icons.cloud_download_outlined),
+            label: Text(l10n.liveness_model_update),
+          ),
+        ],
         if (result != null) ...[
           const SizedBox(height: 12),
           LivenessOutcomeBanner(
             key: const ValueKey('liveness-model-import-result'),
-            text: l10n.liveness_model_import_result(
-                result.status, result.version, result.previousVersion),
+            text: _resultOnline && result.status == 'NOT_FOUND'
+                ? l10n.liveness_model_update_failed
+                : l10n.liveness_model_import_result(
+                    result.status, result.version, result.previousVersion),
             severity: result.status == 'IMPORTED'
                 ? LivenessSeverity.success
                 : LivenessSeverity.error,

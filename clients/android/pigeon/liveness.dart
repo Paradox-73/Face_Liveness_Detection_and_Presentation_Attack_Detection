@@ -93,6 +93,17 @@ abstract class LivenessApi {
   @async
   ModelBundleOutcome importModelBundle(String path);
 
+  /// Supervisor action, online model update: downloads the signed bundle
+  /// from the synced mosip.registration.liveness.model.update_url and imports
+  /// it with the same checks as [importModelBundle]. NOT_FOUND when no URL is
+  /// set or the download failed.
+  @async
+  ModelBundleOutcome updateModelBundle();
+
+  /// Whether mosip.registration.liveness.model.update_url is set, so the
+  /// online model update can be offered.
+  bool isModelUpdateConfigured();
+
   /// The model bundle the liveness engine runs (status IMPORTED), or
   /// NOT_FOUND when none can be read.
   ModelBundleOutcome getModelBundle();

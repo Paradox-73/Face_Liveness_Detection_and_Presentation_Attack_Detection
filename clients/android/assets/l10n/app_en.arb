@@ -431,6 +431,8 @@
   "liveness_capture_status": "{status, select, FAILED{We could not verify face liveness. Please try again.} BLOCKED{Face capture could not be completed after the allowed attempts. Please ask your supervisor to follow the recovery process of the centre.} CANCELLED{Face capture was cancelled. The face was not saved.} BUSY{Another face verification is in progress. Close it and try again.} other{We could not verify face liveness. Please try again.}}",
   "liveness_model_title": "Liveness model",
   "liveness_model_import": "Import liveness model",
+  "liveness_model_update": "Check for model update",
+  "liveness_model_update_failed": "The model could not be downloaded from the update server. Check the connection and try again. The current model is still in use.",
   "liveness_model_current": "Model in use: version {version}",
   "liveness_model_unknown": "Model in use: not known",
   "liveness_model_import_result": "{status, select, IMPORTED{Liveness model {version} is now in use.} NOT_ALLOWED{Only a supervisor or administrator can import a liveness model.} BUSY{A face capture is in progress. Finish or close it, then import again.} NOT_SUPPORTED{This device uses a vendor liveness engine. Its models are not managed by this app.} NOT_FOUND{No model bundle was found at that location. Choose a .zip file that contains a signed bundle.} INVALID{The bundle failed the signature or file check. Nothing was installed.} TOO_OLD{Version {version} is not newer than the model in use or the minimum version ({previous}). Nothing was installed.} other{The new model could not be started. The previous model is still in use.}}",

@@ -74,4 +74,18 @@ class FakeLivenessService implements LivenessService {
 
   @override
   Future<ModelBundleOutcome> getModelBundle() async => bundle;
+
+  /// Answer of [isModelUpdateConfigured].
+  bool updateConfigured = false;
+
+  int updateCalls = 0;
+
+  @override
+  Future<ModelBundleOutcome> updateModelBundle() async {
+    updateCalls++;
+    return bundle;
+  }
+
+  @override
+  Future<bool> isModelUpdateConfigured() async => updateConfigured;
 }

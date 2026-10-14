@@ -28,6 +28,13 @@ abstract class LivenessService {
   /// .zip; empty for the app's import folder) and switches the engine to it.
   Future<ModelBundleOutcome> importModelBundle(String path);
 
+  /// Supervisor action: downloads the signed bundle from the synced update
+  /// URL and imports it with the same checks as [importModelBundle].
+  Future<ModelBundleOutcome> updateModelBundle();
+
+  /// Whether the synced update URL is set (online model update offered).
+  Future<bool> isModelUpdateConfigured();
+
   /// The model bundle the liveness engine runs.
   Future<ModelBundleOutcome> getModelBundle();
 

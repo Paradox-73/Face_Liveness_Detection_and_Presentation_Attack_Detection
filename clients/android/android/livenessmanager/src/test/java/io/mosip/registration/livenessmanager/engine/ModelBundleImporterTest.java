@@ -23,7 +23,13 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.File;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
@@ -133,7 +139,7 @@ public class ModelBundleImporterTest {
         runningVersion = "1.3.0";
         store = new ModelBundleStore(tmp.newFolder("store").toPath());
         ModelSource builtIn = ModelSources.directory(shipped.toFile());
-        importer = new ModelBundleImporter(ConfigSource.of(values), () -> store, () -> builtIn,
+        importer = new ModelBundleImporter(key -> Optional.ofNullable(values.get(key)), () -> store, () -> builtIn,
                 new ModelBundleImporter.Engines() {
                     @Override
                     public boolean supportsModelImport() {
@@ -296,6 +302,58 @@ public class ModelBundleImporterTest {
         assertFalse(store.active().isPresent());
         assertFalse("no floor is raised", store.floor().isPresent());
         assertEquals(0, bundleFolders());
+    }
+
+    @Test
+    public void onlineUpdateImportsTheServedBundleWithTheSameChecks() throws Exception {
+        assertFalse("off while model.update_url is not synced", importer.updateUrl().isPresent());
+        byte[][] served = new byte[1][];
+        ServerSocket server = serve(served);
+        try {
+            values.put(LivenessConfigKeys.MODEL_UPDATE_URL,
+                    "http://127.0.0.1:" + server.getLocalPort() + "/bundle.zip");
+            served[0] = Files.readAllBytes(zip(tampered, ""));
+            assertRefused(importer.updateFromServer("supervisor1", SUPERVISOR), Status.INVALID);
+            served[0] = Files.readAllBytes(zip(older, ""));
+            assertRefused(importer.updateFromServer("supervisor1", SUPERVISOR), Status.TOO_OLD);
+
+            served[0] = Files.readAllBytes(zip(valid, ""));
+            Result r = importer.updateFromServer("supervisor1", SUPERVISOR);
+
+            assertEquals(Status.IMPORTED, r.status());
+            assertEquals("1.4.0", store.active().get().version());
+            assertEquals("REG-EVT-LV15", lastAudit().eventId().id());
+        } finally {
+            server.close();
+        }
+    }
+
+    /** Answers every request on a loopback port with {@code served[0]} (com.sun.net.httpserver is not on Android). */
+    private static ServerSocket serve(byte[][] served) throws IOException {
+        ServerSocket socket = new ServerSocket(0, 50, InetAddress.getLoopbackAddress());
+        Thread worker = new Thread(() -> {
+            while (!socket.isClosed()) {
+                try (Socket c = socket.accept()) {
+                    BufferedReader in = new BufferedReader(new InputStreamReader(c.getInputStream(),
+                            StandardCharsets.ISO_8859_1));
+                    String line;
+                    do {
+                        line = in.readLine();
+                    } while (line != null && !line.isEmpty());
+                    OutputStream out = c.getOutputStream();
+                    out.write(("HTTP/1.1 200 OK\r\nContent-Type: application/zip\r\nContent-Length: "
+                            + served[0].length + "\r\nConnection: close\r\n\r\n")
+                            .getBytes(StandardCharsets.ISO_8859_1));
+                    out.write(served[0]);
+                    out.flush();
+                } catch (IOException e) {
+                    // the test closed the socket
+                }
+            }
+        }, "model-bundle-server");
+        worker.setDaemon(true);
+        worker.start();
+        return socket;
     }
 
     @Test

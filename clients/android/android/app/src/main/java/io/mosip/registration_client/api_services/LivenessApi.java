@@ -172,6 +172,30 @@ public class LivenessApi implements LivenessPigeon.LivenessApi {
         });
     }
 
+    /**
+     * Supervisor action, online model update: downloads the bundle from the synced update URL and imports it on a
+     * background thread, then answers on the main thread.
+     */
+    @Override
+    public void updateModelBundle(@NonNull LivenessPigeon.Result<LivenessPigeon.ModelBundleOutcome> result) {
+        importExecutor.execute(() -> {
+            ModelBundleImporter.Result r;
+            try {
+                r = liveness.updateModelBundle();
+            } catch (RuntimeException e) {
+                r = ModelBundleImporter.Result.of(ModelBundleImporter.Status.LOAD_FAILED);
+            }
+            LivenessPigeon.ModelBundleOutcome outcome = toPigeon(r);
+            resultExecutor.execute(() -> result.success(outcome));
+        });
+    }
+
+    @NonNull
+    @Override
+    public Boolean isModelUpdateConfigured() {
+        return liveness.isModelUpdateConfigured();
+    }
+
     @NonNull
     @Override
     public LivenessPigeon.ModelBundleOutcome getModelBundle() {

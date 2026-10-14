@@ -90,6 +90,17 @@ public final class DefaultLivenessService implements LivenessService {
     }
 
     @Override
+    public ModelBundleImporter.Result updateModelBundle() {
+        String user = runtime.currentUserId();
+        return runtime.modelImporter().updateFromServer(user, runtime.rolesOf(user));
+    }
+
+    @Override
+    public boolean isModelUpdateConfigured() {
+        return runtime.modelImporter().updateUrl().isPresent();
+    }
+
+    @Override
     public Optional<ModelBundleImporter.Result> currentModelBundle() {
         return runtime.modelImporter().current();
     }
