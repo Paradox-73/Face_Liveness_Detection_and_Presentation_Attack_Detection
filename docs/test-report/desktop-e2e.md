@@ -113,6 +113,22 @@ commit):
   recording protocol (15-20 s of neutral face, each action as its own clip) is in
   [../manual-test-checklist.md](../manual-test-checklist.md) section A.
 
+**Fresh-clone run of 2026-10-15 (IST): 69 of 71 checks passed** (`scripts/demo-desktop.sh --restore-golden --policy
+recorded`, clean clone of `f07a81f` plus the two fixes below, 04:02-04:22; check lines in
+[desktop-e2e/recorded-20261015/results.txt](desktop-e2e/recorded-20261015/results.txt)). Every section ran: sign-in,
+three registrations with challenges, attacks and maximum attempts, end of day, config sync both ways, L1 device,
+offline, wrong person, screens and both supervisor overrides.
+
+- **The "page that was not left" above was MockMDS, not liveness.** Stock MockMDS reports quality 44 for fingers and
+  irises; MockSync serves `mosip.registration.iris_threshold=60`, so the resident's irises never counted as captured
+  and every registration stayed on Biometric Details. `devices/mock-mds/application.properties` now reports 80.
+- **A stopped run changed the next run's policy.** Flow 60 sets `policy.registration=PASSIVE_THEN_ACTIVE` on MockSync
+  and deletes it at its end; a run stopped in between left it saved. `demo-desktop.sh` now deletes the keys the flows
+  set before and after each run.
+- The 2 failures: "Hold still" did not appear within 30 s in the screens section, and in the second supervisor
+  override the resident's face did not pass in its one attempt.
+- Still not covered by the recorded packs: turn challenges (the pool was cut to blink and smile).
+
 ## 1. Set-up
 
 | Part | What was used |

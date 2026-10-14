@@ -202,9 +202,14 @@ packets' liveness evidence to `run/demo/desktop-<time>/`. Results of the referen
 `docs/test-report/desktop-e2e.md`.
 
 ```bash
-bash scripts/demo-desktop.sh --restore-golden     # about 10 minutes
+bash scripts/demo-desktop.sh --restore-golden --policy recorded   # about 20 minutes; 69 of 71 checks on 2026-10-15
 bash scripts/demo-desktop.sh --flow tools/mock-sync/e2e/flows/demo-desktop.flow --out /tmp/demo
 ```
+
+`--policy recorded` keeps the shipped policy but cuts the challenge pool to blink and smile, the actions the enrolled
+face pack `s3` has footage of; without it the turn-right challenges cannot be answered and many checks fail. A turn
+challenge needs a live face. A flow file of one section does not start the client by itself: wrap it in a file with
+`include 00-start.flow`, `include 10-login.flow`, `section <nn>-<name>.flow` and `exit`.
 
 ### 6.2 Golden snapshot of an onboarded client
 
@@ -213,6 +218,12 @@ Onboarding needs MockSync, MockMDS and several screens, so an onboarded state is
 `run/golden/desktop/`; `--restore-golden` copies them back before a run. The snapshot works only on the machine that
 made it: the database password is sealed with that machine's TPM key, and MockSync must still know the machine
 (`tools/mock-sync/work/machines.json`).
+
+On any other machine there is no snapshot, so the scripted demo cannot run until `officer1` and `supervisor1` are
+onboarded with face pack `s3` (their faces are what the demo's face sign-in and supervisor checks match). The steps
+exist as `tools/mock-sync/e2e/flows/lib/onboard.flow` (run in the interactive driver for
+[../test-report/desktop-e2e.md](../test-report/desktop-e2e.md) row I1), but no script runs them in one command;
+onboarding by hand needs the frame pack to answer the challenge prompts, which only the driver's `follow` does.
 
 ## 7. Unit tests
 

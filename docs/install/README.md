@@ -118,8 +118,10 @@ MockMDS is a Windows program: the path must be a Windows path such as `E:/Projec
    `docs/test-data.md`. The first login runs the initial sync and ends with a restart alert; start again and log in
    again to reach the home screen.
 4. Onboard the operator (face through liveness, fingers and irises from MockMDS), then use registration, face
-   login and end-of-day approval. Scripted run of every flow: `bash scripts/demo-desktop.sh --restore-golden`
-   (needs an onboarded snapshot and the frame packs; see [desktop.md](desktop.md) section 6).
+   login and end-of-day approval. Scripted run of every flow: `bash scripts/demo-desktop.sh --restore-golden --policy recorded`
+   (needs an onboarded snapshot and the frame packs; see [desktop.md](desktop.md) section 6). The snapshot exists
+   only on the team laptop; on another machine `officer1` and `supervisor1` must first be onboarded with face pack
+   `s3`, and no script does that in one command yet ([desktop.md](desktop.md) section 6.2).
 
 Logs: `<run>/desktop/logs/registration.log` (success line `Login screen loaded`; liveness lines contain `Liveness`).
 
@@ -183,7 +185,7 @@ first build downloads its dependencies and takes longer; the team has not timed 
 
 | Part | State (dated in each row) | Where |
 |---|---|---|
-| Engine build and tests; MockSync, MockMDS, desktop client build and login; every liveness flow with recorded frame packs instead of a webcam | run on 2026-09-30 at the earlier defaults (supervisor workflows passive first); 41 of 41 checks; at the shipped policy only the 2026-10-14 run with the challenge pool cut to blink and smile (5 of 16), because the enrolled face has no turn recordings | [../test-report/desktop-e2e.md](../test-report/desktop-e2e.md) |
+| Engine build and tests; MockSync, MockMDS, desktop client build and login; every liveness flow with recorded frame packs instead of a webcam | run on 2026-09-30 at the earlier defaults (supervisor workflows passive first); 41 of 41 checks; at the shipped policy only the 2026-10-15 run with the challenge pool cut to blink and smile (69 of 71), because the enrolled face has no turn-right recordings | [../test-report/desktop-e2e.md](../test-report/desktop-e2e.md) |
 | MockMDS webcam source (`FFMPEG`) streaming a laptop's built-in camera (first frame after about 1.2 s) | run, outside the client; ffmpeg command lines and a live ffmpeg test pattern are covered by MockMDS tests | `devices/mock-mds/LIVENESS-EXTENSIONS.md` sections 2 and 5 |
 | A live face from a webcam passing liveness in the desktop client | **not run** | [../eval/team-self-test.md](../eval/team-self-test.md) (status of 2026-10-14) |
 | Onboarding a live face from the webcam, then face sign-in with it | **not run** | same |
