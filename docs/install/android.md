@@ -23,7 +23,7 @@ must be generated before every fresh build.
 | Android SDK | `platforms;android-34`, `build-tools;34.0.0`, `ndk;23.1.7779620`, `platform-tools` | `ANDROID_HOME` must point to it. The first Gradle build also installs `platforms;android-31` by itself (the `restart_app` 1.2.1 plugin compiles against it). |
 | Emulator (optional) | `emulator` 37.1.11, `system-images;android-34;google_apis;x86_64` | The run script installs both when missing. Needs hardware virtualisation (WHPX on Windows). |
 | Disk | about 18 GB | Measured: Flutter SDK 2.5 GB; Android SDK 8.7 GB (system image 4.2 GB, NDK 2.5 GB, emulator 1.1 GB); `~/.gradle` 5 GB; Dart package cache 0.2 GB; `clients/android/build/` 2.1 GB after a debug and a release build. |
-| RAM | 16 GB machine | Gradle runs with `-Xmx1536M` (`android/gradle.properties`); the emulator uses 2 GB. |
+| RAM | 16 GB machine | Gradle runs with `-Xmx4G` (`android/gradle.properties`); the emulator uses 2 GB. |
 
 One-time setup:
 
@@ -325,6 +325,7 @@ still decides at capture time.
 | `.gitignore` | ignore `/test/*.mocks.dart` and `/android/clientmanager/null/` | `build_runner` (run by `pigeon.sh`) generates `test/login_test.mocks.dart`; the clientmanager unit tests write `android/clientmanager/null/null/id.zip`. |
 | `android/build.gradle`, `android/app/build.gradle`, `android/clientmanager/build.gradle`, `android/app/src/debug/res/xml/network_security_config.xml` | debug-only server URL and plain-HTTP rule | Section 3. |
 | `android/app/build.gradle` | `ARC_ABIS` selects the CPU types of both build types | Section 2 (APK size). |
+| `android/gradle.properties` | Gradle heap `-Xmx4G` instead of `-Xmx1536M` | The debug build of a fresh clone ran out of memory in D8 dex merging (section 7). |
 | `lib/ui/process_ui/widgets_mobile/biometric_capture_scan_block_portrait.dart` | `validateCaptureException`: a capture whose quality equals the threshold counts as good (`<` instead of `<=`) | Upstream off-by-one: operator onboarding already accepted `quality >= threshold`, registration did not, so the Biometric Details step never enabled CONTINUE for a face of quality 90 with threshold 90 (`docs/design/android-liveness.md` 12.1). |
 | `android/app/.../api_services/BiometricsDetailsApi.java`, `android/clientmanager/.../RegistrationServiceImpl.java`, `.../RegistrationDto.java` | exception photo with the built-in camera; liveness fields in the packet meta info; operator face of a face-authenticated packet as officer biometrics | `docs/design/android-liveness.md` section 12. |
 
@@ -358,10 +359,12 @@ still decides at capture time.
 - **Warning "One or more plugins require a higher Android NDK version"
   (25.1.8937393).** Only a warning; the build uses NDK 23.1.7779620, the default
   of Flutter 3.10.4, and succeeds.
-- **`OutOfMemoryError` in D8 during dex merging.** Upstream notes this can happen
-  with `org.gradle.jvmargs=-Xmx1536M`; it did not happen here. Raise the value in
-  `~/.gradle/gradle.properties` (for example `-Xmx3g`) rather than in the
-  tracked file.
+- **`OutOfMemoryError` in D8 during dex merging, then Flutter asks "Do you want to
+  continue with adding multidex support for Android? [y|n]: No element".** The
+  multidex question is misleading: the Gradle heap was too small
+  (`:app:mergeExtDexDebug`). A fresh clone hit this on 2026-10-15 with upstream's
+  `org.gradle.jvmargs=-Xmx1536M`, so `android/gradle.properties` now sets `-Xmx4G`.
+  If it still happens, close other builds or raise the value.
 
 ## 8. End-to-end liveness demo on the emulator
 
