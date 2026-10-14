@@ -18,7 +18,6 @@ CLIENT_DIR="${1:?usage: register-machine.sh <client-dir> [client-lib-dir]}"
 LIB_DIR="${2:-$CLIENT_DIR/lib}"
 ADMIN="${MOCKSYNC_ADMIN_URL:-http://127.0.0.1:8080}"
 to_native() { if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else echo "$1"; fi; }
-SEP=":"; if command -v cygpath >/dev/null 2>&1; then SEP=";"; fi
 
 if ls "$LIB_DIR"/*.jar >/dev/null 2>&1; then
 	OUT="$(mktemp)"

@@ -187,8 +187,6 @@ wait_count() {
 last_attempt() { logcat_dump | grep "Liveness attempt ended" | tail -1; }
 # attempt_matches REGEX: the last liveness attempt's result line matches REGEX (grep -E).
 attempt_matches() { last_attempt | grep -Eq -- "$1"; }
-# result_matches REGEX: the last capture screen result line matches REGEX.
-result_matches() { logcat_dump | grep "Capture screen result" | tail -1 | grep -Eq -- "$1"; }
 # audited EVENT: the audit sink stored EVENT (for example REG-EVT-LV15) since Logcat was last cleared.
 audited() { logcat_has "Audit stored $1"; }
 audited_all() { local e; for e in "$@"; do audited "$e" || return 1; done; }
@@ -517,9 +515,6 @@ save_new_packets() {
   done
   echo "$n"
 }
-
-# packet_has RID TEXT: the saved evidence of packet RID contains TEXT.
-packet_has() { grep -q -- "$2" "$OUT/packets/$1.liveness.json" 2>/dev/null; }
 
 # upload_all: Manage Applications, select every row, UPLOAD; waits for MockSync to receive packets.
 upload_all() {
