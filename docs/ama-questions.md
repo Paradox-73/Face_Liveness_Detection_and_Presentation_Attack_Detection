@@ -5,7 +5,7 @@ final packaging and the pitch format.
 
 ## Still open
 
-Not answered on the call; to send by email to decode@mosip.io. Q numbers are those of the original list, T numbers
+Not answered on the call; to send by email to decode@mosip.io. Q numbers are those of the list sent before the call (in git history), T numbers
 those of the 2026-09-30 short list.
 
 - T1: Is `ALWAYS_ACTIVE` an acceptable default for every workflow that matches a face, given PS04 says "passive
@@ -26,6 +26,8 @@ those of the 2026-09-30 short list.
 - Q13: Is replacing the Visual C++ runtime DLLs of the bundled Zulu 11.0.8 JRE acceptable?
 - Q15: Is a PR adding a row to `mosip/hackathon/Decode-2026/README.md` expected?
 - Q16: Where does each student upload the college ID: Unstop profile, the Submission round, or email?
+- Q2: Are FACE modes active for `login_auth`, `packet_auth`, `eod_auth` and `exception_auth` in Collab masterdata?
+  They are inactive in `mosip-data` 1.2.0.1 `app_authentication_method.xlsx` (verified).
 - Q6 follow-up: confirm that the Android client may stay on `release-1.2.x` (see Answers).
 
 ## Answers

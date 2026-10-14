@@ -70,8 +70,7 @@ all open:
 
 Result with the shipped defaults (2026-10-14): 0 of 226 synthetic attack transactions accepted, BPCER 0.0%
 ([../eval/results/20261014-shipped/README.md](../eval/results/20261014-shipped/README.md)). The adaptive screen
-replay (SYN-A7) passed every layer until two PAD additions of 2026-10-05 (exposure correction in a dark frame, and a
-screen-pattern check); the suite's screens are software-made, so the screen check still needs real screens. These
+replay (SYN-A7) was accepted in 4 of 8 `registration` transactions until the screen-pattern check of 2026-10-05; the suite's screens are software-made, so the screen check still needs real screens. These
 are technology regression results on synthetic attacks, not an ISO/IEC 30107-3 evaluation; the history and how to
 read it are in [iso-30107.md](iso-30107.md) section 3. Planarity has no attack evidence and cannot be relied on
 against a screen that replays a real head turn.

@@ -177,7 +177,7 @@ first build downloads its dependencies and takes longer; the team has not timed 
 
 **Status on 2026-10-14: the team has not yet run these steps end to end** (the team's steps and results sheet: [manual-test-checklist.md](../manual-test-checklist.md) section C, `MT-DT-01` to `MT-DT-19`). What has been run, and what has not:
 
-| Part | State on 2026-10-05 | Where |
+| Part | State (dated in each row) | Where |
 |---|---|---|
 | Engine build and tests; MockSync, MockMDS, desktop client build and login; every liveness flow with recorded frame packs instead of a webcam | run on 2026-09-30 at the earlier defaults (supervisor workflows passive first); 41 of 41 checks; at the shipped policy only the 2026-10-14 run with the challenge pool cut to blink and smile (5 of 16), because the enrolled face has no turn recordings | [../test-report/desktop-e2e.md](../test-report/desktop-e2e.md) |
 | MockMDS webcam source (`FFMPEG`) streaming a laptop's built-in camera (first frame after about 1.2 s) | run, outside the client; ffmpeg command lines and a live ffmpeg test pattern are covered by MockMDS tests | `devices/mock-mds/LIVENESS-EXTENSIONS.md` sections 2 and 5 |

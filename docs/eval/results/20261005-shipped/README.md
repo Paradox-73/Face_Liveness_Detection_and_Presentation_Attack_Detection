@@ -8,7 +8,7 @@ Three folders hold the re-run of the automated suites after the 2026-10-04 and 2
 | `20261005-legacy` | the same 275 transactions, 517 attempt records | the configuration before 2026-09-30: `PASSIVE_THEN_ACTIVE` for all six workflows, `passive.min_frames=8` |
 | `20261005-latency` | the 6 bona fide registration scenarios, 24 transactions | shipped defaults, 1 ONNX Runtime thread (the shipped and legacy suites use 2) |
 
-Each folder holds `report.md` (metrics), `summary.md` (one row per transaction), `run.json` (models, parameters, platform) and `attempts.jsonl` (one JSON line per attempt; never images). `20261005-shipped` and `20261005-legacy` also hold `det.png`; the latency run has no DET plot (no attack scenarios, and `20260929-latency` has none either).
+Each folder holds `report.md` (metrics), `summary.md` (one row per transaction), `run.json` (models, parameters, platform) and had `attempts.jsonl` (one JSON line per attempt; never images), now in git history only ([../README.md](../README.md)). `20261005-shipped` and `20261005-legacy` also hold `det.png`; the latency run has no DET plot (no attack scenarios, and `20260929-latency` has none either).
 
 Machine, all three runs: Windows 10 laptop, 12 logical CPUs, Java 11.0.8, ONNX Runtime 1.20.0 on CPU, model set SHA-256 `6c1759d2bd2d9acf...`. The laptop was shared with other work during the runs, so wall-clock times are noisy. The frames are replayed into the engine; this is technology regression data on synthetic attacks and three openly licensed clips, not an ISO/IEC 30107-3 evaluation.
 

@@ -66,6 +66,10 @@ and model-update tests (212 to 214) and the recording ingest tests (103 to 120).
 so the parity file was re-recorded (decisions and reasons unchanged). The Flutter tests needed the Pigeon code
 generated again (`scripts/android-build.sh --test`, not `--test-only`, after a Pigeon change).
 
+After the cleanup of 2026-10-15 `liveness-onnx` has 125 tests: the test of the deleted, unused `ImageOps.crop` went
+with it. `scripts/test-all.sh` (engine, MockSync, MockMDS, scenario runner, pytest) passed on that commit. If its
+MockSync step fails while packaging, a MockSync started by a demo still holds `mock-sync.jar`; stop it and re-run.
+
 **Upstream and team-written.** About 1,361 of the tests are upstream: the Android `clientmanager` suite (1,186, all upstream
 tests, passing with this project's changes) and about 175 in MockMDS (an estimate from the first audit count; the 228 in the
 table also include the tests added for the mock face device). The remaining 1,330 or so of the 2,691 are team-written (an

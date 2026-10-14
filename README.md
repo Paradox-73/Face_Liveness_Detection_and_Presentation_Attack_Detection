@@ -77,7 +77,7 @@ upstream split: [docs/test-report/README.md](docs/test-report/README.md#2-unit-a
 | B6 secure offline model import | Done on both clients (signature, per-file SHA-256, rollback protection, self-test, previous bundle kept, audit). Android: "Import liveness model" button in Settings, Device Settings ([picture](docs/ux/screenshots/android/a-s1-model-import-button.png)); no phone test. [Android import steps](docs/install/android.md#10-import-a-liveness-model-bundle-offline-model-update), [design](docs/design/android-liveness.md#14-offline-model-update-bonus-b6) |
 | B7 and B8 per-frame latency and memory on a phone | Code done (measurement kit: instrumented test and `scripts/android-perf.sh`); the phone measurement is pending, the results table is empty. [docs/test-report/android-performance.md](docs/test-report/android-performance.md) |
 
-Known limits (full list: [docs/test-report/README.md](docs/test-report/README.md#6-known-limitations) section 6):
+Known limits (more in [docs/test-report/README.md](docs/test-report/README.md#6-known-limitations) section 6):
 
 - Every attack is synthetic and the genuine data is three people from open clips: regression results, not an
   ISO/IEC 30107-3 evaluation. The screen-pattern check that stops the adaptive screen replay is proven on
@@ -142,8 +142,9 @@ exactly what this project changed ([ADR 0001](docs/adr/0001-monorepo.md)).
 
 Full clean-machine guide (Windows): [docs/install/README.md](docs/install/README.md).
 
-Before the first build: install JDK 11 with JavaFX (Azul Zulu 11 FX) and JDK 21, and create the Maven mirror
-settings for the retired Sonatype repositories that the upstream desktop POM uses; both are in
+Before the first build: install JDK 11 with JavaFX (Azul Zulu 11 FX) and JDK 21, and point `MAVEN_ARGS` at the
+shipped mirror settings (`scripts/release/maven-settings.xml`) for the retired Sonatype repositories that the upstream
+desktop POM uses; both are in
 [docs/install/README.md](docs/install/README.md) section 1 (`JAVA11_HOME`, `JAVA21_HOME`, `MAVEN_ARGS`). Run
 folders go to `${MOSIP_RUN_ROOT:-../run}`.
 
