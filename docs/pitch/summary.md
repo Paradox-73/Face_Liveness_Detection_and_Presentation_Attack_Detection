@@ -63,11 +63,11 @@ Design details: `liveness/README.md`, `docs/design/desktop-liveness-services.md`
 
 | Evidence | Result | Where |
 |---|---|---|
-| Unit and component tests (engine, clients, mocks, tools) | 2,619 passed on 2026-10-05, 0 failures: about 1,361 are upstream MOSIP tests, about 1,258 are written by the team; engine line coverage 93% | `docs/test-report/README.md` section 2 |
-| Desktop client, scripted end-to-end run (13 flows) | 41 of 41 checks passed (run at the earlier defaults; not repeated at the current ones) | `docs/test-report/desktop-e2e.md` |
-| Android client, scripted end-to-end run (16 flows) | 58 of 58 checks passed (same limit) | `docs/test-report/android-e2e.md` |
+| Unit and component tests (engine, clients, mocks, tools) | 2,691 passed on 2026-10-14, 0 failures; about 1,330 are written by the team, the rest are upstream MOSIP tests; engine line coverage 93% | `docs/test-report/README.md` section 2 |
+| Desktop client, scripted end-to-end run (13 flows) | 41 of 41 checks passed at the earlier defaults; 5 of 16 on 2026-10-14 at the current policy with blink and smile only | `docs/test-report/desktop-e2e.md` |
+| Android client, scripted end-to-end run (16 flows) | 58 of 58 checks passed at the earlier defaults; 55 of 75 on 2026-10-14 at the current policy with blink and smile only | `docs/test-report/android-e2e.md` |
 | Desktop and Android give the same decision (bonus B4) | 19 replayed cases on desktop, 19 in Android unit tests, 6 on an emulator; one ONNX Runtime release (1.20.0) on both clients | `docs/test-report/interoperability.md` |
-| Automated scenarios (75, 275 transactions) with ISO/IEC 30107-3 metrics | shipped defaults, per transaction: worst species APCER 50.0% (4/8, adaptive screen replay SYN-A7, registration; 1 of 2 source artefacts accepted); every other species 0.0%; registration genuine rejected 14.3% (4/28, all one synthetic dark clip), sign-in 0.0% (0/12). Legacy configuration (passive first everywhere): APCER_max 100.0% (80/80, SYN-A8) | `docs/eval/results/20261005-shipped/README.md` |
+| Automated scenarios (75, 275 transactions) with ISO/IEC 30107-3 metrics | shipped defaults (2026-10-14), per transaction: 0 of 226 attack transactions accepted, APCER 0.0% for every species and workflow; genuine rejected 0.0% (registration 0/28, sign-in 0/12). Passive first, as the problem statement describes: 100 of 226 accepted | `docs/eval/results/20261014-shipped/README.md` |
 | Per-frame processing, 640x480 | latency run of 2026-10-14, 1 thread, shared laptop: p50 37.5 ms, p95 115.4 ms; the 2026-09-30 quieter-machine run gave p50 21-23 ms, p95 38-45 ms (desktop JVM); target 20 ms not met | `docs/eval/results/20261014-latency/README.md`, `docs/test-report/README.md` section 5 |
 | Android phone measurement (bonus B7, B8) | measurement kit written; no phone run yet, emulator numbers only | `docs/test-report/android-performance.md` |
 | PS04 requirements | every bullet traced to code and test; open items listed | `docs/traceability.md` |
@@ -75,8 +75,8 @@ Design details: `liveness/README.md`, `docs/design/desktop-liveness-services.md`
 **Limits we state openly:** attacks in the automated suite are synthetic and the genuine data is three people from
 open clips, so these are regression results, not an ISO/IEC 30107-3 evaluation (the volunteer evaluation is planned,
 `docs/eval/protocol.md`; no real person or real artefact has been tested yet). Because synthetic prints passed the
-passive check, every workflow that matches a face now always asks for challenges; this costs about 3 s per capture
-(median 9.7 s). Every synthetic replay is refused, including an adaptive screen replay that plays the right clip
+passive check, every workflow that matches a face now always asks for challenges; this costs time, not rejections
+(median accepted registration attempt 11.0 s, `docs/eval/results/20261014-latency/README.md`). Every synthetic replay is refused, including an adaptive screen replay that plays the right clip
 for each prompt (it passed 4 of 8 transactions until a screen-pattern check was added on 2026-10-05; proven on
 software-made screens only). Android was tested on an emulator with replayed
 frames, built-in camera only; no physical phone or L1 device yet, and no live webcam run through the full client.
@@ -87,8 +87,8 @@ frames, built-in camera only; no physical phone or L1 device yet, and no live we
 2. Android: vendor SBI face devices and L1; run the measurement kit on a physical phone (CPU, XNNPACK, NNAPI;
    code done, not yet run on a phone).
 3. Device-side PAD for L1 devices, against adaptive replays.
-4. Offline import of signed model updates: done on desktop and, as code with unit tests, on Android (bonus B6); the
-   Flutter button that starts the Android import is not built yet.
+4. Offline import of signed model updates: done on both clients (bonus B6; Android button in Settings, Device
+   Settings); run it on a physical phone.
 5. Upstream contribution as reviewable pull requests.
 
 ## 6. Links
