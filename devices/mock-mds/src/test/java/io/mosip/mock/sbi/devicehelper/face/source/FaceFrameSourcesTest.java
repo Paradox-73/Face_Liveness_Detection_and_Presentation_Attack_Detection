@@ -65,6 +65,17 @@ class FaceFrameSourcesTest {
 	}
 
 	@Test
+	void sequenceSourcePingpongPlaysBackwardsThenForwards() throws IOException {
+		List<Path> files = FaceTestFrames.writeSequence(tempDir.resolve("pingpong"), 3);
+		ImageSequenceSource source = new ImageSequenceSource(tempDir.resolve("pingpong"), 10, false, true);
+		source.open();
+		int[] order = { 0, 1, 2, 1, 0, 1, 2, 1 };
+		for (int i : order)
+			assertArrayEquals(Files.readAllBytes(files.get(i)), source.next().getJpeg());
+		source.close();
+	}
+
+	@Test
 	void sequenceSourceIgnoresNonJpegFilesAndRejectsEmptyFolder() throws IOException {
 		Path folder = Files.createDirectories(tempDir.resolve("mixed"));
 		Files.writeString(folder.resolve("notes.txt"), "not a frame");

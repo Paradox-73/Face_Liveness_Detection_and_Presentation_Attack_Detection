@@ -13,7 +13,7 @@
 # evidence of every packet MockSync received is saved next to the driver log.
 #
 # Usage (Git Bash, repository root):
-#   scripts/demo-desktop.sh [--flow FILE] [--out DIR] [--restore-golden]
+#   scripts/demo-desktop.sh [--flow FILE] [--out DIR] [--restore-golden] [--policy shipped|recorded]
 #   scripts/demo-desktop.sh --save-golden        copy the client state (db/, .mosipkeys/) to the golden folder
 #
 # Options:
@@ -22,6 +22,9 @@
 #   --restore-golden   replace the client state with the golden snapshot (and drop imported liveness models)
 #                      before the run
 #   --save-golden      save the client state as the golden snapshot and exit (client must be stopped)
+#   --policy MODE      shipped (default): MockSync's values as they are. recorded: the shipped policy with the
+#                      challenge pool cut to the actions the cast's frame packs hold (BLINK,SMILE for s3: its footage
+#                      has no usable head turn), set on MockSync for the run and removed afterwards
 #
 # Needs: a client built with scripts/desktop-build.sh --mocksync, its machine registered in MockSync, officer1 and
 # supervisor1 onboarded with face pack s3 (the golden snapshot holds such a state; it only works on the machine
@@ -42,6 +45,8 @@ OUT="$RUN_ROOT/demo/desktop-$(date +%Y%m%d-%H%M%S)"
 ADMIN="http://127.0.0.1:8080"
 ACTION=run
 RESTORE=0
+POLICY_MODE=shipped
+RECORDED_POOL="mosip.registration.liveness.active.challenge_types"
 
 LOG_TAG=demo-desktop; . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 native() { if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else echo "$1"; fi; }
@@ -52,11 +57,13 @@ while [ $# -gt 0 ]; do
 		--out) OUT="$2"; shift ;;
 		--restore-golden) RESTORE=1 ;;
 		--save-golden) ACTION=save ;;
+		--policy) POLICY_MODE="$2"; shift ;;
 		-h|--help) awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "${BASH_SOURCE[0]}"; exit 0 ;;
 		*) die "unknown option $1" ;;
 	esac
 	shift
 done
+case "$POLICY_MODE" in shipped|recorded) ;; *) die "unknown --policy $POLICY_MODE (shipped or recorded)" ;; esac
 
 client_running() {
 	[ -f "$CLIENT_DIR/client.pid" ] || return 1
@@ -138,6 +145,11 @@ for f in DesktopFlowDriver FlowContext FlowDb FlowHttp FlowInterpreter FlowWatch
 done
 (cd "$CLIENT_DIR" && "$JDK/bin/javac" -encoding UTF-8 -cp "lib/*" -d "$(native "$OUT/driver-classes")" "${DRIVER_SRCS[@]}") \
 	|| die "the flow driver did not compile"
+if [ "$POLICY_MODE" = recorded ]; then
+	curl -sf -m 5 -X PUT -H "Content-Type: application/json" -d "{\"$RECORDED_POOL\":\"BLINK,SMILE\"}" \
+		"$ADMIN/admin/config" >/dev/null || die "could not set $RECORDED_POOL on MockSync"
+	log "policy recorded: $RECORDED_POOL=BLINK,SMILE on MockSync for this run"
+fi
 log "running $(basename "$FLOW"); output in $OUT"
 set +e
 (cd "$CLIENT_DIR" && "$JDK/bin/java" -Xmx1400m -Dfile.encoding=UTF-8 \
@@ -148,6 +160,9 @@ set +e
 	>"$OUT/stdout.log" 2>&1)
 status=$?
 set -e
+if [ "$POLICY_MODE" = recorded ]; then
+	curl -sf -m 5 -X DELETE "$ADMIN/admin/config/$RECORDED_POOL" >/dev/null || log "could not remove $RECORDED_POOL"
+fi
 
 # ---------------------------------------------------------------------------------------------- evidence
 mkdir -p "$OUT/packets"

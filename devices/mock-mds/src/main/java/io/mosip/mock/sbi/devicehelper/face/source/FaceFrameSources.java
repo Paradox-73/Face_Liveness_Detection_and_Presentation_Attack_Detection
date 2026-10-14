@@ -37,7 +37,7 @@ public final class FaceFrameSources {
 			if (settings.getPath() == null)
 				throw new IllegalArgumentException("SEQUENCE source needs a folder path");
 			return new ImageSequenceSource(resolve(workingDirectory, settings.getPath()), settings.getFps(),
-					settings.isLoop());
+					settings.isLoop(), settings.isPingpong());
 		case FFMPEG:
 			FaceSourceSettings ffmpeg = settings.copy();
 			if (ffmpeg.getFile() != null)

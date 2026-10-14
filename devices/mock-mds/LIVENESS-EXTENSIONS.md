@@ -151,6 +151,8 @@ Rules for the new calls:
 | `path` | string | `STATIC` JPEG file (omit for the stock image) or `SEQUENCE` folder |
 | `fps` | number | frames per second, above 0 and at most 60; omitted = current value |
 | `loop` | boolean | `SEQUENCE` / video file restart at the end; omitted = current value |
+| `pingpong` | boolean | `SEQUENCE` plays backwards from the last frame to the first, then forwards again, and never ends; omitted = current value |
+| `resume` | boolean | `SEQUENCE`: a folder replaced earlier in the same stream session continues at the frame where it stopped instead of at its first frame; default `false` |
 | `camera` | string | `FFMPEG` webcam name |
 | `file` | string | `FFMPEG` video file |
 | `inputFormat` | string | `dshow`, `v4l2` or `avfoundation` |
@@ -158,6 +160,8 @@ Rules for the new calls:
 | `captureMode` | string | `FRAME` or `PROFILE` |
 
 The new source is opened once to check it (a webcam must deliver a frame within 10 s). During a stream it replaces the old source at once; otherwise it is closed again until the next stream.
+
+`pingpong` and `resume` let a recorded person answer prompts without repeating frames: the scripted desktop demo plays the subject's `-main` pack with `pingpong` and switches between it and the action packs with `resume`, the same playback as the evaluation scenario runner (`tools/eval/scenario-runner`, `Playlist`). Without them the neutral pack restarts at its first frame after each answer, and the engine's loop check (audit LV08, reason `LOOP`) refuses the replay, as it should for a looped video.
 
 ```sh
 curl -s -X POST http://127.0.0.1:4501/admin/source -d '{"type":"Face","source":"SEQUENCE","path":"frames/live-01","fps":15,"loop":true}'
@@ -289,7 +293,8 @@ Returns the success envelope with `state` as in 4.1, and changes nothing.
 | Class | What it checks |
 |---|---|
 | `devicehelper/face/source/JpegStreamSplitterTest` | ffmpeg output split into exact JPEGs; `FFD9` inside a metadata segment does not cut a frame; cut-off frame dropped |
-| `devicehelper/face/source/FaceFrameSourcesTest` | `SEQUENCE` frames in name order, all different, loop / once, restart on open; `STATIC` repeats and follows a replaced file; factory and settings |
+| `devicehelper/face/source/FaceFrameSourcesTest` | `SEQUENCE` frames in name order, all different, loop / once / pingpong, restart on open; `STATIC` repeats and follows a replaced file; factory and settings |
+| `devicehelper/face/FaceFrameFeedTest` | a `SEQUENCE` switched back to with `resume` continues where it stopped; without it, or in a new session, it restarts |
 | `devicehelper/face/source/FfmpegPipeSourceTest` | command lines (dshow, v4l2, avfoundation, file loop), virtual-camera and quote refusal, missing ffmpeg; with ffmpeg on `PATH`: live test pattern gives changing decodable frames, finite input ends the source |
 | `devicehelper/face/fault/FaceFaultInjectorTest` | every fault mode, `afterFrames` / `frames` windows, stall duration, drop ratio, aliases, validation |
 | `devicehelper/face/SBIFaceHelperLivenessTest` | ISO built from the last streamed frame decodes to that frame (mean difference < 4 grey levels); capture waits for a first frame; `PROFILE` mode returns `Face.iso`; score 95; L1 digitalId signed by `CN=MosipFaceFTM`; `padCapability` and echo |

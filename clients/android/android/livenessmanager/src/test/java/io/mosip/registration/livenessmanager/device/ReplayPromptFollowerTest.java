@@ -153,6 +153,37 @@ public class ReplayPromptFollowerTest {
     }
 
     @Test
+    public void pingpongNeutralPackPlaysBackwardsAtItsEnd() throws InterruptedException {
+        ReplayFrameSource counting = new ReplayFrameSource(
+                java.util.Arrays.asList(new byte[] {'0'}, new byte[] {'1'}, new byte[] {'2'}), 60, true, true,
+                Clock.system(), "test", null);
+        BlockingQueue<Byte> seen = new LinkedBlockingQueue<>();
+        counting.start(new FrameSink() {
+            @Override
+            public void onFrame(FaceFrame frame) {
+                seen.add(frame.data()[0]);
+            }
+
+            @Override
+            public void onError(DeviceError error) {
+            }
+
+            @Override
+            public void onEnd(EndReason reason) {
+            }
+        });
+        try {
+            StringBuilder order = new StringBuilder();
+            for (int i = 0; i < 8; i++) {
+                order.append((char) (byte) seen.poll(2, TimeUnit.SECONDS));
+            }
+            assertEquals("never 2 then 0, the wrap a loop check catches", "01210121", order.toString());
+        } finally {
+            counting.close();
+        }
+    }
+
+    @Test
     public void staleSwitchIsDropped() throws InterruptedException {
         follower.onPrompt(PromptIcon.BLINK);
         follower.onPrompt(PromptIcon.PROGRESS);

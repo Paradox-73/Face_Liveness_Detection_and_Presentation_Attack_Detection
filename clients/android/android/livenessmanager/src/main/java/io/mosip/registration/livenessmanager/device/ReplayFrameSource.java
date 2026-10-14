@@ -41,7 +41,9 @@ import io.mosip.liveness.core.image.PixelFormat;
  * {@link EndReason#END_OF_STREAM}. {@link #switchTo(List)} replaces the sequence while the stream runs, the way a
  * person in front of the camera starts a movement when prompted, and {@link #switchBack()} returns to the first
  * sequence where it was left (see {@link ReplayPromptFollower}). Resuming matters: a recorded clip that restarts
- * from its first frame repeats itself, which the engine's loop check rightly reports as a replayed video.
+ * from its first frame repeats itself, which the engine's loop check rightly reports as a replayed video. For the
+ * same reason a source made with {@code pingpong} plays its first sequence backwards at the end, then forwards
+ * again, as the evaluation scenario runner does with a subject's neutral pack.
  *
  * <p>Only debug builds offer it on the capture screen (developer setting); release builds always use the camera.
  */
@@ -55,6 +57,8 @@ public final class ReplayFrameSource implements FaceFrameSource {
     private PixelFormat format;
     private final int fps;
     private final boolean loop;
+    private final boolean pingpong;
+    private int initialStep = 1;
     private final Clock clock;
     private final String sourceId;
     private final Consumer<byte[]> preview;
@@ -75,6 +79,23 @@ public final class ReplayFrameSource implements FaceFrameSource {
      */
     public ReplayFrameSource(List<byte[]> frames, int fps, boolean loop, Clock clock, String sourceId,
                              Consumer<byte[]> preview) {
+        this(frames, fps, loop, false, clock, sourceId, preview);
+    }
+
+    /**
+     * Creates a source over frames already in memory.
+     *
+     * @param frames   encoded frames; not copied, not modified
+     * @param fps      frames per second, 1-60
+     * @param loop     whether to repeat a sequence
+     * @param pingpong whether the first sequence plays backwards at its end, then forwards again (instead of
+     *                 {@code loop})
+     * @param clock    session clock used to time-stamp frames
+     * @param sourceId device serial written in each frame
+     * @param preview  receives each frame's bytes for display, or {@code null}
+     */
+    public ReplayFrameSource(List<byte[]> frames, int fps, boolean loop, boolean pingpong, Clock clock,
+                             String sourceId, Consumer<byte[]> preview) {
         if (frames == null || frames.isEmpty()) {
             throw new IllegalArgumentException("replay needs at least one frame");
         }
@@ -86,6 +107,7 @@ public final class ReplayFrameSource implements FaceFrameSource {
         this.format = isPng(frames.get(0)) ? PixelFormat.PNG : PixelFormat.JPEG;
         this.fps = fps;
         this.loop = loop;
+        this.pingpong = pingpong;
         this.clock = Objects.requireNonNull(clock, "clock");
         this.sourceId = Objects.requireNonNull(sourceId, "sourceId");
         this.preview = preview;
@@ -193,24 +215,32 @@ public final class ReplayFrameSource implements FaceFrameSource {
         long periodNanos = 1_000_000_000L / fps;
         long next = System.nanoTime();
         int index = 0;
+        int step = 1;
         while (!closed.get()) {
             Switch change = pending.getAndSet(null);
             if (change != null) {
                 if (frames == initial) {
                     initialIndex = index;
+                    initialStep = step;
                 }
                 frames = change.frames == null ? initial : change.frames;
                 index = change.frames == null ? initialIndex : 0;
+                step = change.frames == null ? initialStep : 1;
                 format = isPng(frames.get(0)) ? PixelFormat.PNG : PixelFormat.JPEG;
             }
-            if (index == frames.size()) {
-                if (!loop) {
+            if (index >= frames.size() || index < 0) {
+                if (pingpong && frames == initial && frames.size() > 1) {
+                    step = -step;
+                    index = step < 0 ? frames.size() - 2 : 1;
+                } else if (!loop) {
                     sink.onEnd(EndReason.END_OF_STREAM);
                     return;
+                } else {
+                    index = 0;
                 }
-                index = 0;
             }
-            byte[] data = frames.get(index++);
+            byte[] data = frames.get(index);
+            index += step;
             long seq = delivered.incrementAndGet();
             if (preview != null) {
                 preview.accept(data);

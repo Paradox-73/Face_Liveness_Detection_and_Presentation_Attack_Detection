@@ -29,6 +29,13 @@ public class FaceSourceRequest {
 
 	/** Restart SEQUENCE or FFMPEG file input at the end. */
 	private Boolean loop;
+	/** SEQUENCE: at the end play backwards to the first frame, then forwards again. */
+	private Boolean pingpong;
+	/**
+	 * SEQUENCE: continue a folder that was replaced earlier in the same stream
+	 * where it stopped, instead of at its first frame.
+	 */
+	private Boolean resume;
 
 	/** Webcam device name for FFMPEG, for example "Integrated Camera". */
 	private String camera;

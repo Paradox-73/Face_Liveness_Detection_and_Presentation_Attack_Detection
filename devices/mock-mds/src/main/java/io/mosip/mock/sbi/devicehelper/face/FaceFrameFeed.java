@@ -8,6 +8,7 @@ package io.mosip.mock.sbi.devicehelper.face;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -20,6 +21,7 @@ import io.mosip.mock.sbi.devicehelper.face.source.FaceFrame;
 import io.mosip.mock.sbi.devicehelper.face.source.FaceFrameSource;
 import io.mosip.mock.sbi.devicehelper.face.source.FaceFrameSources;
 import io.mosip.mock.sbi.devicehelper.face.source.FaceSourceSettings;
+import io.mosip.mock.sbi.devicehelper.face.source.FaceSourceType;
 
 /**
  * Connects the mock face device to its current {@link FaceFrameSource}.
@@ -44,6 +46,8 @@ public class FaceFrameFeed {
 	private FaceSourceSettings settings;
 	private FaceFrameSource source;
 	private boolean open;
+	/** SEQUENCE sources replaced during the open session, by folder, for {@code resume}. */
+	private final Map<String, FaceFrameSource> parked = new HashMap<>();
 	private volatile FaceFrame currentFrame;
 	private volatile FaceFrame lastServedFrame;
 	private volatile FaceFrame lastCapturedFrame;
@@ -77,20 +81,64 @@ public class FaceFrameFeed {
 	 * @throws IllegalArgumentException if the settings are incomplete
 	 */
 	public void setSource(FaceSourceSettings newSettings) throws IOException {
-		FaceFrameSource candidate = FaceFrameSources.create(newSettings, workingDirectory, defaultImage);
-		candidate.open();
+		setSource(newSettings, false);
+	}
+
+	/**
+	 * Selects a new source, as {@link #setSource(FaceSourceSettings)}. With
+	 * {@code resume}, a SEQUENCE folder that was replaced earlier in the same
+	 * session continues at the frame where it stopped, the way a recorded person
+	 * goes on after answering a prompt; the scenario runner's playlist does the
+	 * same, so replayed packs do not repeat frames the liveness loop check has
+	 * already seen.
+	 *
+	 * @param newSettings the new source settings
+	 * @param resume      continue a SEQUENCE folder replaced earlier in this
+	 *                    session
+	 * @throws IOException              if the new source cannot produce frames
+	 * @throws IllegalArgumentException if the settings are incomplete
+	 */
+	public void setSource(FaceSourceSettings newSettings, boolean resume) throws IOException {
+		FaceFrameSource candidate = null;
+		FaceFrameSource stale = null;
+		synchronized (this) {
+			FaceFrameSource earlier = open ? parked.remove(parkKey(newSettings)) : null;
+			if (resume)
+				candidate = earlier;
+			else
+				stale = earlier;
+		}
+		if (stale != null)
+			stale.close();
+		if (candidate == null) {
+			candidate = FaceFrameSources.create(newSettings, workingDirectory, defaultImage);
+			candidate.open();
+		}
 		FaceFrameSource old;
+		FaceSourceSettings oldSettings;
+		boolean park;
 		synchronized (this) {
 			old = source;
+			oldSettings = settings;
 			settings = newSettings.copy();
 			source = candidate;
 			if (!open)
 				candidate.close();
 			lastError = null;
+			park = open && old != null && old != candidate && parkKey(oldSettings) != null;
+			if (park) {
+				FaceFrameSource replaced = parked.put(parkKey(oldSettings), old);
+				if (replaced != null && replaced != old)
+					replaced.close();
+			}
 		}
-		if (old != null && old != candidate)
+		if (old != null && old != candidate && !park)
 			old.close();
 		LOGGER.info("Face frame source set :: {}", newSettings.describe());
+	}
+
+	private static String parkKey(FaceSourceSettings s) {
+		return s.getType() == FaceSourceType.SEQUENCE ? s.getPath() : null;
 	}
 
 	/**
@@ -127,6 +175,8 @@ public class FaceFrameFeed {
 	public synchronized void close() {
 		if (source != null && open)
 			source.close();
+		parked.values().forEach(FaceFrameSource::close);
+		parked.clear();
 		open = false;
 		currentFrame = null;
 	}

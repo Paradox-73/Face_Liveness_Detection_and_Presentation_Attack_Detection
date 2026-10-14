@@ -128,6 +128,6 @@ final class PromptFollower {
 			}
 		}
 		pendingAction = null;
-		http.source(wanted);
+		http.source(wanted, true);
 	}
 }

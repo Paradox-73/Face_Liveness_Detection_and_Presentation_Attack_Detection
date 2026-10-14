@@ -385,8 +385,8 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
         for (Map.Entry<PromptIcon, String> e : packs.movements().entrySet()) {
             movements.put(e.getKey(), readPack(e.getValue()));
         }
-        ReplayFrameSource source = new ReplayFrameSource(neutral, request.replayFps(), true, runtime.clock(), serial,
-                this::showReplayFrame);
+        ReplayFrameSource source = new ReplayFrameSource(neutral, request.replayFps(), true, true, runtime.clock(),
+                serial, this::showReplayFrame);
         follower = new ReplayPromptFollower(source, neutral, movements, main::postDelayed,
                 ReplayPromptFollower.DEFAULT_REACTION_MS);
         Log.i(TAG, "Replay " + prefix + "-main following prompts " + packs.prompts() + " at "

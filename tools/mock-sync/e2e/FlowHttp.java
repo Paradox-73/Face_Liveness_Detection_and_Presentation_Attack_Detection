@@ -28,9 +28,20 @@ final class FlowHttp {
 	}
 
 	void source(String pack) throws Exception {
+		source(pack, false);
+	}
+
+	/**
+	 * Switches the MockMDS face source to a frame pack. A subject's neutral pack ({@code -main}) plays backwards at
+	 * its end instead of restarting, and with {@code resume} a pack left earlier in the stream continues where it
+	 * stopped: the playback of the evaluation scenario runner, so a recorded person does not repeat frames that the
+	 * engine's loop check has already seen. Attack packs keep plain looping.
+	 */
+	void source(String pack, boolean resume) throws Exception {
 		String path = PACKS.resolve(pack).toString().replace('\\', '/');
-		mds("/admin/source",
-				"{\"type\":\"Face\",\"source\":\"SEQUENCE\",\"path\":\"" + path + "\",\"fps\":15,\"loop\":true}");
+		boolean pingpong = pack.endsWith("-main");
+		mds("/admin/source", "{\"type\":\"Face\",\"source\":\"SEQUENCE\",\"path\":\"" + path
+				+ "\",\"fps\":15,\"loop\":true,\"pingpong\":" + pingpong + ",\"resume\":" + resume + "}");
 		c.currentSource = pack;
 	}
 

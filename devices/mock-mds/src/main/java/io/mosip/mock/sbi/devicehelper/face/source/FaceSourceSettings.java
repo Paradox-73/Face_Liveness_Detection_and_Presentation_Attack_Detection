@@ -53,6 +53,7 @@ public class FaceSourceSettings {
 	private String path;
 	private double fps = DEFAULT_FPS;
 	private boolean loop = true;
+	private boolean pingpong;
 	private String camera;
 	private String file;
 	private String inputFormat;
@@ -121,6 +122,7 @@ public class FaceSourceSettings {
 		copy.path = path;
 		copy.fps = fps;
 		copy.loop = loop;
+		copy.pingpong = pingpong;
 		copy.camera = camera;
 		copy.file = file;
 		copy.inputFormat = inputFormat;
@@ -146,6 +148,8 @@ public class FaceSourceSettings {
 		putIfSet(map, "inputFormat", inputFormat);
 		if (type != FaceSourceType.STATIC)
 			map.put("loop", loop);
+		if (type == FaceSourceType.SEQUENCE)
+			map.put("pingpong", pingpong);
 		if (type == FaceSourceType.FFMPEG)
 			map.put("width", width);
 		return map;
@@ -203,6 +207,16 @@ public class FaceSourceSettings {
 	/** @param loop restart at the end */
 	public void setLoop(boolean loop) {
 		this.loop = loop;
+	}
+
+	/** @return true when SEQUENCE plays backwards at the end, then forwards again */
+	public boolean isPingpong() {
+		return pingpong;
+	}
+
+	/** @param pingpong play SEQUENCE backwards at the end, then forwards again */
+	public void setPingpong(boolean pingpong) {
+		this.pingpong = pingpong;
 	}
 
 	/** @return webcam device name for FFMPEG */

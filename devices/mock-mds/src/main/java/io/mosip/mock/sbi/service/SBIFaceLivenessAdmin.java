@@ -98,7 +98,8 @@ public class SBIFaceLivenessAdmin {
 			if (body.getCaptureMode() != null)
 				face.getFaceSettings().setCaptureMode(body.getCaptureMode());
 			if (body.getSource() != null)
-				face.getFrameFeed().setSource(toSourceSettings(body, face.getFrameFeed().getSettings()));
+				face.getFrameFeed().setSource(toSourceSettings(body, face.getFrameFeed().getSettings()),
+						Boolean.TRUE.equals(body.getResume()));
 		} catch (IllegalArgumentException | JsonProcessingException ex) {
 			return error("511", ex.getMessage());
 		} catch (IOException ex) {
@@ -232,6 +233,8 @@ public class SBIFaceLivenessAdmin {
 			settings.setFps(body.getFps());
 		if (body.getLoop() != null)
 			settings.setLoop(body.getLoop());
+		if (body.getPingpong() != null)
+			settings.setPingpong(body.getPingpong());
 		if (body.getWidth() != null)
 			settings.setWidth(body.getWidth());
 		String format = body.getInputFormat();

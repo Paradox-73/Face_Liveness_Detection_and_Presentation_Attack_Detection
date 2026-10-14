@@ -27,8 +27,10 @@ import java.util.stream.Stream;
  * {@code frame_0001.jpg}. Each frame is read from disk when it is served. With
  * {@code loop} the sequence restarts after the last frame; without it,
  * {@link #next()} returns {@code null} after the last frame and the stream
- * ends. Every {@link #open()} restarts at the first frame, so each STREAM
- * request sees the same frames in the same order.
+ * ends. With {@code pingpong} the sequence plays backwards from the last
+ * frame to the first, then forwards again, and never ends. Every
+ * {@link #open()} restarts at the first frame, so each STREAM request sees the
+ * same frames in the same order.
  * </p>
  */
 public class ImageSequenceSource implements FaceFrameSource {
@@ -38,9 +40,11 @@ public class ImageSequenceSource implements FaceFrameSource {
 	private final Path folder;
 	private final double fps;
 	private final boolean loop;
+	private final boolean pingpong;
 	private volatile List<Path> frames = List.of();
 	private volatile int frameCount;
 	private int index;
+	private int step = 1;
 	private long sequence;
 
 	/**
@@ -51,9 +55,23 @@ public class ImageSequenceSource implements FaceFrameSource {
 	 * @param loop   restart after the last frame when true
 	 */
 	public ImageSequenceSource(Path folder, double fps, boolean loop) {
+		this(folder, fps, loop, false);
+	}
+
+	/**
+	 * Creates the source.
+	 *
+	 * @param folder   folder that holds the JPEG frames
+	 * @param fps      frame rate to pace the stream at
+	 * @param loop     restart after the last frame when true
+	 * @param pingpong at the end play backwards, then forwards again (overrides
+	 *                 {@code loop})
+	 */
+	public ImageSequenceSource(Path folder, double fps, boolean loop, boolean pingpong) {
 		this.folder = folder;
 		this.fps = FaceSourceSettings.checkFps(fps);
 		this.loop = loop;
+		this.pingpong = pingpong;
 	}
 
 	/** {@inheritDoc} */
@@ -70,6 +88,7 @@ public class ImageSequenceSource implements FaceFrameSource {
 		frames = List.copyOf(found);
 		frameCount = found.size();
 		index = 0;
+		step = 1;
 		sequence = 0;
 	}
 
@@ -79,12 +98,18 @@ public class ImageSequenceSource implements FaceFrameSource {
 		List<Path> current = frames;
 		if (current.isEmpty())
 			return null;
-		if (index >= current.size()) {
-			if (!loop)
+		if (index >= current.size() || index < 0) {
+			if (pingpong && current.size() > 1) {
+				step = -step;
+				index = step < 0 ? current.size() - 2 : 1;
+			} else if (pingpong || loop) {
+				index = 0;
+			} else {
 				return null;
-			index = 0;
+			}
 		}
-		byte[] jpeg = Files.readAllBytes(current.get(index++));
+		byte[] jpeg = Files.readAllBytes(current.get(index));
+		index += step;
 		return new FaceFrame(jpeg, sequence++, System.currentTimeMillis(), NAME);
 	}
 
@@ -117,6 +142,7 @@ public class ImageSequenceSource implements FaceFrameSource {
 		map.put("path", folder.toString());
 		map.put("fps", fps);
 		map.put("loop", loop);
+		map.put("pingpong", pingpong);
 		map.put("frameCount", frameCount);
 		return map;
 	}

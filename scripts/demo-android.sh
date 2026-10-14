@@ -38,6 +38,7 @@
 #   scripts/demo-android.sh                         # every section
 #   scripts/demo-android.sh --sections "login resident"
 #   scripts/demo-android.sh --policy replay         # the policy the recorded packs fit (see below); default: shipped
+#   scripts/demo-android.sh --policy recorded       # shipped policy, challenge pool cut to the packs' actions
 #   scripts/demo-android.sh --out DIR               # output folder (default $MOSIP_RUN_ROOT/demo/android-<time>)
 #   . scripts/demo-android.sh --out DIR             # only defines the functions, for running single steps
 #
@@ -670,10 +671,13 @@ mosip.registration.liveness.policy.onboard_auth=PASSIVE_THEN_ACTIVE
 mosip.registration.liveness.passive.min_frames=8"
 # --policy shipped (the default) runs every flow at the values MockSync ships: nothing is overridden for the run
 # (the replayed packs must then answer the challenges the shipped policy asks for, see "Replay profile").
+# --policy recorded keeps the shipped policy (challenges on every capture, 30 passive frames) and cuts the challenge
+# pool to the actions the cast's packs hold: s3 has blink and smile footage and no usable head turn.
 case "$POLICY_MODE" in
   shipped) DEMO_PROFILE="" ;;
   replay) ;;
-  *) echo "unknown --policy $POLICY_MODE (shipped or replay)" >&2; exit 2 ;;
+  recorded) DEMO_PROFILE="mosip.registration.liveness.active.challenge_types=BLINK,SMILE" ;;
+  *) echo "unknown --policy $POLICY_MODE (shipped, replay or recorded)" >&2; exit 2 ;;
 esac
 
 # Shipped value of a liveness key as MockSync serves it without the demo's overrides (read once at the start;
