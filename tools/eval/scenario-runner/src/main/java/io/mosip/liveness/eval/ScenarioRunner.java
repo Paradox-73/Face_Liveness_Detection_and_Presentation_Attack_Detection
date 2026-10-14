@@ -15,10 +15,12 @@ import io.mosip.liveness.core.engine.LivenessTransaction;
 import io.mosip.liveness.core.policy.ConfigIssue;
 import io.mosip.liveness.core.policy.PolicyResolution;
 import io.mosip.liveness.core.policy.PolicyResolver;
+import io.mosip.liveness.onnx.model.Hex;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -54,21 +56,6 @@ final class ScenarioRunner {
          * @throws IllegalArgumentException if a key is unknown or a value is out of range
          */
         AttemptDriver driver(Map<String, String> overrides);
-    }
-
-    /**
-     * Creates a runner.
-     *
-     * @param engines            engine source
-     * @param store              frame packs
-     * @param globalConfig       configuration overrides applied before each scenario's own (full key names)
-     * @param globalEngineParams engine parameter overrides applied before each scenario's own
-     * @param run                facts written into every record
-     * @param log                progress output
-     */
-    ScenarioRunner(EngineParts engines, FramePackStore store, Map<String, String> globalConfig,
-                   Map<String, String> globalEngineParams, AttemptRecord.RunInfo run, PrintStream log) {
-        this(engines, store, globalConfig, globalEngineParams, run, log, true);
     }
 
     /**
@@ -118,8 +105,8 @@ final class ScenarioRunner {
         }
         LivenessPolicy policy = resolution.policy();
         AttemptDriver driver = engines.driver(params);
-        String configHash = EngineFactory.sha256Hex(new TreeMap<>(config).toString()).substring(0, 16);
-        String paramsHash = EngineFactory.sha256Hex(params.toString()).substring(0, 16);
+        String configHash = Hex.sha256(new TreeMap<>(config).toString().getBytes(StandardCharsets.UTF_8)).substring(0, 16);
+        String paramsHash = Hex.sha256(params.toString().getBytes(StandardCharsets.UTF_8)).substring(0, 16);
         for (long seed : sc.seeds()) {
             runTransaction(sc, policy, driver, seed, configHash, paramsHash, jsonl, summary);
         }

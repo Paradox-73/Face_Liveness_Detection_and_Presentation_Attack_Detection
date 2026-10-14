@@ -7,7 +7,6 @@
 package io.mosip.liveness.eval;
 
 import java.util.EnumMap;
-import java.util.Map;
 
 /**
  * Wall-clock time spent in each processing stage since the last {@link #reset()}.
@@ -61,15 +60,6 @@ final class StageTimer {
      */
     int calls(Stage stage) {
         return calls.getOrDefault(stage, 0);
-    }
-
-    /**
-     * Returns a copy of the per-stage times.
-     *
-     * @return nanoseconds per stage that ran
-     */
-    Map<Stage, Long> snapshot() {
-        return new EnumMap<>(nanos);
     }
 
     /** Clears all stages. */
