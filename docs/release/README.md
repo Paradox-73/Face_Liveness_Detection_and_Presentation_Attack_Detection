@@ -64,7 +64,8 @@ Check a download: put the files and `SHA256SUMS.txt` in one folder and run `sha2
   dist/v1.0.0/SHA256SUMS.txt dist/v1.0.0/manifest.json`. Publish it only when the repository is public.
 - Signed sample model bundles (`valid`, `tampered`, `older`) are made with
   `bash scripts/make-sample-model-bundles.sh --key <publishing-key.pem> --out sample-model-bundles` and zipped
-  into the release; the key stays outside the repository.
+  into the release by the key holder (Kanav Bhardwaj); the key stays outside the repository. The draft release
+  `v1.0.0` does not carry them yet.
 
 ## How the build works
 

@@ -7,7 +7,7 @@ client's local database and therefore effective offline. Both clients read the s
 Source of truth: `io.mosip.liveness.core.config.PolicyKey` (one row per global key: name, default, range, type),
 `LivenessConfigKeys` (key names, per-workflow defaults) and
 `io.mosip.liveness.core.policy.PolicyResolver` (how values are combined, clamped and reported).
-`LivenessConfigKeys.defaultValues()` returns the 45 shipped defaults (43 under `mosip.registration.liveness.*`, including `login_auth.on_max_failure=BLOCK_AND_LOCK` since 2026-10-10, plus `mosip.registration.mds.allowed_certifications` and `mosip.registration.android.offline_approval.enable`); MockSync serves the same list from
+`LivenessConfigKeys.defaultValues()` returns the 46 shipped defaults (44 under `mosip.registration.liveness.*`, including `login_auth.on_max_failure=BLOCK_AND_LOCK` since 2026-10-10, plus `mosip.registration.mds.allowed_certifications` and `mosip.registration.android.offline_approval.enable`); MockSync serves the same list from
 `tools/mock-sync/data/mock-sync-defaults.properties`.
 
 ## 1. Resolution rules

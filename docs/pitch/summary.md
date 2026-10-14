@@ -30,7 +30,7 @@ Team Badmosip · MOSIP Decode 2026 · Problem Statement 04 · summary
   also matched 1:1 with SFace, so a live but different person is refused.
 - **Evidence for MOSIP.** Each face record in the packet carries `LIVENESS_*` entries (decision, method, score
   bucket, challenges, engine, model hash); 17 audit events `REG-EVT-LV01..17`; no images or raw scores in logs.
-- **Configurable through MOSIP sync.** 44 default settings (42 `mosip.registration.liveness.*` keys, 2 other): enable, thresholds, active policy
+- **Configurable through MOSIP sync.** 46 default settings (44 `mosip.registration.liveness.*` keys, 2 other): enable, thresholds, active policy
   per workflow, challenge types and count, timeout, retries, behaviour after the last failure, guidance texts.
 - **Clear UX.** PS04 wording, oval guide, step and attempt counters, generic attack message, recovery guidance;
   English, French and Arabic (right to left) on desktop, plus Hindi, Kannada and Tamil on Android.

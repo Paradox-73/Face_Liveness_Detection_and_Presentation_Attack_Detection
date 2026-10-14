@@ -24,7 +24,7 @@ authentication.
   through intents (unit-tested, no vendor app run); a mock L0/L1 device with fault injection for tests.
 - **Bound to the signed capture:** a single-use pass token and a face-similarity check tie the stored or matched
   face to the stream that passed, enforced in the client's service layer, not in the screens.
-- **Configurable and offline:** 45 default settings (43 `mosip.registration.liveness.*` keys and 2 other MOSIP keys) synced from the server, per-workflow
+- **Configurable and offline:** 46 default settings (44 `mosip.registration.liveness.*` keys and 2 other MOSIP keys) synced from the server, per-workflow
   policies; local settings can change only a short allow-list and cannot lower the threshold floors; everything
   runs without a network.
 - **Evidence:** audit events `REG-EVT-LV01..17` and `LIVENESS_*` entries in every face record of the packet.
@@ -117,7 +117,11 @@ Team **Badmosip**, MOSIP Decode 2026, Problem Statement 04.
 
 Release `v1.0.0` carries the built artefacts: the desktop Registration Client zip (Windows x64, with Java runtime),
 Android release APKs (`arm64-v8a` for tablets, `x86_64` for the emulator), the MockSync and MockMDS zips, the
-engine jars, three signed sample model bundles, `SHA256SUMS.txt` and `manifest.json`.
+engine jars, `SHA256SUMS.txt` and `manifest.json`. Signed sample model bundles (valid, tampered, older) are not
+attached: signing them needs the team's private model-signing key, which only its holder (Kanav Bhardwaj) has. The
+key holder makes them with `bash scripts/make-sample-model-bundles.sh --key <key.pem> --out sample-model-bundles`
+and attaches the zip to the release. `bash scripts/make-sample-model-bundles.sh --self-test` builds the three
+bundles with a throwaway key, checks that only the valid one verifies, and keeps nothing.
 
 - Download from the Releases page of this repository, then check the files: `sha256sum -c SHA256SUMS.txt`.
 - Unzip the desktop client, run `setup-mocksync.bat` once, then `start-client.bat`; the zip's `README.txt` has the steps.
