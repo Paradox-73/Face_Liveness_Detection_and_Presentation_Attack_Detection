@@ -98,7 +98,9 @@ Known limits, stated in the linked documents:
 - Not run yet: no physical Android phone or tablet, no live face or real artefact through either client, no desktop
   GUI run and no Android scripted demo at the shipped defaults (the 41 of 41 and 58 of 58 runs predate them), no L1
   or vendor face device on Android, no second device vendor, no volunteer evaluation with real artefacts.
-- Model updates: offline signed import on both clients; no download through sync.
+- Model updates: offline signed import and online download from the synced `model.update_url` on both clients,
+  with the same signature, hash and rollback checks; the download is unit-tested only (no client run against
+  MockSync, no phone run) and a supervisor starts it.
 
 ## Team
 

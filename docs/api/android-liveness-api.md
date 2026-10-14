@@ -34,6 +34,12 @@ abstract class LivenessApi {
   LivenessOutcome getLastCaptureOutcome(String fieldId);
   @async
   LivenessOutcome authenticateFace(String userId, String workflow);
+  @async
+  ModelBundleOutcome importModelBundle(String path);     // offline model update (supervisor)
+  ModelBundleOutcome getModelBundle();
+  @async
+  ModelBundleOutcome updateModelBundle();                // online model update (supervisor)
+  bool isModelUpdateConfigured();
 }
 ```
 
@@ -44,6 +50,17 @@ abstract class LivenessApi {
 | `setLanguage(code)` | Language of the capture screen and of `message` |
 | `getLastCaptureOutcome(fieldId)` | Outcome of the last resident / onboarding face capture of that field; `NOT_REQUIRED` when no liveness ran |
 | `authenticateFace(userId, workflow)` | Liveness (capture screen), then 1:1 SFace match against the user's onboarding face (`user_biometric`, type `FACE`), threshold `mosip.registration.liveness.face_auth.match_threshold` (40). `workflow` must be an authentication workflow (`login_auth`, `packet_auth`, `exception_auth`, `eod_auth`, `onboard_auth`), else `FAILED` / `NOT_ENFORCED` |
+
+Model update calls. `ModelBundleOutcome` carries `status` (a `ModelBundleImporter.Status` name: `IMPORTED`,
+`NOT_ALLOWED`, `BUSY`, `NOT_SUPPORTED`, `NOT_FOUND`, `INVALID`, `TOO_OLD`, `LOAD_FAILED`), `bundle`, `version`,
+`previousVersion` and `fromStore`, and no file content.
+
+| Method | Behaviour |
+|---|---|
+| `importModelBundle(path)` | Verifies the signed bundle at `path` (folder or `.zip`; empty for `Android/data/<app>/files/liveness-models`), stores it and switches the engine. Signed-in user must be a supervisor or administrator |
+| `getModelBundle()` | The bundle the engine runs (`IMPORTED`), or `NOT_FOUND` |
+| `updateModelBundle()` | Downloads the bundle `.zip` from the synced `mosip.registration.liveness.model.update_url` and imports it exactly like `importModelBundle`. `NOT_FOUND` when the key is empty or the download failed (HTTPS required except to a loopback host, no redirects, 30 s timeouts, 10 minute limit, 512 MB cap); the running models stay active |
+| `isModelUpdateConfigured()` | `true` when `mosip.registration.liveness.model.update_url` is set; the Flutter panel shows "Check for model update" only then |
 
 `errorCode` values for `authenticateFace` (`FaceAuthStatus`): `NOT_ENFORCED`, `CANCELLED`, `FACE_NOT_ENROLLED`,
 `NOT_SUPERVISOR`, `USER_LOCKED`, `LIVENESS_FAILED`, `MAX_ATTEMPTS`, `FACE_MISMATCH`, `ENGINE_UNAVAILABLE`, `BUSY`.

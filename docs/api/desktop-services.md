@@ -42,6 +42,15 @@ the stream is already closed and the device is Ready), `passed()`, `closedWithou
 | `boolean isBlocked(Workflow, String subjectRef)` | attempts used up for this person and workflow |
 | `Optional<LivenessContext> pendingContext(Workflow, String subjectRef)` / `LivenessContext contextFor(Workflow, String subjectRef)` | the pass waiting for its capture (used by `SessionContext.validateFace` and `captureAndValidateFace`) |
 
+`LivenessModelImporter` (Spring bean, supervisor model update, [design 6.1](../design/desktop-liveness-services.md#61-secure-offline-model-update-bonus-b6)):
+
+| Method | Returns |
+|---|---|
+| `Result importBundle(Path location, String userId, Collection<String> roles)` | offline update from a folder or `.zip`: verified, stored and switched to, or refused with a `ModelBundleImporter.Status` |
+| `Optional<String> updateUrl()` | the synced `mosip.registration.liveness.model.update_url`; empty means the online update is off |
+| `Result updateFromServer(String userId, Collection<String> roles)` | online update: downloads the `.zip` from `updateUrl()` (HTTPS, or HTTP to a loopback host; no redirects; 30 s timeouts, 10 minute limit, 512 MB cap) and runs `importBundle` on it; `NOT_FOUND` when the URL is empty or the download failed |
+| `Optional<Result> current()` | the running bundle (name, version, imported or installed) |
+
 `LivenessRequest.builder(Workflow, String subjectRef)` with optional `.modality(...)` and `.device(FaceCaptureDevice)`
 (default: the discovered SBI face device).
 

@@ -29,6 +29,8 @@ The model files, their licences, hashes, input and output shapes, and exact prep
   - Both expose the same `ai.onnxruntime` API. The main sources also compile unchanged against the
     `onnxruntime-android` 1.20.0 `classes.jar`.
   - Only `io.mosip.liveness.onnx.runtime` touches `ai.onnxruntime` (checked by `ArchitectureTest`).
+- **Network:** only `io.mosip.liveness.onnx.bundle` may use `java.net`, for the online model update download. The
+  engine, the adapters and the model loader open no connection (checked by `ArchitectureTest`).
 - **Telemetry:** switched off with `OrtEnvironment.setTelemetry(false)` when the first model loads.
 - **Javadoc:** every public element has Javadoc; the compiler runs with `-Xlint:all -Xdoclint:all/protected`
   and reports no warnings.
@@ -46,6 +48,7 @@ The model files, their licences, hashes, input and output shapes, and exact prep
 | `...onnx.quality` | `FaceQualityMeter` (brightness, Laplacian-variance sharpness) |
 | `...onnx.pad` | `MiniFasModel` (upstream crop and preprocessing, optional exposure gain); `MiniFasPassivePad` (ensemble); `SceneExposure` (gain for a dark frame); `ScreenPatternMeter` (frequency peaks of a screen's pixel grid and moire) |
 | `...onnx.embed` | `FaceAligner` (OpenCV 112x112 five-point template); `SFaceEmbedder` |
+| `...onnx.bundle` | `ModelBundleImporter` (model update for both clients: import from a folder or `.zip`, or download from the synced `model.update_url` with `updateFromServer`, then the same signature, hash, version and self-test checks); `ModelBundleStore` (imported bundles, active pointer, version floor) |
 | `...onnx.tools` | `ModelSigner`, a command-line tool: `keygen`, `update`, `sign`, `verify`, `digest` |
 
 Dependencies between sub-packages have no cycles (checked by `ArchitectureTest`).

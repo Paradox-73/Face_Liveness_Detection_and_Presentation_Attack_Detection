@@ -598,6 +598,7 @@ Logcat as its `Log`.
 | `bundle.ModelBundleStore` (`liveness-onnx`) | `files/liveness/model-store/` in the app's private storage: one folder per imported bundle and `active.properties` (active folder, version, previous folder, version floor), replaced atomically; a missing pointer is rebuilt from the bundle folders, so the floor survives its deletion. |
 | `engine.EngineLoader` | Loads the active imported bundle when there is one, else the APK bundle; minimum version is `model.min_version` or the store's floor, whichever is higher. `switchModels(source)` builds a new engine, self-tests it (ready, face detector and passive PAD on a blank frame) and only then swaps it in and closes the old one. |
 | app `LivenessApi.importModelBundle(path)` / `getModelBundle()` | Pigeon calls (`pigeon/liveness.dart`) for Flutter; the import runs on a background thread and answers on the main thread. An empty path reads `Android/data/<app>/files/liveness-models/`. |
+| app `LivenessApi.updateModelBundle()` / `isModelUpdateConfigured()` | Online update (pigeon): downloads the bundle from the synced `model.update_url` on the import thread and imports it (`DefaultLivenessService.updateModelBundle` calls `ModelBundleImporter.updateFromServer`); tells Flutter whether the key is set. |
 
 Checks, in order; the first failure stops the import and the running models stay active:
 
@@ -628,7 +629,25 @@ refused; the previous bundle is kept; `EngineLoader.switchModels` keeps the runn
 not ready. The engine switch itself is scripted there, because ONNX Runtime for Android does not run in a JVM unit
 test.
 
-Not done: no run on a physical phone or an emulator (the engine switch is scripted in the unit tests); no Flutter screen calls `importModelBundle` yet (the desktop client has its import window); a
-supervisor button, for example in the device settings tab, is the next step. The import does not check whether a
+**Online update (since 2026-10-14).** When the synced key `mosip.registration.liveness.model.update_url` holds a
+URL, `ModelImportPanel` (Settings, Device Settings) also shows "Check for model update". The button calls
+`LivenessApi.updateModelBundle()`, which runs `ModelBundleImporter.updateFromServer` for the signed-in user. That
+method runs checks 1 and 2, downloads the bundle `.zip` to a temporary file and imports the file with
+`importBundle`, so checks 1 to 7 and the audits are the same as above. The download accepts only `https://`, or
+`http://` to `localhost` or a loopback address literal (MockSync through `adb reverse`, for example
+`http://127.0.0.1:8080/v1/syncdata/liveness/model-bundle`). It does not follow redirects, waits at most 30 s to
+connect and between reads, stops after 10 minutes and refuses more than 512 MB. A failed download returns
+`NOT_FOUND`, writes no audit and leaves the running models active; the panel then says that the model could not be
+downloaded. An empty key, the shipped default, hides the button. The app does not check for an update by itself
+after a sync. The same code and limits run on the desktop
+([desktop-liveness-services.md](desktop-liveness-services.md) section 6.1).
+
+Tests of the online update: `ModelBundleImporterTest.onlineUpdateImportsTheServedBundleWithTheSameChecks`
+(livenessmanager) serves the tampered, older and valid sample bundles from a local HTTP server on a random port;
+`ModelBundleUpdateTest` (`liveness-onnx`) covers the URL rules, redirects, error answers and the empty key;
+`model_import_panel_test.dart` covers the button.
+
+Not done: no run on a physical phone or an emulator (the engine switch is scripted in the unit tests), neither for
+the offline import nor for the online update. The import does not check whether a
 capture screen is open (the desktop client refuses with `BUSY` during a capture); the import is started from
 Flutter, so ARC's main screen is in front and no capture screen is open.

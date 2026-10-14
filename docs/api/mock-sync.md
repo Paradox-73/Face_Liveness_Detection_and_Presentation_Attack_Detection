@@ -32,6 +32,7 @@ Demo users are in `docs/test-data.md`; passwords are stored only as salted SHA-2
 | `GET /v1/syncdata/configs/{keyIndex}` | delivers every `mosip.registration.liveness.*` key and the SFace SDK selection (signed, encrypted) |
 | `GET /v1/syncdata/v2/clientsettings?keyindex=` | master data incl. `PermittedLocalConfig` rows (which liveness keys an operator may change locally) and FACE as an authentication method |
 | `GET /v1/syncdata/v2/userdetails?keyindex=` | operators and supervisors |
+| `GET /v1/syncdata/liveness/model-bundle` | online model update: streams the signed bundle `.zip` named by `mocksync.liveness-model-bundle` (`application/zip`); HTTP 404 when that setting is empty or the file is missing. No token and no machine check: the clients verify the bundle signature and hashes themselves. MockSync addition, not a MOSIP endpoint |
 | `GET /v1/syncdata/getcacertificates` | device trust: MockMDS `rootca.cer` (DEVICE), renewed `rootcaftm.cer` (FTM and DEVICE), MockSync DEVICE CA for the Android built-in camera |
 | `GET /registrationprocessor/v1/registrationstatus/getCertificate`, `POST .../registrationstatus/auth` | operator onboarding (IDA mock, `authStatus: true`) |
 | `POST /registrationprocessor/v1/registrationstatus/sync`, `POST .../packetreceiver/registrationpackets` | packet sync and upload |
@@ -95,7 +96,25 @@ scripts/set-config.sh mosip.registration.liveness.policy.registration=ALWAYS_ACT
 scripts/set-config.sh --unset mosip.registration.liveness.policy.registration         # back to the shipped policy
 ```
 
-## 5. Limits
+## 5. Use case: online model update
+
+The clients download a model bundle only from the URL in the synced key `mosip.registration.liveness.model.update_url`
+(empty by default, so the feature is off). The download goes through the same checks as an offline import
+([../design/online-offline.md](../design/online-offline.md) section 3).
+
+```bash
+cd tools/mock-sync
+# Start MockSync with a signed bundle .zip, for example one built by scripts/make-sample-model-bundles.sh and zipped.
+scripts/run-mock-sync.sh --mocksync.liveness-model-bundle=/path/to/bundle-1.3.1.zip
+# Plain HTTP is accepted only to a loopback host: the desktop on the same laptop, Android through adb reverse.
+scripts/set-config.sh mosip.registration.liveness.model.update_url=http://127.0.0.1:8080/v1/syncdata/liveness/model-bundle
+# Client: Synchronize Data, then as a supervisor open the model import window (desktop header menu "Import liveness
+# models"; Android Settings, Device Settings) and press "Check for model update". Audit LV15 on success, LV14 when
+# the bundle is refused.
+scripts/set-config.sh --unset mosip.registration.liveness.model.update_url                      # feature off again
+```
+
+## 6. Limits
 
 Not a MOSIP server: no Keycloak, no biometric matching in IDA, no packet processing, no client-upgrade endpoint.
 Keys and uploaded packets live in `tools/mock-sync/work/` (generated, never committed).

@@ -199,6 +199,7 @@ All MOSIP responses use the envelope
 | `GET /scripts/{name}?keyindex=` | rule script (`applicanttype.mvel`) | file bytes, `Content-Length`, `file-signature` header | signed hash |
 | `GET /v2/userdetails?keyindex=` | operator list | `{"lastSyncTime","userDetails":"<enc>"}`; decrypted: `[{"userId","langCode","name","isActive","isDeleted","regCenterId"}]` | signed, encrypted |
 | `GET /getcacertificates` | device trust anchors | `{"certificateDTOList":[{"certData","partnerDomain",...}],"lastSyncTime"}` | signed |
+| `GET /liveness/model-bundle` | online liveness model update (MockSync addition) | the `.zip` named by `mocksync.liveness-model-bundle`, `application/zip`; 404 when unset or missing | none: the clients check the bundle's signature and hashes |
 
 `dataToSync` entities (names and fields follow the desktop client's `io.mosip.registration.entity` classes):
 `MachineType`, `MachineSpecification`, `RegistrationCenterType`, `RegistrationCenter` (the machine's centre only),
@@ -325,6 +326,7 @@ Data fixes applied when serving (the real server's data differs from the spreads
 | `mocksync.face-auth-processes` | `login_auth,packet_auth,eod_auth,exception_auth` | where FACE authentication is switched on |
 | `mocksync.ida-auth-status` | `true` | onboarding result |
 | `mocksync.ca-certificates[n]` | MockMDS `rootca.cer` (DEVICE), `rootcaftm.cer` (FTM and DEVICE) | `DOMAIN=path` entries for `getcacertificates`; MockSync's own DEVICE CA is always added |
+| `mocksync.liveness-model-bundle` | empty | signed liveness model bundle `.zip` served at `/v1/syncdata/liveness/model-bundle`. Clients fetch it only when the synced key `mosip.registration.liveness.model.update_url` names that URL (empty in `data/mock-sync-defaults.properties`); see [../../docs/api/mock-sync.md](../../docs/api/mock-sync.md) section 5 |
 
 ## Tests
 

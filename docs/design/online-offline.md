@@ -14,7 +14,7 @@ configuration or model updates are synchronised securely when online.
 | Policy and thresholds | Last synced `mosip.registration.liveness.*` values in the local database, else shipped defaults | No (updates need a sync) |
 | Audit events and packet evidence | Local database, then inside the packet | No (upload needs the network) |
 | Configuration updates | MOSIP config sync (`GET /v1/syncdata/configs/{keyIndex}`) | Yes |
-| Model updates | New client release (desktop upgrade, new APK) | Yes, or offline media |
+| Model updates | Offline import of a signed bundle, download of the same bundle from the synced `model.update_url`, or a new client release | Download and release: yes. Offline import: no |
 | Operator onboarding | MOSIP IDA check of the onboarding biometrics | Yes (upstream MOSIP behaviour) |
 
 The liveness decision never waits for a server. There is no online-only branch in the engine: the same session
@@ -56,17 +56,32 @@ Every key: [configuration.md](configuration.md).
 | Packaging | `liveness-onnx-1.0.0-SNAPSHOT-models.jar` (the `models/` bundle on the class path) in `lib/` | `:livenessmanager:prepareLivenessModels` verifies the bundle with `ModelRegistry.verifyAll()` at build time and copies it to `assets/liveness/models/` |
 | Verification at load | `ModelRegistry`: RS256 signature of `manifest.json` against the built-in trust anchor, SHA-256 of every file, bundle version at least `model.min_version` | same class, same checks, on the APK assets |
 | On failure | Engine not created, audit LV14, every enforced face capture refused (fail closed) | same |
-| Update path | New client release through MOSIP's software upgrade (jar hashes listed in `MANIFEST.MF` and checked by `ClientSetupValidator` outside `environment=LOCAL`), or offline import of a signed bundle by a supervisor (`LivenessModelImporter`, import window) | New APK, or offline import of a signed bundle (`ModelBundleImporter`, [android-liveness.md](android-liveness.md) section 14) |
+| Update path | New client release through MOSIP's software upgrade (jar hashes listed in `MANIFEST.MF` and checked by `ClientSetupValidator` outside `environment=LOCAL`), offline import of a signed bundle by a supervisor (`LivenessModelImporter`, import window), or "Check for model update" in the same window, which downloads the bundle from `mosip.registration.liveness.model.update_url` and imports it with the same checks ([desktop-liveness-services.md](desktop-liveness-services.md) section 6.1) | New APK, offline import of a signed bundle (`ModelBundleImporter`, [android-liveness.md](android-liveness.md) section 14), or "Check for model update" in Settings, Device Settings (same download and checks) |
 | Rollback protection | Raise `mosip.registration.liveness.model.min_version` by sync (shipped default `1.3.0`); an older bundle then refuses to load; an import also raises a version floor kept in the store | same |
 
 The offline import of a signed bundle (bonus B6) exists on both clients: the desktop import window ran end to end on
 2026-09-30 (flow 65, at the bundle versions of that day; it needs a bundle of 1.3.1 or higher now), the Android importer is
 covered by unit tests and has an "Import liveness model" button in Settings, Device Settings, shown on the emulator
-on 2026-10-05 (no import run from the button, no phone run). Not done: an online test of a model upgrade through a
-MockSync upgrade endpoint (T-MI-06). MockSync has no client-upgrade endpoint, and the desktop run layout uses
-`environment=LOCAL`, which skips the jar hash check. The verification code that such an update would rely on
-(signature, hashes, minimum version, fail closed) is in place and unit-tested (`ModelRegistryTest`,
-`ModelSignerTest`).
+on 2026-10-05 (no import run from the button, no phone run).
+
+Online model update (since 2026-10-14). The synced key `mosip.registration.liveness.model.update_url` names a signed
+bundle `.zip`. It is empty by default, and then neither client offers the update. When it is set, both clients show
+"Check for model update" next to the offline import. A supervisor presses it, and the shared
+`ModelBundleImporter.updateFromServer` (`liveness-onnx`) downloads the file to a temporary file and hands it to the
+offline importer. The signature, the per-file SHA-256, the version floor and `model.min_version`, and the self-test
+are therefore the same code, and so are the audits (LV14 refused, LV13 could not start, LV15 switched). The download
+requires HTTPS, except to a loopback host. It follows no redirects, has a 30 s connect and read timeout, a 10 minute
+limit and a 512 MB cap. A failed or tampered download leaves the running models in place. The key rides on the signed
+config sync like every other liveness key, and the bundle itself is signed, so the download channel needs no trust
+of its own. MockSync serves a bundle at `GET /v1/syncdata/liveness/model-bundle` from the file named by
+`mocksync.liveness-model-bundle` ([../api/mock-sync.md](../api/mock-sync.md)).
+
+Evidence and limits. Unit tests serve correctly signed, tampered, unsigned, foreign-key and older bundles from a
+local HTTP server on a random port (`ModelBundleUpdateTest`, desktop `LivenessModelImporterTest`, Android
+`ModelBundleImporterTest`) and check that only the valid newer bundle is installed. No client run against MockSync
+and no phone run of the online update have been done. The update is started by a supervisor, not by the sync job
+itself. A client release through MockSync (T-MI-06) is still not tested: MockSync has no client-upgrade endpoint, and
+the desktop run layout uses `environment=LOCAL`, which skips the jar hash check.
 
 ## 4. Audits, packets and metrics while offline
 

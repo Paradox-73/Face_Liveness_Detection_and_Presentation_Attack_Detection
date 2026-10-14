@@ -268,6 +268,28 @@ the repository, produced by `ModelSigner update` and `ModelSigner sign`).
 The client's audit service adds the logged-in user to every row. The result window shows the running bundle,
 the result text in the display language and the models (identifier, version, start of the SHA-256).
 
+**Online update (since 2026-10-14).** When the synced key `mosip.registration.liveness.model.update_url` holds a
+URL, the import window also shows the button "Check for model update". The button calls
+`LivenessModelImporter.updateFromServer(userId, roles)`, which calls `ModelBundleImporter.updateFromServer`. That
+method runs steps 1 and 2, downloads the bundle `.zip` to a temporary file, and passes the file to `importBundle`.
+Steps 1 to 8 and their audits are therefore the same as for a `.zip` from a USB stick. The download is the only new
+code, and it has these limits:
+
+- The URL must start with `https://`. `http://` is accepted only for `localhost` or a loopback address literal such
+  as `127.0.0.1`. Other host names are not resolved for this check, so DNS cannot turn a remote host into a loopback
+  one.
+- Redirects are not followed.
+- The client waits at most 30 s to connect and 30 s between reads, stops after 10 minutes in total, and refuses a
+  body larger than 512 MB.
+- The temporary file is deleted after the import.
+
+A failed download (no answer, an HTTP status other than 200, a refused URL, a limit reached) returns `NOT_FOUND`
+and writes no audit, like an offline import from a folder without a manifest. The running models stay active, and
+the window says that the bundle could not be downloaded. An empty key, the shipped default, hides the button. The
+client does not check for an update by itself after a sync: a supervisor starts each update, so the role check and
+the busy check apply as for an offline import. MockSync serves a bundle for this at
+`GET /v1/syncdata/liveness/model-bundle` ([../api/mock-sync.md](../api/mock-sync.md)).
+
 **At every engine load** the registry prefers the active imported bundle to the one on the class path, and raises
 the minimum version to the store's floor (the highest version ever activated), so a validly signed older bundle
 is refused even if the pointer file is edited. A stored bundle that fails its checks makes the engine fail closed
