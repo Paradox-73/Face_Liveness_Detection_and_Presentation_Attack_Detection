@@ -16,7 +16,10 @@ sequence is dynamic and unpredictable; the action is verified on the frames that
 | `LOOK_UP`, `LOOK_DOWN` | "Please look up / down" | pitch change of 15 degrees | head pose |
 | `GAZE_LEFT`, `GAZE_RIGHT` | "Please look to your left / right without turning your head" | horizontal gaze 0.35 | inter-eye distance at least 60 px |
 
-Default pool (`mosip.registration.liveness.active.challenge_types`): `BLINK,SMILE,TURN_LEFT,TURN_RIGHT,LOOK_UP`.
+Default pool (`mosip.registration.liveness.active.challenge_types`): `BLINK,SMILE,TURN_LEFT,TURN_RIGHT`.
+`LOOK_UP` left the default pool on 2026-10-14: it is unit-tested on synthetic landmarks only, and no recorded
+face has answered it. It stays available; add it to the synced pool once the team recordings show it passes
+(`docs/manual-test-checklist.md`).
 The trigger values are signed engine parameters (`EngineParameter`, for example `active.turn_yaw_deg`), not
 operator settings.
 
@@ -116,7 +119,7 @@ is `docs/ux/message-catalogue.csv`.
 |---|---|---|
 | `active.enable` | `Y` | Y/N |
 | `active.min_challenges`, `<workflow>.min_challenges` | 2 | 1-5 |
-| `active.challenge_types` | `BLINK,SMILE,TURN_LEFT,TURN_RIGHT,LOOK_UP` | any subset of the 8 types |
+| `active.challenge_types` | `BLINK,SMILE,TURN_LEFT,TURN_RIGHT` | any subset of the 8 types |
 | `active.challenge_timeout_ms` | 5,000 | 2,000-15,000 |
 | `active.min_onset_ms` | 200 | 0-2,000 |
 | `active.hold_ms` | 300 | 0-3,000 |

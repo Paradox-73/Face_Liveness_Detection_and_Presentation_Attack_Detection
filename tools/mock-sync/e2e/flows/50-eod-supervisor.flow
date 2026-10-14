@@ -1,5 +1,5 @@
 # End of day at the shipped defaults: every supervisor workflow is ALWAYS_ACTIVE (login_auth, eod_auth), so the
-# supervisor's face always answers random challenges from the five-action pool; no passive score alone passes.
+# supervisor's face always answers random challenges from the four-action pool; no passive score alone passes.
 # supervisor1 logs out the officer and logs in with face liveness, then approves every pending packet with
 # supervisor authentication (password, then face liveness, workflow eod_auth): a screen replay is refused first,
 # the retry with the supervisor's live face (pack s3, the frame source following the prompts) passes, and the

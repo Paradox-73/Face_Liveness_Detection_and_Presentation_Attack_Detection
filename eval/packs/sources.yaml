@@ -83,5 +83,5 @@ sources:
 #     Pitch at most 8.6 degrees in any frame, never 15 above a neutral frame: no look-up.
 #   So genuine TURN_LEFT and TURN_RIGHT answers exist only for S2, and no subject has a LOOK_UP clip. Scenarios
 #   that play genuine answers (bona fide, adaptive replays) keep a two-action pool for that reason; every other
-#   attack scenario runs on the shipped five-action pool. Demos with scripted head turns and look-ups need
+#   attack scenario runs on the shipped four-action pool. Demos with scripted head turns and look-ups need
 #   recordings of the enrolled face itself.

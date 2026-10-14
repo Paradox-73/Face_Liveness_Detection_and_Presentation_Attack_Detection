@@ -1,6 +1,6 @@
 # Resident registration at the shipped defaults: policy.registration=ALWAYS_ACTIVE, so every capture asks for
-# active.min_challenges (2) random actions from the five-action pool (blink, smile, turn left, turn right, look
-# up), even when the passive score alone would pass. A device disconnect during the check shows the device message
+# active.min_challenges (2) random actions from the four-action pool (blink, smile, turn left, turn right),
+# even when the passive score alone would pass. A device disconnect during the check shows the device message
 # and does not use an attempt; after reconnection the resident (face pack s3) answers the challenges, the frame
 # source following the prompts. Then preview and operator packet authentication with face liveness (packet_auth,
 # also ALWAYS_ACTIVE). The passive-first flow of PS04 (PASSIVE_THEN_ACTIVE) is shown in 60-config-sync.flow.

@@ -42,7 +42,7 @@ public enum PolicyKey {
     /** Challenges in the active phase. */
     ACTIVE_MIN_CHALLENGES(LivenessConfigKeys.ACTIVE_MIN_CHALLENGES, 2, 1, 5),
     /** Challenge pool, comma-separated {@code ChallengeType} names. */
-    ACTIVE_CHALLENGE_TYPES(LivenessConfigKeys.ACTIVE_CHALLENGE_TYPES, "BLINK,SMILE,TURN_LEFT,TURN_RIGHT,LOOK_UP",
+    ACTIVE_CHALLENGE_TYPES(LivenessConfigKeys.ACTIVE_CHALLENGE_TYPES, "BLINK,SMILE,TURN_LEFT,TURN_RIGHT",
             Type.TEXT),
     /** Time per challenge in milliseconds (accessibility: up to 15 s). */
     ACTIVE_CHALLENGE_TIMEOUT_MS(LivenessConfigKeys.ACTIVE_CHALLENGE_TIMEOUT_MS, 5_000, 2_000, 15_000),

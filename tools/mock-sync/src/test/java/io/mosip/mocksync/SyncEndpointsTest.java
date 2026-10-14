@@ -148,7 +148,7 @@ class SyncEndpointsTest {
 		Map<String, String> global = config("globalConfiguration");
 
 		assertEquals("Y", registration.get("mosip.registration.liveness.enable"));
-		assertEquals("BLINK,SMILE,TURN_LEFT,TURN_RIGHT,LOOK_UP",
+		assertEquals("BLINK,SMILE,TURN_LEFT,TURN_RIGHT",
 				registration.get("mosip.registration.liveness.active.challenge_types"));
 		assertEquals("eng", registration.get("mosip.mandatory-languages"), "self-referencing keys keep their value");
 		assertEquals("applicanttype.mvel", global.get("mosip.kernel.applicantType.mvel.file"));

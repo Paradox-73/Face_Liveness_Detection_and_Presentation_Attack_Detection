@@ -7,8 +7,8 @@ This repository adds offline face liveness and presentation attack detection (PA
 Clients (desktop JavaFX and Android), for resident face capture, operator authentication and supervisor
 authentication.
 
-- **Hybrid check:** passive PAD on the incoming frames, then randomly chosen actions (blink, smile, turn or look,
-  five-action pool) verified on the following frames. Resident registration, face sign-in, onboarding and the three
+- **Hybrid check:** passive PAD on the incoming frames, then randomly chosen actions (blink, smile, turn left, turn right;
+  look up and down can be added to the pool) verified on the following frames. Resident registration, face sign-in, onboarding and the three
   supervisor workflows (packet, exception and end-of-day authentication) ship with challenges on every capture
   (`ALWAYS_ACTIVE`), because synthetic prints scored above the passive threshold; only the exception photo has
   liveness off. Each workflow's policy is one synced setting; `PASSIVE_THEN_ACTIVE` (challenges only after a low

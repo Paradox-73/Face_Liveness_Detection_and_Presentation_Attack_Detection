@@ -91,7 +91,7 @@ transactions in the morning run of 2026-10-05 and in 0 of 8 after the screen-pat
 | `mosip.registration.liveness.active.enable` | Y/N | `Y` | | no | Allow escalation to challenges (`ALWAYS_ACTIVE` ignores it) |
 | `mosip.registration.liveness.active.min_challenges` | int | 2 | 1-5 | no | Challenges per active stage |
 | `mosip.registration.liveness.<workflow>.min_challenges` | int | unset | 1-5 | no | Per-workflow count |
-| `mosip.registration.liveness.active.challenge_types` | CSV of `BLINK`, `SMILE`, `TURN_LEFT`, `TURN_RIGHT`, `LOOK_UP`, `LOOK_DOWN`, `GAZE_LEFT`, `GAZE_RIGHT` | `BLINK,SMILE,TURN_LEFT,TURN_RIGHT,LOOK_UP` | unknown names dropped; no valid name gives the default | no | Challenge pool |
+| `mosip.registration.liveness.active.challenge_types` | CSV of `BLINK`, `SMILE`, `TURN_LEFT`, `TURN_RIGHT`, `LOOK_UP`, `LOOK_DOWN`, `GAZE_LEFT`, `GAZE_RIGHT` | `BLINK,SMILE,TURN_LEFT,TURN_RIGHT` | unknown names dropped; no valid name gives the default | no | Challenge pool |
 | `mosip.registration.liveness.active.challenge_timeout_ms` | int ms | 5,000 | 2,000-15,000 | yes | Time allowed per challenge |
 | `mosip.registration.liveness.active.min_onset_ms` | int ms | 200 | 0-2,000 | no | Reactions faster than this are refused (`ONSET_TOO_FAST`) |
 | `mosip.registration.liveness.active.hold_ms` | int ms | 300 | 0-3,000 | no | Time the action must be held |

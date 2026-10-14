@@ -37,7 +37,7 @@ class LivenessConfigKeysTest {
         assertEquals("4000", d.get("mosip.registration.liveness.passive.timeout_ms"));
         assertEquals("Y", d.get("mosip.registration.liveness.active.enable"));
         assertEquals("2", d.get("mosip.registration.liveness.active.min_challenges"));
-        assertEquals("BLINK,SMILE,TURN_LEFT,TURN_RIGHT,LOOK_UP", d.get("mosip.registration.liveness.active.challenge_types"));
+        assertEquals("BLINK,SMILE,TURN_LEFT,TURN_RIGHT", d.get("mosip.registration.liveness.active.challenge_types"));
         assertEquals("5000", d.get("mosip.registration.liveness.active.challenge_timeout_ms"));
         assertEquals("200", d.get("mosip.registration.liveness.active.min_onset_ms"));
         assertEquals("300", d.get("mosip.registration.liveness.active.hold_ms"));
@@ -75,7 +75,7 @@ class LivenessConfigKeysTest {
                 "mosip.registration.liveness.passive.timeout_ms=4000",
                 "mosip.registration.liveness.active.enable=Y",
                 "mosip.registration.liveness.active.min_challenges=2",
-                "mosip.registration.liveness.active.challenge_types=BLINK,SMILE,TURN_LEFT,TURN_RIGHT,LOOK_UP",
+                "mosip.registration.liveness.active.challenge_types=BLINK,SMILE,TURN_LEFT,TURN_RIGHT",
                 "mosip.registration.liveness.active.challenge_timeout_ms=5000",
                 "mosip.registration.liveness.active.min_onset_ms=200",
                 "mosip.registration.liveness.active.hold_ms=300",

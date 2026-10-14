@@ -17,4 +17,4 @@ stream:
     TURN_RIGHT: a-s2-print-yaw-right
 expect:
   outcome: reject
-notes: Runs on the shipped five-action challenge pool, where the tilted print answers TURN_LEFT and TURN_RIGHT prompts, and cannot answer BLINK, SMILE or LOOK_UP.
+notes: Runs on the shipped four-action challenge pool, where the tilted print answers TURN_LEFT and TURN_RIGHT prompts, and cannot answer BLINK or SMILE.

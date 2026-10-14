@@ -10,7 +10,7 @@
 # Suites (default: shipped legacy legacy-strict latency):
 #   shipped        shipped configuration: registration, operator onboarding, login and the three supervisor
 #                  workflows (packet_auth, exception_auth, eod_auth) always run challenges from the shipped
-#                  five-action pool, 30 passive frames; blur threshold 40 and the 300-frame loop window from
+#                  four-action pool, 30 passive frames; blur threshold 40 and the 300-frame loop window from
 #                  the signed model bundle. Runs every scenario in eval/scenarios.
 #   legacy         the configuration shipped before 2026-09-30 (passive first on every workflow, including
 #                  the supervisor ones, 8 passive frames, blur threshold 10), on the current engine

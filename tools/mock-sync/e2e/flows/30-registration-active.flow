@@ -1,7 +1,7 @@
 # Resident registration with a low-confidence face: s3 through a noisy camera (packs s3n-*, made by
 # e2e/NoisyPack.java; session passive score 74 in the reference run, below the resident threshold 80 and above the
 # reject threshold 20).
-# At the shipped defaults (ALWAYS_ACTIVE) the engine asks for random challenges from the five-action pool and the
+# At the shipped defaults (ALWAYS_ACTIVE) the engine asks for random challenges from the four-action pool and the
 # frame source follows the prompts. Pack s3n has blink and smile recordings only: a turn or look-up challenge is
 # logged as "FOLLOW no pack for ..." and fails that attempt; expect-live retries up to three attempts. (Pack s1
 # has a passive score of 70-79 too, but its clip blinks every third of a second, so it cannot hold still between

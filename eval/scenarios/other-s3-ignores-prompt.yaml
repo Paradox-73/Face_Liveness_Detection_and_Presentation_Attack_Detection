@@ -16,4 +16,4 @@ expect:
   outcome: reject
   layers:
   - challenge
-notes: Runs on the shipped five-action challenge pool; the stream answers no prompt, whichever action is drawn.
+notes: Runs on the shipped four-action challenge pool; the stream answers no prompt, whichever action is drawn.
