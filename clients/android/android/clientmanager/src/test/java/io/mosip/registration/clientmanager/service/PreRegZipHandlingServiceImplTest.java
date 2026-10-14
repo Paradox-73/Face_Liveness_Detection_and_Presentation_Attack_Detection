@@ -243,7 +243,7 @@ public class PreRegZipHandlingServiceImplTest {
             try {
                 service.storePreRegPacketToDisk("id", new byte[]{1,2,3}, new CenterMachineDto());
             } catch (RuntimeException e) {
-                assertTrue(e.getCause() instanceof RegBaseUncheckedException);
+                assertTrue(e.getCause() instanceof java.io.IOException);
             }
         } catch (Exception e) {
             fail();
