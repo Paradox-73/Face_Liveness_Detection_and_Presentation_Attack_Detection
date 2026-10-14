@@ -187,7 +187,7 @@ photo of you, and let you sign in with your face, in the desktop Registration Cl
 hands-on time after the tools of section 1 are installed and the builds of sections 2-5 have finished once. A
 first build downloads its dependencies and takes longer; the team has not timed it on a clean machine.
 
-**Status on 2026-10-05: the team has not yet run these steps end to end.** What has been run, and what has not:
+**Status on 2026-10-14: the team has not yet run these steps end to end** (the team's steps and results sheet: [manual-test-checklist.md](../manual-test-checklist.md) section C, `MT-DT-01` to `MT-DT-19`). What has been run, and what has not:
 
 | Part | State on 2026-10-05 | Where |
 |---|---|---|

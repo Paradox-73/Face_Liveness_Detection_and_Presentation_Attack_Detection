@@ -9,7 +9,9 @@ captures and home-made attacks, write down what happened, and turn the notes int
   as the test result; they go in the report as "development split".
 - **Status on 2026-09-30:** every automated run so far used recorded or synthetic frames. Nobody has yet passed a
   live face from a webcam through the full client, so the first session is also the first real check of how often
-  genuine people are rejected.
+  genuine people are rejected. The recording protocol and file names for the team are in
+  [../manual-test-checklist.md](../manual-test-checklist.md) section A; `python tools/eval/ingest-recordings.py`
+  turns the recordings into frame packs, runs them and writes the report.
 
 ## 1. People, time and material
 

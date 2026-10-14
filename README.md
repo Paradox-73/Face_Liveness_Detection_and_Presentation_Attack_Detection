@@ -191,9 +191,10 @@ Scripted demos of every flow: `scripts/demo-desktop.sh`, `scripts/demo-android.s
 Try the check with your own face through a webcam, in the desktop client. Full steps, expected screens and
 troubleshooting: [docs/install/README.md section 10](docs/install/README.md#10-evaluate-in-15-minutes-with-your-own-webcam).
 
-**Status on 2026-10-05: the team has not yet run this webcam route end to end.** Every recorded run so far used
-recorded frame packs; a live face through the full client, onboarding your own face and face sign-in with it are
-still to be run (details in that section).
+**Status on 2026-10-14: the team has not yet run this webcam route end to end.** Every recorded run so far used
+recorded frame packs. The steps a person must do, with the expected screens and a results sheet to send back, are
+in [docs/manual-test-checklist.md](docs/manual-test-checklist.md) (section C for this route); the team's webcam
+recordings go into the evaluation with one command, `python tools/eval/ingest-recordings.py`.
 
 1. ffmpeg on `PATH` (MockMDS reads the webcam through it); find the webcam's name with
    `ffmpeg -hide_banner -list_devices true -f dshow -i dummy`.

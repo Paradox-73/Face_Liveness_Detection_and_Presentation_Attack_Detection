@@ -6,6 +6,8 @@ until the phone run has been done.
 
 ## 1. How to run it
 
+The team's step for this is `MT-AND-12` in [../manual-test-checklist.md](../manual-test-checklist.md).
+
 Needs: a phone with USB debugging on, `adb` (Android platform-tools) on `PATH` or `ANDROID_HOME` set, and, to build
 the benchmark, JDK 21 and the liveness engine installed in the local Maven repository (`scripts/android-build.sh`
 does that; see [../install/android.md](../install/android.md)).
