@@ -132,7 +132,8 @@ check_tools() {
     *) die "JAVA_HOME must point to JDK 21 (AGP 8.3.2 + Java 21 sources); found: $java_version" ;;
   esac
   local flutter_version
-  flutter_version="$(flutter --version 2>/dev/null | head -n 1)"
+  # head exits after one line; Flutter then fails writing its first-run banner (exit 255), which set -e must not see.
+  flutter_version="$(flutter --version 2>/dev/null | head -n 1)" || true
   case "$flutter_version" in
     'Flutter 3.10.4 '*) ;;
     *) log "WARNING: upstream builds with Flutter 3.10.4; found: $flutter_version" ;;
