@@ -32,8 +32,8 @@ stay in the linked reports; requirement-by-requirement status is in [../traceabi
 
 Commands run from the repository root in Git Bash (Windows) or bash (Linux), after the setup of
 [../install/README.md](../install/README.md) section 1: JDK 11 with JavaFX as the default `JAVA_HOME`, JDK 21 where the
-row says so, Maven 3.9, and the Maven mirror settings file that the repository ships as `.github/maven-settings.xml`.
-Set it once per shell with `export MAVEN_ARGS="-s .github/maven-settings.xml"` (from the repository root). The
+row says so, Maven 3.9, and the Maven mirror settings file that the repository ships as `scripts/release/maven-settings.xml`.
+Set it once per shell with `export MAVEN_ARGS="-s $PWD/scripts/release/maven-settings.xml"` (from the repository root). The
 counts below were taken on the project laptop (Windows 11, 12 threads, 16 GB, other builds running at the same time).
 The last column names the job of `.github/workflows/ci.yml` that runs the same command on a clean `ubuntu-latest`
 machine at every push and pull request. The hosted re-run of 2026-10-14 on `86799c8` passed every job except `android-unit` (see the list below the

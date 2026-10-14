@@ -40,7 +40,7 @@ jobs:
     name: MockMDS (build + tests)
     runs-on: ubuntu-latest
     env:
-      MAVEN_ARGS: -s ${{ github.workspace }}/.github/maven-settings.xml
+      MAVEN_ARGS: -s ${{ github.workspace }}/scripts/release/maven-settings.xml
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -84,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # The upstream desktop poms list retired repositories; the file routes them to Maven Central.
-      MAVEN_ARGS: -s ${{ github.workspace }}/.github/maven-settings.xml
+      MAVEN_ARGS: -s ${{ github.workspace }}/scripts/release/maven-settings.xml
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

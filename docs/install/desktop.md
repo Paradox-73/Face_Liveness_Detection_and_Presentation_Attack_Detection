@@ -19,22 +19,11 @@ host or against the local MockSync server in `tools/`.
 
 **Maven mirror for retired repositories.** The upstream parent POM lists the
 retired `oss.sonatype.org` repository under the id `ossrh`. Route it to Maven
-Central with a settings file and pass it through `MAVEN_ARGS`:
-
-```xml
-<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
-  <mirrors>
-    <mirror>
-      <id>central-for-retired-repos</id>
-      <mirrorOf>ossrh,sonatype-snapshots,snapshots-repo,oss-sonatype,spring-milestones,spring-snapshots</mirrorOf>
-      <url>https://repo.maven.apache.org/maven2</url>
-    </mirror>
-  </mirrors>
-</settings>
-```
+Central with the settings file the repository ships,
+[`scripts/release/maven-settings.xml`](../../scripts/release/maven-settings.xml):
 
 ```bash
-export MAVEN_ARGS="-s C:/path/to/mirror-settings.xml"
+export MAVEN_ARGS="-s $PWD/scripts/release/maven-settings.xml"   # from the repository root
 ```
 
 ## 2. Build

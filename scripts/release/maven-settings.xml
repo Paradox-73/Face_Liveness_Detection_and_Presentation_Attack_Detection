@@ -1,6 +1,6 @@
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
   <!-- Upstream MOSIP poms still list retired Sonatype and Spring repositories; route them to Maven Central.
-       Used by scripts/release.sh and .github/workflows/release.yml. -->
+       Used by scripts/release.sh and both workflows in .github/workflows; docs/install/README.md section 1. -->
   <mirrors>
     <mirror>
       <id>central-for-retired-repos</id>

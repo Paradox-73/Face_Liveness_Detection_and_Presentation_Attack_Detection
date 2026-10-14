@@ -35,21 +35,9 @@ git clone https://github.com/Paradox-73/Mosip-face-liveness-pad.git
 Hardware: 16 GB RAM is enough for one client plus the mocks; the Android emulator needs hardware virtualisation
 (WHPX) and about 18 GB of disk for Flutter, the Android SDK and Gradle caches.
 
-**Maven mirror.** The upstream desktop POM refers to retired Sonatype repositories. Create a settings file that
-routes them to Maven Central and pass it in `MAVEN_ARGS`:
-
-```xml
-<!-- C:/tools/maven-settings.xml -->
-<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
-  <mirrors>
-    <mirror>
-      <id>central-for-retired-repos</id>
-      <mirrorOf>ossrh,sonatype-snapshots,snapshots-repo,oss-sonatype,spring-milestones,spring-snapshots</mirrorOf>
-      <url>https://repo.maven.apache.org/maven2</url>
-    </mirror>
-  </mirrors>
-</settings>
-```
+**Maven mirror.** The upstream desktop POM refers to retired Sonatype repositories. The repository ships a
+settings file that routes them to Maven Central, [`scripts/release/maven-settings.xml`](../../scripts/release/maven-settings.xml);
+pass it in `MAVEN_ARGS` with an absolute path (CI does the same).
 
 **Environment** (for example in `~/.bashrc`; adjust the paths):
 
@@ -57,7 +45,7 @@ routes them to Maven Central and pass it in `MAVEN_ARGS`:
 export JAVA11_HOME=/c/tools/zulu11.41.23-ca-fx-jdk11.0.8-win_x64   # or leave unset: desktop-build.sh downloads it
 export JAVA21_HOME=/c/tools/jdk-21
 export JAVA_HOME="$JAVA11_HOME"
-export MAVEN_ARGS="-s C:/tools/maven-settings.xml"
+export MAVEN_ARGS="-s C:/src/Mosip-face-liveness-pad/scripts/release/maven-settings.xml"   # your clone
 export ANDROID_HOME=/c/tools/android-sdk
 export PATH="$JAVA_HOME/bin:/c/tools/maven/bin:/c/tools/flutter/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
 ```
