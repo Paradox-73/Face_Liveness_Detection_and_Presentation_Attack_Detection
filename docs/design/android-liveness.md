@@ -239,7 +239,7 @@ A fresh clone therefore builds with one command: `scripts/android-build.sh` (plu
 Commands (Git Bash, JDK 21):
 
 ```bash
-scripts/android-build.sh --test-only                     # unit tests: clientmanager (1,186), livenessmanager (210), app (64)
+scripts/android-build.sh --test-only                     # unit tests (counts: docs/test-report/README.md section 2)
 scripts/android-run-emulator.sh --headless               # boot, install, launch
 scripts/android-build.sh --test-only --device-test       # instrumented test on the emulator
 scripts/android-liveness-demo.sh --shots 6               # capture screen on replay frames, screenshots

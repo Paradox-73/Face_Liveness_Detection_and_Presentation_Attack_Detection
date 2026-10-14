@@ -131,7 +131,7 @@ current models stay in use when the bundle is refused. The service rules are in
 
 ## 6. Tests
 
-JUnit 4 in `registration-client/src/test/java/io/mosip/registration/controller/liveness/` (36 tests; the client
+JUnit 4 in `registration-client/src/test/java/io/mosip/registration/controller/liveness/` (count in [../test-report/README.md](../test-report/README.md) section 2; the client
 module had no tests before, so `junit` was added with test scope):
 
 | Test | Covers |

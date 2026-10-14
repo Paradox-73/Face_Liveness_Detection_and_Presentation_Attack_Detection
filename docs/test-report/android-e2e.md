@@ -127,8 +127,9 @@ the reference run (`frame-times.txt`):
 |---|---|---|
 | Debug, arm64-v8a + x86_64 (used for the run) | 326,405,878 bytes | Flutter debug kernel 24 MB, unshrunk dex with coverage instrumentation, native libraries stored uncompressed for two CPU types. |
 | Release, arm64-v8a only, native libraries uncompressed | 152,997,540 bytes | `scripts/android-build.sh --release --abis arm64-v8a` before the packaging change. |
-| **Release, arm64-v8a only (as shipped now)** | **120,856,656 bytes** | Release builds store the native libraries compressed (`androidComponents` block in `android/app/build.gradle`). Content: dex 58.6 MB (upstream builds without shrinking), native libraries 53.1 MB before compression, liveness models 23.6 MB (SFace 19.4 MB of it), ICU data 10.5 MB. |
-| Release, x86_64 only | 123,142,904 bytes | Installed on the emulator: ARC started and logged "Liveness engine ready: mosip-onnx-default@1.0.0 in 1069 ms", so the compressed ONNX Runtime library is extracted and loads. |
+| **Release, arm64-v8a only, v1.0.0 (build of 2026-10-14, as shipped)** | **116,732,329 bytes** | Checksum in [../release/README.md](../release/README.md). The x86_64 APK of the same build is 117,995,709 bytes. |
+| Release, arm64-v8a only (build of 2026-09-30) | 120,856,656 bytes | Release builds store the native libraries compressed (`androidComponents` block in `android/app/build.gradle`). Content: dex 58.6 MB (upstream builds without shrinking), native libraries 53.1 MB before compression, liveness models 23.6 MB (SFace 19.4 MB of it), ICU data 10.5 MB. |
+| Release, x86_64 only (build of 2026-09-30) | 123,142,904 bytes | Installed on the emulator: ARC started and logged "Liveness engine ready: mosip-onnx-default@1.0.0 in 1069 ms", so the compressed ONNX Runtime library is extracted and loads. |
 | Upstream release before this project (four CPU types, no liveness) | 149,398,259 bytes | `docs/install/android.md` section 2. |
 
 A release for one CPU type is smaller than upstream's four-type release although it carries the engine and the

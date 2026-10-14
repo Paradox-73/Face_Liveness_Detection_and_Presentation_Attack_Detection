@@ -1,6 +1,6 @@
 # Face liveness and presentation attack detection for MOSIP Registration Clients
 
-Team **Badmosip** — MOSIP Decode 2026, Problem Statement 04:
+Team **Badmosip**, MOSIP Decode 2026, Problem Statement 04:
 *Face Liveness Detection and Presentation Attack Detection for Registration and Biometric Authentication.*
 
 This repository adds offline face liveness and presentation attack detection (PAD) to both MOSIP Registration
@@ -65,10 +65,9 @@ decision flow picture: [docs/design/img/decision-flow.svg](docs/design/img/decis
 | Evaluation (`tools/eval`, `eval/`) | Scenario runner (31 tests) and analysis (120 pytest tests) with ISO/IEC 30107-3-style metrics; 275 transactions per run, synthetic attacks and three openly licensed clips; at the shipped defaults (2026-10-14) 0 of 226 attack transactions accepted, APCER 0.0% per transaction for every species and workflow, `registration` BPCER 0.0% (0/28), `login_auth` BPCER 0.0% (0/12); at the passive-first flow of the statement 100 of 226 accepted; `tools/eval/ingest-recordings.py` adds the team's webcam recordings | [docs/eval/results/20261014-shipped/README.md](docs/eval/results/20261014-shipped/README.md); `docs/eval/calibration-notes.md` |
 | Requirements | Every PS04 bullet mapped to code, test and status | `docs/traceability.md` |
 
-Tests: 2,691 tests passed with 0 failures and 0 errors in the verification run of 2026-10-14, 19:46-20:03 (all suites
-above, Android unit tests, Flutter tests; 2 benchmark tests skipped); about 1,361 of them are upstream MOSIP tests
-(Android `clientmanager` 1,186 and about 175 in MockMDS), so about 1,330 are written by this team. Per-suite table and commands:
-[docs/test-report/README.md](docs/test-report/README.md).
+Tests: 2,691 tests passed with 0 failures and 0 errors in the verification run of 2026-10-14 (2 benchmark tests
+skipped); about 1,330 are written by this team, the rest are upstream MOSIP tests. Per-suite table, commands and the
+upstream split: [docs/test-report/README.md](docs/test-report/README.md#2-unit-and-component-tests) section 2.
 
 ### Bonus items
 
@@ -78,32 +77,21 @@ above, Android unit tests, Flutter tests; 2 benchmark tests skipped); about 1,36
 | B6 secure offline model import | Done on both clients (signature, per-file SHA-256, rollback protection, self-test, previous bundle kept, audit). Android: "Import liveness model" button in Settings, Device Settings ([picture](docs/ux/screenshots/android/a-s1-model-import-button.png)); no phone test. [Android import steps](docs/install/android.md#10-import-a-liveness-model-bundle-offline-model-update), [design](docs/design/android-liveness.md#14-offline-model-update-bonus-b6) |
 | B7 and B8 per-frame latency and memory on a phone | Code done (measurement kit: instrumented test and `scripts/android-perf.sh`); the phone measurement is pending, the results table is empty. [docs/test-report/android-performance.md](docs/test-report/android-performance.md) |
 
-Known limits, stated in the linked documents:
+Known limits (full list: [docs/test-report/README.md](docs/test-report/README.md#6-known-limitations) section 6):
 
-- The adaptive screen replay that answers each prompt (SYN-A7, `atk-s3-adaptive-screen`) was accepted in 4 of 8
-  `registration` transactions until 2026-10-05; the screen-pattern check (isolated peaks in the face's frequency
-  spectrum, the trace of a pixel grid and moire) now refuses it in 4 of 4 seeds. The screens are synthetic, so the
-  effect on real screens is unknown, and a camera frame enlarged by 1.5x or a whole-number factor before it reaches
-  the engine could be taken for a screen. [docs/design/engine.md](docs/design/engine.md) section 4.
-- Planarity (a check that the face moves like a 3-D head) has no attack evidence and cannot stop a screen that
-  replays a real head turn.
-- Dim light: the synthetic dim clip (`bf-s3-dim`, 45% brightness) scored 3 and was rejected in 4 of 4 runs; with
-  the exposure correction (a dark frame is brightened before the PAD models see it) it scores 55 and is accepted in
-  4 of 4. Real dim-room recordings are missing; the dim-light ending ("Improve lighting", not counted, up to 3 tries)
-  stays for faces that still fail.
-- Challenges on every registration and sign-in cost time: the median accepted `registration` attempt takes 11.0 s of
-  replayed stream in the 2026-10-14 latency run (9.7 s against 6.6 s in the 2026-09-30 runs).
-- The per-frame latency target (p95 at most 20 ms) is not met: p95 115.4 ms, p50 37.5 ms per analysed frame (decode,
-  analysis, PAD; shipped engine, 1 thread, 4,410 frames, laptop at about 63% CPU load from other builds, 2026-10-14;
-  [results](docs/eval/results/20261014-latency/README.md)); face analysis is two thirds of it.
-- Not run yet: no physical Android phone or tablet, no live face or real artefact through either client, no L1 or
-  vendor face device on Android, no second device vendor, no volunteer evaluation with real artefacts. The scripted
-  demos ran at the shipped policy on 2026-10-14 only with the challenge pool cut to blink and smile (desktop 5 of 16,
-  Android 55 of 75 checks); turn challenges and the longer desktop flows need a live face or longer recordings
+- Every attack is synthetic and the genuine data is three people from open clips: regression results, not an
+  ISO/IEC 30107-3 evaluation. The screen-pattern check that stops the adaptive screen replay is proven on
+  software-made screens only.
+- Not run yet: no physical Android phone or tablet, no live face or real artefact through either client, no
+  volunteer evaluation, no L1 or vendor face device on Android.
+- Challenges on every capture cost time: the median accepted `registration` attempt takes 11.0 s of replayed stream
+  ([results](docs/eval/results/20261014-latency/README.md)). The passive-first flow of
+  the statement (one synced setting per workflow) accepts 100 of 226 synthetic attack transactions.
+- The per-frame latency target (p95 at most 20 ms) is not met: p95 115.4 ms, p50 37.5 ms on a shared laptop.
+- At the shipped policy the scripted client demos ran only with the challenge pool cut to blink and smile (desktop 5
+  of 16, Android 55 of 75 checks); turn challenges need a live face or longer recordings
   ([docs/manual-test-checklist.md](docs/manual-test-checklist.md)).
-- Model updates: offline signed import and online download from the synced `model.update_url` on both clients,
-  with the same signature, hash and rollback checks; the download is unit-tested only (no client run against
-  MockSync, no phone run) and a supervisor starts it.
+- The online model download is unit-tested only (no client run against MockSync, no phone run).
 
 ## Team
 

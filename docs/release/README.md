@@ -15,11 +15,11 @@ Install steps for a new computer: [INSTALL.md](INSTALL.md).
 `git describe --tags --always --dirty` (for example `c959af4-dirty` for a build with uncommitted
 changes).
 
-| File | What it is | Size |
+| File | What it is | Size (v1.0.0 build of 2026-10-14; 1 MB = 1,048,576 bytes) |
 |---|---|---|
 | `mosip-liveness-desktop-client-<v>-win-x64.zip` | Desktop Registration Client 1.2.0.2 built for MockSync (`-Pmocksync`, host `localhost:8443`), ready to run: `lib/` (435 jars, including `liveness-core`, `liveness-onnx`, the signed models jar, `onnxruntime-1.20.0.jar`, `face-match-sdk`, MOSIP `mock-sdk.jar`), Zulu 11.0.8 JRE with JavaFX, `start-client.bat`, `stop-client.bat`, MOSIP's `run.bat`, `setup-mocksync.bat` (trusts MockSync's HTTPS certificate in the bundled JRE and registers the machine keys), `tools/machine-key-tool.jar`, licences, `BUILD-INFO.txt` | 512 MB (658 MB unpacked) |
-| `mosip-liveness-android-<v>-arm64-v8a.apk` | Android Registration Client release build for 64-bit ARM tablets (Android 9+), with the liveness module, ONNX Runtime and the signed models in its assets | 115 MB |
-| `mosip-liveness-android-<v>-x86_64.apk` | The same for the x86_64 Android emulator | 117 MB |
+| `mosip-liveness-android-<v>-arm64-v8a.apk` | Android Registration Client release build for 64-bit ARM tablets (Android 9+), with the liveness module, ONNX Runtime and the signed models in its assets | 111.3 MB (116,732,329 bytes) |
+| `mosip-liveness-android-<v>-x86_64.apk` | The same for the x86_64 Android emulator | 112.5 MB (117,995,709 bytes) |
 | `mosip-liveness-mocksync-<v>-win-x64.zip` | MockSync, the local stand-in for the MOSIP server: `mock-sync.jar`, reference data, `config/application.properties` (device trust certificates from `certs/`), start scripts (`.bat`, `.sh`), `set-config` scripts, full documentation, demo logins, Java 21 runtime | 65 MB (84 MB unpacked) |
 | `mock-sync-<v>.jar` | The MockSync executable jar alone (Java 11+); run it from a folder that holds `data/` from the zip | 31 MB |
 | `mosip-liveness-mockmds-<v>-win-x64.zip` | MockMDS SBI 0.9.5 device simulator with the face-stream extensions: `mock-mds.jar`, runtime libraries, `application.properties`, device keys and profiles, start scripts, `docs/LIVENESS-EXTENSIONS.md` (frame sources, faults, admin API), 30 sample frames, Java 21 runtime | 194 MB (219 MB unpacked; 89 MB of it is upstream's OpenCV jar) |
@@ -77,11 +77,11 @@ Check a download: put the files and `SHA256SUMS.txt` in one folder and run `sha2
 
 | Part (`--only`) | Steps |
 |---|---|
-| `engine` | `mvn install` of `liveness/` with its tests (365 + 109 + 42 on 2026-10-05; 2 of the 109 are benchmark tests that `-Dliveness.benchmark.frames=0` skips), under the shared `liveness-build` lock, then copies the four jars |
+| `engine` | `mvn install` of `liveness/` with its tests (counts in [../test-report/README.md](../test-report/README.md) section 2; `-Dliveness.benchmark.frames=0` skips the 2 benchmark tests), under the shared `liveness-build` lock, then copies the four jars |
 | `desktop` | `scripts/desktop-build.sh --mocksync --run-dir <staging>` (Maven build of `clients/desktop`, fresh Zulu JRE from the checked download, MOSIP mock SDK), then adds the start/stop and MockSync setup scripts, compiles `tools/mock-sync/scripts/MachineKeyTool.java` into `tools/machine-key-tool.jar`, licences and model sources |
 | `android` | `scripts/android-build.sh --release --abis <abi>` once per CPU type (`--android-abis`, default `arm64-v8a,x86_64`) |
 | `mocksync` | copies `tools/mock-sync` sources to a staging folder (the running MockSync keeps its own `target/` jar open), `mvn package` with tests on JDK 11, then the zip |
-| `mockmds` | the same for `devices/mock-mds` on JDK 21 (226 tests), with the runtime-scope libraries only (`dependency:copy-dependencies -DincludeScope=runtime`) |
+| `mockmds` | the same for `devices/mock-mds` on JDK 21 (with its tests), with the runtime-scope libraries only (`dependency:copy-dependencies -DincludeScope=runtime`) |
 
 Then it writes `SHA256SUMS.txt` and `manifest.json` for every file in `dist/`.
 

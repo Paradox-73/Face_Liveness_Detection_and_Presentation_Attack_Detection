@@ -57,7 +57,7 @@ mvn -f liveness/pom.xml install -Dliveness.benchmark.frames=0
 ```
 
 Builds and installs `liveness-core`, `liveness-onnx` (with the `models` jar) and `face-match-sdk` into `~/.m2`,
-runs the tests (core 365, onnx 109 with 2 benchmark tests skipped by that flag, face-match-sdk 42; counts of 2026-10-05) and the Android
+runs the tests (2 benchmark tests skipped by that flag; counts in [../test-report/README.md](../test-report/README.md) section 2) and the Android
 API 28 check. Both clients take the engine from `~/.m2`.
 
 ## 3. Start MockSync (local MOSIP server)
@@ -179,9 +179,9 @@ first build downloads its dependencies and takes longer; the team has not timed 
 
 | Part | State on 2026-10-05 | Where |
 |---|---|---|
-| Engine build and tests; MockSync, MockMDS, desktop client build and login; every liveness flow with recorded frame packs instead of a webcam | run on 2026-09-30 at the earlier defaults (supervisor workflows passive first); not re-run at the shipped defaults, which need a desktop window and recordings of turn-right and look-up for the enrolled face (desktop end-to-end report, 41 of 41 checks) | [../test-report/desktop-e2e.md](../test-report/desktop-e2e.md) |
+| Engine build and tests; MockSync, MockMDS, desktop client build and login; every liveness flow with recorded frame packs instead of a webcam | run on 2026-09-30 at the earlier defaults (supervisor workflows passive first); 41 of 41 checks; at the shipped policy only the 2026-10-14 run with the challenge pool cut to blink and smile (5 of 16), because the enrolled face has no turn recordings | [../test-report/desktop-e2e.md](../test-report/desktop-e2e.md) |
 | MockMDS webcam source (`FFMPEG`) streaming a laptop's built-in camera (first frame after about 1.2 s) | run, outside the client; ffmpeg command lines and a live ffmpeg test pattern are covered by MockMDS tests | `devices/mock-mds/LIVENESS-EXTENSIONS.md` sections 2 and 5 |
-| A live face from a webcam passing liveness in the desktop client | **not run** | [../eval/team-self-test.md](../eval/team-self-test.md) (status of 2026-09-30) |
+| A live face from a webcam passing liveness in the desktop client | **not run** | [../eval/team-self-test.md](../eval/team-self-test.md) (status of 2026-10-14) |
 | Onboarding a live face from the webcam, then face sign-in with it | **not run** | same |
 | A printed photo or a phone screen held to the webcam | **not run**; results with synthetic attacks: [../eval/calibration-notes.md](../eval/calibration-notes.md) | same |
 | This section followed start to finish on a clean machine, timed | **not run** | — |
