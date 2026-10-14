@@ -136,8 +136,11 @@ jobs:
           key: android-${{ runner.os }}-${{ hashFiles('liveness/**/pom.xml', 'clients/android/pubspec.lock') }}
           restore-keys: android-${{ runner.os }}-
       - name: Android SDK packages
+        # Current ubuntu-latest images keep sdkmanager in the SDK's cmdline-tools folder, not on PATH.
         run: |
           set +o pipefail
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+          command -v sdkmanager
           yes | sdkmanager --licenses > /dev/null
           yes | sdkmanager "platforms;android-34" "build-tools;34.0.0" "ndk;23.1.7779620" > /dev/null
       - name: Engine install, code generation (pub get, build_runner, pigeon) and Gradle wrapper, then the unit tests
