@@ -12,7 +12,6 @@ import io.mosip.liveness.core.EngineException;
 import io.mosip.liveness.core.FailureReason;
 import io.mosip.liveness.core.ReasonCode;
 import io.mosip.liveness.core.SessionState;
-import io.mosip.liveness.core.Workflow;
 import io.mosip.liveness.core.api.BindingRequest;
 import io.mosip.liveness.core.api.BindingVerdict;
 import io.mosip.liveness.core.api.LivenessEngine;
@@ -380,24 +379,6 @@ public final class LivenessSessionDriver implements AutoCloseable {
      */
     public boolean isClosed() {
         return closed;
-    }
-
-    /**
-     * Returns the policy used by every attempt.
-     *
-     * @return the policy
-     */
-    public LivenessPolicy policy() {
-        return policy;
-    }
-
-    /**
-     * Returns the workflow.
-     *
-     * @return the workflow
-     */
-    public Workflow workflow() {
-        return policy.workflow();
     }
 
     // ------------------------------------------------------------------ worker thread

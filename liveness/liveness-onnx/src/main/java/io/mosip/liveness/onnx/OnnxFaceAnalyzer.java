@@ -233,19 +233,6 @@ public final class OnnxFaceAnalyzer implements FaceAnalyzer {
         }
 
         /**
-         * Creates options.
-         *
-         * @param minMeshPresence lowest Face Mesh presence probability for mesh measures to be used, 0-1
-         * @return the options
-         */
-        public static Options of(double minMeshPresence) {
-            if (!(minMeshPresence >= 0 && minMeshPresence <= 1)) {
-                throw new IllegalArgumentException("minMeshPresence must be 0-1");
-            }
-            return new Options(minMeshPresence);
-        }
-
-        /**
          * Returns the lowest mesh presence probability accepted.
          *
          * @return 0-1

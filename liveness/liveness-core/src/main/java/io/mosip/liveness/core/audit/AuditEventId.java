@@ -57,13 +57,6 @@ public enum AuditEventId {
     /** Diagnostic mode was switched. Payload: user ID. */
     LIVENESS_DIAGNOSTIC_MODE("REG-EVT-LV17", "Liveness diagnostic mode changed");
 
-    /** Desktop client audit component identifier (next free after {@code REG-MOD-152}). */
-    public static final String DESKTOP_COMPONENT_ID = "REG-MOD-153";
-    /** Android client audit component identifier (next free after {@code REG-MOD-110}). */
-    public static final String ANDROID_COMPONENT_ID = "REG-MOD-111";
-    /** Audit component name on both clients. */
-    public static final String COMPONENT_NAME = "REG_LIVENESS";
-
     private final String id;
     private final String description;
 

@@ -26,7 +26,7 @@ import java.util.Objects;
  * {@code FaceRecognizerSF.feature}: {@code blobFromImage(img, 1, (112, 112), 0, swapRB=true)}), and the 128
  * outputs are scaled to unit length.
  *
- * <p>Compare embeddings with {@link FaceEmbedding#cosineSimilarity(FaceEmbedding)} or {@link #cosine}. The OpenCV
+ * <p>Compare embeddings with {@link FaceEmbedding#cosineSimilarity(FaceEmbedding)}. The OpenCV
  * Zoo SFace sample treats a cosine of {@value #OPENCV_SAME_PERSON_COSINE} or more as the same person; the
  * engine's binding threshold is calibrated separately. Embeddings are biometric data: never log them.
  *
@@ -99,32 +99,6 @@ public final class SFaceEmbedder implements FaceEmbedder {
             unit[i] = (float) (v[i] * inv);
         }
         return FaceEmbedding.of(modelId, unit);
-    }
-
-    /**
-     * Cosine similarity of two vectors.
-     *
-     * @param a first vector
-     * @param b second vector, same length
-     * @return -1 to 1; 0 if either vector is all zeros
-     * @throws IllegalArgumentException if the lengths differ
-     */
-    public static double cosine(float[] a, float[] b) {
-        if (a.length != b.length) {
-            throw new IllegalArgumentException("vectors differ in length");
-        }
-        double dot = 0;
-        double na = 0;
-        double nb = 0;
-        for (int i = 0; i < a.length; i++) {
-            dot += (double) a[i] * b[i];
-            na += (double) a[i] * a[i];
-            nb += (double) b[i] * b[i];
-        }
-        if (na == 0 || nb == 0) {
-            return 0;
-        }
-        return Math.max(-1, Math.min(1, dot / Math.sqrt(na * nb)));
     }
 
     @Override

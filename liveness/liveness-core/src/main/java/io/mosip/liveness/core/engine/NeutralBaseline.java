@@ -19,7 +19,6 @@ final class NeutralBaseline {
     private final Mean mouth = new Mean();
     private final Mean smile = new Mean();
     private final Mean gaze = new Mean();
-    private int frames;
 
     void add(FaceSignals s) {
         yaw.add(s.yaw);
@@ -28,7 +27,6 @@ final class NeutralBaseline {
         mouth.add(s.mouthRatio);
         smile.add(s.smileScore);
         gaze.add(s.gazeHorizontal);
-        frames++;
     }
 
     void clear() {
@@ -38,11 +36,6 @@ final class NeutralBaseline {
         mouth.clear();
         smile.clear();
         gaze.clear();
-        frames = 0;
-    }
-
-    int frames() {
-        return frames;
     }
 
     double yaw() {
@@ -82,7 +75,6 @@ final class NeutralBaseline {
         c.mouth.copyFrom(mouth);
         c.smile.copyFrom(smile);
         c.gaze.copyFrom(gaze);
-        c.frames = frames;
         return c;
     }
 

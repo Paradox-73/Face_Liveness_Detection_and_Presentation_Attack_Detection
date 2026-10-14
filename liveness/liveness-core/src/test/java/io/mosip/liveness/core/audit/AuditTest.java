@@ -40,8 +40,6 @@ class AuditTest {
         assertEquals("LIVENESS_PAD_ATTACK_SUSPECTED", AuditEventId.fromId("REG-EVT-LV08").get().eventName());
         assertEquals("LIVENESS_OVERRIDE_USED", AuditEventId.fromId("REG-EVT-LV16").get().eventName());
         assertFalse(AuditEventId.fromId("REG-EVT-104").isPresent());
-        assertEquals("REG-MOD-153", AuditEventId.DESKTOP_COMPONENT_ID);
-        assertEquals("REG-MOD-111", AuditEventId.ANDROID_COMPONENT_ID);
     }
 
     @Test

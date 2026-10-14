@@ -10,8 +10,8 @@ package io.mosip.liveness.onnx.image;
 import java.util.Objects;
 
 /**
- * Pure-Java image operations for model preprocessing: bilinear resize, crop with clamping, affine warp,
- * channel-order conversion, grey conversion and tensor normalisation. No {@code java.awt}, so the same code runs
+ * Pure-Java image operations for model preprocessing: bilinear resize, affine warp,
+ * channel-order conversion and tensor normalisation. No {@code java.awt}, so the same code runs
  * on the desktop and on Android.
  *
  * <p>Sampling follows OpenCV {@code INTER_LINEAR}: pixel centres at integer coordinates, source position
@@ -152,34 +152,6 @@ public final class ImageOps {
     }
 
     /**
-     * Crops a rectangle, clamped to the image: the part of the rectangle outside the image is dropped.
-     *
-     * @param src    source image
-     * @param x      left edge; may be negative
-     * @param y      top edge; may be negative
-     * @param width  width; positive
-     * @param height height; positive
-     * @return a new image holding the part of the rectangle inside the image
-     * @throws IllegalArgumentException if the rectangle does not overlap the image
-     */
-    public static Rgb8Image crop(Rgb8Image src, int x, int y, int width, int height) {
-        int left = Math.max(0, x);
-        int top = Math.max(0, y);
-        int right = Math.min(src.width() - 1, x + width - 1);
-        int bottom = Math.min(src.height() - 1, y + height - 1);
-        if (width <= 0 || height <= 0 || right < left || bottom < top) {
-            throw new IllegalArgumentException("crop rectangle does not overlap the image");
-        }
-        int w = right - left + 1;
-        int h = bottom - top + 1;
-        byte[] out = new byte[w * h * 3];
-        for (int r = 0; r < h; r++) {
-            System.arraycopy(src.data(), ((top + r) * src.width() + left) * 3, out, r * w * 3, w * 3);
-        }
-        return Rgb8Image.wrap(w, h, out, src.order());
-    }
-
-    /**
      * Warps an image (OpenCV {@code warpAffine}, bilinear, zero outside the source).
      *
      * @param src      source image
@@ -209,25 +181,6 @@ public final class ImageOps {
             return src;
         }
         return Rgb8Image.wrap(src.width(), src.height(), PixelConversions.swapRedBlue(src.data()), order);
-    }
-
-    /**
-     * Converts to grey levels with the ITU-R BT.601 luma weights (the OpenCV {@code COLOR_BGR2GRAY} integer
-     * coefficients).
-     *
-     * @param src source image
-     * @return {@code width * height} grey values 0-255, top row first
-     */
-    public static byte[] toGray(Rgb8Image src) {
-        byte[] data = src.data();
-        int r = src.order().redIndex();
-        int b = src.order().blueIndex();
-        byte[] out = new byte[src.width() * src.height()];
-        for (int i = 0, s = 0; i < out.length; i++, s += 3) {
-            int sum = u8i(data, s + r) * 4899 + u8i(data, s + 1) * 9617 + u8i(data, s + b) * 1868;
-            out[i] = (byte) ((sum + 8192) >> 14);
-        }
-        return out;
     }
 
     // ---------------------------------------------------------------- internals
@@ -333,10 +286,6 @@ public final class ImageOps {
     private static int floor(double v) {
         int i = (int) v;
         return v < i ? i - 1 : i;
-    }
-
-    private static int u8i(byte[] data, int index) {
-        return data[index] & 0xff;
     }
 
     private static byte round(float v) {

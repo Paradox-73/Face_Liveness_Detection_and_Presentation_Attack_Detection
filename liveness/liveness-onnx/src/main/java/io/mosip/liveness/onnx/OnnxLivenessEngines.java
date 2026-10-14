@@ -150,7 +150,7 @@ public final class OnnxLivenessEngines {
      * @param features analyser features
      * @return the supported challenge types
      */
-    static Set<ChallengeType> supportedChallenges(Set<AnalyzerFeature> features) {
+    public static Set<ChallengeType> supportedChallenges(Set<AnalyzerFeature> features) {
         Set<ChallengeType> types = EnumSet.noneOf(ChallengeType.class);
         if (features.contains(AnalyzerFeature.HEAD_POSE)) {
             types.addAll(EnumSet.of(ChallengeType.TURN_LEFT, ChallengeType.TURN_RIGHT, ChallengeType.LOOK_UP,

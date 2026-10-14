@@ -102,15 +102,6 @@ class ImageOpsTest {
     }
 
     @Test
-    void cropIsClampedToTheImage() {
-        Rgb8Image c = ImageOps.crop(quad(), -5, 1, 10, 10);
-        assertEquals(2, c.width());
-        assertEquals(1, c.height());
-        assertArrayEquals(new byte[] {0, 0, (byte) 255, (byte) 255, (byte) 255, (byte) 255}, c.data());
-        assertThrows(IllegalArgumentException.class, () -> ImageOps.crop(quad(), 5, 5, 2, 2));
-    }
-
-    @Test
     void identityWarpReturnsTheImageAndOutsideIsZero() {
         Rgb8Image same = ImageOps.warpAffine(quad(), AffineTransform.identity(), 2, 2);
         assertArrayEquals(quad().data(), same.data());
@@ -156,18 +147,12 @@ class ImageOpsTest {
     }
 
     @Test
-    void orderConversionAndGrey() {
+    void orderConversion() {
         Rgb8Image bgr = ImageOps.withOrder(quad(), ChannelOrder.BGR);
         assertEquals(ChannelOrder.BGR, bgr.order());
         assertEquals(0, bgr.data()[0] & 0xff);
         assertEquals(255, bgr.data()[2] & 0xff);
         assertSame(bgr, ImageOps.withOrder(bgr, ChannelOrder.BGR));
-        byte[] grey = ImageOps.toGray(quad());
-        assertEquals(76, grey[0] & 0xff);
-        assertEquals(150, grey[1] & 0xff);
-        assertEquals(29, grey[2] & 0xff);
-        assertEquals(255, grey[3] & 0xff);
-        assertArrayEquals(grey, ImageOps.toGray(bgr));
         ImageBuffer asBgr = ImageOps.withOrder(quad(), ChannelOrder.BGR).toImageBuffer();
         assertEquals(PixelFormat.BGR888, asBgr.format());
         assertEquals(PixelFormat.RGB888, ImageOps.withOrder(Rgb8Image.of(asBgr), ChannelOrder.RGB).toImageBuffer()

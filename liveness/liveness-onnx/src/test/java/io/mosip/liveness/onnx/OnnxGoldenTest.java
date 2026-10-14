@@ -186,7 +186,6 @@ class OnnxGoldenTest {
         assertTrue(same >= SFaceEmbedder.OPENCV_SAME_PERSON_COSINE);
         assertTrue(different < SFaceEmbedder.OPENCV_SAME_PERSON_COSINE);
         assertTrue(registration.cosineSimilarity(other) < SFaceEmbedder.OPENCV_SAME_PERSON_COSINE);
-        assertEquals(same, SFaceEmbedder.cosine(stream.vector(), registration.vector()), 1e-6);
         assertFalse(sface.toString().contains("0."), "no vector values in toString");
     }
 

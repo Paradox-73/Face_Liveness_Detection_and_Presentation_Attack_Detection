@@ -42,7 +42,7 @@ The model files, their licences, hashes, input and output shapes, and exact prep
 | `io.mosip.liveness.onnx` | `OnnxFaceAnalyzer`; `OnnxModelSet`, which loads everything from a verified registry; `OnnxLivenessEngines` (engine factory), `OnnxLivenessEngine`, `OnnxLivenessEngineProvider` (service-loader entry) |
 | `...onnx.model` | `ModelRegistry` (signed bundle, fail closed); `ModelManifest`, `ModelEntry`, `ManifestSignature` (detached RS256 JWS); `ModelTrustAnchors` (built-in public key); `ModelSources` (class path, directory); `SemanticVersion`, `ModelIds`, `Hex` |
 | `...onnx.runtime` | `OrtModel` (session from verified bytes; float tensor in, named float arrays out); `OnnxRuntimeOptions` (threads, and a hook to add an execution provider such as XNNPACK) |
-| `...onnx.image` | `Rgb8Image` (3-byte working image, zero-copy for RGB888/BGR888); `ImageOps` (bilinear resize, clamped crop, affine warp, grey, tensor normalisation); `AffineTransform` (with the five-point similarity estimate); `TensorFormat` (pinned preprocessing per model) |
+| `...onnx.image` | `Rgb8Image` (3-byte working image, zero-copy for RGB888/BGR888); `ImageOps` (bilinear resize, affine warp, tensor normalisation); `AffineTransform` (with the five-point similarity estimate); `TensorFormat` (pinned preprocessing per model) |
 | `...onnx.detect` | `YuNetFaceDetector` (decoding identical to OpenCV `FaceDetectorYN`; greedy NMS) |
 | `...onnx.mesh` | `FaceMeshLandmarker`; `FaceMeasures` (eye aspect ratio, mouth ratio, gaze, inter-eye distance); `HeadPoseEstimator` |
 | `...onnx.quality` | `FaceQualityMeter` (brightness, Laplacian-variance sharpness) |

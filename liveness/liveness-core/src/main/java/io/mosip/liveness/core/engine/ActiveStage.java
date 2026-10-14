@@ -72,7 +72,6 @@ final class ActiveStage {
     private List<FacePoint> turnedPoints;
     private double maxTurnDeg;
     private long passedUntilNanos;
-    private long totalChallengeMs;
     private long poseSinceNanos = -1;
     private long poseDeadlineNanos;
     private boolean poseNeutral;
@@ -300,7 +299,6 @@ final class ActiveStage {
             ChallengeType type = observer.target();
             long duration = observer.durationMs(nanos);
             records.add(ChallengeRecord.passed(type, index, observer.onsetMs(), observer.holdMs(), duration));
-            totalChallengeMs += duration;
             if (type.isHeadTurn()) {
                 planarityResiduals.add(PlanarityChecker.residual(neutralPoints, turnedPoints, neutralIed));
             }
@@ -340,14 +338,6 @@ final class ActiveStage {
         return observer;
     }
 
-    boolean isObserving() {
-        return phase == Phase.OBSERVE;
-    }
-
-    boolean isWaiting() {
-        return phase == Phase.WAIT;
-    }
-
     boolean isNeutralNow() {
         return phase == Phase.WAIT && neutralSinceNanos >= 0;
     }
@@ -382,19 +372,11 @@ final class ActiveStage {
         return sequence.get(Math.min(index, sequence.size() - 1));
     }
 
-    List<ChallengeType> sequence() {
-        return sequence;
-    }
-
     List<ChallengeRecord> records() {
         return records;
     }
 
     List<Double> planarityResiduals() {
         return planarityResiduals;
-    }
-
-    long totalChallengeMs() {
-        return totalChallengeMs;
     }
 }

@@ -156,7 +156,6 @@ public final class OnnxModelSet implements AutoCloseable {
         private final ModelRegistry registry;
         private OnnxRuntimeOptions runtimeOptions = OnnxRuntimeOptions.defaults();
         private YuNetFaceDetector.Options detectorOptions = YuNetFaceDetector.Options.defaults();
-        private OnnxFaceAnalyzer.Options analyzerOptions = OnnxFaceAnalyzer.Options.defaults();
         private boolean mesh = true;
         private boolean pad = true;
         private boolean embedder = true;
@@ -184,17 +183,6 @@ public final class OnnxModelSet implements AutoCloseable {
          */
         public Builder detectorOptions(YuNetFaceDetector.Options options) {
             this.detectorOptions = Objects.requireNonNull(options, "options");
-            return this;
-        }
-
-        /**
-         * Sets the analyser settings.
-         *
-         * @param options analyser settings
-         * @return this builder
-         */
-        public Builder analyzerOptions(OnnxFaceAnalyzer.Options options) {
-            this.analyzerOptions = Objects.requireNonNull(options, "options");
             return this;
         }
 
@@ -256,8 +244,8 @@ public final class OnnxModelSet implements AutoCloseable {
                             session(ModelIds.SFACE, sessions, infos));
                 }
                 return new OnnxModelSet(Collections.unmodifiableList(sessions), Collections.unmodifiableList(infos),
-                        new OnnxFaceAnalyzer(detector, landmarker, analyzerOptions),
-                        new OnnxFaceAnalyzer(detector, null, analyzerOptions), passivePad, sface);
+                        new OnnxFaceAnalyzer(detector, landmarker, OnnxFaceAnalyzer.Options.defaults()),
+                        new OnnxFaceAnalyzer(detector, null, OnnxFaceAnalyzer.Options.defaults()), passivePad, sface);
             } catch (EngineException | RuntimeException e) {
                 for (OrtModel m : sessions) {
                     m.close();
