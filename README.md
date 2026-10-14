@@ -7,14 +7,16 @@ This repository adds offline face liveness and presentation attack detection (PA
 Clients (desktop JavaFX and Android), for resident face capture, operator authentication and supervisor
 authentication.
 
-- **Hybrid check:** passive PAD on the incoming frames, then randomly chosen actions (blink, smile, turn left, turn right;
-  look up and down can be added to the pool) verified on the following frames. Resident registration, face sign-in, onboarding and the three
-  supervisor workflows (packet, exception and end-of-day authentication) ship with challenges on every capture
-  (`ALWAYS_ACTIVE`), because synthetic prints scored above the passive threshold; only the exception photo has
-  liveness off. Each workflow's policy is one synced setting; `PASSIVE_THEN_ACTIVE` (challenges only after a low
-  passive score, the PS04 literal flow) is a configuration change. In the synthetic suite every attack species is
-  refused, including an adaptive screen replay that answers each prompt, which a screen-pattern check added on
-  2026-10-05 now stops (below; synthetic screens only).
+- **Hybrid check:** passive PAD on the incoming frames, then randomly chosen actions (blink, smile, turn left, turn
+  right; look up and down can be added to the pool) verified on the following frames.
+- **Default flow differs from the problem statement, on purpose.** PS04 describes passive first, with a challenge
+  only below the threshold (`PASSIVE_THEN_ACTIVE`). Resident registration, face sign-in, onboarding and the three
+  supervisor workflows ship with a challenge on every capture (`ALWAYS_ACTIVE`) because the statement's flow lets
+  attacks through: on 2026-10-14 the same 275 synthetic transactions accepted **100 of 226 attacks at
+  `PASSIVE_THEN_ACTIVE`** (a print of subject S3 scores 99, looped clips of genuine video score 96-100, both above
+  the thresholds of 80 and 95) and **0 of 226 at `ALWAYS_ACTIVE`**, with no genuine user rejected in either run
+  ([results](docs/eval/results/20261014-shipped/README.md)). Each workflow's policy is one synced setting, so the
+  statement's flow is a configuration change; the exception photo has liveness off.
 - **One engine, two clients:** a Java 11 library with no runtime dependencies (`liveness/`) runs unchanged on the
   desktop client and on Android, with the same thresholds, prompts, audit events and packet evidence.
 - **Device independent:** SBI 0.9.5 L0 or L1 face devices on the desktop (SBI 1.0 is implemented and untested; only the
@@ -216,7 +218,7 @@ try again." Each state is drawn in [docs/ux/wireframes.svg](docs/ux/wireframes.s
 | Test reports | [summary](docs/test-report/README.md), [desktop](docs/test-report/desktop-e2e.md), [Android](docs/test-report/android-e2e.md), [desktop/Android interoperability (B4)](docs/test-report/interoperability.md), [Android per-frame latency and memory (B7, B8; phone run pending)](docs/test-report/android-performance.md) |
 | Offline model import (B6) | Android: [install steps](docs/install/android.md#10-import-a-liveness-model-bundle-offline-model-update) and [design](docs/design/android-liveness.md#14-offline-model-update-bonus-b6); desktop: [docs/design/desktop-liveness-services.md](docs/design/desktop-liveness-services.md#61-secure-offline-model-update-bonus-b6) section 6.1 |
 | Pitch material | [deck outline](docs/pitch/deck-outline.md), [summary](docs/pitch/summary.md), [video script](docs/pitch/video-script.md) |
-| PAD evaluation protocol and results | [docs/eval/](docs/eval/README.md); latest runs: [docs/eval/results/20261005-shipped/README.md](docs/eval/results/20261005-shipped/README.md) |
+| PAD evaluation protocol and results | [docs/eval/](docs/eval/README.md); latest runs: [docs/eval/results/20261014-shipped/README.md](docs/eval/results/20261014-shipped/README.md) (shipped defaults against the passive-first flow) |
 | Test data and demo accounts | [docs/test-data.md](docs/test-data.md) |
 | Licences and SBOM | [licenses/README.md](licenses/README.md), [NOTICE](NOTICE), [docs/sbom/README.md](docs/sbom/README.md) |
 

@@ -66,7 +66,11 @@ flowchart TD
 For the authentication workflows the live band starts at 95. It only matters when a workflow is set to
 `PASSIVE_THEN_ACTIVE` or `PASSIVE_ONLY`: the shipped `ALWAYS_ACTIVE` default runs the passive stage first (it can
 still reject below `pad.reject_threshold`) and then always asks for challenges, so operators and supervisors answer
-challenges every time. `PASSIVE_THEN_ACTIVE` is PS04's literal flow and remains available by configuration.
+challenges every time. `PASSIVE_THEN_ACTIVE` is PS04's literal flow and remains available by configuration. It was
+measured again on 2026-10-14 before deciding the default: with every workflow at `PASSIVE_THEN_ACTIVE`, 100 of 226
+synthetic attack transactions passed on the passive stage alone (S3 print, score 99; looped clips of genuine video,
+scores 96-100); at `ALWAYS_ACTIVE`, 0 of 226. BPCER was 0.0% in both runs
+([results](../eval/results/20261014-shipped/README.md)). So the default stays `ALWAYS_ACTIVE`.
 
 ## 4. After the decision
 

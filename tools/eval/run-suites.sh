@@ -12,6 +12,8 @@
 #                  workflows (packet_auth, exception_auth, eod_auth) always run challenges from the shipped
 #                  four-action pool, 30 passive frames; blur threshold 40 and the 300-frame loop window from
 #                  the signed model bundle. Runs every scenario in eval/scenarios.
+#   passive-first  shipped, except that those six workflows use PASSIVE_THEN_ACTIVE (the PS04 statement's flow:
+#                  challenges only after a passive score below the threshold)
 #   legacy         the configuration shipped before 2026-09-30 (passive first on every workflow, including
 #                  the supervisor ones, 8 passive frames, blur threshold 10), on the current engine
 #   legacy-strict  legacy with challenges forced for registration (the former "strict" suite)
@@ -58,9 +60,14 @@ LEGACY=(--config policy.registration=PASSIVE_THEN_ACTIVE --config policy.login_a
         --config passive.min_frames=8
         --engine-param quality.min_sharpness=10)
 
+PASSIVE_FIRST=(--config policy.registration=PASSIVE_THEN_ACTIVE --config policy.login_auth=PASSIVE_THEN_ACTIVE
+        --config policy.onboard_auth=PASSIVE_THEN_ACTIVE --config policy.packet_auth=PASSIVE_THEN_ACTIVE
+        --config policy.exception_auth=PASSIVE_THEN_ACTIVE --config policy.eod_auth=PASSIVE_THEN_ACTIVE)
+
 for suite in "${SUITES[@]}"; do
     case "$suite" in
         shipped)  run_suite shipped ;;
+        passive-first) run_suite passive-first "${PASSIVE_FIRST[@]}" ;;
         legacy)   run_suite legacy "${LEGACY[@]}" ;;
         legacy-strict) run_suite legacy-strict "${LEGACY[@]}" --config policy.registration=ALWAYS_ACTIVE ;;
         latency)  run_suite latency --threads 1 --filter '^bf-s[123]-(registration|active)$' ;;

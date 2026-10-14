@@ -62,7 +62,7 @@ flowchart LR
 Policy modes:
 - `OFF`: no liveness; the capture carries `LIVENESS_METHOD=NONE` and no `LIVENESS_*` evidence.
 - `PASSIVE_ONLY`: pass at the passive threshold, otherwise fail `BELOW_THRESHOLD`.
-- `PASSIVE_THEN_ACTIVE`: PS04's literal flow; challenges when the score is below the threshold. No workflow ships with it; a server setting can select it per workflow.
+- `PASSIVE_THEN_ACTIVE`: PS04's literal flow; challenges when the score is below the threshold. No workflow ships with it; a server setting can select it per workflow. Measured on 2026-10-14 with every workflow at this policy: 100 of 226 synthetic attack transactions accepted (S3 print, score 99; looped clips of genuine video, scores 96-100) against 0 of 226 at the shipped `ALWAYS_ACTIVE`, BPCER 0.0% in both ([results](../eval/results/20261014-shipped/README.md)).
 - `ALWAYS_ACTIVE`: passive PAD still runs and can reject, then challenges always.
 
 Why every workflow except `exception_photo` defaults to `ALWAYS_ACTIVE` (registration, sign-in and onboarding since
