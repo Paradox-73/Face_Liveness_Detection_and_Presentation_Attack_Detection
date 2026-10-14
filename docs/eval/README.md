@@ -156,7 +156,7 @@ Each run folder holds:
 
 ```bash
 mvn -f tools/eval/scenario-runner/pom.xml test     # 31 JUnit 5 tests; a scripted engine stands in for the models
-python -m pytest tools/eval/tests                  # 120 pytest tests
+python -m pytest tools/eval/tests                  # 121 pytest tests
 ```
 
 The Java tests cover the scenario loader (every field and error), the playlist (endings, reaction delay, match, mismatch, fixed), outcome and layer classification, the runner end to end with a scripted engine (bona fide pass, wrong-clip rejection over all retries, retry budget from the scenario, no-face and stream-end non-responses, runner time limit, expectation and layer mismatches, parameter pass-through, the low-light ending and `--no-low-light`, no frame content in records), JSON, latency statistics, CLI options, and that every committed scenario loads and names only packs that have a manifest. The Python tests check the Clopper-Pearson values against published figures, the counting rules (per transaction, first attempt, workflow grouping, source artefacts, IAPAR and FRR, the conversion of a MATCH failure in the hand-filled sheet), DET and BPCER20, the report, the manifest helpers, that every committed manifest is consistent, the image transforms, and the recording names and generated scenarios of `ingest-recordings.py`.

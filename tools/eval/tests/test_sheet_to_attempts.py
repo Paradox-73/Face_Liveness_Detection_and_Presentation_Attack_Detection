@@ -43,6 +43,12 @@ def test_converted_records_feed_the_live_report():
     assert "| P1 | 3 | 0 | 3 | 0 |" in report
 
 
+def test_live_report_shows_the_whole_model_set_label():
+    recs = [analyze.Record(r) for r in sheet.convert(_rows(), "t", "mosip-onnx-default@1.3.0")]
+    report = analyze.build_report(recs, None, False, 3, None)
+    assert "| model set | mosip-onnx-default@1.3.0 |" in report
+
+
 @pytest.mark.parametrize("field, value", [("result", "MAYBE"), ("kind", "print"), ("subject_id", "")])
 def test_bad_rows_are_refused_with_the_line_number(field, value):
     rows = _rows()

@@ -406,6 +406,8 @@ def build_report(records: Sequence[Record], det_file: Optional[str], det_ok: boo
             ("attempt records", len(records)),
             ("transactions", len(attempts_by_txn(records))),
             ("transactions per workflow", ", ".join(f"{k} {v}" for k, v in sorted(txn_per_wf.items()))),
+            # a manual sheet carries the bundle label the recorder typed, not a hash
+            ("model set", ", ".join(models)) if manual else
             ("model set SHA-256", ", ".join((m or "?")[:16] + "..." for m in models)),
             ("configuration hashes", len(configs)),
             ("platform", ", ".join(f"{k} {v}" for k, v in platform.items())),

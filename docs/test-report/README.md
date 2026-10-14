@@ -67,7 +67,9 @@ so the parity file was re-recorded (decisions and reasons unchanged). The Flutte
 generated again (`scripts/android-build.sh --test`, not `--test-only`, after a Pigeon change).
 
 After the cleanup of 2026-10-15 `liveness-onnx` has 125 tests: the test of the deleted, unused `ImageOps.crop` went
-with it. `scripts/test-all.sh` (engine, MockSync, MockMDS, scenario runner, pytest) passed on that commit. If its
+with it. `scripts/test-all.sh` (engine, MockSync, MockMDS, scenario runner, pytest) passed on that commit. A fresh-clone
+check the same night added one `tools/eval` Python test (the hand-session report keeps the model bundle label), so
+that suite now has 121. If its
 MockSync step fails while packaging, a MockSync started by a demo still holds `mock-sync.jar`; stop it and re-run.
 
 **Upstream and team-written.** About 1,361 of the tests are upstream: the Android `clientmanager` suite (1,186, all upstream
