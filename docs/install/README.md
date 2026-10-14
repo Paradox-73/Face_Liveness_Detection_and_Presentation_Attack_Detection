@@ -22,6 +22,16 @@ go there, outside git.
 | Python 3.9+ | with `pip install -r tools/eval/requirements.txt` | frame packs, evaluation, Android demo script | optional for a first run |
 | ffmpeg | any recent | frame packs from video; MockMDS webcam source | optional; not bundled |
 
+**Long paths on Windows.** The deepest file in the repository has a 167-character path, so a clone under a deep
+folder fails with `Filename too long`. Turn on long paths in Git before you clone:
+
+```bash
+git config --global core.longpaths true
+git clone https://github.com/Paradox-73/Mosip-face-liveness-pad.git
+```
+
+`git clone -c core.longpaths=true <url>` sets it for this clone only.
+
 Hardware: 16 GB RAM is enough for one client plus the mocks; the Android emulator needs hardware virtualisation
 (WHPX) and about 18 GB of disk for Flutter, the Android SDK and Gradle caches.
 
@@ -162,6 +172,7 @@ MockSync: Ctrl+C in its window.
 | Symptom | Cause and fix |
 |---|---|
 | Maven: `Missing mandatory jurisdiction policy files: unlimited` or `release version 11 not supported` | The JDK 11 is a trimmed runtime without `javac` and policy files; use a full JDK or unset `JAVA11_HOME` so `desktop-build.sh` downloads one |
+| `git clone` or `git checkout` fails with `Filename too long` | Long paths are off in Git; run `git config --global core.longpaths true` and clone again (section 1) |
 | Maven cannot resolve `ossrh` artefacts | `MAVEN_ARGS` does not point at the mirror settings |
 | Client log `BIO_SDK_007 --> SDK provider registry is empty!` | `mock-sdk.jar` missing in `lib/`; rerun `bash scripts/desktop-build.sh --mocksync --skip-build` |
 | Desktop login error, MockSync log shows `KER-SNC-155` | Machine not registered; step 5.2 |

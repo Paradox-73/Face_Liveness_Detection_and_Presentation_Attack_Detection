@@ -45,7 +45,7 @@ Policies in force (shipped values, as on desktop): resident `registration` PASSI
 ## 2. How to reproduce
 
 ```bash
-. toolchain/env.sh; use_java21                          # JDK 21, Flutter 3.10.4, ANDROID_HOME
+export JAVA_HOME="$JAVA21_HOME"; export PATH="$JAVA_HOME/bin:$PATH"   # JDK 21; Flutter 3.10.4 and ANDROID_HOME as in docs/install/README.md section 1
 ARC_WEBCAM=emulated bash scripts/android-run-emulator.sh --headless --no-install
 bash scripts/android-build.sh && adb install -r -g clients/android/build/app/outputs/flutter-apk/app-debug.apk
 bash scripts/demo-android.sh                            # shipped policy (default); --policy replay = the profile of runs 5 to 8

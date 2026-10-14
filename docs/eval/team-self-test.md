@@ -28,7 +28,7 @@ screenshots for the deck need the person's written OK.
 ## 2. Start the three programs (Git Bash, repository root)
 
 ```bash
-source ../toolchain/env.sh                                  # Java, Maven, Android paths on this laptop
+# Java, Maven and Android paths: the environment of docs/install/README.md section 1 (JAVA11_HOME, JAVA21_HOME, MAVEN_ARGS)
 
 # 1. MockSync: the local stand-in for the MOSIP server (accepted by the organisers for judging, 2026-09-30 call)
 curl -s http://127.0.0.1:8080/v1/syncdata/actuator/health  # {"status":"UP"} means it already runs; otherwise:
