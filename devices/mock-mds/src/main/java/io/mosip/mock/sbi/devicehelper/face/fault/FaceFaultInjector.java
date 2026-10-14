@@ -227,15 +227,6 @@ public class FaceFaultInjector {
 		return Arrays.copyOf(jpeg, Math.max(2, jpeg.length * 6 / 10));
 	}
 
-	/**
-	 * Returns the bytes sent by NON_JPEG: ASCII text with no 0xFF byte.
-	 *
-	 * @return a copy of the bytes
-	 */
-	public static byte[] nonJpegBytes() {
-		return NON_JPEG_BYTES.clone();
-	}
-
 	private static int scanDataStart(byte[] jpeg) {
 		for (int i = 2; i + 3 < jpeg.length; i++) {
 			if ((jpeg[i] & 0xFF) == 0xFF && (jpeg[i + 1] & 0xFF) == 0xDA) {

@@ -175,11 +175,6 @@ public class FaceDeviceSettings {
 		this.padDecision = decision;
 	}
 
-	/** @return FRAME or PROFILE */
-	public String getCaptureMode() {
-		return captureMode;
-	}
-
 	/** @return true when RCAPTURE builds the ISO from the current frame */
 	public boolean isCaptureFromFrame() {
 		return CAPTURE_FRAME.equals(captureMode);

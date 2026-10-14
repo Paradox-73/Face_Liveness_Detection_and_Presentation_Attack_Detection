@@ -322,14 +322,4 @@ public class FaceFrameFeed {
 	public synchronized FaceSourceSettings getSettings() {
 		return settings.copy();
 	}
-
-	/** @return true while a session is open */
-	public synchronized boolean isOpen() {
-		return open;
-	}
-
-	/** @return the last source error message, or null */
-	public String getLastError() {
-		return lastError;
-	}
 }
