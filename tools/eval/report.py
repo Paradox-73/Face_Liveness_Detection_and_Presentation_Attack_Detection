@@ -392,7 +392,8 @@ def build_report(records: Sequence[Record], det_file: Optional[str], det_ok: boo
         head = [
             "# Liveness technology regression report\n",
             "Computed with ISO/IEC 30107-3:2023 metric definitions from replayed frame packs. The attack packs are "
-            "synthetic (software-made prints, screens and replays) and the frames are injected into the engine, so "
+            "synthetic (software-made prints, screens and replays), except `rec-*` packs cut from the team's webcam "
+            "recordings (tools/eval/ingest-recordings.py), and the frames are injected into the engine, so "
             "these figures are **technology regression results, not an ISO/IEC 30107-3 evaluation** and not "
             "comparable to laboratory results. Per ISO/IEC 30107-3, a non-zero APCER shows that an attack can "
             "succeed; zero observed errors bound the error rate but do not prove security.\n",
