@@ -10,7 +10,9 @@ This copy of MOSIP MockMDS (`mosip-mock-services/MockMDS` at `3d2174d`, MPL-2.0)
 With the defaults, stock clients keep working:
 
 - Discovery and device info have the same fields and values as stock MockMDS.
-- Two things differ from stock: the RCAPTURE face image is the streamed frame (not `Face.iso`), and the face quality score is 95 (not 44).
+- Three things differ from stock: the RCAPTURE face image is the streamed frame (not `Face.iso`), the face quality score
+  is 95 (not 44), and the finger and iris quality score is 80 (not 44; `mosip.mock.sbi.quality.score`), because 44 is
+  below the iris threshold of 60 that MockSync serves and the desktop client then never leaves Biometric Details.
 
 ## 1. Build and run
 

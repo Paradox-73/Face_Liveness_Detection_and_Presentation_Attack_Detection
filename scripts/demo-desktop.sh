@@ -129,6 +129,19 @@ else
 fi
 bash "$REPO/scripts/mockmds-run.sh" --frames "$PACKS"
 
+# Keys the flows override on MockSync (60, 65) and delete again at their end. A flow stopped half-way leaves its
+# override saved on disk, and every later run would test it instead of the shipped value: remove them before and
+# after the run.
+FLOW_KEYS="mosip.registration.liveness.policy.registration mosip.registration.liveness.diagnostic.enable
+	mosip.registration.liveness.guidance.liveness.status.checking.eng"
+reset_overrides() {
+	local k
+	for k in $FLOW_KEYS; do curl -s -m 5 -o /dev/null -X DELETE "$ADMIN/admin/config/$k" || true; done
+	[ "$POLICY_MODE" != recorded ] || curl -s -m 5 -o /dev/null -X DELETE "$ADMIN/admin/config/$RECORDED_POOL" || true
+}
+reset_overrides
+trap reset_overrides EXIT
+
 STORE="$MOCKSYNC_DIR/work/keys/client-truststore.p12"
 [ -f "$STORE" ] || bash "$MOCKSYNC_DIR/scripts/trust-mock-sync.sh" --truststore "$STORE"
 # Initialization.main reads lib/logback.xml relative to the working directory (logs/registration.log).
@@ -148,8 +161,6 @@ done
 if [ "$POLICY_MODE" = recorded ]; then
 	curl -sf -m 5 -X PUT -H "Content-Type: application/json" -d "{\"$RECORDED_POOL\":\"BLINK,SMILE\"}" \
 		"$ADMIN/admin/config" >/dev/null || die "could not set $RECORDED_POOL on MockSync"
-	# MockSync saves overrides to disk, so an interrupted run must still remove this one.
-	trap 'curl -sf -m 5 -X DELETE "$ADMIN/admin/config/$RECORDED_POOL" >/dev/null || true' EXIT
 	log "policy recorded: $RECORDED_POOL=BLINK,SMILE on MockSync for this run"
 fi
 log "running $(basename "$FLOW"); output in $OUT"
