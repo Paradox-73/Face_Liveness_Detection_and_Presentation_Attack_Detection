@@ -18,7 +18,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
-import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
@@ -199,12 +198,7 @@ public final class KeyMaterial {
 	 */
 	public static String thumbprintHex(X509Certificate certificate) {
 		try {
-			byte[] digest = MessageDigest.getInstance("SHA-256").digest(certificate.getEncoded());
-			StringBuilder hex = new StringBuilder();
-			for (byte b : digest) {
-				hex.append(String.format("%02x", b));
-			}
-			return hex.toString();
+			return ClientCrypto.sha256Hex(certificate.getEncoded());
 		} catch (GeneralSecurityException e) {
 			throw new IllegalStateException(e);
 		}

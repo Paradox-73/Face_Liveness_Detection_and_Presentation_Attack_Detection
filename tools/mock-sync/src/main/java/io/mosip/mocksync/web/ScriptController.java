@@ -7,8 +7,6 @@
 package io.mosip.mocksync.web;
 
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 
 import org.springframework.http.MediaType;
@@ -17,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.mosip.mocksync.crypto.ClientCrypto;
 import io.mosip.mocksync.crypto.ServerKeys;
 import io.mosip.mocksync.data.ClientSettingsBuilder;
 import io.mosip.mocksync.data.ReferenceData;
@@ -71,15 +70,6 @@ public class ScriptController {
 	 * @return hex digest
 	 */
 	public static String sha256UpperHex(byte[] content) {
-		try {
-			byte[] digest = MessageDigest.getInstance("SHA-256").digest(content);
-			StringBuilder hex = new StringBuilder(digest.length * 2);
-			for (byte b : digest) {
-				hex.append(String.format(Locale.ROOT, "%02X", b));
-			}
-			return hex.toString();
-		} catch (NoSuchAlgorithmException e) {
-			throw new IllegalStateException(e);
-		}
+		return ClientCrypto.sha256Hex(content).toUpperCase(Locale.ROOT);
 	}
 }

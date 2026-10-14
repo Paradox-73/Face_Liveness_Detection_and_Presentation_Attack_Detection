@@ -16,7 +16,6 @@ import java.security.Signature;
 import java.security.spec.MGF1ParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
-import java.util.Locale;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -24,6 +23,8 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.OAEPParameterSpec;
 import javax.crypto.spec.PSource;
+
+import org.bouncycastle.util.encoders.Hex;
 
 import tss.tpm.TPMS_SIGNATURE_RSASSA;
 import tss.tpm.TPMT_PUBLIC;
@@ -118,16 +119,18 @@ public final class ClientCrypto {
 	 * @return fingerprint such as {@code 3a:0f:...}
 	 */
 	public static String fingerprint(byte[] key) {
+		return sha256Hex(key).replaceAll("(..)(?!$)", "$1:");
+	}
+
+	/**
+	 * Computes the SHA-256 of some bytes as lowercase hex.
+	 *
+	 * @param data bytes to hash
+	 * @return 64 hex digits
+	 */
+	public static String sha256Hex(byte[] data) {
 		try {
-			byte[] digest = MessageDigest.getInstance("SHA-256").digest(key);
-			StringBuilder builder = new StringBuilder(digest.length * 3);
-			for (int i = 0; i < digest.length; i++) {
-				if (i > 0) {
-					builder.append(':');
-				}
-				builder.append(String.format(Locale.ROOT, "%02x", digest[i]));
-			}
-			return builder.toString();
+			return Hex.toHexString(MessageDigest.getInstance("SHA-256").digest(data));
 		} catch (GeneralSecurityException e) {
 			throw new IllegalStateException("SHA-256 not available", e);
 		}

@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import io.mosip.mocksync.crypto.ClientCrypto;
+
 /**
  * Operator accounts from {@code data/users.json}. Passwords are stored only as salted SHA-256 hashes; the demo logins are listed in docs/test-data.md.
  */
@@ -112,18 +114,9 @@ public class UserStore {
 			if (parts.length != 3 || !"sha256".equals(parts[0])) {
 				return false;
 			}
-			try {
-				byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
-						.digest((parts[1] + candidate).getBytes(java.nio.charset.StandardCharsets.UTF_8));
-				StringBuilder hex = new StringBuilder();
-				for (byte b : digest) {
-					hex.append(String.format("%02x", b));
-				}
-				return java.security.MessageDigest.isEqual(hex.toString().getBytes(java.nio.charset.StandardCharsets.US_ASCII),
-						parts[2].getBytes(java.nio.charset.StandardCharsets.US_ASCII));
-			} catch (java.security.NoSuchAlgorithmException e) {
-				throw new IllegalStateException(e);
-			}
+			String hex = ClientCrypto.sha256Hex((parts[1] + candidate).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+			return java.security.MessageDigest.isEqual(hex.getBytes(java.nio.charset.StandardCharsets.US_ASCII),
+					parts[2].getBytes(java.nio.charset.StandardCharsets.US_ASCII));
 		}
 
 		/**

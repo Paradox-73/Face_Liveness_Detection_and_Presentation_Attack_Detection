@@ -138,13 +138,4 @@ public class ReferenceData {
 			throw new UncheckedIOException("Cannot read " + relativePath, e);
 		}
 	}
-
-	/**
-	 * Returns the data directory.
-	 *
-	 * @return path
-	 */
-	public Path getDataDir() {
-		return dataDir;
-	}
 }

@@ -64,15 +64,6 @@ public final class JwsSigner {
 		return signingInput + "." + sign(signingInput);
 	}
 
-	/**
-	 * Returns the key this signer uses.
-	 *
-	 * @return signing key and certificate
-	 */
-	public CertifiedKey getSignKey() {
-		return signKey;
-	}
-
 	private String sign(String signingInput) {
 		try {
 			Signature signature = Signature.getInstance("SHA256withRSA");
