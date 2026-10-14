@@ -215,45 +215,17 @@ because nobody has timed the 15-minute route yet.
 
 ### What the liveness window shows
 
-The default policy decides whether a capture always asks for actions. The shipped default is being decided between
-`ALWAYS_ACTIVE` (actions on every capture) and `PASSIVE_THEN_ACTIVE` (actions only after a low passive score).
-[design/configuration.md](design/configuration.md) section 3 gives the current default. Step `MT-DT-04` reads the
-value that MockSync serves.
+The shipped default policy is `ALWAYS_ACTIVE`: after the passive check every capture asks for two random actions
+([design/decision-flow.md](design/decision-flow.md) section 5). Step `MT-DT-04` reads the value MockSync serves.
+Each screen and its text: [install/README.md](install/README.md#102-what-you-should-see) section 10.2; every
+message: [ux/message-catalogue.csv](ux/message-catalogue.csv). What the tester needs to know:
 
-Every capture starts the same way:
-
-1. The window title is "Face verification" ("Supervisor verification" when a supervisor verifies). The camera preview
-   has a dashed oval, "Look directly at the camera." and "Attempt 1 of 3".
-2. "Checking face liveness…" appears with a busy indicator for about 2 s (30 frames). Nothing to do.
-
-What happens next depends on the policy:
-
-- **`ALWAYS_ACTIVE`.** Two prompts follow, drawn at random from the pool `BLINK,SMILE,TURN_LEFT,TURN_RIGHT`: "Please
-  blink", "Please smile", "Please turn your head to the left" or "Please turn your head to the right", each with an
-  icon and "Step 1 of 2", then "Step 2 of 2". Each action has 5 s. After each action the window shows "Action
-  detected".
-- **`PASSIVE_THEN_ACTIVE`.** If the passive score passes the threshold (80 for registration, 95 for onboarding,
-  sign-in, packet, exception and end-of-day authentication), no prompt appears and the capture goes straight to the
-  last step. Otherwise the two prompts of `ALWAYS_ACTIVE` follow. Write down in the notes whether prompts appeared.
-
-The end is the same for both policies. "Look directly at the camera and hold still." stays until the face is frontal
-and neutral. Then "Hold still" appears while the device takes the signed capture. Then "Good, face captured
-successfully" appears with a green oval, and the window closes after about 1 s.
-
-Failure texts:
-
-| Situation | Text on screen |
-|---|---|
-| Not enough evidence of liveness, wrong action or no action | "We could not verify face liveness. Please try again." with a guidance line such as "Follow the prompted action." and **Retry** |
-| Action not done in 5 s | "Time is up for this action. Please try again." |
-| Suspected attack | only "Face verification could not be completed. Please try again.", never the reason |
-| Dim light | "We could not verify face liveness. Please try again." with "Improve lighting." The first three dark tries of one capture use no attempt; the fourth does. |
-| Before a retry | "Attempt {0} of {1}. Select Retry to try again." |
-| No face | "No face detected. Keep your face within the capture area." |
-| Two faces | "More than one face detected. Only the person being captured should be in view." |
-| Unclear face | "The face image is not clear. Improve lighting and look directly at the camera." |
-| Resident capture after the last attempt | "Face capture could not be completed after 3 attempts. Please ask your supervisor to follow the centre's recovery process." with a lock icon |
-| Sign-in or authentication after the last attempt | "Face verification could not be completed. Maximum attempts reached. Use another sign-in method or contact your supervisor." |
+- "Checking face liveness..." takes about 2 s (30 frames); nothing to do.
+- Each prompt ("Please blink", "Please smile", "Please turn your head to the left" or "to the right") has 5 s.
+- Under `PASSIVE_THEN_ACTIVE` a passive score at or above the threshold (80 for registration, 95 for the
+  authentication workflows) skips the prompts. Write down in the notes whether prompts appeared.
+- A suspected attack shows only "Face verification could not be completed. Please try again.", never the reason.
+- Dim light: the first three dark tries of one capture use no attempt; the fourth does.
 
 ### Steps
 
@@ -334,4 +306,4 @@ faces, labels and numbers. Do one full dry run before the recording day.
 | `MT-VID-03` | Replayed segments 6a, 6b, 7, 9 and 10 (`scripts/demo-desktop.sh --flow tools/mock-sync/e2e/flows/<nn>-<name>.flow`). | Each take carries the label `REPLAYED FRAMES`. |
 | `MT-VID-04` | Android segment 8: the phone from section D, or `bash scripts/demo-android.sh --sections "login resident attacks approval"` on the emulator with `adb shell screenrecord`. | The phone or emulator shows "Sign in with face", the prompts, the refusal and the maximum-attempts message. |
 | `MT-VID-05` | Time the whole cut with captions. | 4:45 or less (hard limit 5:00). The limitation line of segment 11 stays at least 4 s. |
-| `MT-VID-06` | Final check of the cut. | No face of anyone who did not consent. Every number matches `docs/test-report/README.md` or `docs/eval/results/20261005-shipped/README.md`. The video file stays outside git. |
+| `MT-VID-06` | Final check of the cut. | No face of anyone who did not consent. Every number matches `docs/test-report/README.md` or `docs/eval/results/20261014-shipped/README.md`. The video file stays outside git. |

@@ -126,18 +126,15 @@ R = resident, L = login, E = end of day).
 - Same states and meanings: device error without using an attempt, "Step n of k" challenges, generic PAD message,
   "Attempt n of 3", maximum-attempts recovery text, "Supervisor verification" title, offline badge.
 - Supervisor override: both clients offer it after the last resident failure when the policy is
-  `SUPERVISOR_OVERRIDE`, never after a suspected attack. Desktop asks for an OK in a "Supervisor verification"
-  dialog, then asks for a different supervisor's user ID and that supervisor's face verification (the logged-in
-  operator cannot approve; the approval is valid 60 s)
-  ([../design/desktop-liveness-ui.md](../design/desktop-liveness-ui.md)); Android also asks for the supervisor's user ID
-  and then the supervisor's own face verification ([../design/android-liveness.md](../design/android-liveness.md)
-  section 13.1). Status as of 2026-10-05; neither flow was clicked through on a screen after the second-person change.
+  `SUPERVISOR_OVERRIDE`, never after a suspected attack, and a second, different supervisor approves it with face
+  verification. Steps and texts: [../design/desktop-liveness-ui.md](../design/desktop-liveness-ui.md) section 7
+  (desktop), [../design/android-liveness.md](../design/android-liveness.md) section 13.1 (Android).
 - Shared look: both clients show the status line, icon and oval in the same colours (neutral, success, attention,
   failure and guidance values of the desktop `liveness-panel.css`; Android tests compare them with the desktop file
   and check the contrast ratios). Android still shows a dark full screen with the status banner on top.
 - Desktop window: a scroll area around the panel, height capped at the visible height of the monitor, so Retry and
-  Close stay reachable on 1366x768 screens (measured without opening a window: 619 px at start, 757 px at maximum
-  attempts with the override button; not yet seen on a screen). For resident workflows a second prompt line in the
+  Close stay reachable on 1366x768 screens (sizes: [../design/desktop-liveness-ui.md](../design/desktop-liveness-ui.md)
+  section 5). For resident workflows a second prompt line in the
   resident's language (en, fr or ar, when it differs from the operator's) appears under the prompt.
 - Differences by design: the desktop dialog is a light 520 px window over the capture screen, Android a dark
   full screen (each follows its platform); the wrong-person text at sign-in differs ("Face match not found" on
