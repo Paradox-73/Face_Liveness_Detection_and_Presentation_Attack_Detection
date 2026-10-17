@@ -15,6 +15,7 @@
 # Usage (Git Bash, repository root):
 #   scripts/demo-desktop.sh [--flow FILE] [--out DIR] [--restore-golden] [--policy shipped|recorded]
 #   scripts/demo-desktop.sh --save-golden        copy the client state (db/, .mosipkeys/) to the golden folder
+#   scripts/demo-desktop.sh --onboard            onboard officer1 and supervisor1 on a fresh client, save the golden
 #
 # Options:
 #   --flow FILE        flow file to run (default tools/mock-sync/e2e/flows/demo-desktop.flow)
@@ -25,10 +26,15 @@
 #   --policy MODE      shipped (default): MockSync's values as they are. recorded: the shipped policy with the
 #                      challenge pool cut to the actions the cast's frame packs hold (BLINK,SMILE for s3: its footage
 #                      has no usable head turn), set on MockSync for the run and removed afterwards
+#   --onboard          set up a fresh client (no db/ yet) for the demo: register its machine in MockSync, first
+#                      login of officer1 (initial sync; the client then exits to restart), onboard officer1 and
+#                      supervisor1 with face pack s3 (flows/onboard-desktop.flow, always with the recorded challenge
+#                      pool), then save the golden snapshot
 #
 # Needs: a client built with scripts/desktop-build.sh --mocksync, its machine registered in MockSync, officer1 and
-# supervisor1 onboarded with face pack s3 (the golden snapshot holds such a state; it only works on the machine
-# that made it, because the database key is sealed by that machine's TPM), and the frame packs in
+# supervisor1 onboarded with face pack s3 (--onboard makes that state and saves it as the golden snapshot; a
+# snapshot only works on the machine that made it, because the database key is sealed by that machine's TPM or local
+# key files), and the frame packs in
 # $MOSIP_RUN_ROOT/frame-packs (tools/eval/fetch-frame-packs.py). A JDK 11 with JavaFX and javac: JAVA11_HOME, or
 # the cached Zulu 11 FX JDK that desktop-build.sh downloads.
 # Environment: MOSIP_RUN_ROOT (default <repo>/../run).
@@ -57,6 +63,7 @@ while [ $# -gt 0 ]; do
 		--out) OUT="$2"; shift ;;
 		--restore-golden) RESTORE=1 ;;
 		--save-golden) ACTION=save ;;
+		--onboard) ACTION=onboard ;;
 		--policy) POLICY_MODE="$2"; shift ;;
 		-h|--help) awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "${BASH_SOURCE[0]}"; exit 0 ;;
 		*) die "unknown option $1" ;;
@@ -64,6 +71,9 @@ while [ $# -gt 0 ]; do
 	shift
 done
 case "$POLICY_MODE" in shipped|recorded) ;; *) die "unknown --policy $POLICY_MODE (shipped or recorded)" ;; esac
+# Pack s3 has no head-turn footage, so onboarding can only answer blink and smile challenges.
+[ "$ACTION" != onboard ] || POLICY_MODE=recorded
+[ "$ACTION" != onboard ] || [ "$RESTORE" = 0 ] || die "--onboard starts from a fresh client; leave out --restore-golden"
 
 client_running() {
 	[ -f "$CLIENT_DIR/client.pid" ] || return 1
@@ -81,12 +91,16 @@ copy_state() {
 	return 0
 }
 
-if [ "$ACTION" = save ]; then
-	client_running && die "stop the client first (scripts/desktop-run.ps1 -Stop)"
+save_golden() {
 	copy_state "$CLIENT_DIR" "$GOLDEN"
 	cp "$MOCKSYNC_DIR/work/config-overrides.properties" "$GOLDEN/mock-sync-config-overrides.properties" 2>/dev/null || true
 	date -u +%Y-%m-%dT%H:%M:%SZ >"$GOLDEN/SAVED-AT.txt"
 	log "golden snapshot saved in $GOLDEN"
+}
+
+if [ "$ACTION" = save ]; then
+	client_running && die "stop the client first (scripts/desktop-run.ps1 -Stop)"
+	save_golden
 	exit 0
 fi
 
@@ -94,6 +108,8 @@ fi
 [ -d "$CLIENT_DIR/lib" ] || die "no client in $CLIENT_DIR; run scripts/desktop-build.sh --mocksync"
 [ -d "$PACKS/s3-main" ] || die "frame packs missing in $PACKS; run tools/eval/fetch-frame-packs.py"
 client_running && die "a client started by desktop-run.ps1 is running; stop it first"
+[ "$ACTION" != onboard ] || [ ! -d "$CLIENT_DIR/db" ] || die "the client in $CLIENT_DIR already has a database;" \
+	"onboarding starts from a fresh client: run scripts/desktop-run.ps1 -Reset, or move db/ aside"
 
 JDK=""
 for candidate in "${JAVA11_HOME:-}" "$RUN_ROOT/cache/zulu11.41.23-ca-fx-jdk11.0.8-win_x64"; do
@@ -123,6 +139,7 @@ if curl -s -m 3 -o /dev/null "$ADMIN/admin/config"; then
 	log "MockSync already running"
 else
 	log "starting MockSync"
+	mkdir -p "$MOCKSYNC_DIR/work"
 	(cd "$MOCKSYNC_DIR" && nohup bash scripts/run-mock-sync.sh >>"$MOCKSYNC_DIR/work/mock-sync.out" 2>&1 &)
 	for _ in $(seq 1 120); do curl -s -m 2 -o /dev/null "$ADMIN/admin/config" && break; sleep 1; done
 	curl -s -m 3 -o /dev/null "$ADMIN/admin/config" || die "MockSync did not start; see $MOCKSYNC_DIR/work/mock-sync.out"
@@ -163,14 +180,35 @@ if [ "$POLICY_MODE" = recorded ]; then
 		"$ADMIN/admin/config" >/dev/null || die "could not set $RECORDED_POOL on MockSync"
 	log "policy recorded: $RECORDED_POOL=BLINK,SMILE on MockSync for this run"
 fi
+# run_driver <out dir> <flow file>: runs the flow on a client that the driver starts in its own JVM.
+run_driver() {
+	mkdir -p "$1"
+	(cd "$CLIENT_DIR" && "$JDK/bin/java" -Xmx1400m -Dfile.encoding=UTF-8 \
+		-Dframe.packs="$(native "$PACKS")" \
+		-Djavax.net.ssl.trustStore="$(native "$STORE")" -Djavax.net.ssl.trustStorePassword=changeit \
+		-Djavax.net.ssl.trustStoreType=PKCS12 \
+		-cp "lib/*;$(native "$OUT/driver-classes")" DesktopFlowDriver "$(native "$1")" "$(native "$2")" \
+		>"$1/stdout.log" 2>&1)
+}
+
+if [ "$ACTION" = onboard ]; then
+	log "registering the machine in MockSync"
+	PATH="$JDK/bin:$PATH" bash "$MOCKSYNC_DIR/scripts/register-machine.sh" "$CLIENT_DIR" >"$OUT/register-machine.log" 2>&1 \
+		|| die "machine registration failed; see $OUT/register-machine.log"
+	log "first login and initial sync; output in $OUT/1-sync"
+	# The client ends the initial sync with System.exit (its restart), which ends the driver with status 0.
+	run_driver "$OUT/1-sync" "$MOCKSYNC_DIR/e2e/flows/onboard-sync.flow" \
+		|| die "first login or initial sync failed; see $OUT/1-sync/driver.log"
+	log "onboarding officer1 and supervisor1; output in $OUT/2-onboard"
+	run_driver "$OUT/2-onboard" "$MOCKSYNC_DIR/e2e/flows/onboard-desktop.flow" \
+		|| die "onboarding failed; see $OUT/2-onboard/driver.log"
+	save_golden
+	exit 0
+fi
+
 log "running $(basename "$FLOW"); output in $OUT"
 set +e
-(cd "$CLIENT_DIR" && "$JDK/bin/java" -Xmx1400m -Dfile.encoding=UTF-8 \
-	-Dframe.packs="$(native "$PACKS")" \
-	-Djavax.net.ssl.trustStore="$(native "$STORE")" -Djavax.net.ssl.trustStorePassword=changeit \
-	-Djavax.net.ssl.trustStoreType=PKCS12 \
-	-cp "lib/*;$(native "$OUT/driver-classes")" DesktopFlowDriver "$(native "$OUT")" "$(native "$FLOW")" \
-	>"$OUT/stdout.log" 2>&1)
+run_driver "$OUT" "$FLOW"
 status=$?
 set -e
 

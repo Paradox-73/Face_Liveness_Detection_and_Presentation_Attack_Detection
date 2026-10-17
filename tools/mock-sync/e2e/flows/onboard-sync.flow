@@ -1,0 +1,7 @@
+# First start of a fresh client (scripts/demo-desktop.sh --onboard): officer1 logs in with the password, the client
+# runs the initial sync (configuration, master data, users, certificates) and then exits to restart. That exit ends
+# the driver with status 0; the wait below only ends the run (status 2) when the client never restarts.
+include 00-start.flow
+label first login: officer1 password, initial sync, restart
+login ${OFFICER} ${OFFICER_PASSWORD}
+wait-gone .* 900

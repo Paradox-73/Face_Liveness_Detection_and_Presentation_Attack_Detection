@@ -1,0 +1,22 @@
+# Second start of a fresh client (scripts/demo-desktop.sh --onboard, after onboard-sync.flow): officer1 and
+# supervisor1 log in with their password and are onboarded with face pack s3, the face the demo flows match.
+include 00-start.flow
+abort-on-fail on
+label onboard officer1 with face s3
+login ${OFFICER} ${OFFICER_PASSWORD}
+wait-node #homeImgView 180
+set USER ${OFFICER}
+set OPERATOR ${OFFICER_FACE}
+set ONBOARD_PANE #getOnboardedPane
+include lib/onboard.flow
+label onboard supervisor1 with face s3
+click #homeImgView
+sleep 1500
+if-node #confirm click #confirm
+menu Logout
+login ${SUPERVISOR} ${SUPERVISOR_PASSWORD}
+wait-node #homeImgView 180
+set USER ${SUPERVISOR}
+set OPERATOR ${SUPERVISOR_FACE}
+include lib/onboard.flow
+exit
