@@ -199,9 +199,14 @@ if [ "$ACTION" = onboard ]; then
 	# The client ends the initial sync with System.exit (its restart), which ends the driver with status 0.
 	run_driver "$OUT/1-sync" "$MOCKSYNC_DIR/e2e/flows/onboard-sync.flow" \
 		|| die "first login or initial sync failed; see $OUT/1-sync/driver.log"
+	[ -d "$CLIENT_DIR/db" ] || die "the client made no database at its first login; see $OUT/1-sync/driver.log"
 	log "onboarding officer1 and supervisor1; output in $OUT/2-onboard"
 	run_driver "$OUT/2-onboard" "$MOCKSYNC_DIR/e2e/flows/onboard-desktop.flow" \
 		|| die "onboarding failed; see $OUT/2-onboard/driver.log"
+	# The client also ends with System.exit(0) on other errors; only a flow that reached its end writes DONE.
+	grep -q '^DONE' "$OUT/2-onboard/driver.log" \
+		|| die "the client exited before onboarding ended; the golden snapshot is unchanged; see $OUT/2-onboard/driver.log"
+	reset_overrides
 	save_golden
 	exit 0
 fi
