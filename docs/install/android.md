@@ -165,7 +165,7 @@ The script creates the AVD (emulator profile) `arc_api34` on first use:
   `$ANDROID_HOME/emulator/emulator -webcam-list`), back camera = emulated scene;
 - 2 GB RAM, hardware keyboard on.
 
-It then cold-boots it (`-no-snapshot`, `-gpu auto`: the PC's GPU when its driver allows, see section 7), waits for
+It then cold-boots it (`-no-snapshot`, `-gpu host`: the PC's GPU, see section 7), waits for
 `sys.boot_completed`, runs `adb reverse tcp:8080 tcp:8080`, installs the APK with
 `adb install -r -g` (reinstall keeping data, grant runtime permissions), starts
 `MainActivity` and saves a screenshot to `clients/android/build/emulator/`.
@@ -336,9 +336,16 @@ still decides at capture time.
   `qemu-system-x86_64-headless.exe`, exception `0xc0000005` in an unknown module, that is, in the renderer's
   generated code), most often on ARC's biometric screens. `-gpu swiftshader_indirect` and `-gpu guest` (which
   falls back to `lavapipe` on this system image) both crashed; `-gpu host` (NVIDIA RTX 3050 laptop GPU, headless)
-  ran the whole demo without a crash. `scripts/android-run-emulator.sh` now uses `-gpu auto`; set
-  `ARC_EMULATOR_GPU` to force a mode. A Gradle daemon left running after a build also holds about 2 GB of commit
-  memory; `./gradlew --stop` (in `clients/android/android`) frees it.
+  ran the whole demo without a crash. `-gpu auto` is no remedy: for the headless emulator it chose SwiftShader and
+  `lavapipe` on this laptop although the GPU was there (emulator log: `Graphics Adapter ... (Google SwiftShader)`),
+  and the emulator vanished 9 minutes into the demo on 2026-10-17, with no Windows crash event. The fresh-clone run of
+  2026-10-15 lost the emulator twice the same way. `scripts/android-run-emulator.sh` therefore defaults to
+  `-gpu host`; on a PC without a GPU driver set `ARC_EMULATOR_GPU=swiftshader_indirect` and expect such crashes.
+  A Gradle daemon left running after a build also holds about 2 GB of commit memory; `./gradlew --stop` (in
+  `clients/android/android`) frees it.
+- **The demo stops making progress** with the emulator still running: the PC went to sleep (Modern Standby: System
+  log events 506 and 507 of `Kernel-Power`). A run of 2026-10-17 stood still for an hour that way. Keep the PC awake
+  and the lid open for the 30 minutes of `scripts/demo-android.sh`.
 - **"Building with plugins requires symlink support. Please enable Developer
   Mode"** during `flutter pub get` on Windows. Flutter creates plugin symlinks
   for the Windows and Linux targets, which needs Developer Mode (admin rights).
@@ -374,9 +381,13 @@ frame packs as the camera, and checks the results (report: `docs/test-report/and
 ```bash
 ARC_WEBCAM=emulated bash scripts/android-run-emulator.sh --headless   # no webcam attached
 bash scripts/android-build.sh && adb install -r -g clients/android/build/app/outputs/flutter-apk/app-debug.apk
-bash scripts/demo-android.sh                       # about 30 minutes; output in ../run/demo/android-<time>/
+bash scripts/demo-android.sh --policy recorded     # about 40 minutes; 59 of 74 checks on 2026-10-17
 bash scripts/demo-android.sh --sections "login resident"   # some sections only
 ```
+
+`--policy recorded` keeps the shipped policy but cuts the challenge pool to blink and smile, the actions pack `s3`
+has footage of; without it (`--policy shipped`, the default) turn challenges cannot be answered. Keep the PC awake
+for the whole run (section 7).
 
 Needs: MockSync on port 8080 with the tablet registered and `officer1` / `supervisor1` onboarded with pack `s3`
 (section 5 and `docs/design/android-liveness.md` 11.7); the frame packs in `$MOSIP_RUN_ROOT/frame-packs`
@@ -384,6 +395,37 @@ Needs: MockSync on port 8080 with the tablet registered and `officer1` / `superv
 the packs it uses to the app's external files folder (`liveness-replay/`), selects them per step through
 `liveness-replay/flow-source.txt` (debug builds only; `follow <prefix>` answers the challenge prompts, `masked`
 keeps the preview dark) and removes the selection at the end, so the app uses the camera again.
+
+### 8.1 Set up a new machine for the demo
+
+The tablet's state (machine keys, synced data, onboarded users, device certificate) lives in the emulator's AVD, so
+a new machine needs these steps once. Steps 1 to 4 are scripts; step 5, the onboarding, has no script, because the
+fingerprint blocks of ARC's onboarding screen need an SBI device app or exceptions marked by hand, and the face needs
+the replay selection.
+
+1. Build the debug APK: `bash scripts/android-build.sh` (section 2).
+2. Create and start the emulator, install the APK: `ARC_WEBCAM=emulated bash scripts/android-run-emulator.sh --headless`.
+3. Start MockSync: `bash tools/mock-sync/scripts/run-mock-sync.sh &`.
+4. Register the tablet, run the first login and sync, give the camera its device certificate:
+   `bash scripts/android-mocksync-setup.sh --reset --login --device-cert` (section 5 and 5.1).
+5. Onboard `officer1` and `supervisor1` with face pack `s3`:
+   - cut the challenge pool to the actions `s3` holds:
+     `curl -X PUT -H "Content-Type: application/json" -d '{"mosip.registration.liveness.active.challenge_types":"BLINK,SMILE"}' http://127.0.0.1:8080/admin/config`;
+   - push the packs and select the replay that answers the prompts with `s3`:
+     `. scripts/demo-android.sh --out /tmp/demo-setup`, then `push_packs` and `replay "follow s3"` (the sourced
+     script only defines its functions);
+   - in the app, log in as `officer1` (`Mosip@Officer1`), let it synchronise, open GET ONBOARDED (the same screen as
+     Operational Tasks, "Officer's Biometric Update", for a user who is already onboarded): in Right Hand, Left Hand
+     and Thumbs use Mark Exception (no SBI app on the emulator), in Face press Scan and let the replay pass the
+     liveness check, then VERIFY & SAVE;
+   - log out, repeat for `supervisor1` (`Mosip@Supervisor1`);
+   - remove the replay selection and the override:
+     `adb shell rm /sdcard/Android/data/io.mosip.registration_client/files/liveness-replay/flow-source.txt` and
+     `curl -X DELETE http://127.0.0.1:8080/admin/config/mosip.registration.liveness.active.challenge_types`.
+
+Checked on 2026-10-17: steps 1 to 4 are the scripts the guides above measured; the screen of step 5 (four blocks,
+Mark Exception in the hand blocks, VERIFY & SAVE) was opened for the onboarded `officer1` and left without saving. A
+full onboarding from a wiped app was not repeated, so the exact taps may differ.
 
 The offline section removes `adb reverse tcp:8080` (MockSync unreachable for the tablet, exactly as if it were
 stopped) and switches on airplane mode; it restores both before the final upload.

@@ -33,10 +33,10 @@
 #   ARC_AVD_DEVICE       avdmanager device profile (default "10.1in WXGA (Tablet)")
 #   ARC_AVD_RAM_MB       emulator RAM in MB (default 2048)
 #   ARC_EMULATOR_PORT    console port; the adb serial is emulator-<port> (default 5554)
-#   ARC_EMULATOR_GPU     -gpu mode (default auto: the PC's GPU when its driver supports it, else the
-#                        software renderer). swiftshader_indirect works without a GPU driver, but on the
-#                        team laptop it crashed the emulator every few minutes on ARC's biometric screens
-#                        (access violation in the renderer's generated code); host did not crash.
+#   ARC_EMULATOR_GPU     -gpu mode (default host: the PC's GPU). The software renderers crashed the
+#                        emulator every few minutes on ARC's biometric screens on the team laptop, and auto
+#                        picks them for a headless emulator even when the PC has a GPU (2026-10-17). On a
+#                        PC without a GPU driver, use swiftshader_indirect and expect such crashes.
 #   ARC_WEBCAM           host camera for the front camera (default webcam0;
 #                        list them with: $ANDROID_HOME/emulator/emulator -webcam-list).
 #                        Use "emulated" for automated runs and demos, which replay frame packs.
@@ -55,7 +55,7 @@ AVD_NAME="${ARC_AVD_NAME:-arc_api34}"
 AVD_DEVICE="${ARC_AVD_DEVICE:-10.1in WXGA (Tablet)}"
 RAM_MB="${ARC_AVD_RAM_MB:-2048}"
 PORT="${ARC_EMULATOR_PORT:-5554}"
-GPU="${ARC_EMULATOR_GPU:-auto}"
+GPU="${ARC_EMULATOR_GPU:-host}"
 WEBCAM="${ARC_WEBCAM:-webcam0}"
 REVERSE_PORT="${ARC_REVERSE_PORT-8080}"
 BOOT_TIMEOUT="${ARC_BOOT_TIMEOUT:-600}"

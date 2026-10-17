@@ -441,7 +441,7 @@ blank, `BUILTIN` and unknown values, false only for `SBI`). No camera or emulato
 - Emulator: the host software renderers (`-gpu swiftshader_indirect`, and `lavapipe` as the `guest` fallback)
   crashed the emulator with an access violation in generated code every few minutes on ARC's biometric
   screens (Windows Application log, event 1000). `-gpu host` did not crash; `scripts/android-run-emulator.sh`
-  now defaults to `auto`.
+  defaults to `host`, because `auto` chose the software renderers for the headless emulator (2026-10-17).
 
 ## 13. Supervisor override, metrics, diagnostics, execution provider, release build
 
