@@ -17,7 +17,7 @@ user or machine name. Team alias "Badmosip" only.
 - **Numbers:** only figures from `docs/test-report/README.md` and `docs/eval/results/20261014-shipped/README.md`; the limitation line in segment 11 stays on screen for
   at least 4 seconds.
 - Start every recording day from the golden client state (`bash scripts/demo-desktop.sh --restore-golden` restores
-  the onboarded desktop client) and check MockSync, MockMDS and the emulator are running.
+  the onboarded desktop client; `--onboard` makes that state once on a fresh client) and check MockSync, MockMDS and the emulator are running.
 
 ## What must be recorded live and what can be replayed
 
@@ -55,7 +55,7 @@ user or machine name. Team alias "Badmosip" only.
 
 | Step | Command or action |
 |---|---|
-| Build and restore the desktop client | `bash scripts/desktop-build.sh --mocksync`, then `bash scripts/demo-desktop.sh --restore-golden --policy recorded` for the full replayed run (69 of 71 checks on 2026-10-15). For one segment, write a flow file next to the others with `include 00-start.flow`, `include 10-login.flow`, `section <nn>-<name>.flow` and `exit`, and pass it with `--flow` (`docs/manual-test-checklist.md` `MT-VID-03`) |
+| Build and restore the desktop client | `bash scripts/desktop-build.sh --mocksync`, `bash scripts/demo-desktop.sh --onboard` once on a fresh client, then `bash scripts/demo-desktop.sh --restore-golden --policy recorded` for the full replayed run (69 of 71 checks on 2026-10-15). For one segment, write a flow file next to the others with `include 00-start.flow`, `include 10-login.flow`, `section <nn>-<name>.flow` and `exit`, and pass it with `--flow` (`docs/manual-test-checklist.md` `MT-VID-03`) |
 | Live webcam on desktop | `curl -s -X POST http://127.0.0.1:4501/admin/source -d '{"type":"Face","source":"FFMPEG","camera":"<webcam name>","fps":10}'` (list names with `ffmpeg -hide_banner -list_devices true -f dshow -i dummy`); switch back to a frame pack afterwards |
 | Liveness off for the hook | `PUT /admin/config` on MockSync with `mosip.registration.liveness.enable=N` plus the existing overrides; Synchronize Data in the client; undo after the take |
 | Android replayed segments | `bash scripts/android-run-emulator.sh --headless --no-install`, then `bash scripts/demo-android.sh --sections "login resident attacks approval"` with screen recording (`adb shell screenrecord`) |

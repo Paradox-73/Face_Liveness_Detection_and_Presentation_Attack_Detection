@@ -118,10 +118,10 @@ MockMDS is a Windows program: the path must be a Windows path such as `E:/Projec
    `docs/test-data.md`. The first login runs the initial sync and ends with a restart alert; start again and log in
    again to reach the home screen.
 4. Onboard the operator (face through liveness, fingers and irises from MockMDS), then use registration, face
-   login and end-of-day approval. Scripted run of every flow: `bash scripts/demo-desktop.sh --restore-golden --policy recorded`
-   (needs an onboarded snapshot and the frame packs; see [desktop.md](desktop.md) section 6). The snapshot exists
-   only on the team laptop; on another machine `officer1` and `supervisor1` must first be onboarded with face pack
-   `s3`, and no script does that in one command yet ([desktop.md](desktop.md) section 6.2).
+   login and end-of-day approval. Scripted run of every flow: `bash scripts/demo-desktop.sh --onboard` once on a
+   fresh client (onboards `officer1` and `supervisor1` with face pack `s3` and saves the golden snapshot, about
+   5 minutes), then `bash scripts/demo-desktop.sh --restore-golden --policy recorded` (needs the frame packs; see
+   [desktop.md](desktop.md) sections 6.1 and 6.2).
 
 Logs: `<run>/desktop/logs/registration.log` (success line `Login screen loaded`; liveness lines contain `Liveness`).
 

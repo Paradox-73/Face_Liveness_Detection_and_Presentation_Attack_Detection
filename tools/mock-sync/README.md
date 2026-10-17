@@ -94,6 +94,7 @@ device, the same flows offline, a wrong person refused by the face match, and th
 The command list is in the Javadoc of the driver; the results are in `docs/test-report/desktop-e2e.md`.
 
 ```bash
+scripts/demo-desktop.sh --onboard             # once, on a fresh client: onboard officer1 and supervisor1
 scripts/demo-desktop.sh --restore-golden      # from the repository root; about 10 minutes
 ```
 

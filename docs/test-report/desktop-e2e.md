@@ -137,7 +137,7 @@ offline, wrong person, screens and both supervisor overrides.
 | Server | MockSync (`tools/mock-sync`), machine `batcomputer` registered with its TPM keys; users `officer1` (officer) and `supervisor1` (supervisor). Liveness keys from `data/mock-sync-defaults.properties`; overrides in force: `active.challenge_types=BLINK,SMILE` (head turns fail for genuine people, engine proposal E1 in `docs/eval/calibration-notes.md`) and `operator.onboarding.bioattributes` = ten fingers and face. FACE matcher `io.mosip.liveness.facematch.SFaceBioApi`, threshold 40. |
 | Devices | MockMDS (`devices/mock-mds`, `scripts/mockmds-run.sh`) on port 4501, face device L0 (L1 in D9), frame source switched per step through `/admin/source`, faults through `/admin/fault`. |
 | Faces | Evaluation frame packs in `run/frame-packs` (never committed; `eval/packs/sources.yaml`): `s3` enrolled for both users; `s2` resident with a high passive score; `s3n` = `s3` with camera noise (`tools/mock-sync/e2e/NoisyPack.java`; session passive score 74 in the reference run) as the low-confidence resident; `s1` a live person who is not enrolled; attack packs `a-s2-*`, `a-s3-*`. |
-| Starting state | Golden snapshot `run/golden/desktop` (client database with both users onboarded), restored by `--restore-golden`. |
+| Starting state | Golden snapshot `run/golden/desktop` (client database with both users onboarded), restored by `--restore-golden`. `scripts/demo-desktop.sh --onboard` makes it on a fresh client (`docs/install/desktop.md` section 6.2). |
 | Driver | `tools/mock-sync/e2e/DesktopFlowDriver.java` (entry point; the flow interpreter and the JavaFX helpers are the other `Flow*.java`, `FxNodes.java` and `PromptFollower.java` files in that folder, compiled by `scripts/demo-desktop.sh`) runs the client in its own JVM and executes `tools/mock-sync/e2e/flows/demo-desktop.flow`. It fires the client's own buttons (no operating-system input), so it works on a locked screen. Snapshots hide the camera preview, captured faces and HTML previews (`mask on`). |
 | Machine | Windows 11 laptop, 12 threads, 16 GB; other engineers' builds and an Android emulator ran at the same time. |
 
@@ -151,6 +151,7 @@ for operators; `exception_photo` OFF.
 ```bash
 export JAVA_HOME="$JAVA11_HOME"                      # JDK 11 with JavaFX and javac (docs/install/README.md section 1)
 bash scripts/desktop-build.sh --mocksync             # once
+bash scripts/demo-desktop.sh --onboard               # once: onboard officer1 and supervisor1, save the golden snapshot
 bash scripts/demo-desktop.sh --restore-golden        # about 10 minutes; results in run/demo/desktop-<time>/results.txt
 ```
 
@@ -230,8 +231,9 @@ paths are relative to `docs/`; `log` is `test-report/desktop-e2e/driver-summary.
    re-tested here).
 7. **Notice `liveness.config.updated`** after a sync that changes liveness keys is translated but not shown; the
    change itself is applied and audited (LV15), as D8 shows.
-8. **The golden snapshot works only on this machine**: the client database password is sealed with the machine's
-   TPM key, and MockSync must still hold the machine registration.
+8. **The golden snapshot works only on the machine that made it**: the client database password is sealed with the
+   machine's TPM key, and MockSync must still hold the machine registration. On another machine
+   `scripts/demo-desktop.sh --onboard` makes a new one (about 5 minutes).
 9. **Face images in the run folder.** Screenshots in `run/demo/*` taken before the HTML views were masked (runs 1-3)
    show the resident photo on the preview and EOD pages; they stay outside git. The committed screenshots come from
    run 4 and were checked by eye.

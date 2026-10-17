@@ -48,7 +48,8 @@ screenshots for the deck need the person's written OK.
 
 If the client state is lost (login refused, home screen missing), `bash scripts/demo-desktop.sh --restore-golden`
 puts back the onboarded state and runs the scripted demo once (about 10 minutes); switch MockMDS back to the webcam
-afterwards, because the demo leaves it on a frame pack.
+afterwards, because the demo leaves it on a frame pack. On a machine without a golden snapshot, run
+`bash scripts/demo-desktop.sh --onboard` on a fresh client first (about 5 minutes).
 
 ## 3. How one test goes
 

@@ -202,6 +202,7 @@ packets' liveness evidence to `run/demo/desktop-<time>/`. Results of the referen
 `docs/test-report/desktop-e2e.md`.
 
 ```bash
+bash scripts/demo-desktop.sh --onboard                            # once per machine, section 6.2; about 5 minutes
 bash scripts/demo-desktop.sh --restore-golden --policy recorded   # about 20 minutes; 69 of 71 checks on 2026-10-15
 bash scripts/demo-desktop.sh --flow tools/mock-sync/e2e/flows/demo-desktop.flow --out /tmp/demo
 ```
@@ -211,19 +212,30 @@ face pack `s3` has footage of; without it the turn-right challenges cannot be an
 challenge needs a live face. A flow file of one section does not start the client by itself: wrap it in a file with
 `include 00-start.flow`, `include 10-login.flow`, `section <nn>-<name>.flow` and `exit`.
 
-### 6.2 Golden snapshot of an onboarded client
+### 6.2 Onboard the demo users and save the golden snapshot
 
-Onboarding needs MockSync, MockMDS and several screens, so an onboarded state is kept outside git:
-`bash scripts/demo-desktop.sh --save-golden` (client stopped) copies `run/desktop/db/` and `.mosipkeys/` to
-`run/golden/desktop/`; `--restore-golden` copies them back before a run. The snapshot works only on the machine that
-made it: the database password is sealed with that machine's TPM key, and MockSync must still know the machine
-(`tools/mock-sync/work/machines.json`).
+The scripted demo needs `officer1` and `supervisor1` onboarded with face pack `s3` (their faces are what the demo's
+face sign-in and supervisor checks match). One command does it on a fresh client (no `db/` yet: a new build, or after
+`desktop-run.ps1 -Reset`), with the client stopped:
 
-On any other machine there is no snapshot, so the scripted demo cannot run until `officer1` and `supervisor1` are
-onboarded with face pack `s3` (their faces are what the demo's face sign-in and supervisor checks match). The steps
-exist as `tools/mock-sync/e2e/flows/lib/onboard.flow` (run in the interactive driver for
-[../test-report/desktop-e2e.md](../test-report/desktop-e2e.md) row I1), but no script runs them in one command;
-onboarding by hand needs the frame pack to answer the challenge prompts, which only the driver's `follow` does.
+```bash
+bash scripts/demo-desktop.sh --onboard        # about 5 minutes; then run the demo with --restore-golden
+```
+
+It starts MockSync and MockMDS when they are not running, registers the machine in MockSync
+(`tools/mock-sync/scripts/register-machine.sh`), runs officer1's first login (the initial sync; the client then exits
+to restart, flow `tools/mock-sync/e2e/flows/onboard-sync.flow`), starts the client again and onboards both users
+(`flows/onboard-desktop.flow`: password login, then `lib/onboard.flow` with ten fingers and both irises from MockMDS
+and the face from pack `s3` with liveness). It always uses the recorded challenge pool (blink and smile), because
+`s3` has no head-turn footage. Output: `run/demo/desktop-<time>/1-sync/` and `2-onboard/` (`driver.log`, masked
+snapshots). Measured on 2026-10-17 on the team laptop from an empty client and an empty MockSync `work/` folder:
+4 of 4 checks, 5 minutes, MockSync logged `IDA auth for officer1: biometrics {FACE=1, FINGER=10, IRIS=2}`.
+
+At the end it saves the golden snapshot: `run/desktop/db/` and `.mosipkeys/` copied to `run/golden/desktop/`.
+`--restore-golden` copies them back before a demo run, and `--save-golden` (client stopped) saves the current state
+again. A snapshot works only on the machine that made it: the database password is sealed with that machine's TPM
+key (or its local key files), and MockSync must still know the machine (`tools/mock-sync/work/machines.json`). On
+another machine, run `--onboard` there instead of copying a snapshot.
 
 ## 7. Unit tests
 
