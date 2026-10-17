@@ -141,9 +141,9 @@ the claim.
 - Four large numbers:
   - **2,691** tests passed on 2026-10-14 (verification run, 0 failures); about 1,330 are written by the team, the
     rest come with the upstream MOSIP code (`docs/test-report/README.md` section 2).
-  - **41 / 41** checks: scripted end-to-end run on the real desktop client (run at the earlier defaults; 69 of 71 on
-    2026-10-15 at the current policy with blink and smile only).
-  - **58 / 58** checks: scripted end-to-end run on the real Android client (earlier defaults; 55 of 75 on 2026-10-14).
+  - **41 / 41** checks: scripted end-to-end run on the real desktop client (run at the earlier defaults; 71 of 71 on
+    2026-10-17 at the current policy with blink and smile only).
+  - **58 / 58** checks: scripted end-to-end run on the real Android client (earlier defaults; 59 of 74 on 2026-10-17).
   - **75** automated liveness and attack scenarios, 275 transactions, scored with ISO/IEC 30107-3 metrics.
 - One line (synthetic attacks, per transaction, from `docs/eval/results/20261014-shipped/README.md`): shipped
   defaults **0 of 226** attack transactions accepted, genuine rejected **0.0%** (registration 0/28, face sign-in 0/12); passive first, as the problem

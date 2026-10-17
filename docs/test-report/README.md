@@ -6,8 +6,8 @@ stay in the linked reports; requirement-by-requirement status is in [../traceabi
 
 | Report | What it covers |
 |---|---|
-| [desktop-e2e.md](desktop-e2e.md) | Real desktop Registration Client against MockSync (mock MOSIP server) and MockMDS (mock face device): 13 scripted flows, 3 interactive flows, audit and packet evidence. Re-run 2026-10-15 at the shipped policy with the challenge pool cut to blink and smile: 69 of 71 |
-| [android-e2e.md](android-e2e.md) | Real Android Registration Client on an Android 14 emulator against MockSync: 16 flows, latency, APK size. Re-run 2026-10-14 at the shipped policy with the challenge pool cut to blink and smile: 55 of 75 |
+| [desktop-e2e.md](desktop-e2e.md) | Real desktop Registration Client against MockSync (mock MOSIP server) and MockMDS (mock face device): 13 scripted flows, 3 interactive flows, audit and packet evidence. Re-run 2026-10-17 at the shipped policy with the challenge pool cut to blink and smile: 71 of 71 (2026-10-15: 69 of 71) |
+| [android-e2e.md](android-e2e.md) | Real Android Registration Client on an Android 14 emulator against MockSync: 16 flows, latency, APK size. Re-run 2026-10-17 at the shipped policy with the challenge pool cut to blink and smile: 59 of 74 (2026-10-14: 55 of 75) |
 | [interoperability.md](interoperability.md) | Desktop and Android give the same liveness decision: 19 replayed cases through each client's engine loader, configuration and decoder, one ONNX Runtime release (1.20.0) on both (bonus B4) |
 | [android-performance.md](android-performance.md) | Per-frame latency and memory of the engine on a physical Android phone (bonus B7 and B8): the measurement kit is built, the phone table is still empty |
 | [../install/android.md](../install/android.md#10-import-a-liveness-model-bundle-offline-model-update), [../design/android-liveness.md](../design/android-liveness.md#14-offline-model-update-bonus-b6) | Offline import of a signed model bundle on Android (bonus B6): how to run it and how it works; unit tests only, no phone run |
@@ -22,8 +22,8 @@ stay in the linked reports; requirement-by-requirement status is in [../traceabi
 |---|---|
 | Unit and component tests | **2,691 tests, 0 failures, 0 errors** in the verification run of 2026-10-14 (19:46-20:03) over 13 test suites (section 2) |
 | Automated liveness and attack scenarios | run of 2026-10-14 at the shipped defaults: 275 transactions, 755 attempt records (section 3.0). **0 of 226 attack transactions accepted (APCER 0.0% for every species and workflow). Bona fide: `registration` 0.0% (0/28), `login_auth` 0.0% (0/12).** At passive first: 100 of 226 accepted |
-| Desktop end-to-end | reference run 2026-09-30: 41 of 41 checks passed **at the old defaults** (all workflows passive first); 2026-10-15 at the shipped policy with the pool cut to blink and smile: 69 of 71 (section 4) |
-| Android end-to-end | reference run 2026-09-30: 58 of 58 checks passed **at the old defaults**; a repeat run found one real weakness; 2026-10-14 at the shipped policy with the pool cut to blink and smile: 55 of 75 (section 4) |
+| Desktop end-to-end | reference run 2026-09-30: 41 of 41 checks passed **at the old defaults** (all workflows passive first); 2026-10-17 at the shipped policy with the pool cut to blink and smile: 71 of 71 (section 4) |
+| Android end-to-end | reference run 2026-09-30: 58 of 58 checks passed **at the old defaults**; a repeat run found one real weakness; 2026-10-17 at the shipped policy with the pool cut to blink and smile: 59 of 74 (section 4) |
 | Bonus items | B4 interoperability done (19 of 19 replayed cases agree on desktop and on Android unit tests, 6 of 6 on an emulator); B6 model import done on both clients (Android button in Device Settings); B7 and B8 measurement kit done, **phone measurement pending** (section 8) |
 | Headline weakness | every synthetic attack species is refused, but the attacks are software-made: the screen-pattern check that now stops the adaptive screen replay (SYN-A7, 4 of 8 accepted before it) is proven on synthetic screens only, and frames enlarged by 1.5x or a whole number before the engine could look like a screen to it. The dim clip passes since the exposure correction; real dim rooms are untested (section 6) |
 | Evaluation with real people and artefacts | not run yet; placeholder in section 7 |
@@ -175,17 +175,19 @@ engine before those fixes ([../eval/results/20260930/](../eval/results/20260930/
 - **Desktop** ([desktop-e2e.md](desktop-e2e.md)): real MOSIP desktop Registration Client with MockSync and MockMDS,
   faces from frame packs (no webcam), `scripts/demo-desktop.sh --restore-golden`, about 10 minutes. Reference run of
   2026-09-30: **41 of 41 checks passed at the old defaults** (every workflow passive first); flows in
-  [desktop-e2e.md section 3.1](desktop-e2e.md#31-scripted-run-reference-run-all-checks-passed). Run of 2026-10-15 at
-  the shipped policy with the challenge pool cut to blink and smile: 69 of 71, every section run (2026-10-14: 5 of
-  16, stopped by a MockMDS iris quality below the client's threshold, since fixed).
+  [desktop-e2e.md section 3.1](desktop-e2e.md#31-scripted-run-reference-run-all-checks-passed). Run of 2026-10-17 at
+  the shipped policy with the challenge pool cut to blink and smile, from a client onboarded by `--onboard`: 71 of
+  71 (2026-10-15: 69 of 71; 2026-10-14: 5 of 16, stopped by a MockMDS iris quality below the client's threshold,
+  since fixed).
 - **Android** ([android-e2e.md](android-e2e.md)): real MOSIP Android Registration Client (debug APK) on an Android 14
   x86_64 emulator with MockSync, faces through the app's debug replay, `scripts/demo-android.sh`, about 30 minutes.
   Reference run 7 of 2026-09-30: **58 of 58 checks passed at the old defaults**; flows in
   [android-e2e.md section 3](android-e2e.md#3-results). Run 8 found one real weakness: a printed photo passed the
   passive check under the passive-first registration policy of that time; with `ALWAYS_ACTIVE` it was refused 0/12
-  ([android-e2e/print-attack-trials.txt](android-e2e/print-attack-trials.txt)). Run of 2026-10-14 at the shipped
-  policy with the pool cut to blink and smile: 55 of 75
-  ([android-e2e.md section 14](android-e2e.md#14-re-run-after-the-replay-fix-2026-10-14-1827-to-1941-ist)).
+  ([android-e2e/print-attack-trials.txt](android-e2e/print-attack-trials.txt)). Run of 2026-10-17 at the shipped
+  policy with the pool cut to blink and smile: 59 of 74
+  ([android-e2e.md section 15](android-e2e.md#15-re-run-with-the-host-gpu-2026-10-17-1706-to-1749-ist); 2026-10-14:
+  55 of 75).
 - Turn challenges and the longer flows at the shipped policy need a live face or longer recordings.
 
 ## 5. Latency
@@ -225,7 +227,7 @@ engine before those fixes ([../eval/results/20260930/](../eval/results/20260930/
 | 11 | The stored resident photo can show the challenge expression (smile) | image quality for the ID record | Android 8.2 |
 | 12 | SFace match threshold 40 chosen from published values, not calibrated on a larger set | match error rates unknown | desktop 5.10; `liveness/face-match-sdk/README.md` |
 | 13 | All attack data is synthetic; bona fide data is three people from stock clips | numbers are regression figures, not security claims | section 3 |
-| 14 | The full end-to-end client runs (section 4) were made at the old defaults; at the shipped policy only the runs with the pool cut to blink and smile exist (desktop 69 of 71 on 2026-10-15, Android 55 of 75 on 2026-10-14) | turn challenges and the longer flows at the shipped policy are untested on the clients; they need a live face or longer recordings | `design/android-liveness.md` 13.8 |
+| 14 | The full end-to-end client runs (section 4) were made at the old defaults; at the shipped policy only the runs with the pool cut to blink and smile exist (desktop 71 of 71 and Android 59 of 74 on 2026-10-17) | turn challenges and the longer flows at the shipped policy are untested on the clients; they need a live face or longer recordings | `design/android-liveness.md` 13.8 |
 | 15 | No real person, no physical phone and no real print or screen has been tested through either client | results of sections 3 and 4 are replayed frames only | section 7 |
 
 Closed on 2026-09-30: prints and looped clips passing the passive check (old #1), head turns to the left misread as

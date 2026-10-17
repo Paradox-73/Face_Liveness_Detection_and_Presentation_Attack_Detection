@@ -1,0 +1,74 @@
+PASS A-P0 [profile] replay profile set on MockSync and synchronised
+PASS A-L1 [login] officer password sign-in reaches the home screen
+PASS A-L2 [login] "Sign in with face" offered to an onboarded operator
+PASS A-L3 [login] face sign-in (login_auth): liveness PASS
+PASS A-L4 [login] face sign-in: 1:1 match with the onboarding face
+PASS A-L5 [login] face sign-in reaches the home screen
+PASS A-L6 [login] live person who is not enrolled: liveness PASS
+PASS A-L7 [login] live person who is not enrolled: no match
+PASS A-L8 [login] no match: sign-in stays on the password step with the mismatch message
+PASS A-L9 [login] screen replay at sign-in refused
+PASS A-L10 [login] refusal shown with a generic message that names no attack type
+PASS A-R0 [resident] Lost UIN registration reaches the biometrics grid with exceptions marked
+PASS A-R1 [resident] camera unavailable: device error shown
+PASS A-R2 [resident] camera unavailable uses no attempt
+PASS A-R3 [resident] screen replay refused on attempt 1 with a generic message
+PASS A-R4 [resident] attempt 1 of 3 used, Retry offered
+PASS A-R5 [resident] low-confidence resident: challenge prompt shown
+PASS A-R6 [resident] challenge answered: capture PASS on attempt 2
+PASS A-R7 [resident] session escalated to challenges (REG-EVT-LV03) and passed (REG-EVT-LV10)
+PASS A-R8 [resident] exception photo taken with the built-in camera, preview and authentication step reached
+PASS A-R9 [resident] exception photo taken without a liveness check (policy OFF)
+FAIL A-R10 [resident] operator packet authentication by face (packet_auth): liveness and match, acknowledgement
+PASS A-A1 [attacks] attack a-s2-print-still refused (attempt 1 of 3)
+PASS A-A1g [attacks] generic message after attempt 1
+PASS A-A2 [attacks] attack a-s2-identical refused (attempt 2 of 3)
+PASS A-A2g [attacks] generic message after attempt 2
+PASS A-A3 [attacks] attack a-s2-screen-replay refused (attempt 3 of 3)
+PASS A-A3g [attacks] generic message after attempt 3
+PASS A-A4 [attacks] third failure: recovery guidance, no Retry
+PASS A-A5 [attacks] maximum attempts audited once (REG-EVT-LV11)
+PASS A-A6 [attacks] ARC shows the blocked message under Scan
+PASS A-A7 [attacks] a further Scan opens no capture screen
+PASS A-V1 [override] MockSync: supervisor override policy for residents
+PASS A-V2 [override] synchronised: override policy on the tablet
+PASS A-V3 [override] resident fails the only attempt without a suspected attack
+PASS A-V4 [override] failure allows an override (not PAD, integrity or binding)
+PASS A-V5 [override] capture screen offers "Supervisor override"
+PASS A-V6 [override] diagnostic panel shows metrics and the execution provider
+FAIL A-V7 [override] diagnostic mode switched on is audited (REG-EVT-LV17)
+FAIL A-V8 [override] operator asks for the override and enters the supervisor
+FAIL A-V9 [override] supervisor face authentication (exception_auth): liveness and match
+FAIL A-V10 [override] resident photo taken under the override and returned
+FAIL A-V11 [override] override photo flagged SUPERVISOR_OVERRIDE
+FAIL A-V12 [override] override audited with the supervisor (REG-EVT-LV16)
+FAIL A-V13 [override] ARC shows the override message under Scan
+PASS A-V14 [override] anonymised metrics written to files/liveness/metrics.log
+PASS A-V15 [override] metrics lines carry no user or registration ID
+FAIL A-V16 [override] packet with the override face authenticated by face and created
+PASS A-V17 [override] MockSync: override settings reverted
+PASS A-V18 [override] synchronised back to the shipped policy
+PASS A-E1 [approval] supervisor face sign-in
+FAIL A-E2 [approval] pending applications reviewed and approved
+FAIL A-E4 [approval] supervisor face authentication (eod_auth): liveness and match
+PASS A-E5 [approval] no application left pending
+FAIL A-E6 [approval] packets uploaded to MockSync (0 new)
+FAIL A-E8 [approval] the override registration's packet carries LIVENESS_DECISION OVERRIDE and REG-EVT-LV16
+PASS A-C1 [config] MockSync: policy.packet_auth=ALWAYS_ACTIVE
+PASS A-C2 [config] manual synchronisation completes
+PASS A-C3 [config] after the sync the operator's packet authentication asks for a challenge
+PASS A-C4 [config] packet authentication passes with the challenge answered
+FAIL A-C5 [config] configuration change audited (REG-EVT-LV15)
+PASS A-C6 [config] packet created
+PASS A-C7 [config] MockSync: policy.packet_auth back to the shipped value
+PASS A-C8 [config] synchronised back to the shipped policy
+PASS A-O1 [offline] offline password sign-in
+PASS A-O2 [offline] offline: capture screen shows the Offline badge
+PASS A-O3 [offline] offline: resident face passes on the device
+FAIL A-O4 [offline] offline: packet authentication by face
+PASS A-O5 [offline] offline: supervisor face sign-in
+PASS A-O6-attack [offline] supervisor approval: replay refused
+PASS A-O6-generic [offline] supervisor approval: generic refusal message
+PASS A-O7 [offline] offline: supervisor approval by face (offline_approval.enable=Y)
+PASS A-O8 [offline] after the network is back the offline packet is uploaded (1 new)
+PASS A-P1 [latency] per-frame times recorded

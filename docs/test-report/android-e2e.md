@@ -18,6 +18,8 @@ Android 14 x86_64 emulator, against MockSync as the MOSIP server. The camera was
 - **Re-run of 2026-10-06 (section 12):** attacks section 11 of 11 passed at the shipped defaults; the resident
   section 7 of 12 and the login section 3 of 10 (genuine-person steps fail: no turn or look-up footage, clips that
   repeat); the other sections could not run.
+- **Re-run of 2026-10-17 (section 15):** `--policy recorded`, 59 of 74 checks passed, every section ran; the
+  emulator no longer disappears with `-gpu host`.
 - **Committed screenshots** without any face: `docs/ux/screenshots/android/e2e-*.png` (the capture screen's preview is
   kept dark by the replay's `masked` option; ARC screens that show the stored face are not committed).
 - **Earlier runs** of the same script (same day) found the problems in section 4; each was fixed and the script run
@@ -366,3 +368,51 @@ Why the 20 failures are not refusals of the replayed genuine face:
 
 What still needs a live face or new recordings: any turn challenge (the shipped pool includes `TURN_LEFT` and
 `TURN_RIGHT`; `s3` has no usable turn), and longer neutral footage for sessions with retries.
+
+## 15. Re-run with the host GPU (2026-10-17, 17:06 to 17:49 IST)
+
+`scripts/demo-android.sh --policy recorded` on the debug APK built from `f07a81f` (no app change since), emulator
+`arc_api34` started with `-gpu host` and `-camera-front emulated`, MockSync on 8080. Output
+`run/demo/android-20261017-recorded`, outside git; check lines in
+[android-e2e/recorded-20261017/results.txt](android-e2e/recorded-20261017/results.txt).
+
+**Total: 59 passed, 15 failed** (2026-10-14: 55 passed, 20 failed). The approval section runs a check per uploaded
+packet (A-E7) and the replay-refusal checks (A-E3) only when there is something to approve, so it ran 6 checks
+instead of 9 and the totals differ by one.
+
+| Section | 2026-10-17 | 2026-10-14 |
+|---|---|---|
+| profile (A-P0) | 1 of 1 | 1 of 1 |
+| login (A-L1 to A-L10) | 10 of 10 | 10 of 10 |
+| resident (A-R0 to A-R10) | 10 of 11 | 8 of 11 |
+| attacks (A-A1 to A-A7) | 10 of 10 | 10 of 10 |
+| override | 10 of 18 | 10 of 18 |
+| approval | 2 of 6 | 8 of 9 |
+| config | 7 of 8 | 4 of 8 |
+| offline | 8 of 9 | 3 of 7 |
+| latency (A-P1) | 1 of 1: 21 attempts, 2,089 frames, median p50 33.5 ms, median p95 70.3 ms per frame, worst 448 ms | 1 of 1 |
+
+What the failures are (from the demo log and the failure screenshots):
+
+- A-R10 and A-O4, operator packet authentication by face: the first attempt ended `FAIL_PAD/INTEGRITY`
+  (`LOOP`): the replayed operator clip repeated, which the engine correctly reports as a replayed video. A live face
+  or a longer recording is needed, as in section 14.
+- A-V7 to A-V13 and A-V16, supervisor override: the dialog shows `supervisor1` entered and SUPERVISOR OVERRIDE is
+  not confirmed; the same eight checks failed on 2026-10-10 and 2026-10-14. Not diagnosed.
+- A-E2, A-E4, A-E6, A-E8, end-of-day approval: the Pending Approval list was already empty ("Displaying 0
+  Applications") when the supervisor's face check was due, and no packet was uploaded. The resident and override
+  registrations before it had failed their packet authentication (A-R10, A-V16); that this left nothing to approve
+  is likely but was not checked.
+- A-C5: the configuration change worked (A-C3 and A-C4 pass) but its audit line `REG-EVT-LV15` was not found.
+  Not diagnosed.
+
+**The emulator.** The first attempt of this day (15:26) ran with the script's former default `-gpu auto`. The
+emulator log shows that `auto` chose the software renderers for the headless emulator (`Graphics Adapter ...
+(Google SwiftShader)`, Vulkan `llvmpipe`), and the emulator process vanished 9 minutes in, during the resident
+section, with no event in the Windows logs. This matches the crashes of section 4 and the two losses of the
+fresh-clone run of 2026-10-15. With `-gpu host` (NVIDIA RTX 3050) the run above lost nothing.
+`scripts/android-run-emulator.sh` now defaults to `host`. A second attempt stood still for an hour when the laptop
+went into Modern Standby, and the laptop then restarted; two more attempts right after that restart failed at A-P0
+(the screenshot shows the password typed and LOGIN not taken), while the same steps passed by hand and in the run
+above. Those were started outside the shell through WMI; the cause was not found.
+

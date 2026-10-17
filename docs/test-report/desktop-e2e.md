@@ -129,6 +129,16 @@ offline, wrong person, screens and both supervisor overrides.
   override the resident's face did not pass in its one attempt.
 - Still not covered by the recorded packs: turn challenges (the pool was cut to blink and smile).
 
+**Run from a freshly onboarded client, 2026-10-17 (IST): 71 of 71 checks passed** (commit `3f29e1a`, 14:58-15:18;
+check lines in [desktop-e2e/recorded-20261017/results.txt](desktop-e2e/recorded-20261017/results.txt)). The client
+state, the golden snapshot and MockSync's `work/` folder were moved aside first, so MockSync started with new keys
+and no machine; `scripts/demo-desktop.sh --onboard` then registered the machine, ran the first login and onboarded
+`officer1` and `supervisor1` (4 of 4 checks, 5 minutes), and `--restore-golden --policy recorded` ran the demo on
+that new snapshot. The two failures of 2026-10-15 ("Hold still" within 30 s, the second supervisor override) did
+not repeat; each has now been seen once in two runs, so neither was diagnosed. The script's evidence step (packet
+liveness files, `results.txt`) did not run at the end of this run because the script file was edited while it ran;
+the same commands were run by hand afterwards against the same MockSync.
+
 ## 1. Set-up
 
 | Part | What was used |

@@ -138,7 +138,8 @@ bash scripts/android-liveness-device-cert.sh --csr          # device certificate
 
 `ARC_WEBCAM=emulated` keeps the laptop webcam out; automated runs replay frame packs instead
 (`scripts/android-liveness-demo.sh`, `scripts/demo-android.sh`). Details, troubleshooting and the full demo:
-[android.md](android.md) sections 2-8.
+[android.md](android.md) sections 2-8. The scripted demo also needs `officer1` and `supervisor1` onboarded on the
+tablet with face pack `s3`; that step has no script ([android.md](android.md) section 8.1).
 
 ## 7. Check that everything answers
 
@@ -185,7 +186,7 @@ first build downloads its dependencies and takes longer; the team has not timed 
 
 | Part | State (dated in each row) | Where |
 |---|---|---|
-| Engine build and tests; MockSync, MockMDS, desktop client build and login; every liveness flow with recorded frame packs instead of a webcam | run on 2026-09-30 at the earlier defaults (supervisor workflows passive first); 41 of 41 checks; at the shipped policy only the 2026-10-15 run with the challenge pool cut to blink and smile (69 of 71), because the enrolled face has no turn-right recordings | [../test-report/desktop-e2e.md](../test-report/desktop-e2e.md) |
+| Engine build and tests; MockSync, MockMDS, desktop client build and login; every liveness flow with recorded frame packs instead of a webcam | run on 2026-09-30 at the earlier defaults (supervisor workflows passive first); 41 of 41 checks; at the shipped policy only the runs with the challenge pool cut to blink and smile (71 of 71 on 2026-10-17), because the enrolled face has no turn-right recordings | [../test-report/desktop-e2e.md](../test-report/desktop-e2e.md) |
 | MockMDS webcam source (`FFMPEG`) streaming a laptop's built-in camera (first frame after about 1.2 s) | run, outside the client; ffmpeg command lines and a live ffmpeg test pattern are covered by MockMDS tests | `devices/mock-mds/LIVENESS-EXTENSIONS.md` sections 2 and 5 |
 | A live face from a webcam passing liveness in the desktop client | **not run** | [../eval/team-self-test.md](../eval/team-self-test.md) (status of 2026-10-14) |
 | Onboarding a live face from the webcam, then face sign-in with it | **not run** | same |
