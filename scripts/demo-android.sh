@@ -56,7 +56,7 @@
 # Needs:
 #   - the emulator running with the debug APK (scripts/android-run-emulator.sh --headless; ARC_WEBCAM=emulated
 #     keeps the webcam out), the machine registered in MockSync and officer1 / supervisor1 onboarded with face
-#     pack s3 (docs/install/android.md sections 5 and 6);
+#     pack s3 (docs/install/android.md section 8.1);
 #   - MockSync on http://127.0.0.1:8080 (tools/mock-sync/scripts/run-mock-sync.sh);
 #   - the frame packs in $MOSIP_RUN_ROOT/frame-packs (tools/eval/fetch-frame-packs.py; s3n-* from
 #     tools/mock-sync/e2e/NoisyPack.java). They are pushed to the app when missing.
@@ -952,6 +952,9 @@ main() {
   adb shell settings put global hide_error_dialogs 1 >/dev/null 2>&1 || true
   adb shell settings put secure show_ime_with_hard_keyboard 0 >/dev/null 2>&1 || true
   push_packs || { log "frame packs could not be pushed"; exit 1; }
+  # A stopped run leaves its overrides on MockSync, where read_shipped would take them for the shipped values.
+  local line
+  for line in $DEMO_PROFILE $OVERRIDE_SETTINGS $CONFIG_SETTINGS; do mocksync_unset "${line%%=*}" || true; done
   read_shipped || die "could not read the shipped settings"
   SECTION=profile
   check A-P0 "replay profile set on MockSync and synchronised" demo_profile
