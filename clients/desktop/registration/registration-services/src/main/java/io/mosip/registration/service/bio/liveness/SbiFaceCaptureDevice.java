@@ -50,6 +50,8 @@ public final class SbiFaceCaptureDevice implements FaceCaptureDevice {
 	/** Longest wait for a device scan that is still running when a liveness check starts. */
 	static final long DISCOVERY_WAIT_MS = 3_000L;
 	private static final long DISCOVERY_POLL_MS = 200L;
+	/** Longest wait for a device that reports Busy while it closes the previous stream. */
+	static final long BUSY_WAIT_MS = 2_000L;
 
 	private final MosipDeviceSpecificationFactory factory;
 	private final MdmBioDevice device;
@@ -198,19 +200,37 @@ public final class SbiFaceCaptureDevice implements FaceCaptureDevice {
 		}
 	}
 
+	/**
+	 * Opens the SBI stream. A device reports itself Busy (not Ready) until it notices that the previous stream was
+	 * closed, which it does only at its next frame write; a retry or reconnect started at once after a stream ended
+	 * used to fail with "The face camera is not available" (resident workflows keep the stream open, so the driver's
+	 * wait for Ready between sessions, {@code releaseDeviceBeforeCapture}, is not on for them). A device that is not
+	 * Ready is asked again for at most {@link #BUSY_WAIT_MS}.
+	 */
 	private InputStream open(StreamRequest request) throws DeviceException {
-		try {
-			MosipDeviceSpecificationProvider provider = factory.getMdsProvider(device.getSpecVersion());
-			return provider.stream(device, modality, request);
-		} catch (RegBaseCheckedException e) {
-			boolean notFound = RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode()
-					.equals(e.getErrorCode());
-			LOGGER.error("Face stream could not be opened: {}", e.getErrorCode());
-			throw new DeviceException(notFound ? DeviceErrorCode.NOT_READY : DeviceErrorCode.STREAM_OPEN_FAILED,
-					"face stream could not be opened: " + e.getErrorCode(), e);
-		} catch (RuntimeException e) {
-			throw new DeviceException(DeviceErrorCode.STREAM_OPEN_FAILED, "face stream could not be opened", e);
+		long deadline = System.nanoTime() + BUSY_WAIT_MS * 1_000_000L;
+		while (true) {
+			try {
+				MosipDeviceSpecificationProvider provider = factory.getMdsProvider(device.getSpecVersion());
+				return provider.stream(device, modality, request);
+			} catch (RegBaseCheckedException e) {
+				boolean notFound = RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode()
+						.equals(e.getErrorCode());
+				if (notFound && System.nanoTime() < deadline && sleep(DISCOVERY_POLL_MS)) {
+					LOGGER.info("Face device not Ready for a new stream; asking again");
+					continue;
+				}
+				throw streamFailure(e, notFound);
+			} catch (RuntimeException e) {
+				throw new DeviceException(DeviceErrorCode.STREAM_OPEN_FAILED, "face stream could not be opened", e);
+			}
 		}
+	}
+
+	private static DeviceException streamFailure(RegBaseCheckedException e, boolean notFound) {
+		LOGGER.error("Face stream could not be opened: {}", e.getErrorCode());
+		return new DeviceException(notFound ? DeviceErrorCode.NOT_READY : DeviceErrorCode.STREAM_OPEN_FAILED,
+				"face stream could not be opened: " + e.getErrorCode(), e);
 	}
 
 	private static String nonNull(String value) {
