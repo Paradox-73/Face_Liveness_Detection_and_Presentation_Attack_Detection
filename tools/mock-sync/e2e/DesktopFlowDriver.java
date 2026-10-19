@@ -48,7 +48,8 @@ import java.util.List;
  * (at most 3 attempts); one RESULT with the attempt that passed</li>
  * <li>{@code autoclose on|off} close the client's alert windows as they appear (their text is logged);
  * {@code alert-close}; {@code expect-alert <regex> [sec]} a matching alert was seen since the last
- * {@code mark}; {@code mark}</li>
+ * {@code mark}; {@code wait-alert <regex> [sec]} like expect-alert, but aborts instead of recording a RESULT;
+ * {@code mark}</li>
  * <li>{@code dialog <OK|CANCEL|YES|NO>} press a button of a JavaFX {@code Alert} dialog;
  * {@code menu <text>} fire a menu item of the header menu (for example {@code Logout})</li>
  * <li>{@code network off|on} make every server call of the client fail (offline) or work again; MockSync itself

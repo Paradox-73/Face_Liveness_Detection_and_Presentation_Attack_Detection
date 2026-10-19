@@ -15,8 +15,9 @@ label diagnostic mode: diagnostic.enable=Y and a replaced checking text, synchro
 http PUT ${MOCKSYNC}/admin/config {"mosip.registration.liveness.diagnostic.enable":"Y","mosip.registration.liveness.guidance.liveness.status.checking.eng":"Checking face liveness. Keep looking at the camera."}
 click #homeImgView
 sleep 1500
+mark
 click #syncDataPane
-sleep 20000
+wait-alert (Sync successful|^Failed) 300
 expect-sql 1 SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.diagnostic.enable' AND VAL = 'Y'
 label diagnostic mode: resident face capture shows the diagnostic lines
 set RESIDENT_NAME Dina Diagnostic
@@ -42,8 +43,9 @@ http DELETE ${MOCKSYNC}/admin/config/mosip.registration.liveness.diagnostic.enab
 http DELETE ${MOCKSYNC}/admin/config/mosip.registration.liveness.guidance.liveness.status.checking.eng
 click #homeImgView
 sleep 1500
+mark
 click #syncDataPane
-sleep 20000
+wait-alert (Sync successful|^Failed) 300
 expect-sql 1 SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.diagnostic.enable' AND VAL = 'N'
 label model import: supervisor imports signed bundles from ${MODEL_BUNDLES}
 set USER ${SUPERVISOR}

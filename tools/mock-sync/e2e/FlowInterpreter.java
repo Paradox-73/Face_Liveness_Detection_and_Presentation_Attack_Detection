@@ -103,6 +103,9 @@ final class FlowInterpreter {
 		step("mark", rest -> c.alertMark = c.alerts.size());
 		step("expect-alert", rest -> c.result(
 				fx.waitAlert(regex(rest), seconds(lastNumber(rest), FlowContext.DEFAULT_WAIT_SECONDS)), "alert " + rest));
+		step("wait-alert", rest -> c.require(
+				fx.waitAlert(regex(rest), seconds(lastNumber(rest), FlowContext.DEFAULT_WAIT_SECONDS)),
+				"alert not shown: " + rest));
 		step("menu", rest -> c.require(Boolean.TRUE.equals(fx.onFx(() -> fx.fireMenuItem(rest.trim()))),
 				"no menu item " + rest));
 		step("dialog", rest -> c.require(Boolean.TRUE.equals(fx.onFx(() -> fx.pressDialog(rest.trim()))),

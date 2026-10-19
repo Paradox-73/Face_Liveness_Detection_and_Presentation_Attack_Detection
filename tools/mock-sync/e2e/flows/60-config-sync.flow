@@ -13,8 +13,9 @@ expect-sql 1 SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registra
 http PUT ${MOCKSYNC}/admin/config {"mosip.registration.liveness.policy.registration":"PASSIVE_THEN_ACTIVE"}
 click #homeImgView
 sleep 1500
+mark
 click #syncDataPane
-sleep 20000
+wait-alert (Sync successful|^Failed) 300
 expect-sql 1 SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'PASSIVE_THEN_ACTIVE'
 label config by sync: passive-first, a high passive score passes without challenges
 set RESIDENT_NAME Esi Resident
@@ -33,8 +34,9 @@ label config by sync: key removed, synchronised back to the default ALWAYS_ACTIV
 http DELETE ${MOCKSYNC}/admin/config/mosip.registration.liveness.policy.registration
 click #homeImgView
 sleep 1500
+mark
 click #syncDataPane
-sleep 20000
+wait-alert (Sync successful|^Failed) 300
 expect-sql 1 SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'ALWAYS_ACTIVE'
 label config by sync: default again, rigid-motion print refused, live resident answers the challenges
 set RESIDENT_NAME Femi Resident
