@@ -26,6 +26,9 @@ final class FlowInterpreter {
 
 	private static final String LIVE_PASS_TEXT = "Good, face captured successfully";
 	private static final int MAX_LIVE_ATTEMPTS = 3;
+	/** Engine passes audited by the client (REG-EVT-LV10, one row per passed session). */
+	private static final String LIVE_PASS_COUNT =
+			"SELECT COUNT(*) FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV10'";
 	/** A local port nothing listens on (the discard port), used as the proxy of a cut network. */
 	private static final String CLOSED_PORT = "9";
 
@@ -309,9 +312,13 @@ final class FlowInterpreter {
 	private void expectLive(long seconds) throws Exception {
 		long end = System.currentTimeMillis() + seconds * 1000;
 		int attempt = 1;
+		// The success text can show for less than a poll when a window closes at once after the pass (the
+		// supervisor override), so a new audited pass counts too.
+		long passes = db.count(LIVE_PASS_COUNT);
 		while (System.currentTimeMillis() < end) {
 			String state = fx.onFx(fx::allText);
-			if (state != null && state.contains(LIVE_PASS_TEXT)) {
+			boolean audited = passes >= 0 && db.count(LIVE_PASS_COUNT) > passes;
+			if (audited || state != null && state.contains(LIVE_PASS_TEXT)) {
 				c.result(true, "live face passed on attempt " + attempt);
 				return;
 			}

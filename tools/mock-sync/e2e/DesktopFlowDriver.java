@@ -44,7 +44,8 @@ import java.util.List;
  * <li>{@code wait <regex> [sec]}, {@code wait-gone <regex> [sec]}, {@code wait-node <sel> [sec]},
  * {@code sleep <ms>}</li>
  * <li>{@code expect <regex> [sec]} like wait, but records RESULT PASS/FAIL and never aborts</li>
- * <li>{@code expect-live [sec]} wait for the liveness window to report a pass, pressing Retry after a failed attempt
+ * <li>{@code expect-live [sec]} wait for the liveness window to report a pass (its success text, or a new REG-EVT-LV10
+ * audit row when the window closes too fast to see the text), pressing Retry after a failed attempt
  * (at most 3 attempts); one RESULT with the attempt that passed</li>
  * <li>{@code autoclose on|off} close the client's alert windows as they appear (their text is logged);
  * {@code alert-close}; {@code expect-alert <regex> [sec]} a matching alert was seen since the last

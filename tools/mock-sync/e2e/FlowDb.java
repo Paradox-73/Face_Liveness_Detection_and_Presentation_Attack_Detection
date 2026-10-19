@@ -28,11 +28,7 @@ final class FlowDb {
 	void sql(String query, int minRows) throws Exception {
 		int rows = 0;
 		try {
-			Object context = Class.forName("io.mosip.registration.controller.ClientApplication")
-					.getMethod("getApplicationContext").invoke(null);
-			DataSource ds = (DataSource) context.getClass().getMethod("getBean", Class.class).invoke(context,
-					DataSource.class);
-			try (Connection con = ds.getConnection(); Statement s = con.createStatement();
+			try (Connection con = dataSource().getConnection(); Statement s = con.createStatement();
 					ResultSet rs = s.executeQuery(query)) {
 				ResultSetMetaData md = rs.getMetaData();
 				while (rs.next()) {
@@ -53,5 +49,21 @@ final class FlowDb {
 		} else if (minRows >= 0) {
 			c.result(rows >= minRows, "sql rows>=" + minRows + ": " + query);
 		}
+	}
+
+	/** The first column of the first row of a query (for example a COUNT), or -1 when it cannot be read. */
+	long count(String query) {
+		try (Connection con = dataSource().getConnection(); Statement s = con.createStatement();
+				ResultSet rs = s.executeQuery(query)) {
+			return rs.next() ? rs.getLong(1) : -1;
+		} catch (Exception e) {
+			return -1;
+		}
+	}
+
+	private static DataSource dataSource() throws Exception {
+		Object context = Class.forName("io.mosip.registration.controller.ClientApplication")
+				.getMethod("getApplicationContext").invoke(null);
+		return (DataSource) context.getClass().getMethod("getBean", Class.class).invoke(context, DataSource.class);
 	}
 }
