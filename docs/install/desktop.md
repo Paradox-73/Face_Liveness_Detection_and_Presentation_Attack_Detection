@@ -203,7 +203,7 @@ packets' liveness evidence to `run/demo/desktop-<time>/`. Results of the referen
 
 ```bash
 bash scripts/demo-desktop.sh --onboard                            # once per machine, section 6.2; about 5 minutes
-bash scripts/demo-desktop.sh --restore-golden --policy recorded   # about 20 minutes; 71 of 71 checks on 2026-10-17
+bash scripts/demo-desktop.sh --restore-golden --policy recorded   # about 20 minutes; 71 of 71 checks in two runs on 2026-10-20
 bash scripts/demo-desktop.sh --flow tools/mock-sync/e2e/flows/demo-desktop.flow --out /tmp/demo
 ```
 

@@ -1,0 +1,90 @@
+21:51:51 ==== start: MockMDS face device reset to L0, no fault; client started
+21:53:05 ==== login: officer1 password then face with liveness
+21:53:19 RESULT PASS live face passed on attempt 1
+21:53:21 ==== registration 1: device disconnect and recovery, then challenges at the shipped defaults, packet authentication
+21:53:59 RESULT PASS text disconnected 60
+21:54:03 RESULT PASS text Please (blink|smile|turn your head to the (left|right)|look up) 60
+21:54:09 RESULT PASS live face passed on attempt 1
+21:54:10 RESULT PASS sql rows>=1: SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV04' AND LOG_DESC LIKE '%"workflow":"registration"%'
+21:54:27 RESULT PASS live face passed on attempt 1
+21:54:31 RESULT PASS text Registration Acknowledgement 60
+21:54:31 ==== registration 2: low passive score, active challenges; finger exception, reviewer authentication
+21:55:08 RESULT PASS text Please (blink|smile|turn your head to the (left|right)|look up) 60
+21:55:15 RESULT PASS live face passed on attempt 1
+21:55:39 RESULT PASS live face passed on attempt 1
+21:55:55 RESULT PASS live face passed on attempt 1
+21:55:59 RESULT PASS text Registration Acknowledgement 60
+21:55:59 ==== registration 3: print, injected still stream and screen replay refused; maximum attempts, recovery guidance
+21:56:37 RESULT PASS text (Face verification could not be completed|We could not verify face liveness) 60
+21:56:39 RESULT PASS text (Face verification could not be completed|We could not verify face liveness) 60
+21:56:45 RESULT PASS text after 3 attempts 60
+21:56:52 ==== end of day: supervisor login, EOD approval with supervisor face (ALWAYS_ACTIVE), upload
+21:57:04 RESULT PASS live face passed on attempt 1
+21:57:04 RESULT PASS sql rows>=1: SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV04' AND LOG_DESC LIKE '%"workflow":"login_auth"%'
+21:57:23 RESULT PASS text (Face verification could not be completed|We could not verify face liveness) 60
+21:57:34 RESULT PASS live face passed on attempt 1
+21:57:35 RESULT PASS alert Authentication successful 30
+21:57:38 RESULT PASS sql rows>=1: SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV04' AND LOG_DESC LIKE '%"workflow":"eod_auth"%'
+21:57:56 RESULT PASS sql no rows: SELECT ID FROM REG.REGISTRATION WHERE CLIENT_STATUS_CODE = 'APPROVED'
+21:57:56 ==== config by sync: policy.registration from ALWAYS_ACTIVE (default) to PASSIVE_THEN_ACTIVE, synchronise
+21:57:56 RESULT PASS sql rows>=1: SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'ALWAYS_ACTIVE'
+21:58:02 RESULT PASS sql rows>=1: SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'PASSIVE_THEN_ACTIVE'
+21:58:02 ==== config by sync: passive-first, a high passive score passes without challenges
+21:58:38 RESULT PASS text Good, face captured successfully 60
+21:58:38 RESULT PASS sql rows>=1: SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV15' AND LOG_DESC LIKE '%policy.registration%'
+21:58:38 RESULT PASS sql rows>=1: SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV10' AND LOG_DESC LIKE '%"workflow":"registration"%' AND LOG_DESC LIKE '%"method":"PASSIVE"%'
+21:58:54 RESULT PASS live face passed on attempt 1
+21:58:58 RESULT PASS text Registration Acknowledgement 60
+21:58:58 ==== config by sync: key removed, synchronised back to the default ALWAYS_ACTIVE
+21:59:03 RESULT PASS sql rows>=1: SELECT NAME, VAL FROM REG.GLOBAL_PARAM WHERE NAME = 'mosip.registration.liveness.policy.registration' AND VAL = 'ALWAYS_ACTIVE'
+21:59:03 ==== config by sync: default again, rigid-motion print refused, live resident answers the challenges
+21:59:39 RESULT PASS text Please (blink|smile|turn your head to the (left|right)|look up) 30
+21:59:43 RESULT PASS text (Face verification could not be completed|We could not verify face liveness) 60
+21:59:53 RESULT PASS live face passed on attempt 1
+22:00:10 RESULT PASS live face passed on attempt 1
+22:00:14 RESULT PASS text Registration Acknowledgement 60
+22:00:14 ==== L1 device: FTM-signed device, rescan, operator face capture with liveness
+22:01:18 RESULT PASS live face passed on attempt 1
+22:01:18 RESULT PASS sql rows>=1: SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV01' AND LOG_DESC LIKE '%"certification":"L1"%'
+22:02:10 ==== offline: network cut; login, registration and EOD run locally
+22:02:26 RESULT PASS live face passed on attempt 1
+22:03:10 RESULT PASS live face passed on attempt 1
+22:03:30 RESULT PASS live face passed on attempt 1
+22:03:34 RESULT PASS text Registration Acknowledgement 60
+22:03:51 RESULT PASS live face passed on attempt 1
+22:04:10 RESULT PASS text (Face verification could not be completed|We could not verify face liveness) 60
+22:04:20 RESULT PASS live face passed on attempt 1
+22:04:21 RESULT PASS alert Authentication successful 30
+22:04:24 ==== offline: network back, upload
+22:04:48 RESULT PASS sql no rows: SELECT ID FROM REG.REGISTRATION WHERE CLIENT_STATUS_CODE = 'APPROVED'
+22:04:48 ==== face match: live but wrong person refused, right person accepted
+22:05:04 RESULT PASS live face passed on attempt 1
+22:05:05 RESULT PASS alert Face match not found 30
+22:05:15 RESULT PASS live face passed on attempt 1
+22:05:15 RESULT PASS text Operational Tasks 90
+22:05:15 ==== screens 1: checking, challenge, action detected, hold still, success
+22:05:49 RESULT PASS text Checking face liveness 60
+22:05:51 RESULT PASS text Please (blink|smile|turn your head to the (left|right)|look up) 60
+22:05:53 RESULT PASS text Action detected 30
+22:05:57 RESULT PASS text Hold still 30
+22:05:57 RESULT PASS live face passed on attempt 1
+22:06:01 ==== screens 2: two faces in view
+22:06:01 RESULT PASS text More than one face detected 60
+22:06:07 ==== override 1: three timeouts, the logged-in officer cannot approve his own override
+22:06:43 RESULT PASS text Please (blink|smile|turn your head to the (left|right)|look up) 60
+22:06:48 RESULT PASS text (We could not verify face liveness|Face verification could not be completed) 60
+22:06:57 RESULT PASS text (We could not verify face liveness|Face verification could not be completed) 60
+22:07:05 RESULT PASS text after 3 attempts 60
+22:07:05 RESULT PASS text Supervisor override 10
+22:07:08 RESULT PASS text Another supervisor must verify 30
+22:07:15 ==== override 2: supervisor1 verifies with face liveness; photo checked and stored flagged OVERRIDE
+22:07:51 RESULT PASS text Please (blink|smile|turn your head to the (left|right)|look up) 60
+22:07:56 RESULT PASS text (We could not verify face liveness|Face verification could not be completed) 60
+22:08:04 RESULT PASS text (We could not verify face liveness|Face verification could not be completed) 60
+22:08:12 RESULT PASS text after 3 attempts 60
+22:08:18 RESULT PASS text Please (blink|smile|turn your head to the (left|right)|look up) 60
+22:08:27 RESULT PASS live face passed on attempt 1
+22:08:35 RESULT PASS sql rows>=1: SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV16' AND LOG_DESC LIKE '%GRANTED%'
+22:08:49 RESULT PASS live face passed on attempt 1
+22:08:53 RESULT PASS text Registration Acknowledgement 60
+22:08:53 ==== evidence: liveness audit rows in the client database

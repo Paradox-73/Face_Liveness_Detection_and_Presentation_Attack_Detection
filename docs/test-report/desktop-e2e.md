@@ -139,6 +139,30 @@ not repeat; each has now been seen once in two runs, so neither was diagnosed. T
 liveness files, `results.txt`) did not run at the end of this run because the script file was edited while it ran;
 the same commands were run by hand afterwards against the same MockSync.
 
+**Two runs of 2026-10-20 (IST): 71 of 71 checks passed in each, and no genuine face refused as a loop** (MockMDS and
+flows of commit `6833749`, client build of 2026-10-20 00:49; `scripts/demo-desktop.sh --restore-golden --policy
+recorded`, 21:34-21:51 and 21:51-22:09, outputs `run/local-2026-10-20/PS04/demo-desktop-loopfix2` and `-loopfix3`,
+outside git; check lines in [desktop-e2e/recorded-20261020a/results.txt](desktop-e2e/recorded-20261020a/results.txt)
+and [desktop-e2e/recorded-20261020b/results.txt](desktop-e2e/recorded-20261020b/results.txt)).
+
+- **What was wrong:** the runs of 2026-10-19 passed 71 of 71 only after retries; in 11 of 47 packet authentications
+  a genuine attempt ended `INTEGRITY` with audit reason `LOOP`. The 59-frame `s3-main` pack, played back and forth
+  (`pingpong`), came round forwards again after about 8 s of neutral face in one capture, and the engine's loop
+  check (runs of 6 frames, 300-frame window) refused the repeated frames as a replay. The engine was right.
+- **Change (MockMDS only, engine untouched):** from the second forward sweep a `pingpong` source serves each frame
+  twice, then three and four times, so no run of frames repeats in the same order and speed inside the window; at
+  most 3 identical frames follow each other, below `integrity.max_frozen_frames` (5). Attack packs keep plain looping.
+- **Offline check before the runs:** every stream session of the 2026-10-19 runs (110 genuine sessions, from the
+  MockMDS log) was replayed through MockMDS's `ImageSequenceSource` and the engine's `FrameIntegrityChecker`: 13
+  ended `LOOP` with the old playback, 0 with the new one. Replaying the 23 and 24 genuine sessions of the two runs
+  below with the old playback gives 5 and 4 `LOOP` refusals.
+- **Result:** every genuine face capture passed on its first attempt (0 failed genuine attempts in either run,
+  against 1 to 7 per run on 2026-10-19). The `REG-EVT-LV08` rows of each run are the refused attacks only: `LOOP`
+  for the print still (`a-s2-print-still`) and the rigid-motion print (`a-s2-print-affine`), `FROZEN` for the
+  injected still stream, `PAD_SCORE` for the screen replays. A first run at 19:25 that day (`-loopfix1`) is not
+  counted: two evaluation suites (scenario runner) started on the same laptop at 19:23, and the starved client
+  ended its captures `FAILED(ENGINE)` and `FAILED(QUALITY)` (6 of 17 checks passed); it logged no `LOOP`.
+
 ## 1. Set-up
 
 | Part | What was used |
