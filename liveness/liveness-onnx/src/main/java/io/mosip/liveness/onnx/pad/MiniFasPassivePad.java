@@ -6,6 +6,7 @@
  */
 package io.mosip.liveness.onnx.pad;
 
+import io.mosip.liveness.core.EngineErrorCode;
 import io.mosip.liveness.core.EngineException;
 import io.mosip.liveness.core.image.ImageBuffer;
 import io.mosip.liveness.core.vision.FaceBox;
@@ -20,6 +21,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Passive presentation attack detection with the MiniFASNet ensemble: MiniFASNetV2 on a 2.7x crop and
@@ -29,7 +34,9 @@ import java.util.Objects;
  * <p>This is a weak detector against good 2-D attacks (a vendor benchmark, axonlab.ai 2026, reports that it
  * accepts about two thirds of them) and it does not detect digital injection or frozen frames; the engine
  * combines it with active challenges and frame-integrity checks. Calls are serialised per model; one
- * instance may be shared.
+ * instance may be shared. {@link #score(Rgb8Image, FaceBox)} runs the second and later models on helper threads
+ * while the caller runs the first, so the ensemble takes about the time of one model when a core is free; each
+ * model sees the same input as before, so the scores do not change.
  *
  * <p>Two additions to the upstream scoring, both on by default: in a dark frame the PAD crop is brightened first
  * ({@link SceneExposure}), and the live probability is capped by the screen-pattern check
@@ -39,6 +46,12 @@ public final class MiniFasPassivePad implements PassivePad {
 
     /** Entry of the screen-pattern check in {@link PadScore#modelProbabilities()}. */
     public static final String SCREEN_PATTERN_ID = "screen-pattern";
+
+    private static final ExecutorService HELPERS = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "minifas-pad");
+        t.setDaemon(true);
+        return t;
+    });
 
     private final List<MiniFasModel> models;
     private final boolean exposureCorrection;
@@ -96,10 +109,19 @@ public final class MiniFasPassivePad implements PassivePad {
     public PadScore score(Rgb8Image image, FaceBox face) throws EngineException {
         Map<String, Double> perModel = new LinkedHashMap<>();
         double gain = exposureCorrection ? SceneExposure.gain(image) : 1.0;
+        List<Future<float[]>> others = new ArrayList<>(models.size() - 1);
+        for (MiniFasModel m : models.subList(1, models.size())) {
+            others.add(HELPERS.submit(() -> m.probabilities(image, face, TensorFormat.BGR_RAW, gain)));
+        }
+        float[][] probabilities = new float[models.size()][];
+        probabilities[0] = models.get(0).probabilities(image, face, TensorFormat.BGR_RAW, gain);
+        for (int i = 1; i < models.size(); i++) {
+            probabilities[i] = await(others.get(i - 1), models.get(i));
+        }
         double sum = 0;
-        for (MiniFasModel m : models) {
-            double live = clamp01(m.probabilities(image, face, TensorFormat.BGR_RAW, gain)[MiniFasModel.LIVE_CLASS]);
-            perModel.put(m.id(), live);
+        for (int i = 0; i < models.size(); i++) {
+            double live = clamp01(probabilities[i][MiniFasModel.LIVE_CLASS]);
+            perModel.put(models.get(i).id(), live);
             sum += live;
         }
         double live = clamp01(sum / models.size());
@@ -147,6 +169,24 @@ public final class MiniFasPassivePad implements PassivePad {
             }
         }
         return mean;
+    }
+
+    private static float[] await(Future<float[]> result, MiniFasModel model) throws EngineException {
+        try {
+            return result.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new EngineException(EngineErrorCode.INFERENCE, "interrupted while scoring with " + model.id(), e);
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof EngineException) {
+                throw (EngineException) cause;
+            }
+            if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            }
+            throw new EngineException(EngineErrorCode.INFERENCE, "scoring failed for " + model.id(), cause);
+        }
     }
 
     private static double clamp01(double v) {
