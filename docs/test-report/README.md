@@ -203,7 +203,7 @@ engine before those fixes ([../eval/results/20260930/](../eval/results/20260930/
 | Time to a passive decision | stream clock (replay) | 2.0 s (30 frames, shipped); 0.53 s with the old 8 frames | calibration notes 0.2 |
 | Accepted bona fide `registration` attempt, median | stream clock | 11.0 s under the shipped defaults (2 challenges on every capture, 2026-10-14); 6.6 s under the old defaults (2026-09-30) | [../eval/results/20261014-latency/README.md](../eval/results/20261014-latency/README.md); calibration notes 0.2 |
 | Per analysed frame, shipped suite, two suites in parallel on a loaded machine | desktop JVM | p50 34.1 ms, p95 78.4 ms | calibration notes 0.3 |
-| Per analysed frame, shipped engine, 1 ONNX Runtime thread, shared laptop at about 63% load (2026-10-14) | desktop JVM (scenario runner) | p50 37.5 ms, p95 115.4 ms, max 558.0 ms (n=4410) | [../eval/results/20261014-latency/README.md](../eval/results/20261014-latency/README.md) |
+| Per analysed frame, shipped engine, 1 ONNX Runtime thread, shared laptop (Intel Core i5-12450H) at 51-69% load (2026-10-20) | desktop JVM (scenario runner) | p50 39.4 ms, p95 127.7 ms, max 283.4 ms (n=4410) | [../eval/results/20261020-latency/README.md](../eval/results/20261020-latency/README.md) |
 | Passive pass, user-visible | Android emulator | 2.2-3.0 s; with 2 challenges 7.4-12.1 s | android-e2e section 5 |
 
 - The design target of p95 at most 20 ms per frame is **not met** on either platform (T-PERF-01). Face analysis (YuNet plus

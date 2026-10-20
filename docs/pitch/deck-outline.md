@@ -162,7 +162,8 @@ the claim.
 - The adaptive screen replay (a clip that answers each prompt) passed 4 of 8 transactions until the screen-pattern
   check of 2026-10-05. Say plainly: the screens are software-made, so the real-screen result comes from the
   volunteer test.
-- Per-frame time (same latency run, 1 thread, shared laptop): p50 37.5 ms, p95 115.4 ms, above our own 20 ms target.
+- Per-frame time (latency run of 2026-10-20, 1 thread, shared laptop, Intel Core i5-12450H): p50 39.4 ms, p95 127.7 ms,
+  above our own 20 ms target.
   Android was measured only on an emulator; the phone kit (`docs/test-report/android-performance.md`) has not run.
 
 ---

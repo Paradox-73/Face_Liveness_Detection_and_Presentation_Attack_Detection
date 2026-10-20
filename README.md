@@ -87,7 +87,8 @@ Known limits (more in [docs/test-report/README.md](docs/test-report/README.md#6-
 - Challenges on every capture cost time: the median accepted `registration` attempt takes 11.0 s of replayed stream
   ([results](docs/eval/results/20261014-latency/README.md)). The passive-first flow of
   the statement (one synced setting per workflow) accepts 100 of 226 synthetic attack transactions.
-- The per-frame latency target (p95 at most 20 ms) is not met: p95 115.4 ms, p50 37.5 ms on a shared laptop.
+- The per-frame latency target (p95 at most 20 ms) is not met: p95 127.7 ms, p50 39.4 ms on 2026-10-20 (shared
+  laptop, Intel Core i5-12450H, one ONNX Runtime thread; [results](docs/eval/results/20261020-latency/README.md)).
 - At the shipped policy the scripted client demos ran only with the challenge pool cut to blink and smile (desktop 71
   of 71, Android 59 of 74 checks); turn challenges need a live face or longer recordings
   ([docs/manual-test-checklist.md](docs/manual-test-checklist.md)).

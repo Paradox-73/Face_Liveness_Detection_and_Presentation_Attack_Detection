@@ -187,7 +187,7 @@ factory is registered as a `LivenessEngineProvider` with engine ID `mosip-onnx-d
 
 | Where | Measure | Result | Source |
 |---|---|---|---|
-| Desktop JVM, 640x480, decode included, latency suite of 2026-10-14 (shared laptop, 1 ONNX Runtime thread) | per-frame p50 / p95; median accepted registration attempt | 37.5 ms / 115.4 ms; 11.0 s | [../eval/results/20261014-latency/README.md](../eval/results/20261014-latency/README.md) |
+| Desktop JVM, 640x480, decode included, latency suite of 2026-10-20 (shared laptop, Intel Core i5-12450H, 1 ONNX Runtime thread) | per-frame p50 / p95; median accepted registration attempt | 39.4 ms / 127.7 ms; 11.2 s | [../eval/results/20261020-latency/README.md](../eval/results/20261020-latency/README.md) |
 | Desktop JVM, quieter runs of 2026-09-29 (history) | per-frame p50 / p95; stream time to the passive decision at 8 frames (the default then) | 21-23 ms / 38-45 ms; 533 ms | `docs/eval/calibration-notes.md` section 5 |
 | Android emulator (x86_64, CPU only) | per-frame p50, attempts with challenges | 37-45 ms | `docs/test-report/android-e2e.md` section 5 |
 | Android emulator | passive pass, user-visible total | 2.2-3.0 s | same |
@@ -195,4 +195,7 @@ factory is registered as a `LivenessEngineProvider` with engine ID `mosip-onnx-d
 
 The per-frame target (p95 at most 20 ms, test T-PERF-01 in [../traceability.md](../traceability.md)) is not met. Face Mesh on every passive frame is two thirds of the
 cost; proposal E4 in the calibration notes (detector-only analysis in the passive stage) is the next step.
+Since 2026-10-20 the two MiniFASNet models of the passive PAD run at the same time, which halves the PAD stage
+(p50 about 12 ms to 6.6 ms on the latency suite) without changing any score; the frame p95 still moves more with
+the laptop's load (123-128 ms after, 130-167 ms before, same day).
 No physical Android tablet was measured.
