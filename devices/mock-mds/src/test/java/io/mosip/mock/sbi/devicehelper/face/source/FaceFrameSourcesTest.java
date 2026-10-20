@@ -65,11 +65,11 @@ class FaceFrameSourcesTest {
 	}
 
 	@Test
-	void sequenceSourcePingpongPlaysBackwardsThenForwards() throws IOException {
+	void sequenceSourcePingpongPlaysBackwardsThenForwardsSlowerEachRound() throws IOException {
 		List<Path> files = FaceTestFrames.writeSequence(tempDir.resolve("pingpong"), 3);
 		ImageSequenceSource source = new ImageSequenceSource(tempDir.resolve("pingpong"), 10, false, true);
 		source.open();
-		int[] order = { 0, 1, 2, 1, 0, 1, 2, 1 };
+		int[] order = { 0, 1, 2, 1, 0, 1, 1, 2, 2, 1, 1, 0, 0, 1, 1, 1, 2, 2, 2 };
 		for (int i : order)
 			assertArrayEquals(Files.readAllBytes(files.get(i)), source.next().getJpeg());
 		source.close();

@@ -28,7 +28,10 @@ import java.util.stream.Stream;
  * {@code loop} the sequence restarts after the last frame; without it,
  * {@link #next()} returns {@code null} after the last frame and the stream
  * ends. With {@code pingpong} the sequence plays backwards from the last
- * frame to the first, then forwards again, and never ends. Every
+ * frame to the first, then forwards again, and never ends; from the second
+ * forward sweep on, each frame is served twice, then three and four times (a
+ * slower motion), so a long stream does not repeat a run of frames in the same
+ * order and at the same speed within the engine's loop window. Every
  * {@link #open()} restarts at the first frame, so each STREAM request sees the
  * same frames in the same order.
  * </p>
@@ -45,6 +48,10 @@ public class ImageSequenceSource implements FaceFrameSource {
 	private volatile int frameCount;
 	private int index;
 	private int step = 1;
+	/** Pingpong sweeps finished since open. */
+	private int sweeps;
+	/** Times the current frame has been served. */
+	private int served;
 	private long sequence;
 
 	/**
@@ -89,6 +96,8 @@ public class ImageSequenceSource implements FaceFrameSource {
 		frameCount = found.size();
 		index = 0;
 		step = 1;
+		sweeps = 0;
+		served = 0;
 		sequence = 0;
 	}
 
@@ -102,6 +111,7 @@ public class ImageSequenceSource implements FaceFrameSource {
 			if (pingpong && current.size() > 1) {
 				step = -step;
 				index = step < 0 ? current.size() - 2 : 1;
+				sweeps++;
 			} else if (pingpong || loop) {
 				index = 0;
 			} else {
@@ -109,7 +119,12 @@ public class ImageSequenceSource implements FaceFrameSource {
 			}
 		}
 		byte[] jpeg = Files.readAllBytes(current.get(index));
-		index += step;
+		// Each frame twice from sweep 2, up to 4 times: at most 3 identical frames in a row, below the
+		// engine's default integrity.max_frozen_frames of 5.
+		if (++served >= Math.min(1 + sweeps / 2, 4)) {
+			served = 0;
+			index += step;
+		}
 		return new FaceFrame(jpeg, sequence++, System.currentTimeMillis(), NAME);
 	}
 

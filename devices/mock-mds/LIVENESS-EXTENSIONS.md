@@ -153,7 +153,7 @@ Rules for the new calls:
 | `path` | string | `STATIC` JPEG file (omit for the stock image) or `SEQUENCE` folder |
 | `fps` | number | frames per second, above 0 and at most 60; omitted = current value |
 | `loop` | boolean | `SEQUENCE` / video file restart at the end; omitted = current value |
-| `pingpong` | boolean | `SEQUENCE` plays backwards from the last frame to the first, then forwards again, and never ends (it overrides `loop`); default `false`, not carried over from the previous source |
+| `pingpong` | boolean | `SEQUENCE` plays backwards from the last frame to the first, then forwards again, and never ends (it overrides `loop`). From the second forward sweep each frame is served twice, then three and four times (slower motion), so a long stream never repeats a run of frames in the same order and speed inside the engine's 300-frame loop window; default `false`, not carried over from the previous source |
 | `resume` | boolean | `SEQUENCE`: a folder replaced earlier in the same stream session, with the same `fps` and `pingpong`, continues at the frame where it stopped instead of at its first frame; default `false` |
 | `camera` | string | `FFMPEG` webcam name |
 | `file` | string | `FFMPEG` video file |
@@ -163,7 +163,7 @@ Rules for the new calls:
 
 The new source is opened once to check it (a webcam must deliver a frame within 10 s). During a stream it replaces the old source at once; otherwise it is closed again until the next stream.
 
-`pingpong` and `resume` let a recorded person answer prompts without repeating frames: the scripted desktop demo plays the subject's `-main` pack with `pingpong` and switches between it and the action packs with `resume`, the same playback as the evaluation scenario runner (`tools/eval/scenario-runner`, `Playlist`). Without them the neutral pack restarts at its first frame after each answer, and the engine's loop check (audit LV08, reason `LOOP`) refuses the replay, as it should for a looped video.
+`pingpong` and `resume` let a recorded person answer prompts without repeating frames: the scripted desktop demo plays the subject's `-main` pack with `pingpong` and switches between it and the action packs with `resume`, the same playback as the evaluation scenario runner (`tools/eval/scenario-runner`, `Playlist`). Without them the neutral pack restarts at its first frame after each answer, and the engine's loop check (audit LV08, reason `LOOP`) refuses the replay, as it should for a looped video. Plain back-and-forth playback was not enough either: the 59-frame `s3-main` played forwards a second time after about 8 s of neutral face in one capture, which the loop check also refused (11 of 47 packet authentications in the runs of 2026-10-19); the slower later sweeps remove that repeat.
 
 ```sh
 curl -s -X POST http://127.0.0.1:4501/admin/source -d '{"type":"Face","source":"SEQUENCE","path":"frames/live-01","fps":15,"loop":true}'
