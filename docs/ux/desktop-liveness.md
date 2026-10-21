@@ -34,12 +34,12 @@ Taken by `scripts/demo-desktop.sh` on the real client with MockSync and MockMDS 
 `docs/test-report/desktop-e2e.md`). The driver hides the camera preview, captured faces and HTML previews, so no face
 appears; the dark preview area is where the camera image would be. E2E-03, E2E-05, E2E-09 and E2E-16 are from a
 later run with the preview shown (2026-10-21, `scripts/demo-desktop.sh --restore-golden --policy recorded --flow
-tools/mock-sync/e2e/flows/screens-faces.flow`, 22 of 22 checks passed). The faces are recorded clips used under their licences: subject S3 is Pexels 6781549 by Artem Podrez (Pexels License), and the attack packs are made from Pexels 5474329 and 5474326 by cottonbro studio (Pexels License); see [../eval/README.md](../eval/README.md). The people are not project members.
+tools/mock-sync/e2e/flows/screens-faces.flow`, 22 of 22 checks passed; each picture is the whole dialog, saved by the driver's `-full` snapshot of the window's scroll area). The faces are recorded clips used under their licences: subject S3 is Pexels 6781549 by Artem Podrez (Pexels License), and the attack packs are made from Pexels 5474329 and 5474326 by cottonbro studio (Pexels License); see [../eval/README.md](../eval/README.md). The people are not project members.
 
 | Id | Picture | What it shows |
 |---|---|---|
 | E2E-02 | ![disconnect](screenshots/desktop/e2e-02-device-disconnected.png) | MockMDS `DISCONNECT` during a resident capture: "The face camera was disconnected. Reconnect it and select Retry."; the attempt is not used. |
-| E2E-03 | ![challenge](screenshots/desktop/e2e-03-low-confidence-challenge.png) | Low passive score (pack `s3n`, the S3 clip through a noisy camera): step 1 of 2, "Please blink" with the blink icon and progress bar over the live preview (the client picks the actions at random). |
+| E2E-03 | ![challenge](screenshots/desktop/e2e-03-low-confidence-challenge.png) | Low passive score (pack `s3n`, the S3 clip through a noisy camera): step 1 of 2, "Please smile" with the smile icon and progress bar over the live preview (the client picks the actions at random). |
 | E2E-04 | ![reviewer](screenshots/desktop/e2e-04-reviewer-authentication.png) | Reviewer (supervisor) authentication after a marked finger exception; the Scan button opens the liveness window. |
 | E2E-05 | ![print](screenshots/desktop/e2e-05-print-refused.png) | Printed photo held up to the camera (synthetic pack `a-s2-print-still`): passive PAD refuses it (audit LV08, reason `PAD_SCORE`) with the generic "Face verification could not be completed. Please try again.", attempt 1 of 3. In earlier runs the print passed PAD and failed the challenge instead ("We could not verify face liveness"). |
 | E2E-06 | ![still](screenshots/desktop/e2e-06-injected-still-refused.png) | Injected still stream (identical frames): the generic "Face verification could not be completed. Please try again.", attempt 2 of 3. |

@@ -293,5 +293,5 @@ These counts are from 2026-09-30. Current counts per suite, with the commands a 
 | `docs/test-report/desktop-e2e/results.txt` | every check of the reference run with its section |
 | `docs/test-report/desktop-e2e/driver-summary.log` | commands, alerts, results, SQL rows and MockMDS calls of the reference run (screen-state lines removed) |
 | `docs/test-report/desktop-e2e/packets/*.liveness.json` | liveness evidence of five packets as decrypted by MockSync: `...232013` (D3), `...232100` (D4, D5), `...232400` (D8), `...232717` (D10), `...213659` (I2, override) |
-| `docs/ux/screenshots/desktop/e2e-*.png` | masked snapshots of the reference run (no face shown), except `e2e-03`, `e2e-05`, `e2e-09` and `e2e-16`: the same flows run again on 2026-10-21 with the preview shown (`flows/screens-faces.flow`, 22 of 22 checks; run folder `run/demo/screens-faces-20261021`) |
+| `docs/ux/screenshots/desktop/e2e-*.png` | masked snapshots of the reference run (no face shown), except `e2e-03`, `e2e-05`, `e2e-09` and `e2e-16`: the same flows run again on 2026-10-21 with the preview shown (`flows/screens-faces.flow`, 22 of 22 checks; run folder `run/demo/screens-faces-20261021b`) |
 | `run/demo/desktop-run4/` (not in git) | full driver log with screen states, all snapshots, `packets/` |

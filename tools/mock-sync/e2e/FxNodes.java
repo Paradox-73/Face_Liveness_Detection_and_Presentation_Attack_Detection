@@ -35,6 +35,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.control.Toggle;
 import javafx.scene.image.ImageView;
@@ -608,6 +609,20 @@ final class FxNodes {
 			File file = c.out.resolve(String.format("%03d-%s.png", ++c.snapshotCount, label)).toFile();
 			ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", file);
 			c.logLine("SNAPSHOT " + file.getName());
+			// A window capped at the screen height scrolls; the "-full" picture shows its whole content as well.
+			List<Node> all = new ArrayList<>();
+			collect(scene.getRoot(), all);
+			for (Node n : all) {
+				if (n instanceof ScrollPane && shown(n)) {
+					Node content = ((ScrollPane) n).getContent();
+					if (content != null && content.getBoundsInLocal().getHeight()
+							> ((ScrollPane) n).getViewportBounds().getHeight() + 1) {
+						File full = c.out.resolve(String.format("%03d-%s-full.png", c.snapshotCount, label)).toFile();
+						ImageIO.write(SwingFXUtils.fromFXImage(content.snapshot(null, null), null), "png", full);
+						c.logLine("SNAPSHOT " + full.getName());
+					}
+				}
+			}
 		} catch (IOException | RuntimeException e) {
 			c.logLine("snapshot failed " + e);
 		} finally {

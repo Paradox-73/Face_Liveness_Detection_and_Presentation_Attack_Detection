@@ -57,7 +57,8 @@ import java.util.List;
  * keeps running for other clients</li>
  * <li>{@code mask on|off} hide large images (camera preview, captured faces) and HTML views (preview,
  * acknowledgement) in later snapshots, for screenshots that may be published</li>
- * <li>{@code snap <name>} snapshot every window; {@code dump <name>} write the scene graphs to
+ * <li>{@code snap <name>} snapshot every window, and the whole content of any scroll area taller than its window as
+ * {@code <name>-full}, masked the same way; {@code dump <name>} write the scene graphs to
  * {@code <name>.txt}</li>
  * <li>{@code mds <path> <json>} MockMDS admin call; {@code source <pack>} switch the face source to a frame pack
  * folder under the pack root ({@code -Dframe.packs}, default {@code ../frame-packs}); {@code follow <prefix>|off}
