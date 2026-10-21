@@ -43,7 +43,9 @@ import io.mosip.liveness.core.image.PixelFormat;
  * sequence where it was left (see {@link ReplayPromptFollower}). Resuming matters: a recorded clip that restarts
  * from its first frame repeats itself, which the engine's loop check rightly reports as a replayed video. For the
  * same reason a source made with {@code pingpong} plays its first sequence backwards at the end, then forwards
- * again, as the evaluation scenario runner does with a subject's neutral pack.
+ * again, as the evaluation scenario runner does with a subject's neutral pack. From the second forward sweep on,
+ * each frame of that pack is sent twice, then three and four times (a slower motion), so a long capture does not
+ * repeat a run of frames in the same order and at the same speed within the engine's loop window.
  *
  * <p>Only debug builds offer it on the capture screen (developer setting); release builds always use the camera.
  */
@@ -59,6 +61,10 @@ public final class ReplayFrameSource implements FaceFrameSource {
     private final boolean loop;
     private final boolean pingpong;
     private int initialStep = 1;
+    /** Pingpong sweeps of the first sequence finished so far (play thread only). */
+    private int sweeps;
+    /** Times the current frame of the first sequence has been sent (play thread only). */
+    private int served;
     private final Clock clock;
     private final String sourceId;
     private final Consumer<byte[]> preview;
@@ -232,6 +238,7 @@ public final class ReplayFrameSource implements FaceFrameSource {
                 if (pingpong && frames == initial && frames.size() > 1) {
                     step = -step;
                     index = step < 0 ? frames.size() - 2 : 1;
+                    sweeps++;
                 } else if (!loop) {
                     sink.onEnd(EndReason.END_OF_STREAM);
                     return;
@@ -240,7 +247,12 @@ public final class ReplayFrameSource implements FaceFrameSource {
                 }
             }
             byte[] data = frames.get(index);
-            index += step;
+            // Pingpong pack: each frame twice from sweep 2, up to 4 times. At most 3 identical frames in a row,
+            // below the engine's default integrity.max_frozen_frames of 5.
+            if (!pingpong || frames != initial || ++served >= Math.min(1 + sweeps / 2, 4)) {
+                served = 0;
+                index += step;
+            }
             long seq = delivered.incrementAndGet();
             if (preview != null) {
                 preview.accept(data);

@@ -153,7 +153,7 @@ public class ReplayPromptFollowerTest {
     }
 
     @Test
-    public void pingpongNeutralPackPlaysBackwardsAtItsEnd() throws InterruptedException {
+    public void pingpongNeutralPackPlaysBackwardsAtItsEndThenSlowerEachRound() throws InterruptedException {
         ReplayFrameSource counting = new ReplayFrameSource(
                 java.util.Arrays.asList(new byte[] {'0'}, new byte[] {'1'}, new byte[] {'2'}), 60, true, true,
                 Clock.system(), "test", null);
@@ -174,10 +174,11 @@ public class ReplayPromptFollowerTest {
         });
         try {
             StringBuilder order = new StringBuilder();
-            for (int i = 0; i < 8; i++) {
+            for (int i = 0; i < 19; i++) {
                 order.append((char) (byte) seen.poll(2, TimeUnit.SECONDS));
             }
-            assertEquals("never 2 then 0, the wrap a loop check catches", "01210121", order.toString());
+            assertEquals("never 2 then 0, and each later forward sweep slower, so no run repeats at the same speed",
+                    "0121011221100111222", order.toString());
         } finally {
             counting.close();
         }
