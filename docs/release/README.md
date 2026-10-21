@@ -35,28 +35,36 @@ use them under those coordinates (`io.mosip.liveness:*:1.0.0-SNAPSHOT`).
 
 ### Checksums of the v1.0.0 build
 
-Built on 2026-10-14 from commit `6e88071` (the final code of the PS04 completion pass; only documentation commits
-follow it) with `scripts/release.sh --version 1.0.0 --out <folder>`, into `../run/release/v1.0.0` next to the repository,
-outside it; model bundle 1.3.0, ONNX Runtime 1.20.0. The draft GitHub release `v1.0.0` still holds the
-build of 2026-10-06 (`ffe6f01`), from before the fixes of 2026-10-10 and 2026-10-14; replace its files with this
-build before publishing. The engine jars keep Maven's `1.0.0-SNAPSHOT` names: `release.sh` copies Maven's output
-and has no option to rename them. Each new build has its own `SHA256SUMS.txt`. The clean-install test below used the
-earlier build `c959af4-dirty`.
+Built on 2026-10-21 from commit `46e3502` with `scripts/release.sh --version 1.0.0 --out dist/v1.0.0`; model
+bundle 1.3.0, ONNX Runtime 1.20.0. These files replaced those of the draft GitHub release `v1.0.0` the same day.
+Compared with the build of 2026-10-14 (`6e88071`) it adds the two MiniFASNet models scored at the same time
+(`39e0e06`), the slower later sweeps of pingpong replay in MockMDS (`6833749`) and in the Android debug replay
+(`46e3502`), and the desktop client's wait for a Busy face device before the next stream (`18e23d2`). Tests run
+by this build: engine 375 + 125 (2 skipped) + 44, MockSync 41, MockMDS 228, all passed. The engine jars keep
+Maven's `1.0.0-SNAPSHOT` names: `release.sh` copies Maven's output and has no option to rename them. Each new
+build has its own `SHA256SUMS.txt`. The clean-install test below used the earlier build `c959af4-dirty`.
 
 ```
-b39c66eb3640cf786109be204b60fd690ddce4ab200e8e4cfb6e859d603ecf33  mosip-liveness-desktop-client-1.0.0-win-x64.zip
-01dbfbbf33f6cf7f880a2ac4515e1d2a50fc5fca8615524a9abe36e89d922251  mosip-liveness-mockmds-1.0.0-win-x64.zip
-5a0201ae444fc32b696ba74cb51e397177d11e2dd2cd1655d1548859708fce46  mosip-liveness-mocksync-1.0.0-win-x64.zip
-ca565104efe244a75b775adec3b91a42fbe32987b4385368e04cbfd8cea1466f  mosip-liveness-android-1.0.0-arm64-v8a.apk
-3ef318ddd6989b42199d49b09b1329601ec72baea6448510ac4cc555d34b0973  mosip-liveness-android-1.0.0-x86_64.apk
+7115e9d320ae79f35f130f6c8cd6913645474fb5284c57c8a69082ccb06d762c  mosip-liveness-desktop-client-1.0.0-win-x64.zip
+d412eb7578d6e1126c7ba00982d9f21dc3f58572154aed3cef754dfe76fb656e  mosip-liveness-mockmds-1.0.0-win-x64.zip
+8287d28dfa7539b465cce9f7c3c9d2d39d4d9324f4b601c00ab8d98d292ad05c  mosip-liveness-mocksync-1.0.0-win-x64.zip
+59d1d73f5165854cef490b71b429cb28f2965692702b8616af15b764e5440251  mosip-liveness-android-1.0.0-arm64-v8a.apk
+ff91bcb0dfe9c73b50c890b4a12629f732e8e8fbb3b247028f2dd84ac81dd21e  mosip-liveness-android-1.0.0-x86_64.apk
 df42b201c1e1bd98099bfcfd77854a66f1d9a3005db5275ca171ea78b63e35fb  face-match-sdk-1.0.0-SNAPSHOT.jar
-e4541c8f6717d191af9953fe9b0b576ed5b140b81f7b00d051e5f3426d9fce39  liveness-core-1.0.0-SNAPSHOT.jar
-a8039b3266f826cf4e4bfb9c2a731013b1a1b50215c65dd40ea6a76288cd030f  liveness-onnx-1.0.0-SNAPSHOT.jar
+b48f909ca2af4efd518f0602e8dad1e15bc97374a4716fecdb21ddaa98c7b16d  liveness-core-1.0.0-SNAPSHOT.jar
+71e5572d1037af866290b6d7ad96dcf059e80fc0489e5f39145a30c5bc67a0a8  liveness-onnx-1.0.0-SNAPSHOT.jar
 37f207bd4e401d659be3393ecca7e110ccefe97b70878356191651ecf3f282d9  liveness-onnx-1.0.0-SNAPSHOT-models.jar
-2726a19792628ce53237f7a5bf272406069f27ae87b81b29eb2eac71978c2627  mock-sync-1.0.0.jar
+fe089331628666d1ad327d2ea9defd0ee793685738980c332021273f5a3f3e97  mock-sync-1.0.0.jar
 ```
 
 Check a download: put the files and `SHA256SUMS.txt` in one folder and run `sha256sum -c SHA256SUMS.txt`.
+
+Checks on the 2026-10-21 build: the desktop zip's `BUILD-INFO.txt` names commit `46e3502`; its `lib/` engine jars
+are byte-identical to the separate jars, and `MiniFasPassivePad` in them has the helper thread pool of the parallel
+scoring; `mock-mds.jar` in the MockMDS zip has the pingpong sweep counter; `aapt dump badging` shows package
+`io.mosip.registration_client`, minimum SDK 28 and one CPU type per APK; `apksigner verify` passes (v2 signature,
+certificate `CN=Android Registration Client release, OU=Badmosip, O=MOSIP Decode 2026`, SHA-256
+`810ff5c03a3cb8fe2750dd517639b1e8d98dc65ab6f664dd95972d4a102e009d`).
 
 ## Download and publish
 
@@ -135,7 +143,8 @@ session; the full login, sync and liveness flows of the same client build are in
 `docs/test-report/desktop-e2e.md`), the APKs on a device (the shared emulator runs the team's debug
 build; the APKs were checked with `aapt dump badging` and `apksigner verify`: package
 `io.mosip.registration_client`, minimum SDK 28, one CPU type each, ONNX Runtime and the 5 models
-present, signed with the Android debug certificate), and the GitHub workflow itself (it runs only
+present; that build was signed with the Android debug certificate, the 2026-10-21 build with the team's release
+key), and the GitHub workflow itself (it runs only
 when a tag is pushed).
 
 ## Known limitations
@@ -143,9 +152,10 @@ when a tag is pushed).
 - Release builds of the Android client can now get their device certificate through the app's own provisioning step
   (`scripts/android-liveness-device-cert.sh --csr`, [../install/android.md](../install/android.md) section 5.1); that was
   checked on the emulator only, not on a physical phone.
-- The release APKs use upstream's server address (`https://api-internal.sandbox.xyz.net`) and the
-  Android debug signing key. They cannot reach MockSync; the MockSync demo uses the debug APK
-  (`docs/install/android.md`).
+- The release APKs are built for MockSync at `http://127.0.0.1:8080` through `adb reverse` (plain HTTP is
+  allowed to 127.0.0.1 and localhost only) and signed with the team's release key, not a deployment key. Another
+  server needs a build with `scripts/android-build.sh --release --server-url https://...`. The scripted demo with
+  recorded frame packs uses the debug APK (`docs/install/android.md`).
 - The desktop zip is built for MockSync on `localhost:8443`. Another host needs a build with
   `scripts/desktop-build.sh --hostname`.
 - The zips' Java runtimes are Windows x64. On Linux or macOS the MockSync and MockMDS start scripts

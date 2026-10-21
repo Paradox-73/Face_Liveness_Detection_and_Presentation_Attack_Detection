@@ -170,12 +170,12 @@ The release APKs are production builds of the Android Registration Client with t
 Install with `adb install -r <file>.apk` (Android SDK platform tools), or copy the file to the tablet
 and open it.
 
-- The release build talks to the server address compiled into it (upstream's
-  `https://api-internal.sandbox.xyz.net`) and allows HTTPS only, so it does not reach MockSync.
-- For a demo against MockSync, build the debug APK, which points at `http://127.0.0.1:8080` through
-  `adb reverse`: see [docs/install/android.md](../install/android.md).
-- The APKs are signed with the Android debug key. Sign with your own key for any real deployment
-  (see section 10).
+- The release build talks to MockSync at `http://127.0.0.1:8080` through `adb reverse`
+  (`adb reverse tcp:8080 tcp:8080`); plain HTTP is allowed to 127.0.0.1 and localhost only. Another server
+  needs its own build with `scripts/android-build.sh --release --server-url https://...`. The scripted
+  demo with recorded frame packs uses the debug APK: see [docs/install/android.md](../install/android.md).
+- The APKs are signed with the team's release key (certificate `CN=Android Registration Client release`).
+  Sign with your own key for any real deployment (see section 10).
 
 ## 10. Using a real MOSIP server instead of MockSync
 
