@@ -32,18 +32,21 @@ evaluation frame packs; those frames are never committed, so the pass states are
 
 Taken by `scripts/demo-desktop.sh` on the real client with MockSync and MockMDS (reference run of
 `docs/test-report/desktop-e2e.md`). The driver hides the camera preview, captured faces and HTML previews, so no face
-appears; the dark preview area is where the camera image would be.
+appears; the dark preview area is where the camera image would be. E2E-03, E2E-05, E2E-09 and E2E-16 are from a
+later run with the preview shown (2026-10-21, `scripts/demo-desktop.sh --restore-golden --policy recorded --flow
+tools/mock-sync/e2e/flows/screens-faces.flow`, 22 of 22 checks passed). The faces are recorded clips used under their licences: subject S3 is Pexels 6781549 by Artem Podrez (Pexels License), and the attack packs are made from Pexels 5474329 and 5474326 by cottonbro studio (Pexels License); see [../eval/README.md](../eval/README.md). The people are not project members.
 
 | Id | Picture | What it shows |
 |---|---|---|
 | E2E-02 | ![disconnect](screenshots/desktop/e2e-02-device-disconnected.png) | MockMDS `DISCONNECT` during a resident capture: "The face camera was disconnected. Reconnect it and select Retry."; the attempt is not used. |
-| E2E-03 | ![challenge](screenshots/desktop/e2e-03-low-confidence-challenge.png) | Low passive score: step 1 of 2, "Please smile" with the smile icon and progress bar (the client picks the actions at random; in this run blink came second). |
+| E2E-03 | ![challenge](screenshots/desktop/e2e-03-low-confidence-challenge.png) | Low passive score (pack `s3n`, the S3 clip through a noisy camera): step 1 of 2, "Please blink" with the blink icon and progress bar over the live preview (the client picks the actions at random). |
 | E2E-04 | ![reviewer](screenshots/desktop/e2e-04-reviewer-authentication.png) | Reviewer (supervisor) authentication after a marked finger exception; the Scan button opens the liveness window. |
-| E2E-05 | ![print](screenshots/desktop/e2e-05-print-refused.png) | Printed photo: it cannot answer the challenge; "We could not verify face liveness. Please try again." with "Time is up for this action." |
+| E2E-05 | ![print](screenshots/desktop/e2e-05-print-refused.png) | Printed photo held up to the camera (synthetic pack `a-s2-print-still`): passive PAD refuses it (audit LV08, reason `PAD_SCORE`) with the generic "Face verification could not be completed. Please try again.", attempt 1 of 3. In earlier runs the print passed PAD and failed the challenge instead ("We could not verify face liveness"). |
 | E2E-06 | ![still](screenshots/desktop/e2e-06-injected-still-refused.png) | Injected still stream (identical frames): the generic "Face verification could not be completed. Please try again.", attempt 2 of 3. |
 | E2E-07 | ![max](screenshots/desktop/e2e-07-max-attempts-guidance.png) | After three refused attacks: recovery guidance, lock icon, Close. |
 | E2E-08 | ![eod](screenshots/desktop/e2e-08-eod-pending.png) | End-of-day approval list before supervisor authentication (the HTML preview on the right is hidden). |
-| E2E-09 | ![eod replay](screenshots/desktop/e2e-09-eod-replay-refused.png) | Supervisor verification refuses a screen replay. |
+| E2E-09 | ![eod replay](screenshots/desktop/e2e-09-eod-replay-refused.png) | Supervisor verification at end of day refuses a video replayed on a screen (pack `a-s2-screen-replay`, scan lines and glare visible): "Face verification could not be completed. Please try again.", attempt 1 of 3. |
+| E2E-16 | ![passed](screenshots/desktop/e2e-16-resident-face-passed.png) | Resident face passed: after two answered challenges the biometrics screen shows the captured face (pack `s3`), quality 95% against the 90% threshold, attempt 1. |
 | E2E-10 | ![config](screenshots/desktop/e2e-10-config-sync-print-refused.png) | After MockSync pushed `policy.registration=ALWAYS_ACTIVE`: the moving print must answer a challenge and is refused. |
 | E2E-11 | ![l1](screenshots/desktop/e2e-11-l1-device-onboarding.png) | Operator biometrics captured through an L1 face device (FTM-signed digitalId). |
 | E2E-12 | ![match](screenshots/desktop/e2e-12-face-match-not-found.png) | A live person who is not the operator: liveness passes, the SFace match does not ("Face match not found"). |

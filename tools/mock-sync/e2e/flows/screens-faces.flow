@@ -1,0 +1,13 @@
+# Screenshots with the face visible in the preview (scripts/demo-desktop.sh --flow tools/mock-sync/e2e/flows/screens-faces.flow).
+# The same sections as the demo, but with mask off after the start, so the camera preview and captured faces show
+# the frame packs: s3 (Pexels 6781549 by Artem Podrez, Pexels License) and the synthetic attack packs made from s2
+# (Pexels 5474329 and 5474326 by cottonbro studio). Attribution: docs/eval/README.md. Pack s1 (CC BY-SA) is not used.
+# Used for docs/ux/screenshots/desktop/e2e-03, e2e-05, e2e-09 and e2e-16.
+include 00-start.flow
+mask off
+include 10-login.flow
+section 20-registration-passive.flow
+section 30-registration-active.flow
+section 40-registration-attacks.flow
+section 50-eod-supervisor.flow
+exit

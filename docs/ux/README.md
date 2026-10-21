@@ -1,8 +1,12 @@
 # UX: screens, flows and messages
 
 Index of every committed screen picture of the face liveness feature on both clients, grouped by state, plus the
-states that have no picture yet. All pictures are real screens of the running clients. The `e2e-*` pictures and
-the Android pictures hide the camera preview, so the dark oval is where the camera image would be. The desktop
+states that have no picture yet. All pictures are real screens of the running clients. The desktop pictures
+`e2e-03`, `e2e-05`, `e2e-09` and `e2e-16` show the camera preview with recorded faces (taken 2026-10-21 with
+`tools/mock-sync/e2e/flows/screens-faces.flow`): subject S3 is Pexels 6781549 by Artem Podrez, the attack packs are
+made from Pexels 5474329 and 5474326 by cottonbro studio, all under the Pexels License (attribution:
+[../eval/README.md](../eval/README.md)); the people are not project members. The other `e2e-*` pictures and the
+Android pictures hide the camera preview, so the dark oval is where the camera image would be. The desktop
 `d-*` pictures show, in the preview, the stock stream image that ships with MOSIP MockMDS (MPL-2.0; see
 [desktop-liveness.md](desktop-liveness.md)), never a team member or a volunteer.
 
@@ -31,10 +35,10 @@ R = resident, L = login, E = end of day).
 | Positioning (oval guide, "Look directly at the camera.") | [d-r1-positioning.png](screenshots/desktop/d-r1-positioning.png) | [a-p1-positioning-offline.png](screenshots/android/a-p1-positioning-offline.png) (amber oval and banner "No face detected. Keep your face within the capture area.", progress bar, offline badge; taken 2026-10-05 in airplane mode with an empty replay pack) |
 | Positioning tip during an attempt (amber banner and oval, "Ensure your face is clearly visible.", attempt 3 of 3) | [d-r8-max-attempts.png](screenshots/desktop/d-r8-max-attempts.png) (the file name says maximum attempts, but the picture was taken before the attempt ended; see section 7) | — |
 | Checking face liveness (passive, no action needed) | — (described in [desktop-liveness.md](desktop-liveness.md) section 2; wireframe row 2) | — (wireframe row 2) |
-| Active challenge, step 1 of 2, icon and progress | [e2e-03-low-confidence-challenge.png](screenshots/desktop/e2e-03-low-confidence-challenge.png) ("Please smile", smile icon) | [e2e-06-low-confidence-challenge.png](screenshots/android/e2e-06-low-confidence-challenge.png) ("Please smile") |
+| Active challenge, step 1 of 2, icon and progress | [e2e-03-low-confidence-challenge.png](screenshots/desktop/e2e-03-low-confidence-challenge.png) ("Please blink", blink icon, face in the preview) | [e2e-06-low-confidence-challenge.png](screenshots/android/e2e-06-low-confidence-challenge.png) ("Please smile") |
 | Challenge forced by policy (`ALWAYS_ACTIVE` after a sync) | [e2e-10-config-sync-print-refused.png](screenshots/desktop/e2e-10-config-sync-print-refused.png) | [e2e-12-config-active-challenge.png](screenshots/android/e2e-12-config-active-challenge.png) |
 | Action detected / hold still | — (wireframe rows 4 and 5) | — (wireframe rows 4 and 5) |
-| Success, "Good, face captured successfully" | — (described in [desktop-liveness.md](desktop-liveness.md) section 2) | [a-r1-resident-face-passed.png](screenshots/android/a-r1-resident-face-passed.png) (ARC biometrics screen: banner, quality 90%, attempt 1) |
+| Success, "Good, face captured successfully" | [e2e-16-resident-face-passed.png](screenshots/desktop/e2e-16-resident-face-passed.png) (biometrics screen after the pass: captured face, quality 95%, attempt 1; the window's own success line is described in [desktop-liveness.md](desktop-liveness.md) section 2) | [a-r1-resident-face-passed.png](screenshots/android/a-r1-resident-face-passed.png) (ARC biometrics screen: banner, quality 90%, attempt 1) |
 
 ## 2. Operator authentication
 
@@ -52,7 +56,7 @@ R = resident, L = login, E = end of day).
 |---|---|---|
 | Approval list before supervisor verification | [e2e-08-eod-pending.png](screenshots/desktop/e2e-08-eod-pending.png) | [e2e-10-pending-approval.png](screenshots/android/e2e-10-pending-approval.png) |
 | "Supervisor verification" window | [d-e1-eod-supervisor-arabic.png](screenshots/desktop/d-e1-eod-supervisor-arabic.png) (Arabic, right to left) | [e2e-11-supervisor-replay-refused.png](screenshots/android/e2e-11-supervisor-replay-refused.png) |
-| Screen replay refused at approval | [e2e-09-eod-replay-refused.png](screenshots/desktop/e2e-09-eod-replay-refused.png) | [e2e-11-supervisor-replay-refused.png](screenshots/android/e2e-11-supervisor-replay-refused.png) |
+| Screen replay refused at approval | [e2e-09-eod-replay-refused.png](screenshots/desktop/e2e-09-eod-replay-refused.png) (the replayed video is visible in the preview) | [e2e-11-supervisor-replay-refused.png](screenshots/android/e2e-11-supervisor-replay-refused.png) |
 | Reviewer authentication after a biometric exception | [e2e-04-reviewer-authentication.png](screenshots/desktop/e2e-04-reviewer-authentication.png) | — (no reviewer step in the Android client) |
 | Approval completed offline | — | [e2e-13-offline-approved.png](screenshots/android/e2e-13-offline-approved.png) (airplane mode, 0 applications left) |
 
@@ -60,8 +64,8 @@ R = resident, L = login, E = end of day).
 
 | State | Desktop | Android |
 |---|---|---|
-| Liveness not established (challenge timeout): "We could not verify face liveness. Please try again." with guidance | [e2e-05-print-refused.png](screenshots/desktop/e2e-05-print-refused.png) | [e2e-03-sign-in-replay-refused.png](screenshots/android/e2e-03-sign-in-replay-refused.png) |
-| Suspected attack (PAD, integrity): generic "Face verification could not be completed. Please try again." | [d-r7-pad-fail-retry.png](screenshots/desktop/d-r7-pad-fail-retry.png), [e2e-06-injected-still-refused.png](screenshots/desktop/e2e-06-injected-still-refused.png) | [e2e-05-resident-replay-refused.png](screenshots/android/e2e-05-resident-replay-refused.png) |
+| Liveness not established (challenge timeout): "We could not verify face liveness. Please try again." with guidance | [e2e-10-config-sync-print-refused.png](screenshots/desktop/e2e-10-config-sync-print-refused.png) | [e2e-03-sign-in-replay-refused.png](screenshots/android/e2e-03-sign-in-replay-refused.png) |
+| Suspected attack (PAD, integrity): generic "Face verification could not be completed. Please try again." | [e2e-05-print-refused.png](screenshots/desktop/e2e-05-print-refused.png) (printed photo in the preview), [d-r7-pad-fail-retry.png](screenshots/desktop/d-r7-pad-fail-retry.png), [e2e-06-injected-still-refused.png](screenshots/desktop/e2e-06-injected-still-refused.png) | [e2e-05-resident-replay-refused.png](screenshots/android/e2e-05-resident-replay-refused.png) |
 | Retry available, "Attempt n of 3" | [d-r7-pad-fail-retry.png](screenshots/desktop/d-r7-pad-fail-retry.png) | [e2e-05-resident-replay-refused.png](screenshots/android/e2e-05-resident-replay-refused.png) |
 | Maximum attempts, recovery guidance | [e2e-07-max-attempts-guidance.png](screenshots/desktop/e2e-07-max-attempts-guidance.png) | [e2e-08-max-attempts.png](screenshots/android/e2e-08-max-attempts.png) |
 | Capture blocked for the registration after maximum attempts | — | [e2e-09-blocked-under-scan.png](screenshots/android/e2e-09-blocked-under-scan.png), [a-r3-resident-max-attempts.png](screenshots/android/a-r3-resident-max-attempts.png) |
@@ -93,7 +97,7 @@ R = resident, L = login, E = end of day).
 |---|---|---|---|
 | Checking face liveness | missing | missing | Only frames of real people reach this state long enough; take it with a masked preview (`mask on` in the desktop driver, `masked` replay on Android) |
 | Action detected, hold still | missing | missing | Same; the states were observed in logs (`desktop-liveness.md` section 2, Android Logcat) |
-| Success on the capture window itself | missing | only the ARC banner | Same |
+| Success on the capture window itself | only the biometrics screen after the pass (`e2e-16`) | only the ARC banner | Same |
 | Multiple faces | missing | missing | No two-face frame pack in the client runs (`eval/scenarios/other-two-faces.yaml` runs only in the scenario runner) |
 | Poor quality (too dark, blurred) | missing | missing | Needs a masked run with the dim or blurred pack |
 | Device unavailable with its own wording | wrong text | not applicable | Desktop maps a refused stream to the "disconnected" message; fix in the services layer |

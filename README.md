@@ -38,7 +38,7 @@ face would be.
 
 | Desktop Registration Client | Android Registration Client (tablet emulator) |
 |---|---|
-| <img src="docs/ux/screenshots/desktop/e2e-03-low-confidence-challenge.png" alt="Desktop face verification window: dashed oval, smile icon, Please smile, Step 1 of 2, Attempt 1 of 3, Cancel" width="300"> | <img src="docs/ux/screenshots/android/e2e-06-low-confidence-challenge.png" alt="Android capture screen: oval with progress arc, Please smile, Step 1 of 2, attempt dots, Cancel" width="520"> |
+| <img src="docs/ux/screenshots/desktop/e2e-03-low-confidence-challenge.png" alt="Desktop face verification window: recorded face in the preview, dashed oval, blink icon, Please blink, Step 1 of 2, Attempt 1 of 3" width="300"> | <img src="docs/ux/screenshots/android/e2e-06-low-confidence-challenge.png" alt="Android capture screen: oval with progress arc, Please smile, Step 1 of 2, attempt dots, Cancel" width="520"> |
 
 Every state of both clients side by side (wireframes): [docs/ux/wireframes.svg](docs/ux/wireframes.svg); all
 pictures by state: [docs/ux/README.md](docs/ux/README.md).

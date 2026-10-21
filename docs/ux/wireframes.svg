@@ -322,8 +322,9 @@
 <text x="1124.0" y="2393.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– The guidance line names what to change: look at the</text>
 <text x="1124.0" y="2407.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">camera, face visible, lighting, capture area, follow</text>
 <text x="1124.0" y="2422.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">the action.</text>
-<text x="1124.0" y="2442.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: desktop e2e-05-print-refused.png; Android</text>
-<text x="1124.0" y="2457.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">e2e-03-sign-in-replay-refused.png.</text>
+<text x="1124.0" y="2442.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">– Pictures: desktop</text>
+<text x="1124.0" y="2457.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">e2e-10-config-sync-print-refused.png; Android</text>
+<text x="1124.0" y="2471.5" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#1F2933" font-weight="normal" text-anchor="start">e2e-03-sign-in-replay-refused.png.</text>
 <rect x="12.0" y="2688.0" width="1416.0" height="356.0" rx="6" fill="#EEF2F6" stroke="none" stroke-width="1"/>
 <text x="24.0" y="2714.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#0B2E4F" font-weight="bold" text-anchor="start">8. Generic PAD failure</text>
 <text x="24.0" y="2739.0" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11.5" fill="#3E4C59" font-weight="normal" text-anchor="start">PS04 10.6 (no security detail)</text>

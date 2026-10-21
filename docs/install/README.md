@@ -235,7 +235,7 @@ for actions. The prompts appear on the client's screen; here you are operator an
 | Actions | for example "Please smile", "Please blink", "Please turn your head to the left", with an icon and "Step 1 of 2"; 5 s per action by default | [e2e-03-low-confidence-challenge.png](../ux/screenshots/desktop/e2e-03-low-confidence-challenge.png) |
 | After each action | "Action detected"; after the last one "Look directly at the camera and hold still." until your face is frontal and neutral, then "Hold still" while the device takes the signed capture | wireframe sheet, rows 4 and 5 |
 | Pass | "Good, face captured successfully", green oval; the window closes after about 1 s and the capture screen shows your face | wireframe sheet, row 6 |
-| Not enough evidence of liveness | "We could not verify face liveness. Please try again." with a guidance line and Retry | [e2e-05-print-refused.png](../ux/screenshots/desktop/e2e-05-print-refused.png) |
+| Not enough evidence of liveness | "We could not verify face liveness. Please try again." with a guidance line and Retry | [e2e-10-config-sync-print-refused.png](../ux/screenshots/desktop/e2e-10-config-sync-print-refused.png) |
 | Suspected attack | only "Face verification could not be completed. Please try again.", never the reason | [d-r7-pad-fail-retry.png](../ux/screenshots/desktop/d-r7-pad-fail-retry.png) |
 | Dim light | "We could not verify face liveness. Please try again." with "Improve lighting."; the first three dark tries of one capture do not use an attempt, the fourth does |
 | Third failure | recovery message with a lock icon, Close | [e2e-07-max-attempts-guidance.png](../ux/screenshots/desktop/e2e-07-max-attempts-guidance.png) |

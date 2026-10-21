@@ -40,10 +40,11 @@ the claim.
 
 **On the slide**
 - Three columns with one screenshot each:
-  - Desktop resident challenge: `screenshots/desktop/e2e-03-low-confidence-challenge.png` ("Please smile", step 1
-    of 2).
+  - Desktop resident challenge: `screenshots/desktop/e2e-03-low-confidence-challenge.png` ("Please blink", step 1
+    of 2, recorded face in the preview).
   - Android challenge: `screenshots/android/e2e-06-low-confidence-challenge.png` ("Please smile").
-  - Desktop supervisor verification refusing a replay: `screenshots/desktop/e2e-09-eod-replay-refused.png`.
+  - Desktop supervisor verification refusing a replay: `screenshots/desktop/e2e-09-eod-replay-refused.png` (the
+    replayed video visible in the preview).
 - Under them, the flow in five words: **passive → challenge → bind → gate → evidence**.
 - One line: "One offline engine, both clients, six workflows: registration, exception photo, operator login, packet
   authentication, supervisor approval, operator onboarding."

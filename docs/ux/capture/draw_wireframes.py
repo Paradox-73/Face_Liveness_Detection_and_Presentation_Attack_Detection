@@ -351,7 +351,7 @@ STATES = [
         notes=[
             "Used when liveness was not shown (timeout, wrong action, low score) but nothing points to an attack.",
             "The guidance line names what to change: look at the camera, face visible, lighting, capture area, follow the action.",
-            "Pictures: desktop e2e-05-print-refused.png; Android e2e-03-sign-in-replay-refused.png.",
+            "Pictures: desktop e2e-10-config-sync-print-refused.png; Android e2e-03-sign-in-replay-refused.png.",
         ],
     ),
     dict(
