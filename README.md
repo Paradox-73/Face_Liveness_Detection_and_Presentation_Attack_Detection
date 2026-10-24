@@ -112,6 +112,8 @@ Known limits (more in [docs/test-report/README.md](docs/test-report/README.md#6-
   the statement (one synced setting per workflow) accepts 100 of 226 synthetic attack transactions.
 - The per-frame latency target (p95 at most 20 ms) is not met: p95 127.7 ms, p50 39.4 ms on 2026-10-20 (shared
   laptop, Intel Core i5-12450H, one ONNX Runtime thread; [results](docs/eval/results/20261020-latency/README.md)).
+  The same measurement on 2026-10-24, with no other builds running, gave p95 18.5 ms on the real-face frame packs
+  ([results](docs/eval/results/real-faces-2026-10-24.md)).
 - At the shipped policy the scripted client demos ran only with the challenge pool cut to blink and smile (desktop 71
   of 71, Android 59 of 74 checks); turn challenges need a live face or longer recordings
   ([docs/manual-test-checklist.md](docs/manual-test-checklist.md)).

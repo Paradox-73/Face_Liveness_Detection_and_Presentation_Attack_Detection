@@ -24,6 +24,9 @@ codes, scores, timings), `summary.md` and `report.md` and stay outside git.
 | Per-frame time on the laptop (decode + analysis + PAD), laptop-clip run | p50 17.2 ms, p95 25.7 ms (n = 1,204 frames) |
 | On-phone instrumented suite (OnePlus CPH2569, Android 15) | **6 of 6** passed |
 
+The per-frame times use the same measurement as the latency suite of 2026-10-20 (p95 127.7 ms), which ran on the same
+laptop while other builds were running; on 2026-10-24 the laptop ran no other builds.
+
 ## Attacks per species
 
 Unit: the transaction (one capture until the first accepted attempt or the last allowed attempt). "No decision
