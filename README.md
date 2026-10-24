@@ -126,7 +126,8 @@ Team **Badmosip**, MOSIP Decode 2026, Problem Statement 04.
 | Kanav Bhardwaj | [@Paradox-73](https://github.com/Paradox-73) |
 | Ivan Bhargava | [@Ivan825](https://github.com/Ivan825) |
 | Ishaan Sodhi | not listed |
-| Nikunj | not listed |
+| Nikunj Mahajan | [@nikunj169](https://github.com/nikunj169) |
+| Harsh Modi | - |
 
 ## Download
 

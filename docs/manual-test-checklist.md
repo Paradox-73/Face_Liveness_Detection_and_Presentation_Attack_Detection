@@ -25,7 +25,7 @@ The recordings give the automated suite real faces of consenting people. Until n
 licensed clips of three strangers and software-made attacks. `tools/eval/ingest-recordings.py` turns the recordings
 into frame packs and scenarios and reruns the metrics (step `MT-REC-08`).
 
-**Subjects.** Kanav, Ivan, Ishaan Sodhi and Nikunj each record one set as a subject. Each person gets a pseudonym
+**Subjects.** Kanav Bhardwaj, Ivan Bhargava, Nikunj Mahajan, Ishaan Sodhi and Harsh Modi each record one set as a subject. Each person gets a pseudonym
 `S1` to `S4`. Write the name-to-pseudonym list on paper and keep it apart from the data, as
 [eval/protocol.md](eval/protocol.md) section 10 requires. File names, sheets and reports use the pseudonym only.
 
@@ -96,7 +96,7 @@ Compress-Archive -Path run\recordings\S1_* -DestinationPath run\handover-S1.zip
 Get-FileHash run\handover-S1.zip -Algorithm SHA256
 ```
 
-- Give the zip to Kanav on a USB stick, or put it in a shared-drive folder that only the four team members can open.
+- Give the zip to Kanav on a USB stick, or put it in a shared-drive folder that only the five team members can open.
   Protocol section 10 promises storage on one BitLocker-encrypted laptop and never in the cloud. Use a cloud drive
   only if every subject agreed to it in writing. Delete the shared copy after Kanav confirms the checksum.
 - Kanav checks the checksum with `Get-FileHash` and unzips into `run\recordings\`.
