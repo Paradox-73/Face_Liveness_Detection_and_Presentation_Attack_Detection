@@ -60,7 +60,7 @@ native() { if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else ech
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--flow) FLOW="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"; shift ;;
-		--out) OUT="$2"; shift ;;
+		--out) OUT="$(mkdir -p "$2" && cd "$2" && pwd)"; shift ;;  # absolute: the driver runs in the client folder
 		--restore-golden) RESTORE=1 ;;
 		--save-golden) ACTION=save ;;
 		--onboard) ACTION=onboard ;;
