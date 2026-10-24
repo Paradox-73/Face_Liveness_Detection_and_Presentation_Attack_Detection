@@ -1,0 +1,27 @@
+# Two more states of the liveness window that no other section photographs:
+# 1. A very dark room (pack q-s3-dark: S3 at 20% brightness, made in software): "Improve lighting." while the
+#    check runs; a low-light ending does not use an attempt (up to passive.low_light_max_uncounted).
+# 2. A face device that refuses the stream (MockMDS fault UNAVAILABLE, STREAM answers 608): the device message
+#    "The face camera is not available..." with Retry; device errors never use an attempt.
+label screens 3: dark room, device unavailable
+set RESIDENT_NAME Jaya Resident
+set LEFT_EXCEPTION sleep 1
+include lib/registration-start.flow
+source q-s3-dark
+click #individualBiometricsScanBtn
+expect Improve lighting 60
+snap state-too-dark
+click #cancelButton
+sleep 2000
+source s3-main
+mds /admin/fault {"type":"Face","fault":"UNAVAILABLE"}
+click #individualBiometricsScanBtn
+expect not available 60
+snap state-device-unavailable
+mds /admin/fault {"type":"Face","fault":"NONE"}
+click #cancelButton
+sleep 2000
+click #homeImgView
+sleep 1500
+if-node #confirm click #confirm
+sleep 2000

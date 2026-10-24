@@ -163,6 +163,25 @@ and [desktop-e2e/recorded-20261020b/results.txt](desktop-e2e/recorded-20261020b/
   counted: two evaluation suites (scenario runner) started on the same laptop at 19:23, and the starved client
   ended its captures `FAILED(ENGINE)` and `FAILED(QUALITY)` (6 of 17 checks passed); it logged no `LOOP`.
 
+**Screens run of 2026-10-22 (IST): 24 of 24 checks passed** (commit `f03a83e`, 14:23-14:29;
+`scripts/demo-desktop.sh --restore-golden --policy recorded --flow tools/mock-sync/e2e/flows/screens-states.flow`;
+check lines in [desktop-e2e/screens-20261022/results.txt](desktop-e2e/screens-20261022/results.txt)). The flow runs
+`95-screens.flow` and `96-screens-quality-device.flow` with the camera preview shown and saves the pictures
+`docs/ux/screenshots/desktop/d-s1` to `d-s12`:
+
+- the short-lived states of a live resident: "Checking face liveness...", "Please smile", "Action detected",
+  "Hold still" and "Good, face captured successfully";
+- two faces in view: "More than one face detected";
+- a dark room (pack `q-s3-dark`): "Improve lighting.";
+- a stream the device refuses (MockMDS fault `UNAVAILABLE`): "The face camera is not available. Check that it is
+  connected and select Retry.";
+- the supervisor override. The logged-in officer is refused ("Another supervisor must verify"). `supervisor1`
+  passes face liveness and the photo is stored with audit `REG-EVT-LV16` `GRANTED`.
+
+An earlier try at 14:00 the same day stopped at the operator login with `FAILED(ENGINE)` on three attempts. The
+laptop had about 2 GB of free memory then, with builds of other projects running. The 14:23 run had the machine
+to itself and passed. This matches the starved run of 2026-10-20 described above.
+
 ## 1. Set-up
 
 | Part | What was used |
@@ -293,5 +312,5 @@ These counts are from 2026-09-30. Current counts per suite, with the commands a 
 | `docs/test-report/desktop-e2e/results.txt` | every check of the reference run with its section |
 | `docs/test-report/desktop-e2e/driver-summary.log` | commands, alerts, results, SQL rows and MockMDS calls of the reference run (screen-state lines removed) |
 | `docs/test-report/desktop-e2e/packets/*.liveness.json` | liveness evidence of five packets as decrypted by MockSync: `...232013` (D3), `...232100` (D4, D5), `...232400` (D8), `...232717` (D10), `...213659` (I2, override) |
-| `docs/ux/screenshots/desktop/e2e-*.png` | masked snapshots of the reference run (no face shown), except `e2e-03`, `e2e-05`, `e2e-09` and `e2e-16`: the same flows run again on 2026-10-21 with the preview shown (`flows/screens-faces.flow`, 22 of 22 checks; run folder `run/demo/screens-faces-20261021b`) |
+| `docs/ux/screenshots/desktop/e2e-*.png` | masked snapshots of the reference run (no face shown), except `e2e-03`, `e2e-05`, `e2e-09` and `e2e-17`: the same flows run again on 2026-10-21 with the preview shown (`flows/screens-faces.flow`, 22 of 22 checks; run folder `run/demo/screens-faces-20261021b`) |
 | `run/demo/desktop-run4/` (not in git) | full driver log with screen states, all snapshots, `packets/` |

@@ -32,7 +32,7 @@ evaluation frame packs; those frames are never committed, so the pass states are
 
 Taken by `scripts/demo-desktop.sh` on the real client with MockSync and MockMDS (reference run of
 `docs/test-report/desktop-e2e.md`). The driver hides the camera preview, captured faces and HTML previews, so no face
-appears; the dark preview area is where the camera image would be. E2E-03, E2E-05, E2E-09 and E2E-16 are from a
+appears; the dark preview area is where the camera image would be. E2E-03, E2E-05, E2E-09 and E2E-17 are from a
 later run with the preview shown (2026-10-21, `scripts/demo-desktop.sh --restore-golden --policy recorded --flow
 tools/mock-sync/e2e/flows/screens-faces.flow`, 22 of 22 checks passed; each picture is the whole dialog, saved by the driver's `-full` snapshot of the window's scroll area). The faces are recorded clips used under their licences: subject S3 is Pexels 6781549 by Artem Podrez (Pexels License), and the attack packs are made from Pexels 5474329 and 5474326 by cottonbro studio (Pexels License); see [../eval/README.md](../eval/README.md). The people are not project members.
 
@@ -46,11 +46,33 @@ tools/mock-sync/e2e/flows/screens-faces.flow`, 22 of 22 checks passed; each pict
 | E2E-07 | ![max](screenshots/desktop/e2e-07-max-attempts-guidance.png) | After three refused attacks: recovery guidance, lock icon, Close. |
 | E2E-08 | ![eod](screenshots/desktop/e2e-08-eod-pending.png) | End-of-day approval list before supervisor authentication (the HTML preview on the right is hidden). |
 | E2E-09 | ![eod replay](screenshots/desktop/e2e-09-eod-replay-refused.png) | Supervisor verification at end of day refuses a video replayed on a screen (pack `a-s2-screen-replay`, scan lines and glare visible): "Face verification could not be completed. Please try again.", attempt 1 of 3. |
-| E2E-16 | ![passed](screenshots/desktop/e2e-16-resident-face-passed.png) | Resident face passed: after two answered challenges the biometrics screen shows the captured face (pack `s3`), quality 95% against the 90% threshold, attempt 1. |
+| E2E-17 | ![passed](screenshots/desktop/e2e-17-resident-face-passed.png) | Resident face passed: after two answered challenges the biometrics screen shows the captured face (pack `s3`), quality 95% against the 90% threshold, attempt 1. |
 | E2E-10 | ![config](screenshots/desktop/e2e-10-config-sync-print-refused.png) | After MockSync pushed `policy.registration=ALWAYS_ACTIVE`: the moving print must answer a challenge and is refused. |
 | E2E-11 | ![l1](screenshots/desktop/e2e-11-l1-device-onboarding.png) | Operator biometrics captured through an L1 face device (FTM-signed digitalId). |
 | E2E-12 | ![match](screenshots/desktop/e2e-12-face-match-not-found.png) | A live person who is not the operator: liveness passes, the SFace match does not ("Face match not found"). |
 | E2E-13 | ![diagnostic](screenshots/desktop/e2e-13-diagnostic-mode.png) | Diagnostic mode (`mosip.registration.liveness.diagnostic.enable=Y`): during "Please smile", step 1 of 2, a grey block under the banner lists workflow, policy, phase, PAD score, frame rate, binding score and the model versions. Off by default; meant for a supervisor. |
+
+### 1.2 States with the preview shown (2026-10-22)
+
+Taken by `scripts/demo-desktop.sh --restore-golden --policy recorded --flow
+tools/mock-sync/e2e/flows/screens-states.flow` (24 of 24 checks, [../test-report/desktop-e2e.md](../test-report/desktop-e2e.md)).
+Same recorded clips and licences as E2E-03 above. Each picture is the whole dialog except D-S12 (the biometrics
+screen).
+
+| Id | Picture | What it shows |
+|---|---|---|
+| D-S1 | ![checking](screenshots/desktop/d-s1-checking.png) | Passive stage of a live resident (pack `s3`): "Checking face liveness...", hourglass icon, busy indicator, only Cancel. |
+| D-S2 | ![challenge](screenshots/desktop/d-s2-challenge.png) | First challenge drawn at random: "Please smile", step 1 of 2, attempt 1 of 3. |
+| D-S3 | ![action detected](screenshots/desktop/d-s3-action-detected.png) | The smile seen on the following frames: green oval, check icon, "Action detected". |
+| D-S4 | ![hold still](screenshots/desktop/d-s4-hold-still.png) | After the last challenge: "Hold still" while a neutral frame is held for the signed capture. |
+| D-S5 | ![success](screenshots/desktop/d-s5-success.png) | "Good, face captured successfully", green oval; the window then closes by itself. |
+| D-S6 | ![two faces](screenshots/desktop/d-s6-multiple-faces.png) | Two faces in view (pack `q-pair`, made in software from S3 and S2): amber "More than one face detected. Only the person being captured should be in view." |
+| D-S7 | ![too dark](screenshots/desktop/d-s7-too-dark.png) | A very dark room (pack `q-s3-dark`, S3 at 20% brightness): "Improve lighting."; a dim-light ending does not use an attempt, up to `passive.low_light_max_uncounted`. |
+| D-S8 | ![device unavailable](screenshots/desktop/d-s8-device-unavailable.png) | MockMDS refuses the stream (fault `UNAVAILABLE`): "The face camera is not available. Check that it is connected and select Retry.", camera icon, Retry. |
+| D-S9 | ![override offered](screenshots/desktop/d-s9-override-offered.png) | Three challenge timeouts of a live resident who does not answer (not an attack): recovery text, lock icon, "Supervisor override" and Close. |
+| D-S10 | ![same user refused](screenshots/desktop/d-s10-override-same-user-refused.png) | The logged-in officer enters his own user ID: "The logged-in operator cannot approve this override. Another supervisor must verify." |
+| D-S11 | ![supervisor liveness](screenshots/desktop/d-s11-override-supervisor-liveness.png) | `supervisor1` verifies the override: window titled "Supervisor verification", "Please smile", step 1 of 2. |
+| D-S12 | ![override granted](screenshots/desktop/d-s12-override-granted.png) | After the supervisor passed liveness and face match: the resident photo is checked (one face, PAD score) and stored, quality 95%; audit `REG-EVT-LV16` decision `GRANTED`. |
 
 ## 2. States verified without a committed picture
 
@@ -65,7 +87,7 @@ Run on 2026-09-30 with the real client and the evaluation frame pack `s3-main` (
 | Capture evidence | `LIVENESS_DECISION=PASS, LIVENESS_METHOD=PASSIVE, LIVENESS_SCORE=100, LIVENESS_ENGINE=mosip-onnx-default@1.0.0, LIVENESS_BINDING=90-100, LIVENESS_DEVICE_LEVEL=L0` on the captured `BiometricsDto` (resident, `captureModality`) |
 | Supervisor pass (EOD) | same states with title "Supervisor verification"; the run closed the stream and waited for Ready, then `captureModalityForAuth` returned the face with the same evidence |
 
-"Action detected" was not reached in these runs: the passive check passed or
+"Action detected" was not reached in these runs (it is pictured since 2026-10-22, D-S3): the passive check passed or
 failed on its own with the available packs. Its text, icon and the step counter are covered by
 `LivenessViewModelTest`; challenge prompts are pictured in E2E-03 and E2E-13. Wireframes of every state, next to
 the Android screen: [wireframes.svg](wireframes.svg).

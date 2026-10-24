@@ -1,0 +1,11 @@
+# Screenshots of the short-lived and rare states of the desktop liveness window, with the face visible in the
+# preview (scripts/demo-desktop.sh --restore-golden --policy recorded --flow tools/mock-sync/e2e/flows/screens-states.flow).
+# Packs shown: s3 (Pexels 6781549 by Artem Podrez), s2 (Pexels 5474329 by cottonbro studio) and packs made from them
+# in software (q-pair, q-s3-dark), all under the Pexels License; attribution in docs/eval/README.md.
+# Used for docs/ux/screenshots/desktop/d-s1 to d-s12 (24 of 24 checks on 2026-10-22).
+include 00-start.flow
+mask off
+include 10-login.flow
+section 95-screens.flow
+section 96-screens-quality-device.flow
+exit

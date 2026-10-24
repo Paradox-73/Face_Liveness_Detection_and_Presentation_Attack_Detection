@@ -2,12 +2,14 @@
 
 Index of every committed screen picture of the face liveness feature on both clients, grouped by state, plus the
 states that have no picture yet. All pictures are real screens of the running clients. The desktop pictures
-`e2e-03`, `e2e-05`, `e2e-09` and `e2e-16` show the camera preview with recorded faces (taken 2026-10-21 with
+`e2e-03`, `e2e-05`, `e2e-09` and `e2e-17` show the camera preview with recorded faces (taken 2026-10-21 with
 `tools/mock-sync/e2e/flows/screens-faces.flow`): subject S3 is Pexels 6781549 by Artem Podrez, the attack packs are
 made from Pexels 5474329 and 5474326 by cottonbro studio, all under the Pexels License (attribution:
-[../eval/README.md](../eval/README.md)); the people are not project members. The other `e2e-*` pictures and the
-Android pictures hide the camera preview, so the dark oval is where the camera image would be. The desktop
-`d-*` pictures show, in the preview, the stock stream image that ships with MOSIP MockMDS (MPL-2.0; see
+[../eval/README.md](../eval/README.md)); the people are not project members. The desktop pictures `d-s1` to
+`d-s12` show the same clips and were taken on 2026-10-22 with `tools/mock-sync/e2e/flows/screens-states.flow`
+(24 of 24 checks, [../test-report/desktop-e2e.md](../test-report/desktop-e2e.md)). The other `e2e-*` pictures and the
+Android pictures hide the camera preview, so the dark oval is where the camera image would be. The other desktop
+`d-*` pictures (`d-r*`, `d-l*`, `d-e*`) show, in the preview, the stock stream image that ships with MOSIP MockMDS (MPL-2.0; see
 [desktop-liveness.md](desktop-liveness.md)), never a team member or a volunteer.
 
 Wireframes of every state, desktop and Android side by side: [wireframes.svg](wireframes.svg) (one row per
@@ -34,11 +36,11 @@ R = resident, L = login, E = end of day).
 |---|---|---|
 | Positioning (oval guide, "Look directly at the camera.") | [d-r1-positioning.png](screenshots/desktop/d-r1-positioning.png) | [a-p1-positioning-offline.png](screenshots/android/a-p1-positioning-offline.png) (amber oval and banner "No face detected. Keep your face within the capture area.", progress bar, offline badge; taken 2026-10-05 in airplane mode with an empty replay pack) |
 | Positioning tip during an attempt (amber banner and oval, "Ensure your face is clearly visible.", attempt 3 of 3) | [d-r8-max-attempts.png](screenshots/desktop/d-r8-max-attempts.png) (the file name says maximum attempts, but the picture was taken before the attempt ended; see section 7) | — |
-| Checking face liveness (passive, no action needed) | — (described in [desktop-liveness.md](desktop-liveness.md) section 2; wireframe row 2) | — (wireframe row 2) |
-| Active challenge, step 1 of 2, icon and progress | [e2e-03-low-confidence-challenge.png](screenshots/desktop/e2e-03-low-confidence-challenge.png) ("Please smile", smile icon, face in the preview) | [e2e-06-low-confidence-challenge.png](screenshots/android/e2e-06-low-confidence-challenge.png) ("Please smile") |
+| Checking face liveness (passive, no action needed) | [d-s1-checking.png](screenshots/desktop/d-s1-checking.png) | — (wireframe row 2) |
+| Active challenge, step 1 of 2, icon and progress | [e2e-03-low-confidence-challenge.png](screenshots/desktop/e2e-03-low-confidence-challenge.png) ("Please smile", smile icon, face in the preview), [d-s2-challenge.png](screenshots/desktop/d-s2-challenge.png) | [e2e-06-low-confidence-challenge.png](screenshots/android/e2e-06-low-confidence-challenge.png) ("Please smile") |
 | Challenge forced by policy (`ALWAYS_ACTIVE` after a sync) | [e2e-10-config-sync-print-refused.png](screenshots/desktop/e2e-10-config-sync-print-refused.png) | [e2e-12-config-active-challenge.png](screenshots/android/e2e-12-config-active-challenge.png) |
-| Action detected / hold still | — (wireframe rows 4 and 5) | — (wireframe rows 4 and 5) |
-| Success, "Good, face captured successfully" | [e2e-16-resident-face-passed.png](screenshots/desktop/e2e-16-resident-face-passed.png) (biometrics screen after the pass: captured face, quality 95%, attempt 1; the window's own success line is described in [desktop-liveness.md](desktop-liveness.md) section 2) | [a-r1-resident-face-passed.png](screenshots/android/a-r1-resident-face-passed.png) (ARC biometrics screen: banner, quality 90%, attempt 1) |
+| Action detected / hold still | [d-s3-action-detected.png](screenshots/desktop/d-s3-action-detected.png), [d-s4-hold-still.png](screenshots/desktop/d-s4-hold-still.png) | — (wireframe rows 4 and 5) |
+| Success, "Good, face captured successfully" | [e2e-17-resident-face-passed.png](screenshots/desktop/e2e-17-resident-face-passed.png) (biometrics screen after the pass: captured face, quality 95%, attempt 1); the window itself: [d-s5-success.png](screenshots/desktop/d-s5-success.png) | [a-r1-resident-face-passed.png](screenshots/android/a-r1-resident-face-passed.png) (ARC biometrics screen: banner, quality 90%, attempt 1) |
 
 ## 2. Operator authentication
 
@@ -69,16 +71,20 @@ R = resident, L = login, E = end of day).
 | Retry available, "Attempt n of 3" | [d-r7-pad-fail-retry.png](screenshots/desktop/d-r7-pad-fail-retry.png) | [e2e-05-resident-replay-refused.png](screenshots/android/e2e-05-resident-replay-refused.png) |
 | Maximum attempts, recovery guidance | [e2e-07-max-attempts-guidance.png](screenshots/desktop/e2e-07-max-attempts-guidance.png) | [e2e-08-max-attempts.png](screenshots/android/e2e-08-max-attempts.png) |
 | Capture blocked for the registration after maximum attempts | — | [e2e-09-blocked-under-scan.png](screenshots/android/e2e-09-blocked-under-scan.png), [a-r3-resident-max-attempts.png](screenshots/android/a-r3-resident-max-attempts.png) |
+| Two faces in view: "More than one face detected" | [d-s6-multiple-faces.png](screenshots/desktop/d-s6-multiple-faces.png) | — |
+| Too dark: "Improve lighting." (a dim-light ending does not use an attempt) | [d-s7-too-dark.png](screenshots/desktop/d-s7-too-dark.png) | — |
 | No face in view (no attempt used) | [d-r12-no-face.png](screenshots/desktop/d-r12-no-face.png) | [a-p2-no-face-offline.png](screenshots/android/a-p2-no-face-offline.png) (still "Attempt 1 of 3" with Retry; offline badge) |
 | Printed photo accepted under the shipped policy (known weakness, kept as evidence) | — | [e2e-14-print-accepted-shipped-policy.png](screenshots/android/e2e-14-print-accepted-shipped-policy.png) |
-| Supervisor override offered after the last resident attempt (policy `SUPERVISOR_OVERRIDE`, no suspected attack) | — | [capture-override-offered-diagnostics.png](screenshots/android/capture-override-offered-diagnostics.png) (run with `max_retries=1`; the picture was taken before the plural fix and reads "after 1 attempts", the app now reads "after 1 attempt"; diagnostic panel on) |
+| Supervisor override offered after the last resident attempt (policy `SUPERVISOR_OVERRIDE`, no suspected attack) | [d-s9-override-offered.png](screenshots/desktop/d-s9-override-offered.png) | [capture-override-offered-diagnostics.png](screenshots/android/capture-override-offered-diagnostics.png) (run with `max_retries=1`; the picture was taken before the plural fix and reads "after 1 attempts", the app now reads "after 1 attempt"; diagnostic panel on) |
+| Supervisor override: the logged-in officer is refused ("Another supervisor must verify") | [d-s10-override-same-user-refused.png](screenshots/desktop/d-s10-override-same-user-refused.png) | — |
+| Supervisor override: the second supervisor's face liveness, then the photo stored | [d-s11-override-supervisor-liveness.png](screenshots/desktop/d-s11-override-supervisor-liveness.png), [d-s12-override-granted.png](screenshots/desktop/d-s12-override-granted.png) | — |
 | Supervisor override confirmation, supervisor user ID | — | [capture-override-supervisor-dialog.png](screenshots/android/capture-override-supervisor-dialog.png) |
 
 ## 5. Device errors
 
 | State | Desktop | Android |
 |---|---|---|
-| Device unavailable / stream refused | [d-r10-device-error.png](screenshots/desktop/d-r10-device-error.png) (shows the "disconnected" text; see gaps) | — |
+| Device unavailable / stream refused | [d-s8-device-unavailable.png](screenshots/desktop/d-s8-device-unavailable.png) ("The face camera is not available..."); the older [d-r10-device-error.png](screenshots/desktop/d-r10-device-error.png) shows the "disconnected" text of an earlier build | — |
 | Device disconnected during capture | [e2e-02-device-disconnected.png](screenshots/desktop/e2e-02-device-disconnected.png) | — |
 | Camera unavailable | — | [a-r2-camera-unavailable.png](screenshots/android/a-r2-camera-unavailable.png), [e2e-04-camera-unavailable.png](screenshots/android/e2e-04-camera-unavailable.png) |
 
@@ -95,13 +101,11 @@ R = resident, L = login, E = end of day).
 
 | State | Desktop | Android | Why missing / how to get it |
 |---|---|---|---|
-| Checking face liveness | missing | missing | Only frames of real people reach this state long enough; take it with a masked preview (`mask on` in the desktop driver, `masked` replay on Android) |
-| Action detected, hold still | missing | missing | Same; the states were observed in logs (`desktop-liveness.md` section 2, Android Logcat) |
-| Success on the capture window itself | only the biometrics screen after the pass (`e2e-16`) | only the ARC banner | Same |
-| Multiple faces | missing | missing | No two-face frame pack in the client runs (`eval/scenarios/other-two-faces.yaml` runs only in the scenario runner) |
-| Poor quality (too dark, blurred) | missing | missing | Needs a masked run with the dim or blurred pack |
-| Device unavailable with its own wording | wrong text | not applicable | Desktop maps a refused stream to the "disconnected" message; fix in the services layer |
-| Supervisor override (resident) | missing | present (text "after 1 attempts" from before the plural fix, see retakes) | Desktop: run section I2 of the desktop report with snapshots on |
+| Checking face liveness, action detected, hold still | present (`d-s1` to `d-s4`) | missing | Android: masked replay run |
+| Success on the capture window itself | present (`d-s5`) | only the ARC banner | Android: masked replay run |
+| Multiple faces | present (`d-s6`) | missing | Android: replay of pack `q-pair` |
+| Poor quality | too dark present (`d-s7`); blurred missing | missing | Run with the blurred pack |
+| Supervisor override (resident) | present (`d-s9` to `d-s12`) | present (text "after 1 attempts" from before the plural fix, see retakes) | — |
 | Packet authentication by face | missing | present | Desktop driver section D3 has no snapshot step |
 | Arabic / Hindi capture screen on Android | missing | missing | Pictures exist only in the scratch folder of the module engineer; re-take with the masked replay |
 | Diagnostic mode (scores shown to a supervisor) | present: [e2e-13-diagnostic-mode.png](screenshots/desktop/e2e-13-diagnostic-mode.png) (not yet captioned in [desktop-liveness.md](desktop-liveness.md)) | present: [capture-override-offered-diagnostics.png](screenshots/android/capture-override-offered-diagnostics.png) | — |
@@ -116,7 +120,7 @@ R = resident, L = login, E = end of day).
 | [e2e-03-low-confidence-challenge.png](screenshots/desktop/e2e-03-low-confidence-challenge.png) | Shows "Please smile" (challenges are random); earlier captions said "Please blink". Captions in this folder are fixed; [../pitch/deck-outline.md](../pitch/deck-outline.md) is corrected separately | No retake needed; fix the deck caption |
 | [capture-override-offered-diagnostics.png](screenshots/android/capture-override-offered-diagnostics.png), [capture-override-supervisor-dialog.png](screenshots/android/capture-override-supervisor-dialog.png) | Text reads "after 1 attempts" (run with `max_retries=1`, before the plural fix: both clients now use a singular form, "after 1 attempt"; the Android resource has a plural form in all six languages, the desktop bundles in en, fr and ar) | Retake with the current build, or with the shipped 3 attempts |
 | Desktop `d-*` pictures | Preview shows the MockMDS stock photo with mirrored overlay text | Retake with the masked preview like the `e2e-*` pictures, for a consistent look |
-| New window and colours | The desktop window that scrolls and is capped at the monitor height, the second prompt line in the resident's language, the "Look directly at the camera and hold still" step, the supervisor override dialog with the second-person prompt and the Android capture screen in the shared status colours were never shown on a screen (no window was opened for these changes) | Masked runs on both clients |
+| New window and colours | The desktop window and the supervisor override are pictured since 2026-10-22 (`d-s1` to `d-s12`). Not yet pictured: the second prompt line in the resident's language, the "Look directly at the camera and hold still" step, and the Android capture screen in the shared status colours | Runs on both clients |
 | States marked missing above | No picture | Masked runs as described in each row; the wireframe sheet stands in until then |
 
 ## 8. Consistency between the clients
