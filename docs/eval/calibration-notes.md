@@ -164,7 +164,7 @@ registration and sign-in now runs 30 passive frames and 2 challenges.
 - Android: `onnxruntime-android` includes XNNPACK and NNAPI. The Android module reads the same key through its own
   session customizer (`livenessmanager/engine/AcceleratorCustomizer`), which must not also set
   `OnnxRuntimeOptions.Builder.executionProvider`, or the provider would be added twice. No timing on a device or
-  the emulator is part of this work, so the shipped value stays `CPU` there too.
+  the emulator is part of this work. A phone run of 2026-10-24 ([../test-report/android-performance.md](../test-report/android-performance.md)) measured the best setting as 2 threads on CPU or XNNPACK (p50 58-71 ms, p95 74-92 ms per frame); NNAPI was 5-8 times slower. The shipped value stays `CPU` with 2 threads.
 
 ## 1. Item under test
 

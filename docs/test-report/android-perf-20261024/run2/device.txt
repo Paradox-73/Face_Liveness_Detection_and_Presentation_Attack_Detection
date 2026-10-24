@@ -1,0 +1,9 @@
+date: 2026-10-24 23:09:23
+manufacturer: OnePlus
+model: CPH2569
+abi: arm64-v8a (all: arm64-v8a,armeabi-v7a,armeabi)
+android: 15 (sdk 35)
+soc: SM7325
+cpu cores: 8
+serial: 91336d5e
+app apk: none

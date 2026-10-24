@@ -3,12 +3,14 @@
 This page is for the team: how to sit in front of the real desktop and Android Registration Clients, try genuine
 captures and home-made attacks, write down what happened, and turn the notes into APCER / BPCER figures.
 
-- **What it is:** the *development split* of the evaluation protocol ([protocol.md](protocol.md) section 5, subjects
+- **What it is:** the team-member part of the evaluation protocol ([protocol.md](protocol.md) section 5, subjects
   S1-S4 = team members). Its results are used to check and tune the thresholds.
-- **What it is not:** the volunteer test (subjects S5-S12, thresholds frozen first). Team results are never reported
-  as the test result; they go in the report as "development split".
-- **Status on 2026-10-14:** no live face from a webcam has yet been passed through the full client, so the first
-  session is also the first real check of how often genuine people are rejected (what has and has not been run:
+- **What it is not:** the volunteer test (subjects S5-S12, thresholds frozen first). Team results are reported as
+  team results and are never reported as the volunteer test result.
+- **Status on 2026-10-25:** two team members (S1, S2) and artefacts of three more people (S3-S5) have been run through
+  the shipped engine: genuine 8 of 8 phone-camera transactions accepted, 0 of 32 attack transactions accepted
+  ([results/real-faces-2026-10-24.md](results/real-faces-2026-10-24.md)). The sessions below extend that run to the
+  full client and more conditions (what has been run:
   [../install/README.md](../install/README.md#10-evaluate-in-15-minutes-with-your-own-webcam) section 10). The
   recording protocol and file names for the team are in [../manual-test-checklist.md](../manual-test-checklist.md)
   section A; `python tools/eval/ingest-recordings.py` turns the recordings into frame packs, runs them and writes

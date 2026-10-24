@@ -154,8 +154,12 @@ the claim.
   defaults **0 of 226** attack transactions accepted, genuine rejected **0.0%** (registration 0/28, face sign-in 0/12); passive first, as the problem
   statement describes: 100 of 226 accepted.
 
-- Printed on the slide: "Synthetic attacks, three people from open clips: regression results, not an ISO/IEC
-  30107-3 evaluation. No real artefacts, real people or physical phone tested yet."
+- Add the real-person line (`docs/eval/results/real-faces-2026-10-24.md`): "Real faces and artefacts, 2026-10-24/25:
+  genuine 8 of 8 phone-camera transactions accepted; 0 of 32 attack transactions accepted (print, phone photo, video
+  replay); phone photo refused by PAD 4 of 4; 28 transactions ended at the quality gate with no decision; 6 of 6
+  instrumented tests on a OnePlus CPH2569."
+- Printed on the slide: "Team-run technology evaluation with ISO/IEC 30107-3 metrics; automated suites use
+  synthetic attacks and three people from open clips. Not an ISO/IEC 30107-3 certification."
 
 **Speaker notes**
 - The end-to-end runs cover every PS04 flow on both clients: passive pass, challenges, attacks, maximum attempts,
@@ -165,11 +169,11 @@ the claim.
   every workflow that matches a face now always asks for challenges (one synced key per workflow). The cost is time,
   not rejections: median accepted registration attempt 11.0 s (`docs/eval/results/20261014-latency/README.md`).
 - The adaptive screen replay (a clip that answers each prompt) passed 4 of 8 transactions until the screen-pattern
-  check of 2026-10-05. Say plainly: the screens are software-made, so the real-screen result comes from the
-  volunteer test.
+  check of 2026-10-05. Say plainly: that result is on software-made screens. On real screens, the phone photo of S2
+  was refused by PAD 4 of 4 and the video replays ended at the quality gate with no decision (8 of 8).
 - Per-frame time (latency run of 2026-10-20, 1 thread, shared laptop, Intel Core i5-12450H): p50 39.4 ms, p95 127.7 ms,
   above our own 20 ms target.
-  Android was measured only on an emulator; the phone kit (`docs/test-report/android-performance.md`) has not run.
+  On a OnePlus CPH2569 phone (Android 15, charging at about 40%, two runs of 2026-10-24) the best setting, 2 threads on CPU or XNNPACK, gave p50 58-71 ms and p95 74-92 ms, also above the target; NNAPI was 5-8 times slower (`docs/test-report/android-performance.md`).
 
 ---
 
@@ -203,9 +207,9 @@ the claim.
   mock server, automated attack suite, end-to-end runs on both clients, desktop and Android decisions compared on
   one ONNX Runtime release (`docs/test-report/interoperability.md`).
 - Next (in order):
-  1. Run the volunteer evaluation (12 people, 8 attack types, ISO/IEC 30107-3 method).
-  2. Android: vendor SBI face devices and L1; run the measurement kit on a physical phone (CPU, XNNPACK, NNAPI;
-     code done, no phone run yet).
+  1. Run the volunteer evaluation (12 people, 8 attack types, ISO/IEC 30107-3 method), extending the real-person run of 2026-10-24/25.
+  2. Android: vendor SBI face devices and L1; repeat the phone measurement unplugged and on a second phone model (one phone measured on 2026-10-24;
+     see docs/test-report/android-performance.md).
   3. Device-side PAD for L1 devices (challenge sent in the capture request), the answer to adaptive replays.
   4. Offline model import: built on both clients (Android button in Settings, Device Settings); run it on a
      physical phone.

@@ -69,23 +69,26 @@ Design details: `liveness/README.md`, `docs/design/desktop-liveness-services.md`
 | Desktop and Android give the same decision (bonus B4) | 19 replayed cases on desktop, 19 in Android unit tests, 6 on an emulator; one ONNX Runtime release (1.20.0) on both clients | `docs/test-report/interoperability.md` |
 | Automated scenarios (75, 275 transactions) with ISO/IEC 30107-3 metrics | shipped defaults (2026-10-14), per transaction: 0 of 226 attack transactions accepted, APCER 0.0% for every species and workflow; genuine rejected 0.0% (registration 0/28, sign-in 0/12). Passive first, as the problem statement describes: 100 of 226 accepted | `docs/eval/results/20261014-shipped/README.md` |
 | Per-frame processing, 640x480 | latency run of 2026-10-20, 1 thread, shared laptop (Intel Core i5-12450H): p50 39.4 ms, p95 127.7 ms; the 2026-09-30 quieter-machine run gave p50 21-23 ms, p95 38-45 ms (desktop JVM); target 20 ms not met | `docs/eval/results/20261020-latency/README.md`, `docs/test-report/README.md` section 5 |
-| Android phone measurement (bonus B7, B8) | measurement kit written; no phone run yet, emulator numbers only | `docs/test-report/android-performance.md` |
+| Android phone measurement (bonus B7, B8) | OnePlus CPH2569, Android 15, charging at about 40%, two runs of 2026-10-24: best is 2 threads on CPU or XNNPACK, p50 58-71 ms, p95 74-92 ms per frame (target 20 ms missed); NNAPI 5-8 times slower; peak PSS 239-338 MB | `docs/test-report/android-performance.md` |
 | PS04 requirements | every bullet traced to code and test; open items listed | `docs/traceability.md` |
 
-**Limits we state openly:** attacks in the automated suite are synthetic and the genuine data is three people from
-open clips, so these are regression results, not an ISO/IEC 30107-3 evaluation (the volunteer evaluation is planned,
-`docs/eval/protocol.md`; no real person or real artefact has been tested yet). Because synthetic prints passed the
+**What the results cover:** attacks in the automated suite are synthetic and the genuine data is three people from
+open clips, so these are regression results, not an ISO/IEC 30107-3 evaluation. A team-run run with real faces and
+real artefacts on 2026-10-24/25 (`docs/eval/results/real-faces-2026-10-24.md`) gave: genuine 8 of 8 phone-camera
+transactions accepted; 0 of 32 attack transactions accepted (print, phone photo, video replay); the phone photo of one
+subject refused by PAD 4 of 4 (APCER 0/4); 28 transactions ended at the capture-quality gate with no decision (APNRR);
+6 of 6 instrumented tests on a OnePlus CPH2569. The volunteer evaluation is planned (`docs/eval/protocol.md`). Because synthetic prints passed the
 passive check, every workflow that matches a face now always asks for challenges; this costs time, not rejections
 (median accepted registration attempt 11.0 s, `docs/eval/results/20261014-latency/README.md`). Every synthetic replay is refused, including an adaptive screen replay that plays the right clip
 for each prompt (it passed 4 of 8 transactions until a screen-pattern check was added on 2026-10-05; proven on
-software-made screens only). Android was tested on an emulator with replayed
-frames, built-in camera only; no physical phone or L1 device yet, and no live webcam run through the full client.
+software-made screens). Android ran on an emulator with replayed frames and, for the instrumented tests and the
+latency measurement, on a physical phone (OnePlus CPH2569); L1 and vendor face devices are next.
 
 ## 5. Next steps
 
 1. Run the in-house volunteer evaluation (12 people, 8 attack types, both clients).
-2. Android: vendor SBI face devices and L1; run the measurement kit on a physical phone (CPU, XNNPACK, NNAPI;
-   code done, not yet run on a phone).
+2. Android: vendor SBI face devices and L1; repeat the phone measurement unplugged and on a second phone model (one phone measured on 2026-10-24;
+   see docs/test-report/android-performance.md).
 3. Device-side PAD for L1 devices, against adaptive replays.
 4. Offline import of signed model updates: done on both clients (bonus B6; Android button in Settings, Device
    Settings); run it on a physical phone.

@@ -35,7 +35,7 @@ authentication.
 |---|---|---|
 | 2 | See the screens: challenge, refusals, supervisor approval, device errors, both clients | [docs/ux/README.md](docs/ux/README.md), [wireframes](docs/ux/wireframes.svg) |
 | 3 | Check each PS04 bullet against code, test and status (done, partial, with the reason) | [docs/traceability.md](docs/traceability.md); open items in section 11 |
-| 3 | Read the measured results and the limits | [docs/test-report/README.md](docs/test-report/README.md) section 1, [attack suite](docs/eval/results/20261014-shipped/README.md), [Known limits](#status-2026-10-14) below |
+| 3 | Read the measured results, including the real-person run | [real faces and real attacks](docs/eval/results/real-faces-2026-10-24.md), [docs/test-report/README.md](docs/test-report/README.md) section 1, [attack suite](docs/eval/results/20261014-shipped/README.md), [Known limits](#status-2026-10-14) below |
 | 5 | Build and test the engine (JDK 11): 544 tests, no MOSIP server needed | `mvn -f liveness/pom.xml install -Dliveness.benchmark.frames=0` |
 | 15 | Run the real desktop client with your own webcam | [Evaluate in 15 minutes](#evaluate-in-15-minutes) |
 | 20 | Watch every desktop flow run by script (71 checks), after the build in [Quick start](#quick-start) and a one-time `bash scripts/demo-desktop.sh --onboard` | `bash scripts/demo-desktop.sh --restore-golden --policy recorded`; results in [docs/test-report/desktop-e2e.md](docs/test-report/desktop-e2e.md) |
@@ -94,15 +94,19 @@ upstream split: [docs/test-report/README.md](docs/test-report/README.md#2-unit-a
 |---|---|
 | B4 interoperability testing | Done. One ONNX Runtime release (1.20.0) on both clients; a parity test replays the same recorded frames through each client's engine loader, configuration and decoder: desktop 19 of 19, Android unit 19 of 19, emulator 6 of 6 committed cases, identical decisions. No physical phone. [docs/test-report/interoperability.md](docs/test-report/interoperability.md) |
 | B6 secure offline model import | Done on both clients (signature, per-file SHA-256, rollback protection, self-test, previous bundle kept, audit). Android: "Import liveness model" button in Settings, Device Settings ([picture](docs/ux/screenshots/android/a-s1-model-import-button.png)); no phone test. [Android import steps](docs/install/android.md#10-import-a-liveness-model-bundle-offline-model-update), [design](docs/design/android-liveness.md#14-offline-model-update-bonus-b6) |
-| B7 and B8 per-frame latency and memory on a phone | Code done (measurement kit: instrumented test and `scripts/android-perf.sh`); the phone measurement is pending, the results table is empty. [docs/test-report/android-performance.md](docs/test-report/android-performance.md) |
+| B7 and B8 per-frame latency and memory on a phone | Done. Measured on a OnePlus CPH2569 (Android 15) in two runs on 2026-10-24, phone charging at about 40% battery (may throttle). Best: CPU or XNNPACK with 2 threads, p50 58-71 ms and p95 74-92 ms per frame, so the 20 ms target is missed (as on desktop); NNAPI is 5-8 times slower (p50 312-468 ms); 4 threads are no faster than 2; peak PSS 239-338 MB. [docs/test-report/android-performance.md](docs/test-report/android-performance.md) |
 
 Known limits (more in [docs/test-report/README.md](docs/test-report/README.md#6-known-limitations) section 6):
 
-- Every attack is synthetic and the genuine data is three people from open clips: regression results, not an
-  ISO/IEC 30107-3 evaluation. The screen-pattern check that stops the adaptive screen replay is proven on
-  software-made screens only.
-- Not run yet: no physical Android phone or tablet, no live face or real artefact through either client, no
-  volunteer evaluation, no L1 or vendor face device on Android.
+- Real faces and real artefacts, 2026-10-24/25 ([results](docs/eval/results/real-faces-2026-10-24.md)): genuine 8 of 8
+  phone-camera transactions accepted (BPCER 0/8); 0 of 32 attack transactions accepted (print, phone photo, video
+  replay; 8 artefact groups). The phone photo of one subject reached passive PAD and was refused 4 of 4 (APCER 0/4);
+  28 transactions ended at the capture-quality gate with no decision and are reported as APNRR, not as PAD refusals.
+  On a OnePlus CPH2569 (Android 15) the instrumented suite passed 6 of 6. This is a team-run technology evaluation,
+  not an ISO/IEC 30107-3 certification or an accredited evaluation.
+- The automated suites replay synthetic attacks and three people from open clips: regression results. The
+  screen-pattern check that stops the adaptive screen replay is proven on software-made screens.
+- Next: the volunteer evaluation, and vendor or L1 face devices on Android.
 - Challenges on every capture cost time: the median accepted `registration` attempt takes 11.0 s of replayed stream
   ([results](docs/eval/results/20261014-latency/README.md)). The passive-first flow of
   the statement (one synced setting per workflow) accepts 100 of 226 synthetic attack transactions.
@@ -234,10 +238,10 @@ try again." Each state is drawn in [docs/ux/wireframes.svg](docs/ux/wireframes.s
 | API documentation: engine, device adapter, desktop services, Android API, face-match SDK, SBI calls, MockMDS admin, MockSync | [docs/api/README.md](docs/api/README.md) |
 | UI/UX design (PS04 Deliverable 2): wireframes, user flows, screens, message catalogue | [docs/ux/README.md](docs/ux/README.md): [wireframes.svg](docs/ux/wireframes.svg) (desktop and Android side by side), [flows.md](docs/ux/flows.md) (desktop and Android), [desktop-liveness.md](docs/ux/desktop-liveness.md), [message-catalogue.csv](docs/ux/message-catalogue.csv) |
 | Install and run | [docs/install/README.md](docs/install/README.md), [desktop.md](docs/install/desktop.md), [android.md](docs/install/android.md) |
-| Test reports | [summary](docs/test-report/README.md), [desktop](docs/test-report/desktop-e2e.md), [Android](docs/test-report/android-e2e.md), [desktop/Android interoperability (B4)](docs/test-report/interoperability.md), [Android per-frame latency and memory (B7, B8; phone run pending)](docs/test-report/android-performance.md) |
+| Test reports | [summary](docs/test-report/README.md), [desktop](docs/test-report/desktop-e2e.md), [Android](docs/test-report/android-e2e.md), [desktop/Android interoperability (B4)](docs/test-report/interoperability.md), [Android per-frame latency and memory (B7, B8; phone run of 2026-10-24)](docs/test-report/android-performance.md) |
 | Offline model import (B6) | Android: [install steps](docs/install/android.md#10-import-a-liveness-model-bundle-offline-model-update) and [design](docs/design/android-liveness.md#14-offline-model-update-bonus-b6); desktop: [docs/design/desktop-liveness-services.md](docs/design/desktop-liveness-services.md#61-secure-offline-model-update-bonus-b6) section 6.1 |
 | Pitch material | [deck outline](docs/pitch/deck-outline.md), [summary](docs/pitch/summary.md), [video script](docs/pitch/video-script.md) |
-| PAD evaluation protocol and results | [docs/eval/](docs/eval/README.md); latest runs: [docs/eval/results/20261014-shipped/README.md](docs/eval/results/20261014-shipped/README.md) (shipped defaults against the passive-first flow) |
+| PAD evaluation protocol and results | [docs/eval/](docs/eval/README.md); real-person run: [docs/eval/results/real-faces-2026-10-24.md](docs/eval/results/real-faces-2026-10-24.md); latest automated runs: [docs/eval/results/20261014-shipped/README.md](docs/eval/results/20261014-shipped/README.md) (shipped defaults against the passive-first flow) |
 | Test data and demo accounts | [docs/test-data.md](docs/test-data.md) |
 | Licences and SBOM | [licenses/README.md](licenses/README.md), [NOTICE](NOTICE), [docs/sbom/README.md](docs/sbom/README.md) |
 

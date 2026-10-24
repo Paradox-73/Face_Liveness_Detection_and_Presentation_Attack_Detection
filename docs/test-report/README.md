@@ -9,7 +9,7 @@ stay in the linked reports; requirement-by-requirement status is in [../traceabi
 | [desktop-e2e.md](desktop-e2e.md) | Real desktop Registration Client against MockSync (mock MOSIP server) and MockMDS (mock face device): 13 scripted flows, 3 interactive flows, audit and packet evidence. Re-run 2026-10-17 at the shipped policy with the challenge pool cut to blink and smile: 71 of 71 (2026-10-15: 69 of 71) |
 | [android-e2e.md](android-e2e.md) | Real Android Registration Client on an Android 14 emulator against MockSync: 16 flows, latency, APK size. Re-run 2026-10-17 at the shipped policy with the challenge pool cut to blink and smile: 59 of 74 (2026-10-14: 55 of 75) |
 | [interoperability.md](interoperability.md) | Desktop and Android give the same liveness decision: 19 replayed cases through each client's engine loader, configuration and decoder, one ONNX Runtime release (1.20.0) on both (bonus B4) |
-| [android-performance.md](android-performance.md) | Per-frame latency and memory of the engine on a physical Android phone (bonus B7 and B8): the measurement kit is built, the phone table is still empty |
+| [android-performance.md](android-performance.md) | Per-frame latency and memory of the engine on a physical Android phone (bonus B7 and B8): measured on a OnePlus CPH2569 on 2026-10-24 (best p50 58-71 ms, p95 74-92 ms at 2 threads; 20 ms target missed) |
 | [../install/android.md](../install/android.md#10-import-a-liveness-model-bundle-offline-model-update), [../design/android-liveness.md](../design/android-liveness.md#14-offline-model-update-bonus-b6) | Offline import of a signed model bundle on Android (bonus B6): how to run it and how it works; unit tests only, no phone run |
 | [../eval/calibration-notes.md](../eval/calibration-notes.md) | Automated suite: the real engine and models over replayed scenarios, ISO/IEC 30107-3-style metrics |
 | [../eval/results/20261014-shipped/README.md](../eval/results/20261014-shipped/README.md), [../eval/results/20261014-latency/README.md](../eval/results/20261014-latency/README.md) | The current scenario suites (2026-10-14) at the shipped defaults and at passive first, and the latency run |
@@ -24,9 +24,9 @@ stay in the linked reports; requirement-by-requirement status is in [../traceabi
 | Automated liveness and attack scenarios | run of 2026-10-14 at the shipped defaults: 275 transactions, 755 attempt records (section 3.0). **0 of 226 attack transactions accepted (APCER 0.0% for every species and workflow). Bona fide: `registration` 0.0% (0/28), `login_auth` 0.0% (0/12).** At passive first: 100 of 226 accepted |
 | Desktop end-to-end | reference run 2026-09-30: 41 of 41 checks passed **at the old defaults** (all workflows passive first); 2026-10-17 at the shipped policy with the pool cut to blink and smile: 71 of 71, again in two runs on 2026-10-20 (section 4) |
 | Android end-to-end | reference run 2026-09-30: 58 of 58 checks passed **at the old defaults**; a repeat run found one real weakness; 2026-10-17 at the shipped policy with the pool cut to blink and smile: 59 of 74 (section 4) |
-| Bonus items | B4 interoperability done (19 of 19 replayed cases agree on desktop and on Android unit tests, 6 of 6 on an emulator); B6 model import done on both clients (Android button in Device Settings); B7 and B8 measurement kit done, **phone measurement pending** (section 8) |
+| Bonus items | B4 interoperability done (19 of 19 replayed cases agree on desktop and on Android unit tests, 6 of 6 on an emulator); B6 model import done on both clients (Android button in Device Settings); B7 and B8 measured on one phone on 2026-10-24 (best p95 74-92 ms per frame at 2 threads, 20 ms target missed; section 8) |
 | Headline weakness | every synthetic attack species is refused, but the attacks are software-made: the screen-pattern check that now stops the adaptive screen replay (SYN-A7, 4 of 8 accepted before it) is proven on synthetic screens only, and frames enlarged by 1.5x or a whole number before the engine could look like a screen to it. The dim clip passes since the exposure correction; real dim rooms are untested (section 6) |
-| Evaluation with real people and artefacts | not run yet; placeholder in section 7 |
+| Evaluation with real people and artefacts | run on 2026-10-24/25 ([results](../eval/results/real-faces-2026-10-24.md), section 7.0): genuine 8 of 8 phone-camera transactions accepted (BPCER 0/8); 0 of 32 attack transactions accepted (P1 print 16, P4 phone photo 8, P6 video replay 8); P4 APCER 0/4, 28 transactions ended at the quality gate with no decision (APNRR); OnePlus CPH2569 instrumented suite 6 of 6 |
 
 ## 2. Unit and component tests
 
@@ -228,7 +228,7 @@ engine before those fixes ([../eval/results/20260930/](../eval/results/20260930/
 | 12 | SFace match threshold 40 chosen from published values, not calibrated on a larger set | match error rates unknown | desktop 5.10; `liveness/face-match-sdk/README.md` |
 | 13 | All attack data is synthetic; bona fide data is three people from stock clips | numbers are regression figures, not security claims | section 3 |
 | 14 | The full end-to-end client runs (section 4) were made at the old defaults; at the shipped policy only the runs with the pool cut to blink and smile exist (desktop 71 of 71 and Android 59 of 74 on 2026-10-17) | turn challenges and the longer flows at the shipped policy are untested on the clients; they need a live face or longer recordings | `design/android-liveness.md` 13.8 |
-| 15 | No real person, no physical phone and no real print or screen has been tested through either client | results of sections 3 and 4 are replayed frames only | section 7 |
+| 15 | Real-person frames (2026-10-24/25) went through the engine and, on a physical phone, through the instrumented tests; the full desktop and Android client runs of section 4 use replayed frames | sections 3 and 4 are replayed frames; section 7.0 adds the real-person run | section 7 |
 
 Closed on 2026-09-30: prints and looped clips passing the passive check (old #1), head turns to the left misread as
 a smile (old #3), blurred frames reaching the challenges. Closed on 2026-10-05: the Android import button (old #15,
@@ -236,9 +236,25 @@ Settings, Device Settings, with a BUSY check while a capture screen is open).
 
 ## 7. In-house evaluation with volunteers (ISO/IEC 30107-3 method) — placeholder
 
-To be filled after the capture sessions described in [../eval/protocol.md](../eval/protocol.md). Nothing below is a
-result yet. Title of the final report: "In-house PAD evaluation following ISO/IEC 30107-3:2023 methodology: basic
+Sections 7.1 to 7.7 are filled after the volunteer capture sessions described in [../eval/protocol.md](../eval/protocol.md).
+Title of the final report: "In-house PAD evaluation following ISO/IEC 30107-3:2023 methodology: basic
 attack potential".
+
+### 7.0 Real faces and real artefacts, 2026-10-24 and 25
+
+Full page: [../eval/results/real-faces-2026-10-24.md](../eval/results/real-faces-2026-10-24.md). Shipped engine and
+configuration; frames cut from recordings of two team members (S1, S2) and of printed, phone-screen and replayed faces
+(S1-S5, with consent); team-run, not an ISO/IEC 30107-3 certification and not an accredited evaluation.
+
+| Measure | Result |
+|---|---|
+| Genuine, phone camera, C1 (S1, S2) | 8 of 8 transactions accepted (BPCER 0/8); 4 of 12 attempts refused with `INTEGRITY` / `FACE_SWITCH`, all in transactions that drew `LOOK_DOWN`, which is outside the shipped pool; each passed on a later attempt |
+| Genuine, laptop camera (S2) | 2 of 4 transactions accepted; both refusals `BLINK` `NOT_HELD` (the clip set has a natural, short blink and no deliberate blink clip) |
+| Attacks | 0 of 32 transactions accepted: P1 print 16, P4 phone photo 8, P6 video replay 8 |
+| Refused by passive PAD | 4 (P4 photo of S2, passive score 0, `PAD_SCORE`); P4 APCER 0/4 |
+| No decision (quality gate), APNRR | 28 (`FACE_TOO_SMALL`, one group `BLURRY`); not counted as PAD refusals |
+| Per-frame time on the laptop | p50 12.1 ms, p95 18.5 ms (phone clips); p50 17.2 ms, p95 25.7 ms (laptop clips) |
+| Physical phone, OnePlus CPH2569, Android 15 | `livenessmanager` instrumented suite 6 of 6 |
 
 ### 7.1 Item under test
 
@@ -305,6 +321,6 @@ attack potential".
 |---|---|---|
 | B4 interoperability: one ONNX Runtime release on both clients and a desktop/Android parity test | **done.** Desktop and Android both use ONNX Runtime 1.20.0 (Android moved down from 1.28.0 because the desktop runtime cannot go past 1.20.0). The same replayed cases give identical decisions: desktop 19 of 19, Android unit tests 19 of 19, emulator `arc_api34` 6 of 6 committed cases; maximum score difference 0 points over 98 scores. Not covered: a physical phone (arm64 library untested), the session threading and screens, a Linux CI run | [interoperability.md](interoperability.md) |
 | B6 offline model update on Android | **done on both clients** (desktop earlier). Same checks as the desktop import: signature, per-file SHA-256, anti-rollback, self-test, atomic switch, previous bundle kept, audit events LV13 to LV15. Tests: `ModelBundleImporterTest` 15 of 15 and the loader tests. The "Import liveness model" button in Settings, Device Settings calls it (seen on the emulator, [picture](../ux/screenshots/android/a-s1-model-import-button.png)). **Not done:** no import run on an emulator or phone | [../install/android.md](../install/android.md#10-import-a-liveness-model-bundle-offline-model-update), [../design/android-liveness.md](../design/android-liveness.md#14-offline-model-update-bonus-b6) |
-| B7 and B8 latency and memory on a physical phone | **code done, phone measurement pending.** An instrumented benchmark and a script that loops CPU, XNNPACK and NNAPI over 1, 2 and 4 threads and samples memory exist; the results table is empty; only the emulator numbers of the Android report are listed, labelled emulator | [android-performance.md](android-performance.md) |
+| B7 and B8 latency and memory on a physical phone | **measured on 2026-10-24.** OnePlus CPH2569, Android 15, charging at about 40% battery (may throttle), two runs of CPU, XNNPACK and NNAPI over 1, 2 and 4 threads, 100 frames after 20 warm-up each. Best is CPU or XNNPACK with 2 threads: p50 58-71 ms, p95 74-92 ms per frame (target 20 ms missed); NNAPI is 5-8 times slower; 4 threads are no faster than 2; peak PSS 239-338 MB. One phone only | [android-performance.md](android-performance.md) |
 
-Real-person and phone results are pending for all three items.
+The phone measurement covers one phone. Real-person results: [section 7.0](#70-real-faces-and-real-artefacts-2026-10-24-and-25).

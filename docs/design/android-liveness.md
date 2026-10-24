@@ -525,11 +525,10 @@ Flutter banners, so a synced text replaces the bundled one everywhere. Checked b
 | Fallback | A provider missing from the ONNX Runtime build is skipped (`UNAVAILABLE`); a provider that rejects the options is skipped for that model (`REJECTED`); either way that model runs on the CPU. If the engine still fails to load (anything but a model integrity failure), `EngineLoader` loads it again on the CPU. A provider problem never switches liveness off. |
 | Status | Logcat `Liveness engine ready: ... execution <status>` and the diagnostic panel: `CPU`, `XNNPACK`, `XNNPACK (partly CPU)`, `CPU (NNAPI unavailable)`, `CPU (NNAPI rejected)`, `CPU (XNNPACK failed to load)`. |
 
-Measured: nothing on a phone yet. On the emulator every load reported `execution CPU` (the shipped value). XNNPACK and NNAPI
-were not run on a device; the selection and every fallback path are covered by `AcceleratorCustomizerTest`. The
+Measured on a phone (OnePlus CPH2569, Android 15, charging at about 40%, two runs of 2026-10-24, [../test-report/android-performance.md](../test-report/android-performance.md)): every row loaded its provider without fallback; NNAPI is 5-8 times slower than CPU (p50 312-468 ms), XNNPACK with 2 threads matches CPU with 2 threads (p50 58-71 ms, p95 74-92 ms), 4 threads are no faster than 2, peak PSS 239-338 MB. The measured best is 2 threads on CPU or XNNPACK, the shipped setting (CPU, 2 threads). On the emulator every load reported `execution CPU` (the shipped value). XNNPACK and NNAPI
+were not run on the emulator; the selection and every fallback path are covered by `AcceleratorCustomizerTest`. The
 measurement kit (`scripts/android-perf.sh`, instrumented test `LivenessPerformanceTest`: CPU, XNNPACK and NNAPI by
-1, 2 and 4 threads, per-frame time and memory) is written and compiles, but the test APK was not built or installed and
-no phone or emulator run exists; the results table in [../test-report/android-performance.md](../test-report/android-performance.md) is empty. Whether the NNAPI provider loads in `onnxruntime-android` 1.20.0 is unverified (B7/B8 in `docs/traceability.md`).
+1, 2 and 4 threads, per-frame time and memory) produced the phone results above.
 
 Model warm-up: `EngineLoader` runs the face detector and the PAD models once on a blank 640x480 frame after
 loading (100-500 ms on the emulator). Without it, the first frames of the first session after an app start took

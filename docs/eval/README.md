@@ -4,12 +4,13 @@ Tools and data descriptions for testing the face liveness engine automatically a
 
 - [protocol.md](protocol.md): the in-house evaluation with real people and real artefacts (who, what, how many, consent, metrics).
 - [team-self-test.md](team-self-test.md): how the team tests the real clients with their own faces and home-made attacks, and turns the hand-filled sheet into APCER / BPCER (`tools/eval/sheet-to-attempts.py`).
+- [results/real-faces-2026-10-24.md](results/real-faces-2026-10-24.md): the evaluation with real faces and real artefacts of 2026-10-24/25: genuine 8 of 8 phone-camera transactions accepted, 0 of 32 attack transactions accepted, 6 of 6 instrumented tests on a physical phone.
 - [calibration-notes.md](calibration-notes.md): results of the automated suite on the shipped engine and the parameter changes they support.
 - [results/](results/): the reports of the runs quoted in the calibration notes; the latest are the suites of 2026-10-14, shipped defaults against the passive-first flow ([results/20261014-shipped/README.md](results/20261014-shipped/README.md)); before them the suites of 2026-10-05 evening, after the exposure correction and the screen-pattern check ([results/20261005b-shipped/README.md](results/20261005b-shipped/README.md)).
 
 [../manual-test-checklist.md](../manual-test-checklist.md) lists the steps only people can do: webcam recordings of each team member, the volunteer attack session, both clients with a live face, and the video dry run. Results go into [../manual-test-results-template.md](../manual-test-results-template.md). `python tools/eval/ingest-recordings.py` reads the recordings from `../run/recordings/` (names `<subject>_<condition>_<clip>.mp4`, for example `S2_C1_blink.mp4`), cuts them into `rec-*` frame packs, writes one scenario per subject and condition into the output folder, runs the scenario runner and `analyze.py`, and prints the path of `report.md`. Its options and limits are in the script header.
 
-The automated suite replays recorded frames into the engine. That is an injection path in itself, and the attack frames are made in software, so its results are **technology regression results, not an ISO/IEC 30107-3 evaluation**.
+The automated suite replays recorded frames into the engine. That is an injection path in itself, and most attack frames are made in software, so its results are **technology regression results, not an ISO/IEC 30107-3 evaluation**. The real-person run of 2026-10-24/25 uses the same replay path with frames cut from recordings of real faces and real artefacts.
 
 ## Layout
 
@@ -164,6 +165,6 @@ The Java tests cover the scenario loader (every field and error), the playlist (
 ## Design choices
 
 - Pack manifests are in `eval/packs/` and scenarios in `eval/scenarios/` (not both under `eval/scenarios/`), because several scenarios share one pack.
-- The frame packs are not from team members but from openly licensed clips of unrelated people plus software-made attacks, because no consenting team captures exist yet. The development-split capture ([protocol.md](protocol.md) section 5, S1-S4 frame packs) replaces them once recorded; the tools do not change.
+- The frame packs are not from team members but from openly licensed clips of unrelated people plus software-made attacks, for the automated regression suites. Recordings of consenting team members (`rec-*` packs from `tools/eval/ingest-recordings.py`, [protocol.md](protocol.md) section 5) run through the same tools; the first such run is [results/real-faces-2026-10-24.md](results/real-faces-2026-10-24.md).
 - Metrics and DET plots come from one script, `tools/eval/analyze.py`, not two.
 - Only the headless runner exists; a second, services-level mode through the Registration Client and MockMDS `ImageSequenceSource` is not built. The same packs can be streamed by hand with MockMDS `POST /admin/source {source: SEQUENCE, path: ...}`.
