@@ -1,12 +1,15 @@
 # Pitch deck outline (7 core slides)
 
+The submitted deck has 13 slides: these seven, split out and joined by target audience, technology stack, what
+is new, limits and roadmap slides.
+
 Team Badmosip, MOSIP Decode 2026, Problem Statement 04. Seven slides, about 7 minutes spoken (one minute per
 slide). No institution names or logos anywhere. Every number on a slide comes from
 [../test-report/README.md](../test-report/README.md) or [../traceability.md](../traceability.md); the speaker
 notes name the source so a question can be answered with the document open.
 
 Visual rules: one message per slide, white background, the clients' own blue (`#005BAA`) as accent, screenshots
-from `docs/ux/screenshots/` (none shows a real face), numbers large, limitations printed on the slide that makes
+from `docs/ux/screenshots/` (faces only from openly licensed stock clips, never a team member), numbers large, limitations printed on the slide that makes
 the claim.
 
 ---
@@ -122,7 +125,7 @@ the claim.
 | Biometric SDK interface (`IBioApiV2`) | SFace face-match SDK loaded by MOSIP's own SDK factory for FACE |
 | Existing screens | liveness window opened from the existing capture and authentication screens |
 
-- Footer: "Upstream code changed surgically: 84 files in the desktop client, 148 in the Android client, each
+- Footer: "Upstream code changed surgically: 117 files in the desktop client, 209 in the Android client (2026-10-22, whitespace-only changes ignored), each
   upstream import in its own commit so the diff is reviewable."
 
 **Speaker notes**
@@ -142,9 +145,10 @@ the claim.
 - Four large numbers:
   - **2,691** tests passed on 2026-10-14 (verification run, 0 failures); about 1,330 are written by the team, the
     rest come with the upstream MOSIP code (`docs/test-report/README.md` section 2).
-  - **41 / 41** checks: scripted end-to-end run on the real desktop client (run at the earlier defaults; 71 of 71 on
-    2026-10-17 and twice on 2026-10-20 at the current policy with blink and smile only).
-  - **58 / 58** checks: scripted end-to-end run on the real Android client (earlier defaults; 59 of 74 on 2026-10-17).
+  - **71 / 71** checks: scripted end-to-end run on the real desktop client at the shipped policy with the challenge
+    pool cut to blink and smile (2026-10-17, and twice on 2026-10-20; 41 of 41 at the earlier defaults).
+  - **59 / 74** checks: scripted end-to-end run on the real Android client at the same policy (2026-10-17; face
+    sign-in 10 of 10, attacks 10 of 10, supervisor override 10 of 18; 58 of 58 at the earlier defaults).
   - **75** automated liveness and attack scenarios, 275 transactions, scored with ISO/IEC 30107-3 metrics.
 - One line (synthetic attacks, per transaction, from `docs/eval/results/20261014-shipped/README.md`): shipped
   defaults **0 of 226** attack transactions accepted, genuine rejected **0.0%** (registration 0/28, face sign-in 0/12); passive first, as the problem

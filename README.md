@@ -29,16 +29,35 @@ authentication.
   runs without a network.
 - **Evidence:** audit events `REG-EVT-LV01..17` and `LIVENESS_*` entries in every face record of the packet.
 
+## Judge's path
+
+| Minutes | Step | Where |
+|---|---|---|
+| 2 | See the screens: challenge, refusals, supervisor approval, device errors, both clients | [docs/ux/README.md](docs/ux/README.md), [wireframes](docs/ux/wireframes.svg) |
+| 3 | Check each PS04 bullet against code, test and status (done, partial, with the reason) | [docs/traceability.md](docs/traceability.md); open items in section 11 |
+| 3 | Read the measured results and the limits | [docs/test-report/README.md](docs/test-report/README.md) section 1, [attack suite](docs/eval/results/20261014-shipped/README.md), [Known limits](#status-2026-10-14) below |
+| 5 | Build and test the engine (JDK 11): 544 tests, no MOSIP server needed | `mvn -f liveness/pom.xml install -Dliveness.benchmark.frames=0` |
+| 15 | Run the real desktop client with your own webcam | [Evaluate in 15 minutes](#evaluate-in-15-minutes) |
+| 20 | Watch every desktop flow run by script (71 checks), after the build in [Quick start](#quick-start) and a one-time `bash scripts/demo-desktop.sh --onboard` | `bash scripts/demo-desktop.sh --restore-golden --policy recorded`; results in [docs/test-report/desktop-e2e.md](docs/test-report/desktop-e2e.md) |
+
+Design: [docs/design/README.md](docs/design/README.md). Pitch material: [docs/pitch/](docs/pitch/summary.md).
+
 ## Screens
 
 The same challenge on both clients: the client asks for a randomly chosen action ("Please smile", step 1 of 2).
-Real screens from the scripted end-to-end runs of 2026-09-30, when the challenge followed a low passive score
-(registration now asks for challenges every time); the camera preview is hidden, so the dark oval is where the
-face would be.
+Real screens of the running clients. The desktop picture (2026-10-21) shows a recorded face in the preview: an
+openly licensed stock clip played by the mock face device, not a team member. The Android picture (2026-09-30)
+hides the camera preview, so the dark oval is where the face would be.
 
 | Desktop Registration Client | Android Registration Client (tablet emulator) |
 |---|---|
 | <img src="docs/ux/screenshots/desktop/e2e-03-low-confidence-challenge.png" alt="Desktop face verification window: recorded face in the preview, dashed oval, smile icon, Please smile, Step 1 of 2, Attempt 1 of 3, Cancel" width="300"> | <img src="docs/ux/screenshots/android/e2e-06-low-confidence-challenge.png" alt="Android capture screen: oval with progress arc, Please smile, Step 1 of 2, attempt dots, Cancel" width="520"> |
+
+More desktop states (2026-10-22, same recorded clips):
+
+| Checking | Action detected | Two faces | Camera not available |
+|---|---|---|---|
+| <img src="docs/ux/screenshots/desktop/d-s1-checking.png" alt="Checking face liveness, hourglass icon, dashed oval over the face, Cancel" width="190"> | <img src="docs/ux/screenshots/desktop/d-s3-action-detected.png" alt="Smiling face, green oval, check icon, Action detected, Step 1 of 2" width="190"> | <img src="docs/ux/screenshots/desktop/d-s6-multiple-faces.png" alt="Two faces in the preview, amber oval and warning icon, More than one face detected" width="190"> | <img src="docs/ux/screenshots/desktop/d-s8-device-unavailable.png" alt="Dark preview, red oval, camera icon, The face camera is not available, Retry" width="190"> |
 
 Every state of both clients side by side (wireframes): [docs/ux/wireframes.svg](docs/ux/wireframes.svg); all
 pictures by state: [docs/ux/README.md](docs/ux/README.md).

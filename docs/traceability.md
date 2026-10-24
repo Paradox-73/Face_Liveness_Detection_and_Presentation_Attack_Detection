@@ -276,7 +276,7 @@ Where it runs:
 | E6 | Evaluate against ISO/IEC 30107 | `docs/eval/protocol.md`, `tools/eval/`, `docs/eval/calibration-notes.md` | 3 suites x 131 transactions | partial | Volunteer gap. Automated technology regression with ISO/IEC 30107-3 metrics is done. The evaluation with real people and real artefacts ([protocol](eval/protocol.md)) has not run yet. |
 | E7-E19 | Implement passive, PAD, active, dynamic selection, action detection, thresholds, resident, operator, supervisor, online/offline, retry, UI/UX, configuration | mandatory tasks 1-10 below | | see rows | |
 | E20 | Audit and diagnostic logging | `core/audit/*`, `RS/.../DesktopAuditSink`, `DesktopDiagnosticSink`; `LM/audit/ArcAuditSink`, `LogcatSinks`; events `REG-EVT-LV01..17` on both clients | `AuditTest`, `DesktopAuditSinkTest`, `ArcAuditSinkTest`; DE-D12, AE-A14 | done | No image, embedding or raw score in any audit row. |
-| E21 | Performance and interoperability testing | latency: `docs/eval/calibration-notes.md` sections 0.3 and 5, `test-report/android-e2e.md` section 5 | see [test-report/README.md](test-report/README.md) section 5 | partial | The per-frame target (p95 at most 20 ms) is not met: desktop JVM p95 38-45 ms on a quieter machine, about 78 ms with two suites in parallel; the emulator is slower. No idle-machine or physical-tablet measurement (hardware). No interoperability framework (B4). |
+| E21 | Performance and interoperability testing | latency: `docs/eval/calibration-notes.md` sections 0.3 and 5, `test-report/android-e2e.md` section 5 | see [test-report/README.md](test-report/README.md) section 5 | partial | The per-frame target (p95 at most 20 ms) is not met: desktop JVM p95 127.7 ms on 2026-10-20 (shared laptop at 51-69% load, one ONNX Runtime thread; [eval/results/20261020-latency/README.md](eval/results/20261020-latency/README.md)), 38-45 ms in earlier runs on a quieter machine; the emulator is slower. No idle-machine or physical-tablet measurement (hardware). Interoperability: the desktop/Android parity test is done (B4). |
 
 ## 7. Mandatory tasks
 
@@ -289,7 +289,7 @@ Where it runs:
 | 1.3 | Continuous or periodic frame processing | `FrameHandOff.latestOnly()`, key `frame.sample_interval_ms` | CameraX `KEEP_ONLY_LATEST`; PAD every n-th frame during challenges | `FrameHandOffTest`, `FrameTimerTest` | done | |
 | 1.4 | Handle device frame formats | `RS/.../DesktopImageDecoder` (JPEG, ISO 19794-5 JPEG 2000), `core/image/PixelFormat` | `LM/image/AndroidImageDecoder` (RGBA_8888, JPEG), `PixelOrientation` | `ImageBufferTest`, `DesktopImageDecoderTest`, `AndroidImageDecoderTest`, `PixelOrientationTest` | done | |
 | 1.5 | Handle device communication failures | read timeouts (2 s), `DeviceErrorCode` (`STALLED`, `FIRST_FRAME_TIMEOUT`, `INVALID_STREAM`) | camera errors mapped to `DeviceErrorCode` | `MjpegEdgeCaseTest`, `FaceStreamSessionTest`; DE-D2 | done | |
-| 1.6 | Handle connection and disconnection | disconnect → message, no attempt used, Retry reopens the stream; waits for a running device scan | camera unavailable → message and Retry | DE-D2; AE-A5; `SbiFaceCaptureDeviceResolveTest` | done | Desktop shows the "disconnected" text also for a refused stream (MockMDS `UNAVAILABLE`); no separate "unavailable" wording. |
+| 1.6 | Handle connection and disconnection | disconnect → message, no attempt used, Retry reopens the stream; waits for a running device scan | camera unavailable → message and Retry | DE-D2; AE-A5; `SbiFaceCaptureDeviceResolveTest` | done | A refused stream (MockMDS `UNAVAILABLE`) shows "The face camera is not available..." on desktop (picture `ux/screenshots/desktop/d-s8-device-unavailable.png`, 2026-10-22); a disconnect during capture shows the "disconnected" text. |
 | 1.7 | Common device abstraction | `core/device/FaceCaptureDevice` implemented by `SbiFaceCaptureDevice` | implemented by `BuiltInCameraL0Device`, `SbiIntentDevice` | `DeviceTypesTest` | done | |
 
 ### 7.2 Task 2: Passive liveness
@@ -471,8 +471,8 @@ See [ux/README.md](ux/README.md) for the screen index. Summary:
 | Updated resident face capture screen | done | Both platforms, screenshots. |
 | Updated operator authentication screen | done | Desktop login (French, offline), Android sign-in with face. |
 | Updated supervisor authentication screen | done | Desktop EOD (Arabic), Android supervisor approval. |
-| Live face preview | done | Committed pictures hide the preview (no real faces in the repository). |
-| Liveness verification status | partial | "Checking" state described, not pictured. |
+| Live face preview | done | Desktop `e2e-03`, `e2e-05`, `e2e-09` and `e2e-17` show the preview or the captured face with recorded stock faces (Pexels License, not project members); the other pictures hide the preview. |
+| Liveness verification status | done | Desktop "Checking face liveness...", "Action detected", "Hold still" and success pictured (`d-s1` to `d-s5`, 2026-10-22); Android states drawn in the wireframes only. |
 | Active challenge prompts; facial action guidance; challenge progress | done | Desktop `e2e-03`, Android `e2e-06`, `e2e-12`. |
 | Liveness failure messages; PAD/failure messages | done | |
 | Retry flow; maximum retry flow | done | |
@@ -499,8 +499,8 @@ See [ux/README.md](ux/README.md) for the screen index. Summary:
 | Online/offline support | OF1-OF4 | done (models: offline signed import on both clients, Android without a screen) |
 | Configuration support | 7.8 | done |
 | Audit and diagnostic logging | E20 | done |
-| Desktop Registration Client changes | `clients/desktop` (108 files added or changed against the upstream import, counted on 2026-10-05 with uncommitted files) | done |
-| Android Registration Client changes | `clients/android` (202 files added or changed against the upstream import, counted on 2026-10-05 with uncommitted files) | done |
+| Desktop Registration Client changes | `clients/desktop` (117 files added or changed against the upstream import `96f4c56`, whitespace-only changes ignored, counted on 2026-10-22) | done |
+| Android Registration Client changes | `clients/android` (209 files added or changed against the upstream import `7f7e094`, whitespace-only changes ignored, counted on 2026-10-22) | done |
 
 ## 11. Summary of open items
 
