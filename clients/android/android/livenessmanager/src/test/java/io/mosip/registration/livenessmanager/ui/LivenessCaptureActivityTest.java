@@ -239,6 +239,20 @@ public class LivenessCaptureActivityTest {
     }
 
     @Test
+    public void attemptCountIsWrittenNextToTheDots() {
+        LivenessCaptureActivity activity = openScreen();
+        activity.render(LivenessUiState.builder(UiPhase.CHALLENGE, MessageKeys.CHALLENGE_BLINK)
+                .promptIcon(PromptIcon.BLINK).severity(Severity.INFO).attempt(2, 3).build());
+
+        ViewGroup attempts = activity.findViewById(R.id.liveness_attempts);
+        View last = attempts.getChildAt(attempts.getChildCount() - 1);
+        assertTrue(last instanceof TextView);
+        assertEquals("Attempt 2 of 3", ((TextView) last).getText().toString());
+        assertEquals("Attempt 2 of 3", attempts.getContentDescription().toString());
+        assertEquals("three dots and the words", 4, attempts.getChildCount());
+    }
+
+    @Test
     public void faceOvalDrawableIsTheDesktopFaceOutline() throws Exception {
         String xml = read(new File("src/main/res/drawable/ic_liveness_face.xml"));
         String smile = read(new File("src/main/res/drawable/ic_liveness_smile.xml"));

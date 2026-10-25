@@ -23,6 +23,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -460,7 +461,7 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
         prompt.setText(text);
         if (!text.equals(lastPrompt)) {
             lastPrompt = text;
-            prompt.announceForAccessibility(text);
+            // TalkBack reads the new prompt once through the prompt's live region (layout); no second announcement.
             // State changes in Logcat let tests and demos follow the screen (message key only, no image data).
             Log.i(TAG, "Screen state " + state.phase() + " " + state.messageKey());
         }
@@ -517,10 +518,18 @@ public final class LivenessCaptureActivity extends AppCompatActivity {
             int tint = used ? R.color.liveness_dot_used
                     : (i == attempt ? R.color.liveness_text : R.color.liveness_dot_free);
             dot.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, tint)));
+            dot.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             attempts.addView(dot);
         }
-        attempts.setContentDescription(messages.label(R.string.liveness_ui_attempts, String.valueOf(attempt),
-                String.valueOf(max)));
+        String text = messages.label(R.string.liveness_ui_attempts, String.valueOf(attempt), String.valueOf(max));
+        // The count in words next to the dots, so it is not told by dot colour alone.
+        TextView label = new TextView(this);
+        label.setText(text);
+        label.setTextColor(ContextCompat.getColor(this, R.color.liveness_text_secondary));
+        label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        label.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        attempts.addView(label);
+        attempts.setContentDescription(text);
     }
 
     private void attemptEnded(LivenessCaptureResult result) {

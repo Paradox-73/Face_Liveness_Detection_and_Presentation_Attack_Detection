@@ -171,6 +171,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:focusable="true"
+            android:gravity="center_vertical"
             android:orientation="horizontal" />
 
         <LinearLayout
@@ -199,7 +200,9 @@
                 android:layout_marginStart="8dp"
                 android:minHeight="48dp"
                 android:text="@string/liveness_ui_cancel"
-                android:textColor="@color/liveness_text" />
+                android:textColor="@color/liveness_text"
+                app:strokeColor="@color/liveness_text_secondary"
+                app:strokeWidth="2dp" />
 
             <!-- Resident workflows with on_max_failure=SUPERVISOR_OVERRIDE, after the last attempt only. -->
             <com.google.android.material.button.MaterialButton
@@ -211,7 +214,9 @@
                 android:minHeight="48dp"
                 android:text="@string/liveness_ui_override"
                 android:textColor="@color/liveness_text"
-                android:visibility="gone" />
+                android:visibility="gone"
+                app:strokeColor="@color/liveness_text_secondary"
+                app:strokeWidth="2dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/liveness_retry"
