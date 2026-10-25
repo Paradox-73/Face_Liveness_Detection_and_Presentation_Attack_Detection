@@ -103,4 +103,4 @@ latency measurement, on a physical phone (OnePlus CPH2569); L1 and vendor face d
 | Test data (demo users, frame packs) | `docs/test-data.md` |
 | Screens, both clients | `docs/ux/README.md` |
 | Technologies considered | `docs/design/technology-evaluation.md` |
-| Demo video | _link to be added after recording_ |
+| Demo video | https://youtu.be/rod0HENUmQQ |
