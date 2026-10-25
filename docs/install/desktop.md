@@ -40,21 +40,22 @@ The script:
 
 1. picks a JDK 11 that has `javac` and the Java crypto policy files, or downloads
    the Zulu 11.0.8 FX JDK into `<run root>/cache/`;
-2. runs `mvn -B clean install -DskipTests -Dgpg.skip` (plus `-Pmocksync` or
-   `-Dmosip.hostname=...`) in `clients/desktop/registration/`;
-3. assembles the run layout (section 3).
+2. runs `mvn -B clean install -DskipTests -Dgpg.skip` in `clients/desktop/registration/`;
+3. assembles the run layout (section 3). With `--mocksync` or `--hostname`, it
+   rewrites `mosip.hostname` in `props/mosip-application.properties` of the run
+   layout's `registration-services` jar with `jar uf`, as upstream `configure.sh`
+   does when MOSIP packages the client.
 
 Other options: `--fast` builds only `registration-client` and the modules it
 needs; `--skip-build` re-assembles from the last build; `--run-dir DIR` changes
 the output folder. `<run root>` is `$MOSIP_RUN_ROOT`, or the folder `run` next
 to the repository.
 
-The same build without the script:
+The same Maven build without the script (server host `dev.mosip.net`, as upstream):
 
 ```bash
 cd clients/desktop/registration
-mvn -B clean install -DskipTests -Dgpg.skip              # default host
-mvn -B clean install -DskipTests -Dgpg.skip -Pmocksync   # localhost:8443
+mvn -B clean install -DskipTests -Dgpg.skip
 ```
 
 **Measured build times** (12-thread laptop, `MAVEN_OPTS=-Xmx1536m`):
@@ -62,29 +63,17 @@ mvn -B clean install -DskipTests -Dgpg.skip -Pmocksync   # localhost:8443
 | Case | Maven "Total time" |
 |---|---|
 | First build, empty `~/.m2` (all dependencies downloaded) | 5 min 33 s |
-| Rebuild, default host | 1 min 28 s |
-| Rebuild, `-Pmocksync` | 1 min 43 s |
-| Rebuild, `--fast --mocksync` (no `registration-test`) | 1 min 35 s |
-| Rebuild, `--fast --hostname example.org:9443` | 1 min 55 s |
+| Rebuild | 1 min 28 s to 1 min 55 s |
 
 Rebuild times vary by about 20 s with other load on the machine.
 
 ### 2.1 Build changes compared with upstream
 
-| File | Change | Why |
-|---|---|---|
-| `registration/registration-services/pom.xml` | `registration-api` and `registration-api-stub-impl` use `${project.version}` (1.2.0.2, built in this reactor) instead of `${mosip.core.kernel.version}` (1.2.0.1 from Maven Central). | Upstream silently used the published 1.2.0.1 jars, so changes to the local API modules never reached the client. The run layout now contains `registration-api-1.2.0.2.jar`. |
-| `registration/pom.xml` | New property `mosip.client.hostname` (default `dev.mosip.net`); profile `mocksync` sets it to `localhost:8443`; profile `hostname-override` copies `-Dmosip.hostname=<host>` into it. | Selects the server host at build time, the same value `configure.sh` writes when MOSIP packages the client. |
-| `registration/registration-services/src/main/resources/props/mosip-application.properties` | `mosip.hostname=${mosip.client.hostname}` (filled in by Maven resource filtering). | A default build still produces `mosip.hostname=dev.mosip.net`. |
-
-Notes:
-
-- The default build and `-Pmocksync` leave the `${mosip.hostname}` placeholders
-  in `spring.properties` for the client to resolve at run time, as upstream does.
-- `-Dmosip.hostname=<host>` also replaces those placeholders at build time,
-  because Maven filters `spring.properties` too. The resulting jar works, but
-  `configure.sh`'s later rewrite of `props/mosip-application.properties` would no
-  longer change the service URLs. Use `-Dmosip.hostname` only for local builds.
+`registration-services/pom.xml` adds the liveness dependencies (`liveness-core`,
+`liveness-onnx` and its `models` jar, `onnxruntime` 1.20.0, `face-match-sdk`) and
+turns off the engine preload in tests; `registration-client/pom.xml` adds JUnit
+for its tests. Nothing else in the Maven build differs from upstream: the server
+host is set after the build (step 3 above).
 
 ## 3. Run layout
 

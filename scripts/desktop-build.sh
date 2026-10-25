@@ -23,8 +23,11 @@
 #   scripts/desktop-build.sh --skip-build       # re-assemble from the last build
 #
 # Options:
-#   --mocksync          build with the Maven profile 'mocksync'
-#   --hostname HOST     build with -Dmosip.hostname=HOST
+#   --mocksync          run layout talks to MockSync (mosip.hostname=localhost:8443)
+#   --hostname HOST     run layout talks to HOST (mosip.hostname=HOST)
+#                       Both rewrite props/mosip-application.properties in the
+#                       run layout's registration-services jar with 'jar uf', as
+#                       upstream configure.sh does; the Maven build is upstream's.
 #   --fast              build only registration-client and the modules it needs
 #   --skip-build        do not run Maven; assemble from existing target/ folders
 #   --skip-assemble     run Maven only
@@ -119,8 +122,6 @@ run_maven() {
 	log "JDK: $JAVA_HOME"
 
 	local args=(-B clean install -DskipTests -Dgpg.skip)
-	[ "$MOCKSYNC" = 1 ] && args+=(-Pmocksync)
-	[ -n "$HOST_OVERRIDE" ] && args+=("-Dmosip.hostname=$HOST_OVERRIDE")
 	[ "$FAST" = 1 ] && args+=(-pl registration-client -am)
 
 	log "mvn ${args[*]}  (in $RC_DIR)"
@@ -163,6 +164,20 @@ write_run_bat() {
 		> "$RUN_DIR/run.bat"
 }
 
+# Writes the server host into props/mosip-application.properties of the given jar.
+set_hostname() {
+	local host="$HOST_OVERRIDE" tmp="$RUN_DIR/.props" jar
+	jar="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+	[ -z "$host" ] && [ "$MOCKSYNC" = 1 ] && host="localhost:8443"
+	[ -n "$host" ] || return 0
+	rm -rf "$tmp"
+	mkdir -p "$tmp/props"
+	unzip -p "$jar" props/mosip-application.properties | tr -d '\r' \
+		| sed "s|^mosip.hostname=.*|mosip.hostname=$host|" > "$tmp/props/mosip-application.properties"
+	(cd "$tmp" && "$(select_jdk)/bin/jar" uf "$jar" props/mosip-application.properties)
+	rm -rf "$tmp"
+}
+
 assemble() {
 	local version target services_jar hostname environment
 	version="$(client_version)"
@@ -183,6 +198,8 @@ assemble() {
 	install_jre
 	write_run_bat
 
+	services_jar="$RUN_DIR/lib/registration-services-$version.jar"
+	set_hostname "$services_jar"
 	hostname="$(unzip -p "$services_jar" props/mosip-application.properties | tr -d '\r' | sed -n 's/^mosip.hostname=//p')"
 	environment="$(unzip -p "$services_jar" props/mosip-application.properties | tr -d '\r' | sed -n 's/^environment=//p')"
 	{

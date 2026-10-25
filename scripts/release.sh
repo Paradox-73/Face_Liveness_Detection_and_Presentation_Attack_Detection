@@ -9,7 +9,7 @@
 # Artefacts (<v> = release version, see --version):
 #   engine    liveness-core, liveness-onnx, liveness-onnx models and face-match-sdk jars
 #   desktop   mosip-liveness-desktop-client-<v>-win-x64.zip: Registration Client built for MockSync
-#             (-Pmocksync), lib/ with the liveness jars, ONNX Runtime, signed models, face-match SDK and
+#             (--mocksync), lib/ with the liveness jars, ONNX Runtime, signed models, face-match SDK and
 #             MOSIP mock SDK, Zulu 11.0.8 FX JRE, start/stop scripts, MockSync trust and machine setup
 #   android   mosip-liveness-android-<v>-<abi>.apk: release APKs (arm64-v8a for tablets, x86_64 for the
 #             emulator) from scripts/android-build.sh --release

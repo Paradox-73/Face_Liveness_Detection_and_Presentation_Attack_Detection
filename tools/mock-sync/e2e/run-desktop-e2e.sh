@@ -15,7 +15,7 @@
 #                  configure.sh normally copies into lib/
 #   MOCKSYNC_WORK_DIR  MockSync work directory (default tools/mock-sync/work)
 # Needs a JDK 11 with JavaFX (Zulu 11 FX, as the client uses) on PATH: the driver runs as a single-file program.
-# The client must be built with -Pmocksync (mosip.hostname=localhost:8443) and its machine registered in MockSync
+# The client must be built with scripts/desktop-build.sh --mocksync (mosip.hostname=localhost:8443) and its machine registered in MockSync
 # (scripts/register-machine.sh) before the first login.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")/.." && pwd)"

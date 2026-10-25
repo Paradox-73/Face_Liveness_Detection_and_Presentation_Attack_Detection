@@ -10,7 +10,7 @@ laptop without MOSIP's hosted test environment (Collab).
 - **Licence:** MPL-2.0 for the code; the reference data keeps its MPL-2.0 licence (`data/LICENSE-NOTE.md`).
 
 Checked result on 2026-09-28 (Windows 11, TPM 2.0 laptop, desktop client built from `clients/desktop` with
-`-Pmocksync`): first login, all six initial-sync steps, restart and second login reach the operator home screen.
+`--mocksync`): first login, all six initial-sync steps, restart and second login reach the operator home screen.
 
 ![Desktop client home screen after initial sync against MockSync](docs/desktop-home-after-sync.png)
 
@@ -37,10 +37,10 @@ end-to-end runner and `show-packet.sh` (`fetch-data.py` is Python).
    ```bash
    scripts/run-mock-sync.sh            # builds target/mock-sync.jar when missing; Ctrl+C stops it
    ```
-2. **Build the desktop client for MockSync.** The `mocksync` profile sets `mosip.hostname=localhost:8443` in the
+2. **Build the desktop client for MockSync.** `--mocksync` sets `mosip.hostname=localhost:8443` in the
    client's `props/mosip-application.properties` (no Java change).
    ```bash
-   cd ../../clients/desktop/registration && mvn -Pmocksync -DskipTests -Dgpg.skip install
+   cd ../.. && bash scripts/desktop-build.sh --mocksync
    ```
 3. **Make the client's Java trust MockSync's HTTPS certificate** (`work/keys/tls-cert.pem`). Either import it into
    the JRE the client runs on, or create a separate trust store and pass it with `-Djavax.net.ssl.trustStore`:

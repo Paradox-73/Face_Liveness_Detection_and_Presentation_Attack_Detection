@@ -110,9 +110,6 @@
 		<mosip.commons.packet.manager.version>1.2.0.1</mosip.commons.packet.manager.version>
 		<mosip.biometric.util.version>1.2.0.2</mosip.biometric.util.version>
 		<mosip.kernel.virusscanner.version>1.1.3</mosip.kernel.virusscanner.version>
-		<!-- Server host written into props/mosip-application.properties (mosip.hostname) at build time.
-			Override with -Pmocksync (localhost:8443) or -Dmosip.hostname=<host>. -->
-		<mosip.client.hostname>dev.mosip.net</mosip.client.hostname>
 		<!-- Derby Version -->
 		<apache.derby.version>10.13.1.1</apache.derby.version>
 
@@ -629,25 +626,6 @@
 					</plugin>
 				</plugins>
 			</build>
-		</profile>
-		<profile>
-			<!-- Client for the local MockSync server (tools/), which serves the sync APIs on https://localhost:8443 -->
-			<id>mocksync</id>
-			<properties>
-				<mosip.client.hostname>localhost:8443</mosip.client.hostname>
-			</properties>
-		</profile>
-		<profile>
-			<!-- -Dmosip.hostname=<host> sets the same host in props/mosip-application.properties -->
-			<id>hostname-override</id>
-			<activation>
-				<property>
-					<name>mosip.hostname</name>
-				</property>
-			</activation>
-			<properties>
-				<mosip.client.hostname>${mosip.hostname}</mosip.client.hostname>
-			</properties>
 		</profile>
 	</profiles>
 </project>
