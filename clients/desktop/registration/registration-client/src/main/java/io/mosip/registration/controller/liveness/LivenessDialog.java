@@ -451,7 +451,11 @@ public final class LivenessDialog {
 				online = false;
 			}
 			boolean offline = !online;
-			Platform.runLater(() -> panel.setOffline(offline));
+			Platform.runLater(() -> {
+				if (!closed) {
+					panel.setOffline(offline);
+				}
+			});
 		}, "liveness-online-check");
 		thread.setDaemon(true);
 		thread.start();

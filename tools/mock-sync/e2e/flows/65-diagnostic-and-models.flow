@@ -9,7 +9,7 @@
 #    development key: verified, stored, engine switched, LV15) and "v1.0.0-old" (validly signed but older: refused
 #    by the rollback check). A face login afterwards runs on the imported models.
 # Needs ${MODEL_BUNDLES}: a folder with those three bundles (see docs/design/desktop-liveness-services.md, model
-# import). The import leaves the bundle active in the client's liveness-models/ folder; delete that folder to go
+# import). The import leaves the bundle active in the client's db/liveness-models/ folder; delete that folder to go
 # back to the models of the installation.
 label diagnostic mode: diagnostic.enable=Y and a replaced checking text, synchronise
 http PUT ${MOCKSYNC}/admin/config {"mosip.registration.liveness.diagnostic.enable":"Y","mosip.registration.liveness.guidance.liveness.status.checking.eng":"Checking face liveness. Keep looking at the camera."}

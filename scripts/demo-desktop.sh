@@ -38,7 +38,7 @@
 # $MOSIP_RUN_ROOT/frame-packs (tools/eval/fetch-frame-packs.py). A JDK 11 with JavaFX and javac: JAVA11_HOME, or
 # the cached Zulu 11 FX JDK that desktop-build.sh downloads.
 # Environment: MOSIP_RUN_ROOT (default <repo>/../run); MOCKSYNC_HTTP_PORT, MockSync's HTTP admin port (default 8080;
-# set another when 8080 is taken; flows 60, 65 and 90 still call 8080).
+# set another when 8080 is taken; the flows get it as -Dflow.MOCKSYNC).
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -133,7 +133,7 @@ if [ "$RESTORE" = 1 ]; then
 	[ -d "$GOLDEN/db" ] || die "no golden snapshot in $GOLDEN"
 	copy_state "$GOLDEN" "$CLIENT_DIR"
 	# Model bundles imported by an earlier run (flow 65) would stay active; go back to the installed models.
-	rm -rf "$CLIENT_DIR/liveness-models"
+	rm -rf "$CLIENT_DIR/db/liveness-models" "$CLIENT_DIR/liveness-models"
 	log "client state restored from $GOLDEN"
 fi
 
@@ -186,7 +186,7 @@ fi
 run_driver() {
 	mkdir -p "$1"
 	(cd "$CLIENT_DIR" && "$JDK/bin/java" -Xmx1400m -Dfile.encoding=UTF-8 \
-		-Dframe.packs="$(native "$PACKS")" \
+		-Dframe.packs="$(native "$PACKS")" -Dflow.MOCKSYNC="$ADMIN" \
 		-Djavax.net.ssl.trustStore="$(native "$STORE")" -Djavax.net.ssl.trustStorePassword=changeit \
 		-Djavax.net.ssl.trustStoreType=PKCS12 \
 		-cp "lib/*;$(native "$OUT/driver-classes")" DesktopFlowDriver "$(native "$1")" "$(native "$2")" \

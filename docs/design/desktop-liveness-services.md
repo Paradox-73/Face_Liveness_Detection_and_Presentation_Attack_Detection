@@ -201,7 +201,7 @@ floors and ranges, and reports each correction; the orchestrator audits correcti
 | `engine` | `mosip-onnx-default` | engine registry |
 | `engine.execution_provider` | `CPU` | not read on desktop: `LivenessEngineRegistry` builds the engine with `OnnxLivenessEngines.builder` and the default runtime options, and the Windows x64 ONNX Runtime 1.20.0 package offers only the CPU provider ([calibration notes](../eval/calibration-notes.md) 0.4) |
 | `model.min_version` | `1.3.0` | engine registry, model import |
-| `model.store_dir` (desktop only) | `liveness-models` in the client's working folder | engine registry, model import |
+| `model.store_dir` (desktop only) | `db/liveness-models`: inside the client's database folder, next to `db/reg`, so the upgrade backup copies it | engine registry, model import |
 | `guidance.<messageKey>.<lang>` | unset (bundle text) | liveness window (`LivenessTexts.withOverrides`) |
 | `passive.threshold`, `pad.reject_threshold`, `passive.min_frames`, `passive.timeout_ms` | 80 / 20 / 30 / 4000 | session |
 | `active.*` (`enable`, `min_challenges`, `challenge_types`, `challenge_timeout_ms`, `min_onset_ms`, `hold_ms`) | see [configuration.md](configuration.md) section 5 | session |
@@ -296,7 +296,7 @@ is refused even if the pointer file is edited. A stored bundle that fails its ch
 (`LV14`); the client does not fall back to the older bundle of the installation. A missing or unreadable
 `active.properties` is rebuilt from the bundle folders (newest version active, and the floor), so deleting the file
 alone does not lower the floor (since 2026-10-10). To go back to the installed models, an administrator deletes the
-whole `liveness-models` folder while the client is stopped; bundles older than the installed one stay refused because
+whole `db/liveness-models` folder while the client is stopped; bundles older than the installed one stay refused because
 an import must be newer than the running bundle.
 
 **Trust:** the store is not trusted: signature, hashes and version are checked again at every load. The trust

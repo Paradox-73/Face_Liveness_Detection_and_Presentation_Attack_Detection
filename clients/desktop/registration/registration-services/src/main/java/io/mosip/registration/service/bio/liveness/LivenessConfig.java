@@ -66,8 +66,11 @@ public class LivenessConfig implements ConfigSource {
 	static final int DEFAULT_INVALID_LOGIN_COUNT = 3;
 	/** Folder that holds model bundles imported with {@link LivenessModelImporter} (desktop-only key). */
 	public static final String MODEL_STORE_KEY = LivenessConfigKeys.PREFIX + "model.store_dir";
-	/** Default model store folder, relative to the client's working folder. */
-	public static final String DEFAULT_MODEL_STORE = "liveness-models";
+	/**
+	 * Default model store folder: inside the client's database folder ({@code db}, next to {@code db/reg}), so the
+	 * imported bundles and their version floor stay with the client's data and are copied by its upgrade backup.
+	 */
+	public static final String DEFAULT_MODEL_STORE = "db/liveness-models";
 	/** Longest time between two reads of the local liveness preferences, in milliseconds. */
 	static final long LOCAL_REFRESH_MS = 5_000L;
 
@@ -292,7 +295,8 @@ public class LivenessConfig implements ConfigSource {
 	/**
 	 * Returns the folder of imported model bundles.
 	 *
-	 * @return {@value #MODEL_STORE_KEY}, default {@value #DEFAULT_MODEL_STORE} in the working folder
+	 * @return {@value #MODEL_STORE_KEY}, default {@value #DEFAULT_MODEL_STORE}; a relative path is resolved against
+	 *         the client's working folder, like the client's own {@code db/reg}
 	 */
 	public Path modelStoreDirectory() {
 		return Paths.get(get(MODEL_STORE_KEY).orElse(DEFAULT_MODEL_STORE));

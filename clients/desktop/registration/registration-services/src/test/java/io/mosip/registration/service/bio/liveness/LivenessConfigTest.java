@@ -10,6 +10,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,6 +51,13 @@ public class LivenessConfigTest {
 			}
 		}
 		assertEquals(60_000L, config.policy(Workflow.REGISTRATION).streamTimeoutMs());
+	}
+
+	@Test
+	public void importedModelsLiveInTheClientDatabaseFolderUnlessConfigured() {
+		assertEquals(Paths.get("db", "liveness-models"), config.modelStoreDirectory());
+		values.put(LivenessConfig.MODEL_STORE_KEY, "D:/reg-data/models");
+		assertEquals(Paths.get("D:/reg-data/models"), config.modelStoreDirectory());
 	}
 
 	@Test

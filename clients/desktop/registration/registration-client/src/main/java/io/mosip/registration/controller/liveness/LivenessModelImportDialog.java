@@ -328,6 +328,10 @@ public final class LivenessModelImportDialog {
 	}
 
 	private void finished(Result r, boolean online) {
+		if (!stage.isShowing()) {
+			// closed while the import ran: the result is in the audit trail, not on a hidden window
+			return;
+		}
 		busy.setVisible(false);
 		importButton.setDisable(false);
 		updateButton.setDisable(false);
