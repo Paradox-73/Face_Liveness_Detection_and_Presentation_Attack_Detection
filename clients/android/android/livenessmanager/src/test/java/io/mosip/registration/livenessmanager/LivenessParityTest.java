@@ -68,7 +68,9 @@ public class LivenessParityTest {
         Context context = ApplicationProvider.getApplicationContext();
         AndroidImageDecoder decoder = new AndroidImageDecoder();
         Map<String, String> synced = new LinkedHashMap<>();
-        synced.put(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM, ModelTrustAnchors.DEVELOPMENT_KEY_PEM);
+        // the form MockSync syncs: the development key named by its fingerprint
+        synced.put(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM,
+                ModelTrustAnchors.fingerprint(ModelTrustAnchors.development()));
         EngineLoader engines = EngineLoader.onnx(context.getAssets(), config(synced), decoder);
         List<String> failures = new ArrayList<>();
         int committed = 0;

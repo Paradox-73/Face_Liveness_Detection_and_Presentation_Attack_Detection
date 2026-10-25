@@ -98,6 +98,33 @@ class OnnxLivenessEngineProviderTest {
         assertEquals(EngineErrorCode.CONFIG_INVALID, invalid.getErrorCode());
     }
 
+    /**
+     * A fingerprint picks a key shipped with the client and fits the desktop client's 512-character global-parameter
+     * column, which the PEM RSA 3072 key does not (the desktop config sync failed on it); a fingerprint of no shipped
+     * key trusts nothing.
+     */
+    @Test
+    void fingerprintPicksTheShippedKeyAndFitsTheDesktopColumn() throws Exception {
+        String fp = ModelTrustAnchors.fingerprint(ModelTrustAnchors.development());
+        assertEquals("sha256:99538367853153c2969000626bcd6bdd28e7267d0649c0057662f85ee23e8b80", fp);
+        assertTrue(fp.length() <= 512 && ModelTrustAnchors.DEVELOPMENT_KEY_PEM.length() > 512);
+        Map<String, String> config = new HashMap<>();
+        config.put(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM, fp.toUpperCase().replace("SHA256:", "sha256:"));
+        new OnnxLivenessEngineProvider().create(context(config)).close();
+
+        KeyPairGenerator g = KeyPairGenerator.getInstance("RSA");
+        g.initialize(2048);
+        config.put(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM,
+                ModelTrustAnchors.fingerprint(g.generateKeyPair().getPublic()));
+        EngineException unknown = assertThrows(EngineException.class,
+                () -> new OnnxLivenessEngineProvider().create(context(config)));
+        assertEquals(EngineErrorCode.CONFIG_INVALID, unknown.getErrorCode());
+
+        config.put(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM, "sha256:1234");
+        assertEquals(EngineErrorCode.CONFIG_INVALID, assertThrows(EngineException.class,
+                () -> new OnnxLivenessEngineProvider().create(context(config))).getErrorCode());
+    }
+
     /** No configured key: nothing is trusted and no model loads, not even the development-signed bundle. */
     @Test
     void unsetTrustAnchorLoadsNoModel() {

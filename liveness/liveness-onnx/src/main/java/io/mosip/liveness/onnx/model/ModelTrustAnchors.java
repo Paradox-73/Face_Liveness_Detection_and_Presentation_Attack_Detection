@@ -6,15 +6,24 @@
  */
 package io.mosip.liveness.onnx.model;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.mosip.liveness.core.EngineErrorCode;
 import io.mosip.liveness.core.EngineException;
@@ -27,8 +36,20 @@ import io.mosip.liveness.core.config.LivenessConfigKeys;
  * <p>The development key below signs the bundle in this repository ({@code models/manifest.jws}). Its private
  * half is kept outside the repository and never committed. The clients trust only the keys named by
  * {@code mosip.registration.liveness.model.trust_anchor_pem}; demo configurations set it to this key explicitly.
+ *
+ * <p>The setting holds PEM {@code PUBLIC KEY} blocks, or {@code sha256:<64 hex>} fingerprints (SHA-256 of the key's
+ * SubjectPublicKeyInfo) that pick keys shipped with the client: the development key and the PEM blocks of the class
+ * path resource {@value #BUILT_IN_RESOURCE}. A fingerprint fits the desktop client's global-parameter column
+ * (512 characters), which a PEM RSA 3072 key (about 600 characters) does not.
  */
 public final class ModelTrustAnchors {
+
+    /** Class path resource with further keys a fingerprint may pick; optional, added to a deployment's build. */
+    public static final String BUILT_IN_RESOURCE = "liveness-model-trust-anchors.pem";
+
+    private static final Pattern PEM_BLOCK = Pattern.compile(
+            "-----BEGIN PUBLIC KEY-----.*?-----END PUBLIC KEY-----", Pattern.DOTALL);
+    private static final Pattern FINGERPRINT = Pattern.compile("sha256:([0-9a-fA-F]{64})");
 
     /**
      * X.509 SubjectPublicKeyInfo (PEM) of the development model-signing key (RSA 3072, key id
@@ -59,12 +80,13 @@ public final class ModelTrustAnchors {
     }
 
     /**
-     * Returns the keys a deployment trusts: the PEM blocks of {@code mosip.registration.liveness.model.trust_anchor_pem}.
+     * Returns the keys a deployment trusts: the PEM blocks, and the shipped keys picked by fingerprint, in
+     * {@code mosip.registration.liveness.model.trust_anchor_pem}.
      *
      * @param config liveness configuration
      * @return at least one key
-     * @throws EngineException {@code CONFIG_INVALID} when the key is unset or holds no readable RSA public key; no
-     *                         built-in key is trusted in its place, so no model loads
+     * @throws EngineException {@code CONFIG_INVALID} when the key is unset, holds no readable RSA public key, or names
+     *                         a fingerprint of no shipped key; no other key is trusted in its place, so no model loads
      */
     public static List<PublicKey> configured(ConfigSource config) throws EngineException {
         Optional<String> pem = config.get(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM).map(String::trim)
@@ -74,21 +96,76 @@ public final class ModelTrustAnchors {
                     + " is unset; no model is trusted until it names the model-signing public key");
         }
         List<PublicKey> keys = new ArrayList<>();
+        String value = pem.get().replace("\\n", "");
         try {
-            for (String block : pem.get().replace("\\n", "").split("-----END PUBLIC KEY-----")) {
-                if (!block.trim().isEmpty()) {
-                    keys.add(parsePem(block));
+            Matcher blocks = PEM_BLOCK.matcher(value);
+            while (blocks.find()) {
+                keys.add(parsePem(blocks.group()));
+            }
+            for (String token : blocks.replaceAll(" ").trim().split("[\\s,]+")) {
+                if (token.isEmpty()) {
+                    continue;
                 }
+                Matcher fp = FINGERPRINT.matcher(token);
+                if (!fp.matches()) {
+                    throw new IllegalArgumentException("neither a PEM block nor sha256:<64 hex>");
+                }
+                keys.add(shipped(fp.group(1).toLowerCase(Locale.ROOT)));
             }
         } catch (IllegalArgumentException e) {
-            throw new EngineException(EngineErrorCode.CONFIG_INVALID,
-                    LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM + " is not a PEM RSA public key", e);
+            throw new EngineException(EngineErrorCode.CONFIG_INVALID, LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM
+                    + " is not a PEM RSA public key or the fingerprint of a shipped key: " + e.getMessage(), e);
         }
         if (keys.isEmpty()) {
             throw new EngineException(EngineErrorCode.CONFIG_INVALID, LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM
                     + " holds no key");
         }
         return keys;
+    }
+
+    /**
+     * Returns the fingerprint with which the setting picks a shipped key.
+     *
+     * @param key the key
+     * @return {@code sha256:} and the lower-case hex SHA-256 of the key's SubjectPublicKeyInfo
+     */
+    public static String fingerprint(PublicKey key) {
+        try {
+            StringBuilder sb = new StringBuilder("sha256:");
+            for (byte b : MessageDigest.getInstance("SHA-256").digest(key.getEncoded())) {
+                sb.append(String.format("%02x", b & 0xFF));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
+    }
+
+    /** The development key or a key of {@value #BUILT_IN_RESOURCE} with this SHA-256 (lower-case hex). */
+    private static PublicKey shipped(String hex) {
+        List<PublicKey> candidates = new ArrayList<>();
+        candidates.add(development());
+        try (InputStream in = ModelTrustAnchors.class.getClassLoader().getResourceAsStream(BUILT_IN_RESOURCE)) {
+            if (in != null) {
+                ByteArrayOutputStream text = new ByteArrayOutputStream();
+                byte[] buf = new byte[4096];
+                for (int n = in.read(buf); n > 0; n = in.read(buf)) {
+                    text.write(buf, 0, n);
+                }
+                Matcher blocks = PEM_BLOCK.matcher(new String(text.toByteArray(), StandardCharsets.US_ASCII));
+                while (blocks.find()) {
+                    candidates.add(parsePem(blocks.group()));
+                }
+            }
+        } catch (IOException e) {
+            throw new IllegalArgumentException(BUILT_IN_RESOURCE + " could not be read", e);
+        }
+        for (PublicKey k : candidates) {
+            if (fingerprint(k).equals("sha256:" + hex)) {
+                return k;
+            }
+        }
+        throw new IllegalArgumentException("no shipped key has fingerprint sha256:" + hex);
     }
 
     /**

@@ -501,9 +501,16 @@ with `--app-id-suffix .release`, engine loaded, MockSync reached over `adb rever
 ## 10. Import a liveness model bundle (offline model update)
 
 New liveness models arrive as a signed bundle: `manifest.json`, `manifest.jws` and the model files, in a folder or
-a `.zip`. The app checks the signature against the key built into it, the SHA-256 of every model, and refuses a
-version below `mosip.registration.liveness.model.min_version` or not newer than the running bundle. Details:
+a `.zip`. The app checks the signature against the key named by the synced setting
+`mosip.registration.liveness.model.trust_anchor_pem`, the SHA-256 of every model, and refuses a version below
+`mosip.registration.liveness.model.min_version` or not newer than the running bundle. Details:
 `docs/design/android-liveness.md` section 14.
+
+The key setting holds PEM `PUBLIC KEY` blocks or `sha256:<64 hex>` fingerprints of keys shipped in the app (the
+development key, or a key in a `liveness-model-trust-anchors.pem` class path file). MockSync sends the development
+key's fingerprint, the same value the desktop client uses. Unset, or a fingerprint of no shipped key: no model
+loads and liveness fails closed (`CONFIG_INVALID`); the same rule (`ModelTrustAnchors.configured`) runs on both
+clients.
 
 1. Copy the bundle to the tablet, into the app's import folder (create it if missing):
 

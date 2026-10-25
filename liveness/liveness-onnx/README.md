@@ -137,6 +137,10 @@ engine.close();                           // at shutdown, after the last session
   - `ModelRegistryTest` checks that it equals `models/model-signing-dev.pub.pem`.
   - A deployment passes its own key with `ModelRegistry.Builder.trustAnchor(PublicKey)`. Once any key is passed,
     the development key is no longer trusted.
+  - The clients take the keys from `mosip.registration.liveness.model.trust_anchor_pem`
+    (`ModelTrustAnchors.configured`): PEM blocks, or `sha256:<64 hex>` fingerprints that pick a key shipped with the
+    client (the development key, or a key in the class path file `liveness-model-trust-anchors.pem`). The desktop
+    client needs the fingerprint form: its synced values are limited to 512 characters.
 - **Private key:**
   - It never enters the repository. `ModelSigner keygen` refuses to write a private key inside a git working tree
     unless `--allow-in-repo` is given.

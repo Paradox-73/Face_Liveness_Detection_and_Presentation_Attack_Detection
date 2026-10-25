@@ -180,6 +180,13 @@ then be given the new values.
    that change holds bundle 1.0.1, which the client refuses (`MODEL_VERSION`; liveness fails closed). Rebuild the
    engine (`mvn -f liveness/pom.xml install`), rebuild the client, run `scripts/desktop-build.sh` again (it replaces only
    `lib/` and keeps the database and machine keys), restart MockSync, then run Synchronize Data.
+7. Model-signing key: the client loads no model until `mosip.registration.liveness.model.trust_anchor_pem` names the
+   key the bundle is signed with (unset or unknown: `CONFIG_INVALID`, liveness fails closed). The desktop client stores
+   synced values in 512 characters and a PEM RSA 3072 key is about 600, so set the key's fingerprint
+   (`sha256:<64 hex>`, `ModelTrustAnchors.fingerprint`). MockSync sends the development key's fingerprint
+   `sha256:99538367853153c2969000626bcd6bdd28e7267d0649c0057662f85ee23e8b80`. A fingerprint picks only a key shipped
+   in the client: the development key, or a key in a `liveness-model-trust-anchors.pem` file on the class path
+   (see `docs/design/configuration.md`).
 
 ### 6.1 Scripted end-to-end demo
 

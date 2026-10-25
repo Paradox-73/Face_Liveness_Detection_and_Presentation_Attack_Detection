@@ -6,7 +6,7 @@ stay in the linked reports; requirement-by-requirement status is in [../traceabi
 
 | Report | What it covers |
 |---|---|
-| [desktop-e2e.md](desktop-e2e.md) | Real desktop Registration Client against MockSync (mock MOSIP server) and MockMDS (mock face device): 13 scripted flows, 3 interactive flows, audit and packet evidence. Re-run 2026-10-17 at the shipped policy with the challenge pool cut to blink and smile: 71 of 71 (2026-10-15: 69 of 71) |
+| [desktop-e2e.md](desktop-e2e.md) | Real desktop Registration Client against MockSync (mock MOSIP server) and MockMDS (mock face device): 13 scripted flows, 3 interactive flows, audit and packet evidence. Re-run 2026-10-17 at the shipped policy with the challenge pool cut to blink and smile: 71 of 71 (2026-10-15: 69 of 71); again 71 of 71 on 2026-10-25 after the signing-key fix, screens flow 24 of 24 |
 | [android-e2e.md](android-e2e.md) | Real Android Registration Client on an Android 14 emulator against MockSync: 16 flows, latency, APK size. Re-run 2026-10-17 at the shipped policy with the challenge pool cut to blink and smile: 59 of 74 (2026-10-14: 55 of 75) |
 | [interoperability.md](interoperability.md) | Desktop and Android give the same liveness decision: 19 replayed cases through each client's engine loader, configuration and decoder, one ONNX Runtime release (1.20.0) on both (bonus B4) |
 | [android-performance.md](android-performance.md) | Per-frame latency and memory of the engine on a physical Android phone (bonus B7 and B8): measured on a OnePlus CPH2569 on 2026-10-24 (best p50 58-71 ms, p95 74-92 ms at 2 threads; 20 ms target missed) |
@@ -20,9 +20,9 @@ stay in the linked reports; requirement-by-requirement status is in [../traceabi
 
 | Area | Result |
 |---|---|
-| Unit and component tests | **2,706 tests, 0 failures, 0 errors** in the runs of 2026-10-25 over 13 test suites (section 2; Flutter count from 2026-10-14) |
+| Unit and component tests | **2,707 tests, 0 failures, 0 errors** in the runs of 2026-10-25 over 13 test suites (section 2; Flutter count from 2026-10-14) |
 | Automated liveness and attack scenarios | run of 2026-10-14 at the shipped defaults: 275 transactions, 755 attempt records (section 3.0). no attack transaction accepted at the shipped defaults (APCER 0.0% for every species and workflow); counts, bona fide rates and the passive-first result: [results](../eval/results/20261014-shipped/README.md) |
-| Desktop end-to-end | reference run 2026-09-30: 41 of 41 checks passed **at the old defaults** (all workflows passive first); 2026-10-17 at the shipped policy with the pool cut to blink and smile: 71 of 71, again in two runs on 2026-10-20 (section 4) |
+| Desktop end-to-end | reference run 2026-09-30: 41 of 41 checks passed **at the old defaults** (all workflows passive first); 2026-10-17 at the shipped policy with the pool cut to blink and smile: 71 of 71, again in two runs on 2026-10-20 and on 2026-10-25 after the signing-key fix (section 4) |
 | Android end-to-end | reference run 2026-09-30: 58 of 58 checks passed **at the old defaults**; a repeat run found one real weakness; 2026-10-17 at the shipped policy with the pool cut to blink and smile: 59 of 74 (section 4) |
 | Bonus items | B4 interoperability done (19 of 19 replayed cases agree on desktop and on Android unit tests, 6 of 6 on an emulator); B6 model import done on both clients (Android button in Device Settings); B7 and B8 measured on one phone on 2026-10-24 (best p95 74-92 ms per frame at 2 threads, 20 ms target missed; section 8) |
 | Headline weakness | every synthetic attack species is refused, but the attacks are software-made: the screen-pattern check that now stops the adaptive screen replay (SYN-A7, 4 of 8 accepted before it) is proven on synthetic screens only, and frames enlarged by 1.5x or a whole number before the engine could look like a screen to it. The dim clip passes since the exposure correction; real dim rooms are untested (section 6) |
@@ -43,7 +43,7 @@ code and still pass with this project's changes.
 | Module | What it tests | Command | Tests | Failures / errors | Skipped | CI job |
 |---|---|---|---|---|---|---|
 | `liveness/liveness-core` | engine: session state machine, passive decision, challenges, action detection, integrity, planarity, capture binding, policy, audit, UI states, MJPEG reader | `mvn -B -f liveness/pom.xml install -Dliveness.benchmark.frames=0` (the job runs `verify`; `install` also puts the engine in `~/.m2`, which the rows below need) | 376 | 0 | 0 | `liveness` |
-| `liveness/liveness-onnx` | ONNX adapters, golden outputs of the 5 models, signed model registry, engine factory, execution providers, exposure correction and screen-pattern check, shared model-bundle importer and store | same run | 127 | 0 | 2 | `liveness` |
+| `liveness/liveness-onnx` | ONNX adapters, golden outputs of the 5 models, signed model registry, engine factory, execution providers, exposure correction and screen-pattern check, shared model-bundle importer and store | same run | 128 | 0 | 2 | `liveness` |
 | `liveness/face-match-sdk` | SFace face-match SDK behind MOSIP's `IBioApiV2`, ISO 19794-5 records, MOSIP loader | same run | 44 | 0 | 0 | `liveness` |
 | desktop `registration-services` (liveness and audit tests) | capture and authentication gates, stream session, orchestrator, config, audit sink, packet evidence, pass tokens, model import wiring, behaviour on repeated failure, account lock | after the engine install: `mvn -B -f clients/desktop/registration/pom.xml test -pl registration-services,registration-client -am -Dgpg.skip -Djacoco.skip=true -DfailIfNoTests=false "-Dtest=io/mosip/registration/service/bio/liveness/*Test.java,**/AuditFactoryTest.java,io/mosip/registration/controller/liveness/*Test.java"` (on Linux, put `xvfb-run -a` in front: the JavaFX tests need a display) | 159 | 0 | 0 | `desktop-liveness` |
 | desktop `registration-client` (liveness tests) | liveness panel view model, texts and replacement texts, bundle parity (en/fr/ar), JavaFX listener, diagnostic lines, model import window | same run | 64 | 0 | 0 | `desktop-liveness` |
@@ -55,7 +55,7 @@ code and still pass with this project's changes.
 | `devices/mock-mds` (upstream + extensions) | frame sources, capture from the streamed frame, faults, renewed FTM keys | with JDK 21: `mvn -B -f devices/mock-mds/pom.xml package -Dgpg.skip=true` | 228 | 0 | 0 | `mock-mds` |
 | `tools/eval/scenario-runner` | scenario loading, playlists, classification, output | after the engine install: `mvn -B -f tools/eval/scenario-runner/pom.xml package` | 31 | 0 | 0 | `scenario-runner` |
 | `tools/eval` Python | APCER/BPCER, confidence intervals, frame-pack manifests | `pip install -r tools/eval/requirements.txt`, then `python -m pytest -q tools/eval/tests` | 121 | 0 | 0 | `eval-python` |
-| **Total** | | | **2,706, run on 2026-10-25** | **0** | **2** | |
+| **Total** | | | **2,707, run on 2026-10-25** | **0** | **2** | |
 
 **Totals.** On 2026-10-25, after the maintainer-review fixes, every suite above except the Flutter widgets
 (not changed, 35 from 2026-10-14) ran again: 2,699 tests, 0 failures, 0 errors, 2 benchmark tests skipped
@@ -66,6 +66,10 @@ re-ran the engine, scenario runner, desktop and Android suites: **2,706 tests, 0
 helper-pool close test (`liveness-onnx` 127), the model-store default test (desktop 159), the CameraX start-error
 and attempt-text tests (`livenessmanager` 216) and the officer-face and missing-registration tests (`app` 78);
 MockSync, MockMDS and the Python tools did not change and keep the counts of the first run.
+The signing-key fix of the same evening (18:00-18:30: the key setting may name a shipped key by its `sha256:`
+fingerprint, because the desktop client's synced values hold 512 characters) re-ran the engine, desktop and Android
+suites: **2,707 tests, 0 failures, 0 errors**. New: the fingerprint test (`liveness-onnx` 128); the Android parity
+test now loads the engine with the fingerprint MockSync sends (`livenessmanager` 216, unchanged count).
 
 The verification run of 2026-10-14 (19:46-20:03, logs outside the repository) ran every suite of the
 table on the final code of the PS04 completion pass and found **2,691 tests, 0 failures, 0 errors**, 2 benchmark
@@ -84,7 +88,7 @@ MockSync step fails while packaging, a MockSync started by a demo still holds `m
 
 **Upstream and team-written.** About 1,361 of the tests are upstream: the Android `clientmanager` suite (1,186, all upstream
 tests, passing with this project's changes) and about 175 in MockMDS (an estimate from the first audit count; the 228 in the
-table also include the tests added for the mock face device). The remaining 1,345 or so of the 2,706 are team-written (an
+table also include the tests added for the mock face device). The remaining 1,346 or so of the 2,707 are team-written (an
 approximate figure).
 
 Hosted CI:
@@ -187,7 +191,8 @@ engine before those fixes ([../eval/results/20260930/](../eval/results/20260930/
   [desktop-e2e.md section 3.1](desktop-e2e.md#31-scripted-run-reference-run-all-checks-passed). Run of 2026-10-17 at
   the shipped policy with the challenge pool cut to blink and smile, from a client onboarded by `--onboard`: 71 of
   71 (2026-10-15: 69 of 71; 2026-10-14: 5 of 16, stopped by a MockMDS iris quality below the client's threshold,
-  since fixed).
+  since fixed). Run of 2026-10-25 after the signing-key fix (the key setting names the key by fingerprint, because
+  the desktop's synced settings hold 512 characters): 71 of 71, screens flow 24 of 24 on its second try.
 - **Android** ([android-e2e.md](android-e2e.md)): real MOSIP Android Registration Client (debug APK) on an Android 14
   x86_64 emulator with MockSync, faces through the app's debug replay, `scripts/demo-android.sh`, about 30 minutes.
   Reference run 7 of 2026-09-30: **58 of 58 checks passed at the old defaults**; flows in

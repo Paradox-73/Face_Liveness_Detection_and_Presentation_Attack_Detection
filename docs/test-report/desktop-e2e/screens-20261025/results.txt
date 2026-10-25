@@ -1,0 +1,31 @@
+18:58:20 ==== start: MockMDS face device reset to L0, no fault; client started
+18:59:45 ==== login: officer1 password then face with liveness
+19:00 RESULT PASS live face passed on attempt 1
+19:00:03 ==== screens 1: checking, challenge, action detected, hold still, success
+19:00:39 RESULT PASS text Checking face liveness 60
+19:00:42 RESULT PASS text Please (blink|smile|turn your head to the (left|right)|look up) 60
+19:00:44 RESULT PASS text Action detected 30
+19:00:49 RESULT PASS text Hold still 30
+19:00:49 RESULT PASS live face passed on attempt 1
+19:00:53 ==== screens 2: two faces in view
+19:00:53 RESULT PASS text More than one face detected 60
+19:00:59 ==== override 1: three timeouts, the logged-in officer cannot approve his own override
+19:01:36 RESULT PASS text Please (blink|smile|turn your head to the (left|right)|look up) 60
+19:01:41 RESULT PASS text (We could not verify face liveness|Face verification could not be completed) 60
+19:01:50 RESULT PASS text (We could not verify face liveness|Face verification could not be completed) 60
+19:01:59 RESULT PASS text after 3 attempts 60
+19:01:59 RESULT PASS text Supervisor override 10
+19:02:04 RESULT PASS text Another supervisor must verify 30
+19:02:10 ==== override 2: supervisor1 verifies with face liveness; photo checked and stored flagged OVERRIDE
+19:02:47 RESULT PASS text Please (blink|smile|turn your head to the (left|right)|look up) 60
+19:02:52 RESULT PASS text (We could not verify face liveness|Face verification could not be completed) 60
+19:03 RESULT PASS text (We could not verify face liveness|Face verification could not be completed) 60
+19:03:08 RESULT PASS text after 3 attempts 60
+19:03:14 RESULT PASS text Please (blink|smile|turn your head to the (left|right)|look up) 60
+19:03:22 RESULT PASS live face passed on attempt 1
+19:03:30 RESULT PASS sql rows>=1: SELECT EVENT_ID, LOG_DESC FROM AUDIT.APP_AUDIT_LOG WHERE EVENT_ID = 'REG-EVT-LV16' AND LOG_DESC LIKE '%GRANTED%'
+19:03:44 RESULT PASS live face passed on attempt 1
+19:03:48 RESULT PASS text Registration Acknowledgement 60
+19:03:48 ==== screens 3: dark room, device unavailable
+19:04:22 RESULT PASS text Improve lighting 60
+19:04:25 RESULT PASS text not available 60

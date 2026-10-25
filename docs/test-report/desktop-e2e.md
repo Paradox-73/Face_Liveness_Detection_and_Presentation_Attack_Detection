@@ -182,6 +182,28 @@ An earlier try at 14:00 the same day stopped at the operator login with `FAILED(
 laptop had about 2 GB of free memory then, with builds of other projects running. The 14:23 run had the machine
 to itself and passed. This matches the starved run of 2026-10-20 described above.
 
+**Signing-key regression and re-run of 2026-10-25 (IST): 71 of 71 checks, then screens 24 of 24** (fix on top of
+commit `85ad110`; `MOCKSYNC_HTTP_PORT=18080 scripts/demo-desktop.sh --restore-golden --policy recorded`, 18:27-18:46,
+output `run/demo/desktop-keyfp-20261025`, outside git; check lines in
+[desktop-e2e/recorded-20261025/results.txt](desktop-e2e/recorded-20261025/results.txt)).
+
+- **What was wrong:** commit `1bed6ab` made the clients load no model unless
+  `mosip.registration.liveness.model.trust_anchor_pem` names the model-signing key, and MockSync sent the key as a
+  PEM block of 615 characters. The desktop client stores synced settings in a 512-character column, so the whole
+  config sync failed, a client never received the key, the engine never loaded, and 3 of the 71 checks failed.
+- **Change:** the setting may name a key shipped with the client by its fingerprint, `sha256:` and 64 hex digits
+  (`ModelTrustAnchors`; the development key, or keys in a `liveness-model-trust-anchors.pem` class path file).
+  MockSync now sends the development key's fingerprint. Unset, unreadable, or a fingerprint of no shipped key still
+  means no model loads (`CONFIG_INVALID`); a PEM block still works where it fits (Android). Both clients use the same
+  `ModelTrustAnchors.configured`.
+- **Result:** 71 of 71; the client log shows the engine ready with all five models after the sync.
+- **Screens flow** (`--flow tools/mock-sync/e2e/flows/screens-states.flow`, 18:58-19:04, check lines in
+  [desktop-e2e/screens-20261025/results.txt](desktop-e2e/screens-20261025/results.txt)): 24 of 24, pictures
+  `docs/ux/screenshots/desktop/d-s1` to `d-s12` taken again (they now show the focus ring of commit `85ad110`). A
+  first try at 18:47 passed 17 of 24: the officer's first login attempt ended `FAILED(ENGINE)` after the engine had
+  loaded, the same intermittent failure as on 2026-10-20 and 2026-10-22 (about 2.6 GB of memory free at the time);
+  it was not diagnosed.
+
 ## 1. Set-up
 
 | Part | What was used |
