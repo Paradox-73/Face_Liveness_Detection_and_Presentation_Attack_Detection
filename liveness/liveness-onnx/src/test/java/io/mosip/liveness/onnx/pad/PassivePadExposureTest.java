@@ -15,7 +15,11 @@ import io.mosip.liveness.onnx.image.Rgb8Image;
 import io.mosip.liveness.onnx.image.TensorFormat;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -60,6 +64,20 @@ class PassivePadExposureTest {
                 after.modelProbabilities().get(models.passivePad().models().get(0).id()), 1e-6);
         assertTrue(Math.abs(after.liveProbability() - before.liveProbability()) > 1e-4,
                 "the gain must change the input of the models");
+    }
+
+    @Test
+    void closeEndsTheHelperThreadsAndLaterScoresAreRefused() throws Exception {
+        OnnxModelSet models = TestSupport.nativeResolutionModels();
+        ImageBuffer image = TestSupport.face(STREAM);
+        FaceBox box = models.faceAnalyzer().analyze(image).primary().get().box();
+        Rgb8Image rgb = Rgb8Image.of(image);
+        MiniFasPassivePad pad = new MiniFasPassivePad(models.passivePad().models());
+        assertEquals(models.passivePad().score(rgb, box).liveProbability(), pad.score(rgb, box).liveProbability(),
+                1e-9);
+        pad.close();
+        assertTrue(pad.helpers().awaitTermination(5, TimeUnit.SECONDS), "helper threads still running");
+        assertThrows(RejectedExecutionException.class, () -> pad.score(rgb, box));
     }
 
     private static Rgb8Image darken(Rgb8Image src, double factor) {

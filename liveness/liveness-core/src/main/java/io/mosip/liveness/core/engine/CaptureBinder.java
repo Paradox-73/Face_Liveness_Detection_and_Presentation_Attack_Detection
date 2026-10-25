@@ -142,7 +142,7 @@ final class CaptureBinder {
         if (!req.echoedChallenge().isPresent()) {
             return ChallengeEchoStatus.MISSING;
         }
-        return req.echoedChallenge().get().equals(issued.nonce()) ? ChallengeEchoStatus.MATCHED
+        return issued.nonceEquals(req.echoedChallenge().get()) ? ChallengeEchoStatus.MATCHED
                 : ChallengeEchoStatus.MISMATCHED;
     }
 

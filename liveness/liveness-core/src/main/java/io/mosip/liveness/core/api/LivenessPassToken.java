@@ -8,6 +8,8 @@ package io.mosip.liveness.core.api;
 
 import io.mosip.liveness.core.Workflow;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -132,8 +134,19 @@ public final class LivenessPassToken {
         }
         LivenessPassToken t = (LivenessPassToken) o;
         return sessionId.equals(t.sessionId) && workflow == t.workflow && subjectRef.equals(t.subjectRef)
-                && deviceSerial.equals(t.deviceSerial) && nonce.equals(t.nonce) && issuedAt.equals(t.issuedAt)
+                && deviceSerial.equals(t.deviceSerial) && nonceEquals(t.nonce) && issuedAt.equals(t.issuedAt)
                 && expiresAt.equals(t.expiresAt);
+    }
+
+    /**
+     * Compares the nonce in constant time, so the time taken does not tell how many leading characters match.
+     *
+     * @param other a presented nonce
+     * @return {@code true} when it equals this token's nonce
+     */
+    public boolean nonceEquals(String other) {
+        return other != null && MessageDigest.isEqual(nonce.getBytes(StandardCharsets.UTF_8),
+                other.getBytes(StandardCharsets.UTF_8));
     }
 
     @Override

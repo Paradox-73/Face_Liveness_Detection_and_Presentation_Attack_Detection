@@ -62,6 +62,9 @@ class ApiTypesTest {
         assertFalse(t.toString().contains("officer1"));
         assertFalse(t.toString().contains("Qm9ndXNOb25jZVZhbHVlMDE"));
         assertEquals(t, token());
+        assertTrue(t.nonceEquals("Qm9ndXNOb25jZVZhbHVlMDE"));
+        assertFalse(t.nonceEquals("Qm9ndXNOb25jZVZhbHVlMDI"));
+        assertFalse(t.nonceEquals(null));
         assertThrows(IllegalArgumentException.class, () -> LivenessPassToken.builder().sessionId("s").workflow(Workflow.EOD_AUTH)
                 .subjectRef("u").deviceSerial("d").nonce("short").issuedAt(T0).expiresAt(T0.plusMillis(1)).build());
         assertThrows(IllegalArgumentException.class, () -> LivenessPassToken.builder().sessionId("s").workflow(Workflow.EOD_AUTH)

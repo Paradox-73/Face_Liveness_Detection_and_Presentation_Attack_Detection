@@ -137,9 +137,12 @@ public final class OnnxModelSet implements AutoCloseable {
         return models;
     }
 
-    /** Releases every native session. */
+    /** Stops the passive PAD's helper threads and releases every native session. */
     @Override
     public void close() {
+        if (passivePad != null) {
+            passivePad.close();
+        }
         for (OrtModel m : sessions) {
             m.close();
         }

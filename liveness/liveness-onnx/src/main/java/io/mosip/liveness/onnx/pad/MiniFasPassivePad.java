@@ -23,8 +23,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Passive presentation attack detection with the MiniFASNet ensemble: MiniFASNetV2 on a 2.7x crop and
@@ -42,18 +44,14 @@ import java.util.concurrent.Future;
  * ({@link SceneExposure}), and the live probability is capped by the screen-pattern check
  * ({@link ScreenPatternMeter}), reported as model {@value #SCREEN_PATTERN_ID}.
  */
-public final class MiniFasPassivePad implements PassivePad {
+public final class MiniFasPassivePad implements PassivePad, AutoCloseable {
 
     /** Entry of the screen-pattern check in {@link PadScore#modelProbabilities()}. */
     public static final String SCREEN_PATTERN_ID = "screen-pattern";
 
-    private static final ExecutorService HELPERS = Executors.newCachedThreadPool(r -> {
-        Thread t = new Thread(r, "minifas-pad");
-        t.setDaemon(true);
-        return t;
-    });
-
     private final List<MiniFasModel> models;
+    /** One thread per model after the first; idle threads end after 30 s, {@link #close()} ends them all. */
+    private final ThreadPoolExecutor helpers;
     private final boolean exposureCorrection;
     private final boolean screenCheck;
 
@@ -81,6 +79,14 @@ public final class MiniFasPassivePad implements PassivePad {
             throw new IllegalArgumentException("at least one model required");
         }
         this.models = Collections.unmodifiableList(new ArrayList<>(models));
+        int threads = Math.max(1, models.size() - 1);
+        this.helpers = new ThreadPoolExecutor(threads, threads, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
+                r -> {
+                    Thread t = new Thread(r, "minifas-pad");
+                    t.setDaemon(true);
+                    return t;
+                });
+        helpers.allowCoreThreadTimeOut(true);
     }
 
     /**
@@ -111,7 +117,7 @@ public final class MiniFasPassivePad implements PassivePad {
         double gain = exposureCorrection ? SceneExposure.gain(image) : 1.0;
         List<Future<float[]>> others = new ArrayList<>(models.size() - 1);
         for (MiniFasModel m : models.subList(1, models.size())) {
-            others.add(HELPERS.submit(() -> m.probabilities(image, face, TensorFormat.BGR_RAW, gain)));
+            others.add(helpers.submit(() -> m.probabilities(image, face, TensorFormat.BGR_RAW, gain)));
         }
         float[][] probabilities = new float[models.size()][];
         probabilities[0] = models.get(0).probabilities(image, face, TensorFormat.BGR_RAW, gain);
@@ -175,6 +181,7 @@ public final class MiniFasPassivePad implements PassivePad {
         try {
             return result.get();
         } catch (InterruptedException e) {
+            result.cancel(true);
             Thread.currentThread().interrupt();
             throw new EngineException(EngineErrorCode.INFERENCE, "interrupted while scoring with " + model.id(), e);
         } catch (ExecutionException e) {
@@ -187,6 +194,20 @@ public final class MiniFasPassivePad implements PassivePad {
             }
             throw new EngineException(EngineErrorCode.INFERENCE, "scoring failed for " + model.id(), cause);
         }
+    }
+
+    /**
+     * Stops the helper threads; a later {@link #score} throws {@link java.util.concurrent.RejectedExecutionException}.
+     * The models' native sessions belong to the {@link io.mosip.liveness.onnx.OnnxModelSet} that closes this ensemble.
+     */
+    @Override
+    public void close() {
+        helpers.shutdownNow();
+    }
+
+    /** The helper pool, for tests. */
+    ExecutorService helpers() {
+        return helpers;
     }
 
     private static double clamp01(double v) {
