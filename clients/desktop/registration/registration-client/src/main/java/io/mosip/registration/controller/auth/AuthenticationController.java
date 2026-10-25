@@ -16,6 +16,7 @@ import org.springframework.stereotype.Controller;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.registration.controller.liveness.LivenessSupport.FaceLivenessStep;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
@@ -170,6 +171,8 @@ public class AuthenticationController extends BaseController implements Initiali
 	private Button fingerPrintScanButton;
 	@FXML
 	private ImageView faceImage;
+
+	private final FaceLivenessStep faceAuthLiveness = new FaceLivenessStep();
 
 	@Autowired
 	private PacketHandlerController packetHandlerController;
@@ -482,7 +485,7 @@ public class AuthenticationController extends BaseController implements Initiali
 
 	@FXML
 	private void startStream() {
-		startFaceStream(faceAuthWorkflow(true, isReviewer), this::validateFace, this::streamPlainFace);
+		liveness.startFaceStream(liveness.faceAuthWorkflow(true, isReviewer), this::validateFace, this::streamPlainFace);
 	}
 
 	private void streamPlainFace() {
@@ -511,7 +514,7 @@ public class AuthenticationController extends BaseController implements Initiali
 
 		if (validateInput(faceUserId, null)) {
 			String userId = faceUserId.getText();
-			authenticateFace(faceAuthWorkflow(true, isReviewer), userId, operatorAuthenticationPane,
+			liveness.authenticateFace(this, faceAuthLiveness, liveness.faceAuthWorkflow(true, isReviewer), userId, operatorAuthenticationPane,
 					() -> executeFaceValidationTask(userId, operatorAuthenticationPane));
 		}
 

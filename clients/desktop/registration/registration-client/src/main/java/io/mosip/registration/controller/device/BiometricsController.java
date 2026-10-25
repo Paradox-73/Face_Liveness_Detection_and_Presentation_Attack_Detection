@@ -31,6 +31,7 @@ import io.mosip.kernel.biometrics.constant.BiometricType;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.liveness.core.Workflow;
+import io.mosip.registration.controller.liveness.LivenessSupport.FaceLivenessStep;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
@@ -886,7 +887,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		biometric.setDisable(true);
 
 		// operator onboarding face: liveness first, so a spoofed face never becomes an operator's stored template
-		if (isFace(currentModality) && startFaceLiveness(faceLiveness, Workflow.ONBOARD_AUTH, SessionContext.userId(),
+		if (isFace(currentModality) && liveness.startFaceLiveness(faceLiveness, Workflow.ONBOARD_AUTH, SessionContext.userId(),
 				biometric, this::rCaptureTaskService, () -> biometric.setDisable(false))) {
 			return;
 		}
@@ -1066,7 +1067,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 			public void handle(WorkerStateEvent t) {
 
 				LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "RCapture task failed");
-				alertCaptureFailure(faceLiveness, rCaptureTaskService.getException());
+				liveness.alertCaptureFailure(BiometricsController.this, faceLiveness, rCaptureTaskService.getException());
 
 				LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Enabling LogOut");
 				// Enable Auto-Logout

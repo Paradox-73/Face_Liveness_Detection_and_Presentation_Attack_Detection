@@ -22,6 +22,7 @@ import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.liveness.core.Workflow;
+import io.mosip.registration.controller.liveness.LivenessSupport.FaceLivenessStep;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
@@ -182,6 +183,8 @@ public class LoginController extends BaseController implements Initializable {
 
 	@FXML
 	private ImageView irisImageView;
+
+	private final FaceLivenessStep faceAuthLiveness = new FaceLivenessStep();
 
 	@Autowired
 	private LoginService loginService;
@@ -600,7 +603,7 @@ public class LoginController extends BaseController implements Initializable {
 	}
 
 	public void streamFace() {
-		startFaceStream(Workflow.LOGIN_AUTH, () -> captureFace(null), this::streamPlainFace);
+		liveness.startFaceStream(Workflow.LOGIN_AUTH, () -> captureFace(null), this::streamPlainFace);
 	}
 
 	private void streamPlainFace() {
@@ -677,7 +680,7 @@ public class LoginController extends BaseController implements Initializable {
 
 		// with liveness, SessionContext.validateFace picks up the pending pass of this login session; after the last
 		// failed attempt the invalid-login rule applies (BLOCK_AND_LOCK)
-		authenticateFace(Workflow.LOGIN_AUTH, userId.getText(), facePane,
+		liveness.authenticateFace(faceAuthLiveness, Workflow.LOGIN_AUTH, userId.getText(), facePane,
 				() -> executeValidationTask(userDTO, RegistrationConstants.FACE, false, false, authenticationValidatorDTO,
 						facePane, faceProgressIndicator,
 						RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.FACE_MATCH),
@@ -783,7 +786,7 @@ public class LoginController extends BaseController implements Initializable {
 			break;
 		case RegistrationConstants.FACE:
 			facePane.setVisible(true);
-			if (isLivenessEnforced(Workflow.LOGIN_AUTH)) {
+			if (liveness.isLivenessEnforced(Workflow.LOGIN_AUTH)) {
 				Platform.runLater(() -> captureFace(null));
 			}
 			break;

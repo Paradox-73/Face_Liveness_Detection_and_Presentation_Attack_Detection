@@ -16,6 +16,7 @@ import org.springframework.stereotype.Controller;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.liveness.core.Workflow;
+import io.mosip.registration.controller.liveness.LivenessSupport.FaceLivenessStep;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
@@ -138,6 +139,8 @@ public class EODAuthenticationController extends BaseController implements Initi
 	private ImageView faceImage;
 	@FXML
 	private GridPane authenticaion;
+
+	private final FaceLivenessStep faceAuthLiveness = new FaceLivenessStep();
 
 	@Autowired
 	private OTPManager otpManager;
@@ -597,7 +600,7 @@ public class EODAuthenticationController extends BaseController implements Initi
 
 	@FXML
 	private void startStream() {
-		startFaceStream(Workflow.EOD_AUTH, this::validateFace, this::streamPlainFace);
+		liveness.startFaceStream(Workflow.EOD_AUTH, this::validateFace, this::streamPlainFace);
 	}
 
 	private void streamPlainFace() {
@@ -626,7 +629,7 @@ public class EODAuthenticationController extends BaseController implements Initi
 
 		if (validateInput(faceUserId, null)) {
 			String userId = faceUserId.getText();
-			authenticateFace(Workflow.EOD_AUTH, userId, faceBasedLogin,
+			liveness.authenticateFace(this, faceAuthLiveness, Workflow.EOD_AUTH, userId, faceBasedLogin,
 					() -> executeFaceValidationTask(userId, faceBasedLogin));
 		}
 	}

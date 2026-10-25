@@ -25,6 +25,7 @@ import io.mosip.commons.packet.dto.packet.BiometricsException;
 import io.mosip.kernel.biometrics.constant.BiometricType;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.liveness.core.Workflow;
+import io.mosip.registration.controller.liveness.LivenessSupport.FaceLivenessStep;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
@@ -439,7 +440,7 @@ public class GenericBiometricsController extends BaseController {
 
 		disableEnableBiometricPane(true);
 
-		if ((isFace(currentModality) || isExceptionPhoto(currentModality)) && startFaceLiveness(faceLiveness,
+		if ((isFace(currentModality) || isExceptionPhoto(currentModality)) && liveness.startFaceLiveness(faceLiveness,
 				livenessWorkflow(currentModality), livenessSubjectRef(), biometric, this::rCaptureTaskService,
 				() -> disableEnableBiometricPane(false))) {
 			return;
@@ -612,7 +613,7 @@ public class GenericBiometricsController extends BaseController {
 			@Override
 			public void handle(WorkerStateEvent t) {
 				LOGGER.debug("RCapture task failed");
-				alertCaptureFailure(faceLiveness, rCaptureTaskService.getException());
+				liveness.alertCaptureFailure(GenericBiometricsController.this, faceLiveness, rCaptureTaskService.getException());
 
 				LOGGER.debug("Enabling LogOut");
 				// Enable Auto-Logout
