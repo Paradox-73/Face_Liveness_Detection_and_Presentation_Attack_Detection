@@ -31,6 +31,8 @@ import io.mosip.liveness.core.interop.ParityCase;
 import io.mosip.liveness.core.interop.ParityCheck;
 import io.mosip.liveness.core.interop.ParityFiles;
 import io.mosip.liveness.core.interop.ParityReplay;
+import io.mosip.liveness.core.config.LivenessConfigKeys;
+import io.mosip.liveness.onnx.model.ModelTrustAnchors;
 import io.mosip.registration.audit.AuditManagerService;
 
 /**
@@ -56,7 +58,9 @@ public class LivenessParityTest {
 	@BeforeClass
 	public static void loadEngine() throws Exception {
 		files = ParityFiles.locate();
-		registry = new LivenessEngineRegistry(LivenessConfig.of(new LinkedHashMap<>()), new DesktopImageDecoder(),
+		Map<String, Object> config = new LinkedHashMap<>();
+		config.put(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM, ModelTrustAnchors.DEVELOPMENT_KEY_PEM);
+		registry = new LivenessEngineRegistry(LivenessConfig.of(config), new DesktopImageDecoder(),
 				new DesktopAuditSink(Mockito.mock(AuditManagerService.class), Runnable::run),
 				new DesktopDiagnosticSink());
 		engine = registry.engine();

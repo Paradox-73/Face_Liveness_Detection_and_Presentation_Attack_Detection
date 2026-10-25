@@ -28,12 +28,14 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.mosip.liveness.core.api.LivenessEngine;
+import io.mosip.liveness.core.config.LivenessConfigKeys;
 import io.mosip.liveness.core.config.LivenessPolicy;
 import io.mosip.liveness.core.interop.ParityCase;
 import io.mosip.liveness.core.interop.ParityCheck;
 import io.mosip.liveness.core.interop.ParityFiles;
 import io.mosip.liveness.core.interop.ParityReplay;
 import io.mosip.liveness.core.policy.PolicyResolver;
+import io.mosip.liveness.onnx.model.ModelTrustAnchors;
 import io.mosip.registration.livenessmanager.config.GlobalParamConfigSource;
 import io.mosip.registration.livenessmanager.engine.EngineLoader;
 import io.mosip.registration.livenessmanager.image.AndroidImageDecoder;
@@ -65,7 +67,9 @@ public class LivenessParityTest {
 
         Context context = ApplicationProvider.getApplicationContext();
         AndroidImageDecoder decoder = new AndroidImageDecoder();
-        EngineLoader engines = EngineLoader.onnx(context.getAssets(), config(new LinkedHashMap<>()), decoder);
+        Map<String, String> synced = new LinkedHashMap<>();
+        synced.put(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM, ModelTrustAnchors.DEVELOPMENT_KEY_PEM);
+        EngineLoader engines = EngineLoader.onnx(context.getAssets(), config(synced), decoder);
         List<String> failures = new ArrayList<>();
         int committed = 0;
         int ran = 0;
