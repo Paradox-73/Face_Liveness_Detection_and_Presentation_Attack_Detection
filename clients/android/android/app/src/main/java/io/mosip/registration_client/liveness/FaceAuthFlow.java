@@ -100,9 +100,12 @@ public class FaceAuthFlow {
         this.saved = Objects.requireNonNull(saved, "saved");
         for (Map.Entry<String, String> e : saved.load(System.currentTimeMillis()).entrySet()) {
             AttemptCount count = AttemptCount.parse(e.getValue());
-            if (count != null) {
-                attempts.put(e.getKey(), count);
+            if (count == null) {
+                // Fail closed: an edited or corrupt entry blocks the user (for the keep period) instead of resetting.
+                count = new AttemptCount(1, 1, true, false, 0);
+                saved.put(e.getKey(), count.format(), System.currentTimeMillis());
             }
+            attempts.put(e.getKey(), count);
         }
     }
 

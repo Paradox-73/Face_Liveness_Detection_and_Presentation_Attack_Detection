@@ -54,6 +54,18 @@ public class SavedAttemptsTest {
         assertEquals("a pass clears the saved count", 0, gate().usedAttempts(RID, FIELD));
     }
 
+    /** An edited or corrupt saved entry blocks the field instead of resetting its count. */
+    @Test
+    public void corruptEntryFailsClosed() {
+        SavedAttempts s = saved();
+        s.put(RID + '|' + FIELD, "not,a,count", System.currentTimeMillis());
+        assertNotNull("blocked", gate().admit(RID, FIELD));
+
+        RuntimeEnvironment.getApplication().getSharedPreferences("test_capture_attempts", 0).edit()
+                .putString(RID + '|' + FIELD, "garbage").commit();
+        assertNotNull("an unreadable expiry is kept, not dropped", gate().admit(RID, FIELD));
+    }
+
     @Test
     public void expiredEntriesAreDropped() {
         SavedAttempts s = saved();

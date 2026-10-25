@@ -219,6 +219,16 @@ public class FaceAuthFlowTest {
     }
 
     @Test
+    public void corruptSavedEntryBlocksInsteadOfResetting() throws Exception {
+        SavedAttempts saved = new SavedAttempts(RuntimeEnvironment.getApplication(), "test_auth_attempts_corrupt");
+        saved.put(Workflow.PACKET_AUTH.id() + "|officer1", "x", System.currentTimeMillis());
+        flow.persistTo(saved);
+        flow.authenticate("officer1", Workflow.PACKET_AUTH, outcomes::add);
+        assertEquals(FaceAuthStatus.MAX_ATTEMPTS, outcomes.get(0).status());
+        assertEquals("no camera", 0, liveness.requests.size());
+    }
+
+    @Test
     public void reopenedScreenReceivesTheEarlierAttackAndDimLightCount() throws Exception {
         flow.authenticate("officer1", Workflow.LOGIN_AUTH, outcomes::add);
         assertFalse(liveness.requests.get(0).isPriorSuspectedAttack());

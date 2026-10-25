@@ -53,9 +53,9 @@ public final class SavedAttempts {
             int cut = text.indexOf(';');
             long until;
             try {
-                until = cut < 0 ? 0 : Long.parseLong(text.substring(0, cut));
+                until = Long.parseLong(text.substring(0, Math.max(cut, 0)));
             } catch (NumberFormatException ex) {
-                until = 0;
+                until = Long.MAX_VALUE; // unreadable: kept, so the gate treats it as blocked instead of forgetting it
             }
             if (until > now) {
                 live.put(e.getKey(), text.substring(cut + 1));

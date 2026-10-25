@@ -107,10 +107,16 @@ public class FaceCaptureLivenessGate {
                 if (lowLight > 0) {
                     lowLightRetries.put(e.getKey(), lowLight);
                 }
-            } catch (RuntimeException ignored) {
-                // An unreadable entry is dropped.
+            } catch (RuntimeException unreadable) {
+                // Fail closed: an edited or corrupt entry blocks the field (for the keep period) instead of resetting it.
+                failedAttempts.put(e.getKey(), maxAttempts(fieldOf(e.getKey())));
+                save(e.getKey());
             }
         }
+    }
+
+    private static String fieldOf(String key) {
+        return key.substring(key.indexOf('|') + 1);
     }
 
     /** Saves the counts of one key, or removes the saved entry when none is left. */
