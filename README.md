@@ -125,13 +125,13 @@ Known limits (more in [docs/test-report/README.md](docs/test-report/README.md#6-
 
 Team **Badmosip**, MOSIP Decode 2026, Problem Statement 04.
 
-| Member | GitHub account |
-|---|---|
-| Kanav Bhardwaj | [@Paradox-73](https://github.com/Paradox-73) |
-| Ivan Bhargava | [@Ivan825](https://github.com/Ivan825) |
-| Ishaan Sodhi | not listed |
-| Nikunj Mahajan | [@nikunj169](https://github.com/nikunj169) |
-| Harsh Modi | - |
+| Member | GitHub | Area |
+|---|---|---|
+| Kanav Bhardwaj | [Paradox-73](https://github.com/Paradox-73) | liveness engine and models |
+| Ivan Bhargava | [Ivan825](https://github.com/Ivan825) | desktop Registration Client integration |
+| Nikunj Mahajan | [nikunj169](https://github.com/nikunj169) | Android Registration Client integration |
+| Ishaan Sodhi | [aloofdevil](https://github.com/aloofdevil) | mock MDS, MockSync and configuration |
+| Harsh Modi | [h4rshmodi007](https://github.com/h4rshmodi007) | evaluation, test reports and documentation |
 
 ## Download
 
