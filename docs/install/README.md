@@ -27,7 +27,8 @@ folder fails with `Filename too long`. Turn on long paths in Git before you clon
 
 ```bash
 git config --global core.longpaths true
-git clone https://github.com/Paradox-73/Mosip-face-liveness-pad.git
+git clone https://github.com/Paradox-73/Face_Liveness_Detection_and_Presentation_Attack_Detection.git
+cd Face_Liveness_Detection_and_Presentation_Attack_Detection
 ```
 
 `git clone -c core.longpaths=true <url>` sets it for this clone only.
@@ -45,7 +46,7 @@ pass it in `MAVEN_ARGS` with an absolute path (CI does the same).
 export JAVA11_HOME=/c/tools/zulu11.41.23-ca-fx-jdk11.0.8-win_x64   # or leave unset: desktop-build.sh downloads it
 export JAVA21_HOME=/c/tools/jdk-21
 export JAVA_HOME="$JAVA11_HOME"
-export MAVEN_ARGS="-s C:/src/Mosip-face-liveness-pad/scripts/release/maven-settings.xml"   # your clone
+export MAVEN_ARGS="-s C:/src/Face_Liveness_Detection_and_Presentation_Attack_Detection/scripts/release/maven-settings.xml"   # your clone
 export ANDROID_HOME=/c/tools/android-sdk
 export PATH="$JAVA_HOME/bin:/c/tools/maven/bin:/c/tools/flutter/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
 ```

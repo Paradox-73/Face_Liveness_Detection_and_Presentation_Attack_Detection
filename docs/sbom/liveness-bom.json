@@ -74,7 +74,7 @@
       "externalReferences" : [
         {
           "type" : "website",
-          "url" : "https://github.com/Paradox-73/Mosip-face-liveness-pad"
+          "url" : "https://github.com/Paradox-73/Face_Liveness_Detection_and_Presentation_Attack_Detection"
         }
       ]
     },
@@ -113,7 +113,7 @@
       "externalReferences" : [
         {
           "type" : "website",
-          "url" : "https://github.com/Paradox-73/Mosip-face-liveness-pad/liveness-core"
+          "url" : "https://github.com/Paradox-73/Face_Liveness_Detection_and_Presentation_Attack_Detection/liveness-core"
         }
       ]
     },
@@ -136,7 +136,7 @@
       "externalReferences" : [
         {
           "type" : "website",
-          "url" : "https://github.com/Paradox-73/Mosip-face-liveness-pad/liveness-onnx"
+          "url" : "https://github.com/Paradox-73/Face_Liveness_Detection_and_Presentation_Attack_Detection/liveness-onnx"
         }
       ]
     },
@@ -222,7 +222,7 @@
       "externalReferences" : [
         {
           "type" : "website",
-          "url" : "https://github.com/Paradox-73/Mosip-face-liveness-pad/face-match-sdk"
+          "url" : "https://github.com/Paradox-73/Face_Liveness_Detection_and_Presentation_Attack_Detection/face-match-sdk"
         }
       ]
     },

@@ -11,7 +11,7 @@
 
     <name>MOSIP face liveness (parent)</name>
     <description>Shared face liveness and presentation attack detection engine for the MOSIP desktop and Android registration clients.</description>
-    <url>https://github.com/Paradox-73/Mosip-face-liveness-pad</url>
+    <url>https://github.com/Paradox-73/Face_Liveness_Detection_and_Presentation_Attack_Detection</url>
 
     <licenses>
         <license>
