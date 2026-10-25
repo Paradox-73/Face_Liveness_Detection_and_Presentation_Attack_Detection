@@ -381,6 +381,47 @@ public class BiometricsDetailsApiLivenessOffTest {
                 + "\"error\":{\"errorCode\":\"0\",\"errorInfo\":\"Success\"}}]";
     }
 
+    /** Two threads finishing the same capture: Flutter gets one answer, on the main thread. */
+    @Test
+    public void concurrentCompletionsAnswerFlutterOnceOnTheMainThread() throws Exception {
+        config.put(LivenessConfigKeys.ENABLE, "N");
+        List<Thread> answeredOn = Collections.synchronizedList(new ArrayList<>());
+        api.invokeDiscoverSbi(FIELD, "Face", new BiometricsPigeon.Result<String>() {
+            @Override
+            public void success(@NonNull String status) {
+                answeredOn.add(Thread.currentThread());
+                flutter.add(status);
+            }
+
+            @Override
+            public void error(@NonNull Throwable error) {
+                throw new AssertionError(error);
+            }
+        });
+        java.util.concurrent.CountDownLatch go = new java.util.concurrent.CountDownLatch(1);
+        List<Thread> workers = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            Thread t = new Thread(() -> {
+                try {
+                    go.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                api.completeCapture("Ok");
+            });
+            t.start();
+            workers.add(t);
+        }
+        go.countDown();
+        for (Thread t : workers) {
+            t.join(5_000);
+        }
+        assertTrue("not answered off the main thread", flutter.isEmpty());
+        shadowOf(Looper.getMainLooper()).idle();
+        assertEquals(Collections.singletonList("Ok"), flutter);
+        assertEquals(Looper.getMainLooper().getThread(), answeredOn.get(0));
+    }
+
     private BiometricsPigeon.Result<String> result() {
         return new BiometricsPigeon.Result<String>() {
             @Override

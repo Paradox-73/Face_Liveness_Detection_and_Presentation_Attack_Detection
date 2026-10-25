@@ -13,6 +13,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -32,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -93,7 +96,8 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
     private final List<Bitmap> listBitmaps1 = new ArrayList<>();
     private byte[] byteArrayTester;
     private List<byte[]> listByteArrayTester1 = new ArrayList<>();
-    BiometricsPigeon.Result<String> biometricResult;
+    /** The pending Flutter capture call; taken once, so it is answered exactly once from any thread. */
+    private final AtomicReference<BiometricsPigeon.Result<String>> biometricResult = new AtomicReference<>();
 
     public List<String> OPERATOR_EXCEPTIONS=new ArrayList<>();
 
@@ -137,7 +141,7 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
         this.faceCapture = new FaceCaptureCoordinator(() -> activity, new FaceCaptureCoordinator.Host() {
             @Override
             public void begin(BiometricsPigeon.Result<String> result) {
-                biometricResult = result;
+                biometricResult.set(result);
             }
 
             @Override
@@ -213,15 +217,19 @@ public class BiometricsDetailsApi implements BiometricsPigeon.BiometricsApi {
             return;
         }
         discoverSBI();
-        biometricResult = result;
+        biometricResult.set(result);
     }
 
-    /** Completes the pending Flutter capture call once; later calls are ignored. */
-    private void completeCapture(String status) {
-        BiometricsPigeon.Result<String> pending = biometricResult;
-        biometricResult = null;
-        if (pending != null) {
+    /** Completes the pending Flutter capture call once, on the main thread as Pigeon requires; later calls are ignored. */
+    void completeCapture(String status) {
+        BiometricsPigeon.Result<String> pending = biometricResult.getAndSet(null);
+        if (pending == null) {
+            return;
+        }
+        if (Looper.myLooper() == Looper.getMainLooper()) {
             pending.success(status);
+        } else {
+            new Handler(Looper.getMainLooper()).post(() -> pending.success(status));
         }
     }
 
