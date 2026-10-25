@@ -192,6 +192,9 @@ public class LivenessPanel extends VBox {
 				: model.progress());
 		stepLabel.setText(model.stepText());
 		attemptLabel.setText(model.attemptText());
+		// screen readers announce the bar as a bare percentage otherwise; read the step and attempt instead
+		progressBar.setAccessibleText((model.stepText() + " " + model.attemptText()).trim());
+		promptLabel.setAccessibleHelp(String.join(" ", model.guidance()));
 		boolean retryWasVisible = retryButton.isVisible();
 		show(retryButton, model.isRetryVisible());
 		show(overrideButton, model.isOverrideVisible());

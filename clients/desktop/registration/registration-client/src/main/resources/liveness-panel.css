@@ -158,9 +158,9 @@
 }
 
 .liveness-primary-button:focused {
-	-fx-border-color: #0B2E4F;
-	-fx-border-width: 3;
-	-fx-border-radius: 6;
+	-fx-background-color: #0B2E4F, #FFFFFF, #005BAA;
+	-fx-background-insets: -5, -2, 0;
+	-fx-background-radius: 9, 7, 6;
 }
 
 .liveness-secondary-button {
@@ -176,9 +176,16 @@
 	-fx-cursor: hand;
 }
 
+.liveness-secondary-button:hover {
+	-fx-background-color: #E8F1FA;
+}
+
+/* Keyboard focus: a 3 px dark ring outside the button (13.9:1 on white), separated from it by a white gap, so the
+   focused button is clear without relying on the button's own colour. */
 .liveness-secondary-button:focused {
-	-fx-border-color: #0B2E4F;
-	-fx-border-width: 3;
+	-fx-background-color: #0B2E4F, #FFFFFF, #FFFFFF;
+	-fx-background-insets: -5, -2, 0;
+	-fx-background-radius: 9, 7, 6;
 }
 
 /* Result line of the model import window (LivenessModelImportDialog); the text always says what happened. */

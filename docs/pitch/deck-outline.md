@@ -143,7 +143,7 @@ the claim.
 
 **On the slide**
 - Four large numbers:
-  - **2,699** tests passed on 2026-10-25 (0 failures); about 1,340 are written by the team, the
+  - **2,706** tests passed on 2026-10-25 (0 failures); about 1,345 are written by the team, the
     rest come with the upstream MOSIP code (`docs/test-report/README.md` section 2).
   - **71 / 71** checks: scripted end-to-end run on the real desktop client at the shipped policy with the challenge
     pool cut to blink and smile (2026-10-17, and twice on 2026-10-20; 41 of 41 at the earlier defaults).

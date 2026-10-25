@@ -63,7 +63,7 @@ Design details: `liveness/README.md`, `docs/design/desktop-liveness-services.md`
 
 | Evidence | Result | Where |
 |---|---|---|
-| Unit and component tests (engine, clients, mocks, tools) | 2,699 passed on 2026-10-25, 0 failures; about 1,340 are written by the team, the rest are upstream MOSIP tests; engine line coverage 93% | `docs/test-report/README.md` section 2 |
+| Unit and component tests (engine, clients, mocks, tools) | 2,706 passed on 2026-10-25, 0 failures; about 1,345 are written by the team, the rest are upstream MOSIP tests; engine line coverage 93% | `docs/test-report/README.md` section 2 |
 | Desktop client, scripted end-to-end run (13 flows) | 41 of 41 checks passed at the earlier defaults; 71 of 71 on 2026-10-17 and in two runs on 2026-10-20 at the current policy with blink and smile only | `docs/test-report/desktop-e2e.md` |
 | Android client, scripted end-to-end run (16 flows) | 58 of 58 checks passed at the earlier defaults; 59 of 74 on 2026-10-17 at the current policy with blink and smile only | `docs/test-report/android-e2e.md` |
 | Desktop and Android give the same decision (bonus B4) | 19 replayed cases on desktop, 19 in Android unit tests, 6 on an emulator; one ONNX Runtime release (1.20.0) on both clients | `docs/test-report/interoperability.md` |

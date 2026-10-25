@@ -116,6 +116,10 @@ The `live` and `live-eod` scenarios use frame packs of real people: keep their o
 | Text + icon + colour for every state | yes (pictures above) |
 | Contrast | prompt text on banner: `#0B2E4F` on `#E8F1FA` 12.1:1, `#7A1712` on `#FCE8E6` 9.1:1, `#5B3B00` on `#FFF4DB` 9.3:1, `#14532D` on `#E6F4EA` 8.0:1; guidance `#1F2933` on the error banner 12.5:1; white on button `#005BAA` 6.8:1; offline badge white on `#5B4200` 9.4:1 (WCAG 2.1 relative-luminance formula). The Android capture screen uses the same colour values (unit tests compare them with `liveness-panel.css` and check the contrast ratios) on its dark full screen |
 | Prompt size | 26 px bold; guidance, counters and buttons 16 px |
-| Keyboard | Retry is the default button (Enter) and takes focus when it appears; Escape = Cancel |
-| Screen reader | prompt label accessible text updated with every state; preview has an accessible description |
+| Keyboard | Retry is the default button (Enter) and takes focus when it appears; Escape = Cancel; Tab order follows the buttons left to right (override, Cancel, Retry) |
+| Focus visible | the focused button gets a 3 px `#0B2E4F` ring outside it with a white gap (13.9:1 on white), so focus does not depend on the button's own colour (since 2026-10-25; before, a 3 px border close to the button colour) |
+| Hit targets | buttons at least 44 x 120 px (desktop); Android buttons at least 48 dp high |
+| Screen reader | prompt label accessible text updated with every state, guidance lines as its accessible help; the progress bar reads "Step 1 of 2 Attempt 1 of 3" instead of a bare percentage (since 2026-10-25); preview has an accessible description. JavaFX has no live region, so the desktop prompt is read when the reader reaches it, not announced by itself |
+| Android capture screen | prompt is a polite live region, announced once per change (an extra `announceForAccessibility` that read it twice was removed on 2026-10-25); the attempt count is written next to the dots ("Attempt 2 of 3"), not shown by dot colour alone; Cancel and override buttons have a 2 dp `#E0E0E0` outline on the dark panel (the default outline was not visible); unit tests check the contrast ratios and the attempt text |
 | No scores / model names | only with `mosip.registration.liveness.diagnostic.enable=Y` |
+| Not done | no test with screen-reader users or residents; no check with Windows Narrator or TalkBack on a device |

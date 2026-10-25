@@ -20,7 +20,7 @@ stay in the linked reports; requirement-by-requirement status is in [../traceabi
 
 | Area | Result |
 |---|---|
-| Unit and component tests | **2,699 tests, 0 failures, 0 errors** in the run of 2026-10-25 over 13 test suites (section 2; Flutter count from 2026-10-14) |
+| Unit and component tests | **2,706 tests, 0 failures, 0 errors** in the runs of 2026-10-25 over 13 test suites (section 2; Flutter count from 2026-10-14) |
 | Automated liveness and attack scenarios | run of 2026-10-14 at the shipped defaults: 275 transactions, 755 attempt records (section 3.0). no attack transaction accepted at the shipped defaults (APCER 0.0% for every species and workflow); counts, bona fide rates and the passive-first result: [results](../eval/results/20261014-shipped/README.md) |
 | Desktop end-to-end | reference run 2026-09-30: 41 of 41 checks passed **at the old defaults** (all workflows passive first); 2026-10-17 at the shipped policy with the pool cut to blink and smile: 71 of 71, again in two runs on 2026-10-20 (section 4) |
 | Android end-to-end | reference run 2026-09-30: 58 of 58 checks passed **at the old defaults**; a repeat run found one real weakness; 2026-10-17 at the shipped policy with the pool cut to blink and smile: 59 of 74 (section 4) |
@@ -43,25 +43,29 @@ code and still pass with this project's changes.
 | Module | What it tests | Command | Tests | Failures / errors | Skipped | CI job |
 |---|---|---|---|---|---|---|
 | `liveness/liveness-core` | engine: session state machine, passive decision, challenges, action detection, integrity, planarity, capture binding, policy, audit, UI states, MJPEG reader | `mvn -B -f liveness/pom.xml install -Dliveness.benchmark.frames=0` (the job runs `verify`; `install` also puts the engine in `~/.m2`, which the rows below need) | 376 | 0 | 0 | `liveness` |
-| `liveness/liveness-onnx` | ONNX adapters, golden outputs of the 5 models, signed model registry, engine factory, execution providers, exposure correction and screen-pattern check, shared model-bundle importer and store | same run | 126 | 0 | 2 | `liveness` |
+| `liveness/liveness-onnx` | ONNX adapters, golden outputs of the 5 models, signed model registry, engine factory, execution providers, exposure correction and screen-pattern check, shared model-bundle importer and store | same run | 127 | 0 | 2 | `liveness` |
 | `liveness/face-match-sdk` | SFace face-match SDK behind MOSIP's `IBioApiV2`, ISO 19794-5 records, MOSIP loader | same run | 44 | 0 | 0 | `liveness` |
-| desktop `registration-services` (liveness and audit tests) | capture and authentication gates, stream session, orchestrator, config, audit sink, packet evidence, pass tokens, model import wiring, behaviour on repeated failure, account lock | after the engine install: `mvn -B -f clients/desktop/registration/pom.xml test -pl registration-services,registration-client -am -Dgpg.skip -Djacoco.skip=true -DfailIfNoTests=false "-Dtest=io/mosip/registration/service/bio/liveness/*Test.java,**/AuditFactoryTest.java,io/mosip/registration/controller/liveness/*Test.java"` (on Linux, put `xvfb-run -a` in front: the JavaFX tests need a display) | 158 | 0 | 0 | `desktop-liveness` |
+| desktop `registration-services` (liveness and audit tests) | capture and authentication gates, stream session, orchestrator, config, audit sink, packet evidence, pass tokens, model import wiring, behaviour on repeated failure, account lock | after the engine install: `mvn -B -f clients/desktop/registration/pom.xml test -pl registration-services,registration-client -am -Dgpg.skip -Djacoco.skip=true -DfailIfNoTests=false "-Dtest=io/mosip/registration/service/bio/liveness/*Test.java,**/AuditFactoryTest.java,io/mosip/registration/controller/liveness/*Test.java"` (on Linux, put `xvfb-run -a` in front: the JavaFX tests need a display) | 159 | 0 | 0 | `desktop-liveness` |
 | desktop `registration-client` (liveness tests) | liveness panel view model, texts and replacement texts, bundle parity (en/fr/ar), JavaFX listener, diagnostic lines, model import window | same run | 64 | 0 | 0 | `desktop-liveness` |
-| Android `livenessmanager` | engine loader, config, audit sink, face authenticator, capture screen (Robolectric), image decoding, SBI codec, replay, supervisor override, metrics, diagnostic mode, execution provider | with JDK 21 as `JAVA_HOME`, Flutter 3.10.4 and the Android SDK of [../install/README.md](../install/README.md) section 1: `bash scripts/android-build.sh --test-only` (installs the engine, generates the code a fresh clone lacks, runs the three `testDebugUnitTest` tasks) | 214 | 0 | 0 | `android-unit` |
-| Android `app` | capture gate, face-auth flow, capture launcher, Flutter bridge, supervisor override flow | same run | 75 | 0 | 0 | `android-unit` |
+| Android `livenessmanager` | engine loader, config, audit sink, face authenticator, capture screen (Robolectric), image decoding, SBI codec, replay, supervisor override, metrics, diagnostic mode, execution provider | with JDK 21 as `JAVA_HOME`, Flutter 3.10.4 and the Android SDK of [../install/README.md](../install/README.md) section 1: `bash scripts/android-build.sh --test-only` (installs the engine, generates the code a fresh clone lacks, runs the three `testDebugUnitTest` tasks) | 216 | 0 | 0 | `android-unit` |
+| Android `app` | capture gate, face-auth flow, capture launcher, Flutter bridge, supervisor override flow | same run | 78 | 0 | 0 | `android-unit` |
 | Android `clientmanager` (upstream + liveness) | packet building with `LIVENESS_*` evidence, meta info; all upstream tests | same run | 1,186 | 0 | 0 | `android-unit` |
 | Android Flutter widgets | face-auth panel, outcome banner, Arabic right-to-left, model import panel | after the Android run above: `cd clients/android && flutter test test/liveness/` (on Windows with the clone off drive C:, first set `PUB_CACHE` to the folder the build log names, so the packages it fetched are reused) | 35 | 0 | 0 | `android-unit` |
 | `tools/mock-sync` | sync endpoints, Android contract (key wrapping), response signatures, packet inspector | `mvn -B -f tools/mock-sync/pom.xml verify` | 41 | 0 | 0 | `mock-sync` |
 | `devices/mock-mds` (upstream + extensions) | frame sources, capture from the streamed frame, faults, renewed FTM keys | with JDK 21: `mvn -B -f devices/mock-mds/pom.xml package -Dgpg.skip=true` | 228 | 0 | 0 | `mock-mds` |
 | `tools/eval/scenario-runner` | scenario loading, playlists, classification, output | after the engine install: `mvn -B -f tools/eval/scenario-runner/pom.xml package` | 31 | 0 | 0 | `scenario-runner` |
 | `tools/eval` Python | APCER/BPCER, confidence intervals, frame-pack manifests | `pip install -r tools/eval/requirements.txt`, then `python -m pytest -q tools/eval/tests` | 121 | 0 | 0 | `eval-python` |
-| **Total** | | | **2,699, run on 2026-10-25** | **0** | **2** | |
+| **Total** | | | **2,706, run on 2026-10-25** | **0** | **2** | |
 
 **Totals.** On 2026-10-25, after the maintainer-review fixes, every suite above except the Flutter widgets
-(not changed, 35 from 2026-10-14) ran again: **2,699 tests, 0 failures, 0 errors**, 2 benchmark tests skipped
+(not changed, 35 from 2026-10-14) ran again: 2,699 tests, 0 failures, 0 errors, 2 benchmark tests skipped
 (`scripts/test-all.sh`, the desktop command, `scripts/android-build.sh --test-only`). New since 2026-10-14: the session
 close race test (core 376), the fail-closed signing-key test (`liveness-onnx` 126 again), three desktop tests (158) and
-the Flutter-reply and corrupt-counter tests (`app` 75).
+the Flutter-reply and corrupt-counter tests (`app` 75). The second fix round of the same evening (16:50-17:45)
+re-ran the engine, scenario runner, desktop and Android suites: **2,706 tests, 0 failures, 0 errors**. New: the PAD
+helper-pool close test (`liveness-onnx` 127), the model-store default test (desktop 159), the CameraX start-error
+and attempt-text tests (`livenessmanager` 216) and the officer-face and missing-registration tests (`app` 78);
+MockSync, MockMDS and the Python tools did not change and keep the counts of the first run.
 
 The verification run of 2026-10-14 (19:46-20:03, logs outside the repository) ran every suite of the
 table on the final code of the PS04 completion pass and found **2,691 tests, 0 failures, 0 errors**, 2 benchmark
@@ -80,12 +84,12 @@ MockSync step fails while packaging, a MockSync started by a demo still holds `m
 
 **Upstream and team-written.** About 1,361 of the tests are upstream: the Android `clientmanager` suite (1,186, all upstream
 tests, passing with this project's changes) and about 175 in MockMDS (an estimate from the first audit count; the 228 in the
-table also include the tests added for the mock face device). The remaining 1,340 or so of the 2,699 are team-written (an
+table also include the tests added for the mock face device). The remaining 1,345 or so of the 2,706 are team-written (an
 approximate figure).
 
 Hosted CI:
 
-- GitHub Actions (`.github/workflows/ci.yml`, hosted `ubuntu-latest`): the repository is public and `ci` runs on every push to `main`. The re-run of 2026-10-14 on `86799c8` (run 38079969255) passed six jobs (liveness engine, MockSync, MockMDS, scenario runner, evaluation pytest, desktop liveness tests) and failed the Android job at its first step: `sdkmanager: command not found`, because current runner images keep `sdkmanager` under `$ANDROID_HOME/cmdline-tools/latest/bin`. The workflow now puts that folder on `PATH`. The hosted result for the final commit will be recorded here after the push.
+- GitHub Actions (`.github/workflows/ci.yml`, hosted `ubuntu-latest`): the repository is public and `ci` runs on every push to `main`. The re-run of 2026-10-14 on `86799c8` (run 38079969255) passed six jobs (liveness engine, MockSync, MockMDS, scenario runner, evaluation pytest, desktop liveness tests) and failed the Android job at its first step: `sdkmanager: command not found`, because current runner images keep `sdkmanager` under `$ANDROID_HOME/cmdline-tools/latest/bin`. The workflow now puts that folder on `PATH`. On `0ef751a` (2026-10-25, run 40183409981) every job passed, the Android unit tests included; the DCO job runs on pull requests only and was skipped.
 
 Not re-run for this page (results from the engineers' reports of the same day):
 
@@ -212,7 +216,9 @@ engine before those fixes ([../eval/results/20260930/](../eval/results/20260930/
 | Passive pass, user-visible | Android emulator | 2.2-3.0 s; with 2 challenges 7.4-12.1 s | android-e2e section 5 |
 
 - The design target of p95 at most 20 ms per frame is **not met** on either platform (T-PERF-01). Face analysis (YuNet plus
-  Face Mesh on every frame) is two thirds of the frame; proposal E4 runs the mesh only during challenges.
+  Face Mesh on every frame) is two thirds of the frame. Running the mesh only during challenges (proposal E4) is not
+  safe without a new calibration: the passive stage's quality gate and stored-frame choice use mesh values
+  ([../design/engine.md](../design/engine.md) section 10).
 - No idle-machine measurement and no physical Android device yet; the phone measurement kit is described in [android-performance.md](android-performance.md) and has not been run on a phone.
 
 ## 6. Known limitations

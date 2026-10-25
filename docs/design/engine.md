@@ -194,7 +194,13 @@ factory is registered as a `LivenessEngineProvider` with engine ID `mosip-onnx-d
 | Model loading | desktop start-up preload / Android emulator | about 1.4 s / 10.7 s | `docs/design/desktop-liveness-services.md`, `docs/design/android-liveness.md` |
 
 The per-frame target (p95 at most 20 ms, test T-PERF-01 in [../traceability.md](../traceability.md)) is not met. Face Mesh on every passive frame is two thirds of the
-cost; proposal E4 in the calibration notes (detector-only analysis in the passive stage) is the next step.
+cost. Proposal E4 in the calibration notes (detector-only analysis in the passive stage) was checked against the
+engine on 2026-10-25 and not adopted, because the passive stage uses the mesh, not only the challenges: the quality
+gate takes head pose (yaw and pitch limits) and the inter-eye distance (`quality.min_ied_px`, the `FACE_TOO_SMALL`
+check) from it, the choice of the stored frame takes the eye aspect ratio (no frame with closed eyes), and the
+neutral-face window and the challenge eligibility take its pose and inter-eye distance. Five-point detector values
+differ from the mesh values, so decisions and the stored frame could change; a detector-only passive stage needs its
+own calibration (shipped and attack suites) before it can ship.
 Since 2026-10-20 the two MiniFASNet models of the passive PAD run at the same time, which halves the PAD stage
 (p50 about 12 ms to 6.6 ms on the latency suite) without changing any score; the frame p95 still moves more with
 the laptop's load (123-128 ms after, 130-167 ms before, same day).
