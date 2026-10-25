@@ -29,7 +29,7 @@ authentication.
   runs without a network.
 - **Evidence:** audit events `REG-EVT-LV01..17` and `LIVENESS_*` entries in every face record of the packet.
 
-**Demo video:** https://youtu.be/rod0HENUmQQ
+**Demo video:** https://youtu.be/DlSre35yWCo
 
 ## Judge's path
 
