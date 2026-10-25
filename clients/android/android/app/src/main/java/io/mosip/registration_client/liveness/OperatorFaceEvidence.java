@@ -51,14 +51,16 @@ public class OperatorFaceEvidence {
     }
 
     /**
-     * Stores the operator's face of a successful packet authentication. A capture that fails the SBI checks is
-     * not stored (the authentication itself stays valid); the packet then carries no officer face.
+     * Stores the operator's face of a successful packet authentication. A capture without a signed device response
+     * (a vendor SBI app) has nothing to store and is accepted as before.
      *
      * @param capture the passing capture of the authentication
+     * @return {@code false} when the face could not be stored (failed SBI checks, no open registration): the caller
+     *         fails the authentication, so no packet is written without the officer face
      */
-    public void keep(LivenessCaptureResult capture) {
+    public boolean keep(LivenessCaptureResult capture) {
         if (capture == null || capture.rCaptureResponse() == null) {
-            return;
+            return true;
         }
         try {
             RegistrationDto registration = registrationService.getRegistrationDto();
@@ -75,8 +77,10 @@ public class OperatorFaceEvidence {
             registration.getOfficerBiometrics().clear();
             registration.getOfficerBiometrics().addAll(faces);
             Log.i(TAG, "Operator face kept for the packet: " + faces.size() + " record(s)");
+            return true;
         } catch (Exception e) {
-            Log.w(TAG, "Operator face not kept for the packet: " + e.getClass().getSimpleName());
+            Log.e(TAG, "Operator face not kept for the packet: " + e.getClass().getSimpleName());
+            return false;
         }
     }
 }

@@ -320,6 +320,10 @@ public final class FaceCaptureCoordinator {
                                         boolean exceptionPhoto) {
         host.begin(result);
         String subject = livenessSubject(fieldId);
+        if (subject == null) {
+            host.complete(CaptureOutcome.Status.FAILED.name());
+            return true;
+        }
         CaptureOutcome blocked = livenessGate.admit(subject, gateField);
         if (blocked != null) {
             // Attempts used up: a supervisor may still accept the face when the policy allows an override.
@@ -345,8 +349,10 @@ public final class FaceCaptureCoordinator {
                                    String fieldId, Modality modality, String gateField) {
         livenessGate.clearOutcome(gateField);
         host.begin(result);
+        String subject = livenessSubject(fieldId);
+        // No attempt is counted for this photo, so the field name may stand in for a missing subject.
         boolean started = livenessLauncher.launch(FaceCaptureLivenessGate.workflowFor(gateField),
-                livenessSubject(fieldId), true, 0,
+                subject == null ? fieldId : subject, true, 0,
                 captureResult -> onPhotoCapture(fieldId, gateField, modality, captureResult));
         if (!started) {
             host.complete("BUSY");
@@ -378,6 +384,10 @@ public final class FaceCaptureCoordinator {
                                          String fieldId, Modality modality, String gateField) {
         host.begin(result);
         String subject = livenessSubject(fieldId);
+        if (subject == null) {
+            host.complete(CaptureOutcome.Status.FAILED.name());
+            return;
+        }
         CaptureOutcome blocked = livenessGate.admit(subject, gateField);
         if (blocked != null) {
             host.complete(blocked.status().name());
@@ -461,16 +471,19 @@ public final class FaceCaptureCoordinator {
         }
     }
 
-    /** The registration ID for a resident, the signed-in operator for onboarding. */
+    /**
+     * The registration ID for a resident, the signed-in operator for onboarding: the key of the failed-attempt
+     * counters. {@code null} when it cannot be read; the caller then refuses the capture, because a shared stand-in
+     * key would mix the counters of different residents.
+     */
     private String livenessSubject(String fieldId) {
         try {
-            if (fieldId.equals(OPERATOR_BIOMETRICS)) {
-                String user = signedInUserId();
-                return user.isEmpty() ? OPERATOR_BIOMETRICS : user;
-            }
-            return registrationService.getRegistrationDto().getRId();
+            String subject = fieldId.equals(OPERATOR_BIOMETRICS) ? signedInUserId()
+                    : registrationService.getRegistrationDto().getRId();
+            return subject == null || subject.trim().isEmpty() ? null : subject;
         } catch (Exception e) {
-            return fieldId;
+            Log.e(TAG, "No subject for the face liveness counters: " + e.getClass().getSimpleName());
+            return null;
         }
     }
 

@@ -52,8 +52,10 @@ import io.mosip.liveness.core.policy.PolicyResolver;
 import io.mosip.registration.clientmanager.constant.AuditEvent;
 import io.mosip.registration.clientmanager.constant.Components;
 import io.mosip.registration.clientmanager.constant.RegistrationConstants;
+import io.mosip.registration.clientmanager.dto.registration.RegistrationDto;
 import io.mosip.registration.clientmanager.entity.Audit;
 import io.mosip.registration.clientmanager.spi.AuditManagerService;
+import io.mosip.registration.clientmanager.spi.RegistrationService;
 import io.mosip.registration.livenessmanager.LivenessCaptureRequest;
 import io.mosip.registration.livenessmanager.LivenessCaptureResult;
 import io.mosip.registration.livenessmanager.LivenessService;
@@ -80,19 +82,39 @@ public class BiometricsDetailsApiLivenessOffTest {
     private final List<String> flutter = new ArrayList<>();
     private final List<AuditEvent> audits = new ArrayList<>();
     private LivenessCaptureResult nextScreenResult;
+    /** Whether a registration is open, so the resident's registration ID can be read. */
+    private boolean registrationOpen;
     private Activity activity;
     private LivenessCaptureLauncher launcher;
     private FaceCaptureLivenessGate gate;
     private BiometricsDetailsApi api;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        RegistrationDto registration = new RegistrationDto("rid-1", "NEW", "NEW", 1.0,
+                Collections.singletonList("eng"), new HashMap<>(), "app-1");
+        // Only getRegistrationDto is used on this path (Mockito does not run under this module's Robolectric).
+        RegistrationService registrations = (RegistrationService) java.lang.reflect.Proxy.newProxyInstance(
+                RegistrationService.class.getClassLoader(), new Class<?>[] {RegistrationService.class},
+                (proxy, method, args) -> {
+                    if (method.getDeclaringClass() == Object.class) {
+                        return method.getName().equals("equals") ? proxy == args[0]
+                                : method.getName().equals("hashCode") ? 0 : "registrations";
+                    }
+                    if (!method.getName().equals("getRegistrationDto")) {
+                        throw new UnsupportedOperationException(method.getName());
+                    }
+                    if (!registrationOpen) {
+                        throw new IllegalStateException("no registration open");
+                    }
+                    return registration;
+                });
         LivenessService liveness = new ConfigLivenessService();
         activity = Robolectric.buildActivity(Activity.class).setup().get();
         launcher = new LivenessCaptureLauncher(liveness);
         launcher.attach(activity);
         gate = new FaceCaptureLivenessGate(liveness);
-        api = new BiometricsDetailsApi(new RecordingAudit(), new ObjectMapper(), null, null, null, null);
+        api = new BiometricsDetailsApi(new RecordingAudit(), new ObjectMapper(), null, registrations, null, null);
         api.setActivity(activity);
         api.setLivenessGate(gate, launcher);
         // A live view: each test sets its keys after this.
@@ -234,7 +256,17 @@ public class BiometricsDetailsApiLivenessOffTest {
     // ------------------------------------------------------------------ liveness on
 
     @Test
+    public void livenessOnWithoutAnOpenRegistrationIsRefusedBeforeTheCamera() {
+        api.invokeDiscoverSbi(FIELD, "Face", result());
+
+        assertEquals(Collections.singletonList(CaptureOutcome.Status.FAILED.name()), flutter);
+        assertTrue("no capture screen without a registration ID to count attempts on", screens.isEmpty());
+        assertEquals("no counter under a stand-in key", 0, gate.usedAttempts(FIELD, FIELD));
+    }
+
+    @Test
     public void livenessOnBuiltInCameraRunsTheLivenessScreen() {
+        registrationOpen = true;
         api.invokeDiscoverSbi(FIELD, "Face", result());
 
         assertEquals(1, screens.size());
@@ -244,6 +276,7 @@ public class BiometricsDetailsApiLivenessOffTest {
 
     @Test
     public void livenessOnSbiDeviceWithoutStreamIsRefusedByDefault() throws Exception {
+        registrationOpen = true;
         config.put(LivenessConfigKeys.ANDROID_DEVICE, "SBI");
         installSbiApp();
 
@@ -262,6 +295,7 @@ public class BiometricsDetailsApiLivenessOffTest {
 
     @Test
     public void livenessOnSbiDeviceCaptureOnlyGoesOnToTheVendorCapture() throws Exception {
+        registrationOpen = true;
         config.put(LivenessConfigKeys.ANDROID_DEVICE, "SBI");
         config.put(LivenessConfigKeys.NO_STREAM_POLICY, "CAPTURE_ONLY");
         installSbiApp();
@@ -284,6 +318,7 @@ public class BiometricsDetailsApiLivenessOffTest {
 
     @Test
     public void sbiDeviceBelowTheAllowedCertificationIsRefused() throws Exception {
+        registrationOpen = true;
         config.put(LivenessConfigKeys.ANDROID_DEVICE, "SBI");
         config.put(LivenessConfigKeys.NO_STREAM_POLICY, "CAPTURE_ONLY");
         config.put(LivenessConfigKeys.MDS_ALLOWED_CERTIFICATIONS, "L1");
@@ -307,6 +342,7 @@ public class BiometricsDetailsApiLivenessOffTest {
 
     @Test
     public void livenessOnSbiDeviceWithoutFaceDeviceFails() throws Exception {
+        registrationOpen = true;
         config.put(LivenessConfigKeys.ANDROID_DEVICE, "SBI");
         installSbiApp();
 

@@ -22,12 +22,14 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import io.mosip.liveness.core.Workflow;
+import io.mosip.liveness.core.ui.MessageKeys;
 import io.mosip.liveness.onnx.bundle.ModelBundleImporter;
 import io.mosip.registration.clientmanager.constant.AuditEvent;
 import io.mosip.registration.clientmanager.constant.Components;
 import io.mosip.registration.clientmanager.spi.AuditManagerService;
 import io.mosip.registration.livenessmanager.LivenessService;
 import io.mosip.registration.livenessmanager.auth.FaceAuthOutcome;
+import io.mosip.registration.livenessmanager.auth.FaceAuthStatus;
 import io.mosip.registration_client.liveness.CaptureOutcome;
 import io.mosip.registration_client.liveness.FaceAuthFlow;
 import io.mosip.registration_client.liveness.FaceCaptureLivenessGate;
@@ -141,10 +143,14 @@ public class LivenessApi implements LivenessPigeon.LivenessApi {
         }
         auditStart(w);
         faceAuth.authenticate(userId, w, outcome -> {
-            if (w == Workflow.PACKET_AUTH && operatorFaces != null) {
-                outcome.capture().ifPresent(operatorFaces::keep);
+            FaceAuthOutcome answer = outcome;
+            if (w == Workflow.PACKET_AUTH && operatorFaces != null && outcome.capture().isPresent()
+                    && !operatorFaces.keep(outcome.capture().get())) {
+                // The packet must carry the officer face that authenticated it: refuse instead of writing it without.
+                answer = new FaceAuthOutcome(w, FaceAuthStatus.LIVENESS_FAILED, MessageKeys.ERROR_FRAMES_INVALID,
+                        outcome.attemptsUsed(), outcome.maxAttempts());
             }
-            result.success(toPigeon(outcome));
+            result.success(toPigeon(answer));
         });
     }
 

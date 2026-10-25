@@ -14,6 +14,7 @@ import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
+import androidx.camera.core.UseCase;
 import androidx.camera.core.resolutionselector.ResolutionSelector;
 import androidx.camera.core.resolutionselector.ResolutionStrategy;
 import androidx.camera.lifecycle.ProcessCameraProvider;
@@ -24,6 +25,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,7 +49,9 @@ import io.mosip.liveness.core.image.PixelFormat;
  * decoder. Analysis frames are what the sensor sees, not mirrored ({@code mirrored=false}); only the on-screen
  * preview ({@code PreviewView}) is mirrored like a selfie, so head-turn directions stay subject-relative.
  *
- * <p>Binds to the screen's lifecycle: the camera stops when the screen stops.
+ * <p>Binds to the screen's lifecycle: the camera stops when the screen stops. {@link #close()} unbinds only this
+ * source's own use cases, so another CameraX user of the app keeps its camera, and no frame reaches the sink after
+ * it returns.
  */
 public final class CameraXFrameSource implements FaceFrameSource {
 
@@ -70,7 +74,10 @@ public final class CameraXFrameSource implements FaceFrameSource {
     private volatile long firstNanos;
     private volatile long lastNanos;
     private volatile ProcessCameraProvider provider;
+    private volatile UseCase[] useCases = new UseCase[0];
     private volatile FrameSink sink;
+    /** Held while a frame is handed to the sink, and by {@link #close()}, so no frame follows the close. */
+    private final Object delivery = new Object();
 
     /**
      * Creates the source.
@@ -110,14 +117,21 @@ public final class CameraXFrameSource implements FaceFrameSource {
 
     @Override
     public void close() {
-        if (!closed.compareAndSet(false, true)) {
-            return;
+        synchronized (delivery) {
+            if (!closed.compareAndSet(false, true)) {
+                return;
+            }
         }
-        ProcessCameraProvider p = provider;
-        if (p != null) {
-            ContextCompat.getMainExecutor(context).execute(p::unbindAll);
-        }
+        unbindOwn();
         analysisExecutor.shutdown();
+    }
+
+    private void unbindOwn() {
+        ProcessCameraProvider p = provider;
+        UseCase[] own = useCases;
+        if (p != null && own.length > 0) {
+            ContextCompat.getMainExecutor(context).execute(() -> p.unbind(own));
+        }
     }
 
     private void bind(ListenableFuture<ProcessCameraProvider> future) {
@@ -139,17 +153,33 @@ public final class CameraXFrameSource implements FaceFrameSource {
                     .setResolutionSelector(resolution)
                     .build();
             analysis.setAnalyzer(analysisExecutor, this::analyze);
-            p.unbindAll();
             if (surfaceProvider != null) {
                 Preview preview = new Preview.Builder().setResolutionSelector(resolution).build();
                 preview.setSurfaceProvider(surfaceProvider);
-                p.bindToLifecycle(owner, selector, preview, analysis);
+                useCases = new UseCase[] {preview, analysis};
             } else {
-                p.bindToLifecycle(owner, selector, analysis);
+                useCases = new UseCase[] {analysis};
             }
+            p.bindToLifecycle(owner, selector, useCases);
         } catch (Exception e) {
-            fail(DeviceErrorCode.CAMERA_IN_USE, "camera could not be opened", e);
+            fail(bindError(e), "camera could not be opened", e);
         }
+    }
+
+    /**
+     * Device error of a failed camera start: no usable camera, camera permission missing, or the camera held
+     * elsewhere (CameraX reports that, and a lifecycle already destroyed, as {@link IllegalStateException}).
+     */
+    static DeviceErrorCode bindError(Throwable e) {
+        Throwable cause = e instanceof ExecutionException && e.getCause() != null ? e.getCause() : e;
+        if (cause instanceof SecurityException) {
+            return DeviceErrorCode.CAMERA_PERMISSION_DENIED;
+        }
+        if (cause instanceof IllegalArgumentException) {
+            // CameraX: "No available camera can be found" for the selector
+            return DeviceErrorCode.NOT_FOUND;
+        }
+        return DeviceErrorCode.CAMERA_IN_USE;
     }
 
     private void analyze(@NonNull ImageProxy image) {
@@ -167,10 +197,15 @@ public final class CameraXFrameSource implements FaceFrameSource {
                 firstNanos = now;
             }
             lastNanos = now;
-            s.onFrame(FaceFrame.builder().data(copyRgba(image)).format(PixelFormat.RGBA8888)
+            FaceFrame frame = FaceFrame.builder().data(copyRgba(image)).format(PixelFormat.RGBA8888)
                     .size(image.getWidth(), image.getHeight())
                     .rotationDegrees(image.getImageInfo().getRotationDegrees()).mirrored(false)
-                    .monotonicNanos(now).sequence(n).sourceId(sourceId).build());
+                    .monotonicNanos(now).sequence(n).sourceId(sourceId).build();
+            synchronized (delivery) {
+                if (!closed.get()) {
+                    s.onFrame(frame);
+                }
+            }
         } catch (RuntimeException e) {
             fail(DeviceErrorCode.INVALID_STREAM, "camera frame could not be read", e);
         } finally {
@@ -203,6 +238,7 @@ public final class CameraXFrameSource implements FaceFrameSource {
         FrameSink s = sink;
         if (s != null && closed.compareAndSet(false, true)) {
             s.onError(DeviceError.of(code, message, cause));
+            unbindOwn();
             analysisExecutor.shutdown();
         }
     }
