@@ -49,6 +49,9 @@ final class ScriptedModels {
         int calls;
         FaceBox lastHint;
 
+        /** Runs inside every analysis, on the frame thread; lets a test hold a frame in flight. */
+        Runnable onAnalyze = () -> { };
+
         void faces(DetectedFace... faces) {
             next = FaceObservation.of(640, 480, Arrays.asList(faces));
         }
@@ -61,6 +64,7 @@ final class ScriptedModels {
         @Override
         public FaceObservation analyze(ImageBuffer image) throws EngineException {
             calls++;
+            onAnalyze.run();
             if (failure != null) {
                 throw failure;
             }

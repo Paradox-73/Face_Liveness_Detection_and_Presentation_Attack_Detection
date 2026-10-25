@@ -46,12 +46,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * The liveness session state machine of docs/design/engine.md section 3, driven by stream frames and clock ticks.
  *
  * <p>Confined to one owning thread (the thread that calls {@link #start()}); {@link #sessionId()},
- * {@link #state()} and {@link #cancel()} are safe from any thread. Every step is deterministic given the
+ * {@link #state()}, {@link #cancel()} and {@link #close()} are safe from any thread: every public call holds one
+ * lock, and a {@code close()} that finds a call in flight on another thread is finished by that thread as it leaves. Every step is deterministic given the
  * session's clock, random source and model outputs, which the scenario tests rely on.
  */
 final class DefaultLivenessSession implements LivenessSession {
@@ -111,7 +113,10 @@ final class DefaultLivenessSession implements LivenessSession {
     private DeviceErrorCode deviceError;
     private EngineErrorCode engineError;
     private LivenessResult result;
-    private boolean closed;
+    /** Held by every public call; {@link #close()} only tries it, so it never waits on a frame in flight. */
+    private final ReentrantLock lock = new ReentrantLock();
+    private volatile boolean closeRequested;
+    private volatile boolean closed;
 
     DefaultLivenessSession(DefaultLivenessEngine engine, SessionRequest request, LivenessListener listener) {
         this.engine = engine;
@@ -152,7 +157,9 @@ final class DefaultLivenessSession implements LivenessSession {
 
     @Override
     public void start() {
+        lock.lock();
         if (state != SessionState.IDLE) {
+            lock.unlock();
             return;
         }
         owner = Thread.currentThread();
@@ -333,33 +340,55 @@ final class DefaultLivenessSession implements LivenessSession {
     @Override
     public void cancel() {
         cancelRequested.set(true);
-        if (Thread.currentThread() == owner && depth == 0 && !state.isTerminal()) {
-            depth++;
+        if (Thread.currentThread() == owner && lock.tryLock()) {
             try {
-                finishCancelled();
+                if (depth == 0 && !state.isTerminal()) {
+                    depth++;
+                    try {
+                        finishCancelled();
+                    } finally {
+                        depth--;
+                    }
+                }
             } finally {
-                depth--;
+                lock.unlock();
             }
         }
     }
 
     @Override
     public void close() {
-        if (closed) {
+        cancelRequested.set(true);
+        closeRequested = true;
+        closeIfIdle();
+    }
+
+    /**
+     * Closes the session when a close is pending and no public call is in flight. Runs from {@link #close()} and
+     * after every public call, so whichever thread finds the session idle finishes the close.
+     */
+    private void closeIfIdle() {
+        if (!closeRequested || closed || !lock.tryLock()) {
             return;
         }
-        if (!state.isTerminal()) {
-            cancelRequested.set(true);
-            depth++;
-            try {
-                finishCancelled();
-            } finally {
-                depth--;
+        try {
+            if (closed || lock.getHoldCount() > 1) {
+                return; // a call of this thread is still running; it closes as it leaves
             }
+            if (!state.isTerminal()) {
+                depth++;
+                try {
+                    finishCancelled();
+                } finally {
+                    depth--;
+                }
+            }
+            closed = true;
+            candidate.wipe();
+            lastFace = null;
+        } finally {
+            lock.unlock();
         }
-        closed = true;
-        candidate.wipe();
-        lastFace = null;
     }
 
     /**
@@ -368,12 +397,15 @@ final class DefaultLivenessSession implements LivenessSession {
      * @return {@code false} if the session has ended
      */
     private boolean enter() {
+        lock.lock();
         depth++;
         if (cancelRequested.get() && !state.isTerminal()) {
             finishCancelled();
         }
         if (state.isTerminal()) {
             depth--;
+            lock.unlock();
+            closeIfIdle();
             return false;
         }
         return true;
@@ -385,6 +417,8 @@ final class DefaultLivenessSession implements LivenessSession {
             finishCancelled();
         }
         depth--;
+        lock.unlock();
+        closeIfIdle();
     }
 
     // ------------------------------------------------------------------ frame processing

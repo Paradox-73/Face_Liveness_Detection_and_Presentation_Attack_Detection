@@ -34,10 +34,14 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -346,6 +350,44 @@ class SessionEdgeCaseTest {
         cb.start();
         cb.frame(TestFaces.neutral());
         assertEquals(SessionState.CANCELLED, cb.state(), "a cancel from a callback applies when the call returns");
+    }
+
+    /** A close from another thread while a frame is being analysed never cuts into that frame. */
+    @Test
+    void closeFromAnotherThreadWaitsForTheFrameInFlight() throws Exception {
+        SessionHarness h = started();
+        h.frames(3, TestFaces.neutral());
+        CountDownLatch inside = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        h.analyzer.onAnalyze = () -> {
+            inside.countDown();
+            try {
+                release.await(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        };
+        AtomicReference<Throwable> crash = new AtomicReference<>();
+        Thread worker = new Thread(() -> h.frame(TestFaces.neutral()));
+        worker.setUncaughtExceptionHandler((t, e) -> crash.set(e));
+        worker.start();
+        assertTrue(inside.await(5, TimeUnit.SECONDS));
+
+        Thread closer = new Thread(h.session::close);
+        closer.start();
+        closer.join(5_000);
+        assertFalse(closer.isAlive(), "close does not wait for the frame worker");
+        assertFalse(h.state().isTerminal(), "the session ends only after the frame in flight");
+
+        release.countDown();
+        worker.join(5_000);
+        assertNull(crash.get());
+        assertEquals(SessionState.CANCELLED, h.state());
+        assertEquals(1, h.listener.results.size());
+        assertFalse(h.session.captureFrame().isPresent());
+        h.analyzer.onAnalyze = () -> { };
+        h.frame(TestFaces.neutral());
+        assertEquals(1, h.listener.results.size(), "frames after the close are ignored");
     }
 
     @Test
