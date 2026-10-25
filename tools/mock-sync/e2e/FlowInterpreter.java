@@ -117,7 +117,8 @@ final class FlowInterpreter {
 		step("dump", rest -> fx.dump(rest.trim()));
 		step("set", rest -> {
 			String[] a = rest.trim().split("\\s+", 2);
-			c.variables.put(a[0], a.length > 1 ? a[1] : "");
+			// -Dflow.NAME=value overrides the flow's value (demo-desktop.sh sets flow.MOCKSYNC to its admin port)
+			c.variables.put(a[0], System.getProperty("flow." + a[0], a.length > 1 ? a[1] : ""));
 		});
 		handlers.put("include", rest -> runFile(c.scriptDir.resolve(rest.trim())));
 		handlers.put("section", rest -> section(c.scriptDir.resolve(rest.trim())));
