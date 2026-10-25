@@ -12,7 +12,6 @@ import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,9 +25,8 @@ import io.mosip.liveness.core.config.LivenessConfigKeys;
  * Public keys trusted to sign model bundles.
  *
  * <p>The development key below signs the bundle in this repository ({@code models/manifest.jws}). Its private
- * half is kept outside the repository and never committed. A production deployment passes its own key to
- * {@link ModelRegistry.Builder#trustAnchor(PublicKey)}, for example one taken from a certificate the client
- * already synchronises.
+ * half is kept outside the repository and never committed. The clients trust only the keys named by
+ * {@code mosip.registration.liveness.model.trust_anchor_pem}; demo configurations set it to this key explicitly.
  */
 public final class ModelTrustAnchors {
 
@@ -61,19 +59,19 @@ public final class ModelTrustAnchors {
     }
 
     /**
-     * Returns the keys a deployment trusts: the PEM blocks of {@code mosip.registration.liveness.model.trust_anchor_pem},
-     * or the development key when that key is unset (the documented fallback for development and demos).
+     * Returns the keys a deployment trusts: the PEM blocks of {@code mosip.registration.liveness.model.trust_anchor_pem}.
      *
      * @param config liveness configuration
      * @return at least one key
-     * @throws EngineException {@code CONFIG_INVALID} when the key is set but holds no readable RSA public key; the
-     *                         development key is never used in that case
+     * @throws EngineException {@code CONFIG_INVALID} when the key is unset or holds no readable RSA public key; no
+     *                         built-in key is trusted in its place, so no model loads
      */
     public static List<PublicKey> configured(ConfigSource config) throws EngineException {
         Optional<String> pem = config.get(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM).map(String::trim)
                 .filter(v -> !v.isEmpty());
         if (!pem.isPresent()) {
-            return Collections.singletonList(development());
+            throw new EngineException(EngineErrorCode.CONFIG_INVALID, LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM
+                    + " is unset; no model is trusted until it names the model-signing public key");
         }
         List<PublicKey> keys = new ArrayList<>();
         try {

@@ -146,7 +146,7 @@ public final class LivenessConfigKeys {
 
     /**
      * Model-signing public key(s) a model bundle must be signed with, as PEM {@code PUBLIC KEY} blocks (RSA). Unset:
-     * the built-in development key, which a production deployment must replace. Synced only; never a local value.
+     * no model loads ({@code CONFIG_INVALID}). Synced only; never a local value.
      */
     public static final String MODEL_TRUST_ANCHOR_PEM = PREFIX + "model.trust_anchor_pem";
 

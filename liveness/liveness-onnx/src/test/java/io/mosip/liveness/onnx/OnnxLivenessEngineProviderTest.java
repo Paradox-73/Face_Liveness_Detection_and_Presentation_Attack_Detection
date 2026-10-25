@@ -98,8 +98,20 @@ class OnnxLivenessEngineProviderTest {
         assertEquals(EngineErrorCode.CONFIG_INVALID, invalid.getErrorCode());
     }
 
+    /** No configured key: nothing is trusted and no model loads, not even the development-signed bundle. */
+    @Test
+    void unsetTrustAnchorLoadsNoModel() {
+        EngineException refused = assertThrows(EngineException.class, () -> new OnnxLivenessEngineProvider()
+                .create(context(Collections.singletonMap(LivenessConfigKeys.MODEL_MIN_VERSION, "1.3.0"))));
+        assertEquals(EngineErrorCode.CONFIG_INVALID, refused.getErrorCode());
+        assertTrue(refused.getMessage().contains(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM), refused.getMessage());
+    }
+
     private static EngineContext context(String minimumVersion) {
-        return context(Collections.singletonMap(LivenessConfigKeys.MODEL_MIN_VERSION, minimumVersion));
+        Map<String, String> config = new HashMap<>();
+        config.put(LivenessConfigKeys.MODEL_MIN_VERSION, minimumVersion);
+        config.put(LivenessConfigKeys.MODEL_TRUST_ANCHOR_PEM, ModelTrustAnchors.DEVELOPMENT_KEY_PEM);
+        return context(config);
     }
 
     private static EngineContext context(Map<String, String> config) {

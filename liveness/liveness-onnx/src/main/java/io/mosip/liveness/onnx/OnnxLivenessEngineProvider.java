@@ -33,7 +33,7 @@ import io.mosip.liveness.onnx.runtime.OnnxRuntimeOptions;
  * <p>{@link #create(EngineContext)} reads the bundle from {@link EngineContext#models()}, requires at least
  * {@code mosip.registration.liveness.model.min_version}, uses the ONNX Runtime back end named by
  * {@code mosip.registration.liveness.engine.execution_provider} (default CPU), trusts the keys of
- * {@code mosip.registration.liveness.model.trust_anchor_pem} (the built-in development key when unset), and returns an
+ * {@code mosip.registration.liveness.model.trust_anchor_pem} (unset: {@code CONFIG_INVALID}, nothing loads), and returns an
  * {@link OnnxLivenessEngine}. It loads synchronously, so the engine is ready when it returns. A bundle that fails
  * verification throws an {@link EngineException} whose code has
  * {@link io.mosip.liveness.core.EngineErrorCode#isModelIntegrityFailure()} set; the client audits
