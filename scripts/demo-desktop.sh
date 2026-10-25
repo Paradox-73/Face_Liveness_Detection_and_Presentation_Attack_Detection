@@ -37,7 +37,8 @@
 # key files), and the frame packs in
 # $MOSIP_RUN_ROOT/frame-packs (tools/eval/fetch-frame-packs.py). A JDK 11 with JavaFX and javac: JAVA11_HOME, or
 # the cached Zulu 11 FX JDK that desktop-build.sh downloads.
-# Environment: MOSIP_RUN_ROOT (default <repo>/../run).
+# Environment: MOSIP_RUN_ROOT (default <repo>/../run); MOCKSYNC_HTTP_PORT, MockSync's HTTP admin port (default 8080;
+# set another when 8080 is taken; flows 60, 65 and 90 still call 8080).
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -48,7 +49,8 @@ PACKS="$RUN_ROOT/frame-packs"
 MOCKSYNC_DIR="$REPO/tools/mock-sync"
 FLOW="$MOCKSYNC_DIR/e2e/flows/demo-desktop.flow"
 OUT="$RUN_ROOT/demo/desktop-$(date +%Y%m%d-%H%M%S)"
-ADMIN="http://127.0.0.1:8080"
+MOCKSYNC_HTTP_PORT="${MOCKSYNC_HTTP_PORT:-8080}"
+ADMIN="http://127.0.0.1:$MOCKSYNC_HTTP_PORT"
 ACTION=run
 RESTORE=0
 POLICY_MODE=shipped
@@ -140,7 +142,7 @@ if curl -s -m 3 -o /dev/null "$ADMIN/admin/config"; then
 else
 	log "starting MockSync"
 	mkdir -p "$MOCKSYNC_DIR/work"
-	(cd "$MOCKSYNC_DIR" && nohup bash scripts/run-mock-sync.sh >>"$MOCKSYNC_DIR/work/mock-sync.out" 2>&1 &)
+	(cd "$MOCKSYNC_DIR" && nohup bash scripts/run-mock-sync.sh "--mocksync.http-port=$MOCKSYNC_HTTP_PORT" >>"$MOCKSYNC_DIR/work/mock-sync.out" 2>&1 &)
 	for _ in $(seq 1 120); do curl -s -m 2 -o /dev/null "$ADMIN/admin/config" && break; sleep 1; done
 	curl -s -m 3 -o /dev/null "$ADMIN/admin/config" || die "MockSync did not start; see $MOCKSYNC_DIR/work/mock-sync.out"
 fi
