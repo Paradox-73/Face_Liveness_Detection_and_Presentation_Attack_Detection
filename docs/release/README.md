@@ -40,7 +40,7 @@ bundle 1.3.0, ONNX Runtime 1.20.0. These files replaced those of the draft GitHu
 Compared with the build of 2026-10-14 (`6e88071`) it adds the two MiniFASNet models scored at the same time
 (`39e0e06`), the slower later sweeps of pingpong replay in MockMDS (`6833749`) and in the Android debug replay
 (`46e3502`), and the desktop client's wait for a Busy face device before the next stream (`18e23d2`). Tests run
-by this build: engine 375 + 125 (2 skipped) + 44, MockSync 41, MockMDS 228, all passed. The engine jars keep
+by this build: engine, models jar and SDK (counts: [test report](../test-report/README.md#2-unit-and-component-tests)), MockSync 41, MockMDS 228, all passed. The engine jars keep
 Maven's `1.0.0-SNAPSHOT` names: `release.sh` copies Maven's output and has no option to rename them. Each new
 build has its own `SHA256SUMS.txt`. The clean-install test below used the earlier build `c959af4-dirty`.
 

@@ -22,8 +22,8 @@ Read this first:
 
 ## Current results (2026-10-14)
 
-At the shipped defaults (`ALWAYS_ACTIVE`) 0 of 226 attack transactions are accepted; with the six workflows at
-`PASSIVE_THEN_ACTIVE`, 100 of 226 ([results/20261014-shipped/README.md](results/20261014-shipped/README.md)). The
+At the shipped defaults (`ALWAYS_ACTIVE`) no attack transaction is accepted; with the six workflows at
+`PASSIVE_THEN_ACTIVE`, some are ([results/20261014-shipped/README.md](results/20261014-shipped/README.md)). The
 median accepted registration attempt takes 11.2 s; per analysed frame p50 39.4 ms, p95 127.7 ms on 2026-10-20
 ([results/20261020-latency/README.md](results/20261020-latency/README.md)). The updates and studies below are the
 dated history behind the thresholds.

@@ -143,7 +143,7 @@ the claim.
 
 **On the slide**
 - Four large numbers:
-  - **2,691** tests passed on 2026-10-14 (verification run, 0 failures); about 1,330 are written by the team, the
+  - **2,699** tests passed on 2026-10-25 (0 failures); about 1,340 are written by the team, the
     rest come with the upstream MOSIP code (`docs/test-report/README.md` section 2).
   - **71 / 71** checks: scripted end-to-end run on the real desktop client at the shipped policy with the challenge
     pool cut to blink and smile (2026-10-17, and twice on 2026-10-20; 41 of 41 at the earlier defaults).
@@ -151,8 +151,8 @@ the claim.
     sign-in 10 of 10, attacks 10 of 10, supervisor override 10 of 18; 58 of 58 at the earlier defaults).
   - **75** automated liveness and attack scenarios, 275 transactions, scored with ISO/IEC 30107-3 metrics.
 - One line (synthetic attacks, per transaction, from `docs/eval/results/20261014-shipped/README.md`): shipped
-  defaults **0 of 226** attack transactions accepted, genuine rejected **0.0%** (registration 0/28, face sign-in 0/12); passive first, as the problem
-  statement describes: 100 of 226 accepted.
+  defaults no attack transaction accepted, genuine rejected **0.0%**; passive first, as the problem
+  statement describes: attacks accepted (counts in that file).
 
 - Add the real-person line (`docs/eval/results/real-faces-2026-10-24.md`): "Real faces and artefacts, 2026-10-24/25:
   genuine 8 of 8 phone-camera transactions accepted; 0 of 32 attack transactions accepted (print, phone photo, video
@@ -165,7 +165,7 @@ the claim.
 - The end-to-end runs cover every PS04 flow on both clients: passive pass, challenges, attacks, maximum attempts,
   device disconnect, supervisor approval, configuration by sync, offline, a live but wrong person refused by the
   face match, audit rows and packet evidence decrypted on the server side.
-- The suite changed our defaults: passive first let a synthetic print and looped clips through (100 of 226), so
+- The suite changed our defaults: passive first let a synthetic print and looped clips through, so
   every workflow that matches a face now always asks for challenges (one synced key per workflow). The cost is time,
   not rejections: median accepted registration attempt 11.0 s (`docs/eval/results/20261014-latency/README.md`).
 - The adaptive screen replay (a clip that answers each prompt) passed 4 of 8 transactions until the screen-pattern

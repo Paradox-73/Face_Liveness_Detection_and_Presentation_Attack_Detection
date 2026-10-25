@@ -37,8 +37,8 @@ authentication.
 |---|---|---|
 | 2 | See the screens: challenge, refusals, supervisor approval, device errors, both clients | [docs/ux/README.md](docs/ux/README.md), [wireframes](docs/ux/wireframes.svg) |
 | 3 | Check each PS04 bullet against code, test and status (done, partial, with the reason) | [docs/traceability.md](docs/traceability.md); open items in section 11 |
-| 3 | Read the measured results, including the real-person run | [real faces and real attacks](docs/eval/results/real-faces-2026-10-24.md), [docs/test-report/README.md](docs/test-report/README.md) section 1, [attack suite](docs/eval/results/20261014-shipped/README.md), [Known limits](#status-2026-10-14) below |
-| 5 | Build and test the engine (JDK 11): 544 tests, no MOSIP server needed | `mvn -f liveness/pom.xml install -Dliveness.benchmark.frames=0` |
+| 3 | Read the measured results, including the real-person run | [real faces and real attacks](docs/eval/results/real-faces-2026-10-24.md), [docs/test-report/README.md](docs/test-report/README.md) section 1, [attack suite](docs/eval/results/20261014-shipped/README.md), [Known limits](#status) below |
+| 5 | Build and test the engine (JDK 11 or newer, no JavaFX): no MOSIP server needed | `mvn -f liveness/pom.xml install -Dliveness.benchmark.frames=0` |
 | 15 | Run the real desktop client with your own webcam | [Evaluate in 15 minutes](#evaluate-in-15-minutes) |
 | 20 | Watch every desktop flow run by script (71 checks), after the build in [Quick start](#quick-start) and a one-time `bash scripts/demo-desktop.sh --onboard` | `bash scripts/demo-desktop.sh --restore-golden --policy recorded`; results in [docs/test-report/desktop-e2e.md](docs/test-report/desktop-e2e.md) |
 
@@ -72,23 +72,21 @@ The two clients call one engine contract; every liveness decision runs on the re
 is used only for configuration sync and packet upload. Details: [docs/design/architecture.md](docs/design/architecture.md);
 decision flow picture: [docs/design/img/decision-flow.svg](docs/design/img/decision-flow.svg).
 
-## Status (2026-10-14)
+## Status
 
 | Part | State | Evidence |
 |---|---|---|
-| Shared engine (`liveness/liveness-core`) | Passive PAD, active challenges, frame integrity (loop window 300 frames), planarity, capture binding that fails closed, policy resolution, audit, metrics, one session driver used by both clients | 375 tests; `liveness/README.md` |
-| ONNX adapters and models (`liveness/liveness-onnx`, `models/`) | YuNet, Face Mesh, MiniFASNet V2 + V1SE, SFace; signed bundle 1.3.0 with rollback protection; offline import and online update of a signed bundle | 125 tests (2 benchmark tests skipped; 126 on 2026-10-14, one went with a deleted method); `models/SOURCES.md` |
-| Face-match SDK (`liveness/face-match-sdk`) | SFace `IBioApiV2` for FACE 1:1 matching | 44 tests |
-| Desktop client (`clients/desktop`) | Liveness gates resident capture, exception photo, onboarding, face login, packet and reviewer authentication, end-of-day approval; supervisor override (a second, different supervisor with face authentication; the same user cannot approve their own override; checked photo), account lock, retry counters kept across Cancel, reopened windows and client restarts, diagnostic mode, replacement texts, offline import and online update of a signed model bundle | 155 + 64 liveness unit tests (`registration-services`, `registration-client`); end-to-end run 41 of 41 checks on 2026-09-30 at the earlier defaults; at the shipped policy (challenge pool cut to the recorded blink and smile) 71 of 71 checks on 2026-10-17 from a client onboarded by `scripts/demo-desktop.sh --onboard`, and again in two runs on 2026-10-20 with every genuine capture passing on its first attempt (`docs/test-report/desktop-e2e.md`) |
-| Android client (`clients/android`) | `livenessmanager` module with the built-in camera device; resident capture, onboarding, face sign-in, packet authentication, supervisor approval; supervisor override (a different supervisor must approve; self-approval refused), retry counters kept across Cancel, reopened screens and app restarts, metrics, diagnostic panel, execution provider choice, signed release build with in-app device key provisioning, offline import and online update of a model bundle (Device Settings), vendor SBI face app through intents | 214 `livenessmanager` + 72 `app` unit tests, 35 Flutter tests; scripted demo at the shipped policy (2026-10-17, pool cut to blink and smile): 59 of 74 checks, face sign-in 10 of 10, attacks 10 of 10, supervisor override 10 of 18 (`docs/test-report/android-e2e.md` section 15) |
-| Mock face device (`devices/mock-mds`) | Image sequences, video or webcam; capture signed from the streamed frame; 13 fault types; L0/L1; provisional PAD capability; replay that resumes a pack and plays it back and forth | 228 tests (upstream and extensions); `devices/mock-mds/LIVENESS-EXTENSIONS.md` |
-| Mock MOSIP server (`tools/mock-sync`) | Both real clients log in, sync, onboard and upload against it; live config changes; packet evidence viewer; serves a signed model bundle | 41 tests; `tools/mock-sync/README.md` |
-| Evaluation (`tools/eval`, `eval/`) | Scenario runner (31 tests) and analysis (121 pytest tests) with ISO/IEC 30107-3-style metrics; 275 transactions per run, synthetic attacks and three openly licensed clips; at the shipped defaults (2026-10-14) 0 of 226 attack transactions accepted, APCER 0.0% per transaction for every species and workflow, `registration` BPCER 0.0% (0/28), `login_auth` BPCER 0.0% (0/12); at the passive-first flow of the statement 100 of 226 accepted; `tools/eval/ingest-recordings.py` adds the team's webcam recordings | [docs/eval/results/20261014-shipped/README.md](docs/eval/results/20261014-shipped/README.md); `docs/eval/calibration-notes.md` |
+| Shared engine (`liveness/liveness-core`) | Passive PAD, active challenges, frame integrity (loop window 300 frames), planarity, capture binding that fails closed, policy resolution, audit, metrics, one session driver used by both clients | Test count: [docs/test-report/README.md](docs/test-report/README.md#2-unit-and-component-tests); design and API: `liveness/README.md` |
+| ONNX adapters and models (`liveness/liveness-onnx`, `models/`) | YuNet, Face Mesh, MiniFASNet V2 + V1SE, SFace; signed bundle 1.3.0 with rollback protection; offline import and online update of a signed bundle | `models/SOURCES.md` |
+| Face-match SDK (`liveness/face-match-sdk`) | SFace `IBioApiV2` for FACE 1:1 matching | [test report](docs/test-report/README.md#2-unit-and-component-tests) |
+| Desktop client (`clients/desktop`) | Liveness gates resident capture, exception photo, onboarding, face login, packet and reviewer authentication, end-of-day approval; supervisor override (a second, different supervisor with face authentication; the same user cannot approve their own override; checked photo), account lock, retry counters kept across Cancel, reopened windows and client restarts, diagnostic mode, replacement texts, offline import and online update of a signed model bundle | End-to-end run 41 of 41 checks on 2026-09-30 at the earlier defaults; at the shipped policy (challenge pool cut to the recorded blink and smile) 71 of 71 checks on 2026-10-17 from a client onboarded by `scripts/demo-desktop.sh --onboard`, and again in two runs on 2026-10-20 with every genuine capture passing on its first attempt (`docs/test-report/desktop-e2e.md`) |
+| Android client (`clients/android`) | `livenessmanager` module with the built-in camera device; resident capture, onboarding, face sign-in, packet authentication, supervisor approval; supervisor override (a different supervisor must approve; self-approval refused), retry counters kept across Cancel, reopened screens and app restarts, metrics, diagnostic panel, execution provider choice, signed release build with in-app device key provisioning, offline import and online update of a model bundle (Device Settings), vendor SBI face app through intents | scripted demo at the shipped policy (2026-10-17, pool cut to blink and smile): 59 of 74 checks, face sign-in 10 of 10, attacks 10 of 10, supervisor override 10 of 18 (`docs/test-report/android-e2e.md` section 15) |
+| Mock face device (`devices/mock-mds`) | Image sequences, video or webcam; capture signed from the streamed frame; 13 fault types; L0/L1; provisional PAD capability; replay that resumes a pack and plays it back and forth | `devices/mock-mds/LIVENESS-EXTENSIONS.md` |
+| Mock MOSIP server (`tools/mock-sync`) | Both real clients log in, sync, onboard and upload against it; live config changes; packet evidence viewer; serves a signed model bundle | `tools/mock-sync/README.md` |
+| Evaluation (`tools/eval`, `eval/`) | Scenario runner and analysis with ISO/IEC 30107-3-style metrics; 275 transactions per run, synthetic attacks and three openly licensed clips; attack and genuine-user rates at the shipped defaults and at the passive-first flow of the statement are in the results report; `tools/eval/ingest-recordings.py` adds the team's webcam recordings | [docs/eval/results/20261014-shipped/README.md](docs/eval/results/20261014-shipped/README.md); `docs/eval/calibration-notes.md` |
 | Requirements | Every PS04 bullet mapped to code, test and status | `docs/traceability.md` |
 
-Tests: 2,691 tests passed with 0 failures and 0 errors in the verification run of 2026-10-14 (2 benchmark tests
-skipped); about 1,330 are written by this team, the rest are upstream MOSIP tests. Per-suite table, commands and the
-upstream split: [docs/test-report/README.md](docs/test-report/README.md#2-unit-and-component-tests) section 2.
+Tests: unit and component test counts per suite, commands and the upstream split are kept in one place: [docs/test-report/README.md](docs/test-report/README.md#2-unit-and-component-tests) section 2.
 
 ### Bonus items
 
@@ -111,7 +109,8 @@ Known limits (more in [docs/test-report/README.md](docs/test-report/README.md#6-
 - Next: the volunteer evaluation, and vendor or L1 face devices on Android.
 - Challenges on every capture cost time: the median accepted `registration` attempt takes 11.0 s of replayed stream
   ([results](docs/eval/results/20261014-latency/README.md)). The passive-first flow of
-  the statement (one synced setting per workflow) accepts 100 of 226 synthetic attack transactions.
+  the statement (one synced setting per workflow) lets synthetic attacks through (numbers in the
+  [results](docs/eval/results/20261014-shipped/README.md)).
 - The per-frame latency target (p95 at most 20 ms) is not met: p95 127.7 ms, p50 39.4 ms on 2026-10-20 (shared
   laptop, Intel Core i5-12450H, one ONNX Runtime thread; [results](docs/eval/results/20261020-latency/README.md)).
   The same measurement on 2026-10-24, with no other builds running, gave p95 18.5 ms on the real-face frame packs
@@ -171,7 +170,7 @@ exactly what this project changed ([ADR 0001](docs/adr/0001-monorepo.md)).
 
 Full clean-machine guide (Windows): [docs/install/README.md](docs/install/README.md).
 
-Before the first build: install JDK 11 with JavaFX (Azul Zulu 11 FX) and JDK 21, and point `MAVEN_ARGS` at the
+Before the first build: install JDK 11 with JavaFX (Azul Zulu 11 FX, for the desktop client only) and JDK 21, and point `MAVEN_ARGS` at the
 shipped mirror settings (`scripts/release/maven-settings.xml`) for the retired Sonatype repositories that the upstream
 desktop POM uses; both are in
 [docs/install/README.md](docs/install/README.md) section 1 (`JAVA11_HOME`, `JAVA21_HOME`, `MAVEN_ARGS`). Run
@@ -179,7 +178,7 @@ folders go to `${MOSIP_RUN_ROOT:-../run}`.
 
 ```bash
 export JAVA_HOME="$JAVA11_HOME"                                   # JDK 11 with JavaFX for the next three steps
-mvn -f liveness/pom.xml install -Dliveness.benchmark.frames=0     # JDK 11 FX: engine, models jar, SDK; runs the tests
+mvn -f liveness/pom.xml install -Dliveness.benchmark.frames=0     # any JDK 11 or newer (no JavaFX): engine, models jar, SDK; runs the tests
 (cd tools/mock-sync && scripts/run-mock-sync.sh)                  # JDK 11; own terminal; local MOSIP server: HTTPS 8443, HTTP 8080
 bash scripts/desktop-build.sh --mocksync                          # JDK 11 FX: desktop client run folder in ${MOSIP_RUN_ROOT:-../run}/desktop
 bash scripts/mockmds-run.sh --build                               # JDK 21 from JAVA21_HOME: mock face device on 127.0.0.1:4501
@@ -212,8 +211,8 @@ Scripted demos of every flow: `scripts/demo-desktop.sh`, `scripts/demo-android.s
 Try the check with your own face through a webcam, in the desktop client. Full steps, expected screens and
 troubleshooting: [docs/install/README.md section 10](docs/install/README.md#10-evaluate-in-15-minutes-with-your-own-webcam).
 
-**Status on 2026-10-14: the team has not yet run this webcam route end to end.** Every recorded run so far used
-recorded frame packs. The steps a person must do, with the expected screens and a results sheet to send back, are
+The scripted and automated runs use recorded frame packs. Team webcam and phone recordings were run through the engine on
+2026-10-24/25 ([real faces and real attacks](docs/eval/results/real-faces-2026-10-24.md)); that was not this live desktop route. The steps a person must do, with the expected screens and a results sheet to send back, are
 in [docs/manual-test-checklist.md](docs/manual-test-checklist.md) (section C for this route); the team's webcam
 recordings go into the evaluation with one command, `python tools/eval/ingest-recordings.py`.
 

@@ -45,7 +45,7 @@ flowchart LR
 | `mosip.registration.liveness.engine` | string | `mosip-onnx-default` | engine IDs found by `ServiceLoader` | no | Which `LivenessEngineProvider` builds the engine. |
 | `mosip.registration.liveness.engine.execution_provider` | `CPU` / `XNNPACK` / `NNAPI` | `CPU` | unknown value means `CPU` | no | ONNX Runtime back end of the default engine, read when the engine loads (restart needed). A back end the installed runtime lacks falls back to CPU. Android reads it (`livenessmanager/engine/AcceleratorCustomizer`); the desktop Windows runtime has only CPU and does not read it ([calibration notes](../eval/calibration-notes.md) 0.4). |
 | `mosip.registration.liveness.model.min_version` | `MAJOR.MINOR.PATCH` | `1.3.0` | | no | Oldest model bundle version accepted; an older bundle fails to load (rollback protection, audit LV14). Any other form (`1.2`, `latest`) is reported as invalid and the default applies (since 2026-10-10; before, `1.2` stopped the engine). |
-| `mosip.registration.liveness.model.trust_anchor_pem` | PEM `PUBLIC KEY` block(s), RSA | unset: the development key | must parse, else `CONFIG_INVALID` (engine stops, no fallback) | no | Model-signing key(s) a bundle must be signed with, on both clients (engine load and offline import). Synced only. Added 2026-10-10 |
+| `mosip.registration.liveness.model.trust_anchor_pem` | PEM `PUBLIC KEY` block(s), RSA | unset: `CONFIG_INVALID`, no model loads (MockSync, the demo server, sets the development key) | must parse, else `CONFIG_INVALID` (engine stops, no fallback) | no | Model-signing key(s) a bundle must be signed with, on both clients (engine load and offline import). Synced only. Added 2026-10-10 |
 | `mosip.registration.liveness.model.update_url` | URL | empty | `https://`, or `http://` to `localhost` or a loopback address literal | no | Online model update: the signed bundle `.zip` that "Check for model update" downloads and imports with the offline import checks (both clients). Empty hides the button. Synced only. Added 2026-10-14 |
 
 ## 3. Policy per workflow
@@ -63,7 +63,7 @@ flowchart LR
 Policy modes:
 - `OFF`: no liveness; the capture carries `LIVENESS_METHOD=NONE` and no `LIVENESS_*` evidence.
 - `PASSIVE_ONLY`: pass at the passive threshold, otherwise fail `BELOW_THRESHOLD`.
-- `PASSIVE_THEN_ACTIVE`: PS04's literal flow; challenges when the score is below the threshold. No workflow ships with it; a server setting can select it per workflow. Measured on 2026-10-14 with every workflow at this policy: 100 of 226 synthetic attack transactions accepted (S3 print, score 99; looped clips of genuine video, scores 96-100) against 0 of 226 at the shipped `ALWAYS_ACTIVE`, BPCER 0.0% in both ([results](../eval/results/20261014-shipped/README.md)).
+- `PASSIVE_THEN_ACTIVE`: PS04's literal flow; challenges when the score is below the threshold. No workflow ships with it; a server setting can select it per workflow. Measured on 2026-10-14 with every workflow at this policy: synthetic attack transactions accepted (S3 print, score 99; looped clips of genuine video, scores 96-100) against none at the shipped `ALWAYS_ACTIVE`, BPCER 0.0% in both ([results](../eval/results/20261014-shipped/README.md)).
 - `ALWAYS_ACTIVE`: passive PAD still runs and can reject, then challenges always.
 
 Why every workflow except `exception_photo` defaults to `ALWAYS_ACTIVE` (registration, sign-in and onboarding since

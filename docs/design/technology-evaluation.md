@@ -68,7 +68,7 @@ all open:
 | Active PAD and planarity | MiniFASNet during challenges; homography residual of landmarks on head turns | screen replays (SYN-A6): 0 accepted |
 | Capture binding | SFace (Apache-2.0) similarity between the live session and the signed capture; single-use pass token | a different face captured after a passed session |
 
-Result with the shipped defaults (2026-10-14): 0 of 226 synthetic attack transactions accepted, BPCER 0.0%
+Result with the shipped defaults (2026-10-14): no synthetic attack transaction accepted, BPCER 0.0%
 ([../eval/results/20261014-shipped/README.md](../eval/results/20261014-shipped/README.md)). The adaptive screen
 replay (SYN-A7) was accepted in 4 of 8 `registration` transactions until the screen-pattern check of 2026-10-05; the suite's screens are software-made, so the screen check still needs real screens. These
 are technology regression results on synthetic attacks, not an ISO/IEC 30107-3 evaluation; the history and how to

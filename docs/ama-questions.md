@@ -9,8 +9,8 @@ Not answered on the call; to send by email to decode@mosip.io. Q numbers are tho
 those of the 2026-09-30 short list.
 
 - T1: Is `ALWAYS_ACTIVE` an acceptable default for every workflow that matches a face, given PS04 says "passive
-  first, active when below threshold"? Evidence: 0 of 226 synthetic attack transactions accepted at `ALWAYS_ACTIVE`,
-  100 of 226 at `PASSIVE_THEN_ACTIVE` ([eval/results/20261014-shipped/README.md](eval/results/20261014-shipped/README.md)).
+  first, active when below threshold"? Evidence: synthetic attack transactions accepted at `ALWAYS_ACTIVE` and at
+  `PASSIVE_THEN_ACTIVE` ([eval/results/20261014-shipped/README.md](eval/results/20261014-shipped/README.md)).
 - T3 / Q10: Is a supervisor override after the last failed resident attempt acceptable (the shipped core default is
   `BLOCK`)? Should a failed liveness attempt count against `mosip.registration.num_of_face_retries`?
 - T4 / Q4: On Android, is an in-app camera (CameraX) acceptable as an L0 face device, since vendor SBI face apps send

@@ -20,8 +20,8 @@ stay in the linked reports; requirement-by-requirement status is in [../traceabi
 
 | Area | Result |
 |---|---|
-| Unit and component tests | **2,691 tests, 0 failures, 0 errors** in the verification run of 2026-10-14 (19:46-20:03) over 13 test suites (section 2) |
-| Automated liveness and attack scenarios | run of 2026-10-14 at the shipped defaults: 275 transactions, 755 attempt records (section 3.0). **0 of 226 attack transactions accepted (APCER 0.0% for every species and workflow). Bona fide: `registration` 0.0% (0/28), `login_auth` 0.0% (0/12).** At passive first: 100 of 226 accepted |
+| Unit and component tests | **2,699 tests, 0 failures, 0 errors** in the run of 2026-10-25 over 13 test suites (section 2; Flutter count from 2026-10-14) |
+| Automated liveness and attack scenarios | run of 2026-10-14 at the shipped defaults: 275 transactions, 755 attempt records (section 3.0). no attack transaction accepted at the shipped defaults (APCER 0.0% for every species and workflow); counts, bona fide rates and the passive-first result: [results](../eval/results/20261014-shipped/README.md) |
 | Desktop end-to-end | reference run 2026-09-30: 41 of 41 checks passed **at the old defaults** (all workflows passive first); 2026-10-17 at the shipped policy with the pool cut to blink and smile: 71 of 71, again in two runs on 2026-10-20 (section 4) |
 | Android end-to-end | reference run 2026-09-30: 58 of 58 checks passed **at the old defaults**; a repeat run found one real weakness; 2026-10-17 at the shipped policy with the pool cut to blink and smile: 59 of 74 (section 4) |
 | Bonus items | B4 interoperability done (19 of 19 replayed cases agree on desktop and on Android unit tests, 6 of 6 on an emulator); B6 model import done on both clients (Android button in Device Settings); B7 and B8 measured on one phone on 2026-10-24 (best p95 74-92 ms per frame at 2 threads, 20 ms target missed; section 8) |
@@ -42,22 +42,28 @@ code and still pass with this project's changes.
 
 | Module | What it tests | Command | Tests | Failures / errors | Skipped | CI job |
 |---|---|---|---|---|---|---|
-| `liveness/liveness-core` | engine: session state machine, passive decision, challenges, action detection, integrity, planarity, capture binding, policy, audit, UI states, MJPEG reader | `mvn -B -f liveness/pom.xml install -Dliveness.benchmark.frames=0` (the job runs `verify`; `install` also puts the engine in `~/.m2`, which the rows below need) | 375 | 0 | 0 | `liveness` |
+| `liveness/liveness-core` | engine: session state machine, passive decision, challenges, action detection, integrity, planarity, capture binding, policy, audit, UI states, MJPEG reader | `mvn -B -f liveness/pom.xml install -Dliveness.benchmark.frames=0` (the job runs `verify`; `install` also puts the engine in `~/.m2`, which the rows below need) | 376 | 0 | 0 | `liveness` |
 | `liveness/liveness-onnx` | ONNX adapters, golden outputs of the 5 models, signed model registry, engine factory, execution providers, exposure correction and screen-pattern check, shared model-bundle importer and store | same run | 126 | 0 | 2 | `liveness` |
 | `liveness/face-match-sdk` | SFace face-match SDK behind MOSIP's `IBioApiV2`, ISO 19794-5 records, MOSIP loader | same run | 44 | 0 | 0 | `liveness` |
-| desktop `registration-services` (liveness and audit tests) | capture and authentication gates, stream session, orchestrator, config, audit sink, packet evidence, pass tokens, model import wiring, behaviour on repeated failure, account lock | after the engine install: `mvn -B -f clients/desktop/registration/pom.xml test -pl registration-services,registration-client -am -Dgpg.skip -Djacoco.skip=true -DfailIfNoTests=false "-Dtest=io/mosip/registration/service/bio/liveness/*Test.java,**/AuditFactoryTest.java,io/mosip/registration/controller/liveness/*Test.java"` (on Linux, put `xvfb-run -a` in front: the JavaFX tests need a display) | 155 | 0 | 0 | `desktop-liveness` |
+| desktop `registration-services` (liveness and audit tests) | capture and authentication gates, stream session, orchestrator, config, audit sink, packet evidence, pass tokens, model import wiring, behaviour on repeated failure, account lock | after the engine install: `mvn -B -f clients/desktop/registration/pom.xml test -pl registration-services,registration-client -am -Dgpg.skip -Djacoco.skip=true -DfailIfNoTests=false "-Dtest=io/mosip/registration/service/bio/liveness/*Test.java,**/AuditFactoryTest.java,io/mosip/registration/controller/liveness/*Test.java"` (on Linux, put `xvfb-run -a` in front: the JavaFX tests need a display) | 158 | 0 | 0 | `desktop-liveness` |
 | desktop `registration-client` (liveness tests) | liveness panel view model, texts and replacement texts, bundle parity (en/fr/ar), JavaFX listener, diagnostic lines, model import window | same run | 64 | 0 | 0 | `desktop-liveness` |
 | Android `livenessmanager` | engine loader, config, audit sink, face authenticator, capture screen (Robolectric), image decoding, SBI codec, replay, supervisor override, metrics, diagnostic mode, execution provider | with JDK 21 as `JAVA_HOME`, Flutter 3.10.4 and the Android SDK of [../install/README.md](../install/README.md) section 1: `bash scripts/android-build.sh --test-only` (installs the engine, generates the code a fresh clone lacks, runs the three `testDebugUnitTest` tasks) | 214 | 0 | 0 | `android-unit` |
-| Android `app` | capture gate, face-auth flow, capture launcher, Flutter bridge, supervisor override flow | same run | 72 | 0 | 0 | `android-unit` |
+| Android `app` | capture gate, face-auth flow, capture launcher, Flutter bridge, supervisor override flow | same run | 75 | 0 | 0 | `android-unit` |
 | Android `clientmanager` (upstream + liveness) | packet building with `LIVENESS_*` evidence, meta info; all upstream tests | same run | 1,186 | 0 | 0 | `android-unit` |
 | Android Flutter widgets | face-auth panel, outcome banner, Arabic right-to-left, model import panel | after the Android run above: `cd clients/android && flutter test test/liveness/` (on Windows with the clone off drive C:, first set `PUB_CACHE` to the folder the build log names, so the packages it fetched are reused) | 35 | 0 | 0 | `android-unit` |
 | `tools/mock-sync` | sync endpoints, Android contract (key wrapping), response signatures, packet inspector | `mvn -B -f tools/mock-sync/pom.xml verify` | 41 | 0 | 0 | `mock-sync` |
 | `devices/mock-mds` (upstream + extensions) | frame sources, capture from the streamed frame, faults, renewed FTM keys | with JDK 21: `mvn -B -f devices/mock-mds/pom.xml package -Dgpg.skip=true` | 228 | 0 | 0 | `mock-mds` |
 | `tools/eval/scenario-runner` | scenario loading, playlists, classification, output | after the engine install: `mvn -B -f tools/eval/scenario-runner/pom.xml package` | 31 | 0 | 0 | `scenario-runner` |
-| `tools/eval` Python | APCER/BPCER, confidence intervals, frame-pack manifests | `pip install -r tools/eval/requirements.txt`, then `python -m pytest -q tools/eval/tests` | 120 | 0 | 0 | `eval-python` |
-| **Total** | | | **2,691, verified on 2026-10-14** | **0** | **2** | |
+| `tools/eval` Python | APCER/BPCER, confidence intervals, frame-pack manifests | `pip install -r tools/eval/requirements.txt`, then `python -m pytest -q tools/eval/tests` | 121 | 0 | 0 | `eval-python` |
+| **Total** | | | **2,699, run on 2026-10-25** | **0** | **2** | |
 
-**Totals.** The verification run of 2026-10-14 (19:46-20:03, logs outside the repository) ran every suite of the
+**Totals.** On 2026-10-25, after the maintainer-review fixes, every suite above except the Flutter widgets
+(not changed, 35 from 2026-10-14) ran again: **2,699 tests, 0 failures, 0 errors**, 2 benchmark tests skipped
+(`scripts/test-all.sh`, the desktop command, `scripts/android-build.sh --test-only`). New since 2026-10-14: the session
+close race test (core 376), the fail-closed signing-key test (`liveness-onnx` 126 again), three desktop tests (158) and
+the Flutter-reply and corrupt-counter tests (`app` 75).
+
+The verification run of 2026-10-14 (19:46-20:03, logs outside the repository) ran every suite of the
 table on the final code of the PS04 completion pass and found **2,691 tests, 0 failures, 0 errors**, 2 benchmark
 tests skipped. New since 2026-10-10: the online model update (`liveness-onnx` 115 to 126, MockSync 40 to 41, desktop
 154 + 63 to 155 + 64, Flutter 32 to 35), the MockMDS replay `pingpong` and `resume` (226 to 228), the Android replay
@@ -74,7 +80,7 @@ MockSync step fails while packaging, a MockSync started by a demo still holds `m
 
 **Upstream and team-written.** About 1,361 of the tests are upstream: the Android `clientmanager` suite (1,186, all upstream
 tests, passing with this project's changes) and about 175 in MockMDS (an estimate from the first audit count; the 228 in the
-table also include the tests added for the mock face device). The remaining 1,330 or so of the 2,691 are team-written (an
+table also include the tests added for the mock face device). The remaining 1,340 or so of the 2,699 are team-written (an
 approximate figure).
 
 Hosted CI:
@@ -110,10 +116,9 @@ The tables from section 3.1 on are the 39-scenario suites of 2026-09-30, kept as
 
 ### 3.0 Current run: 2026-10-14 at the shipped defaults
 
-At the shipped defaults (`ALWAYS_ACTIVE` for every workflow that matches a face) **0 of 226 attack transactions are
-accepted**: APCER 0.0% per transaction for every species and workflow. BPCER: `registration` 0.0% (0/28),
-`login_auth` 0.0% (0/12). The same 275 transactions at `PASSIVE_THEN_ACTIVE`, the passive-first flow of the problem
-statement, accept 100 of 226 (a print and looped clips that score above the passive threshold). Per-species table,
+At the shipped defaults (`ALWAYS_ACTIVE` for every workflow that matches a face) **no attack transaction is
+accepted**: APCER 0.0% per transaction for every species and workflow. The same 275 transactions at `PASSIVE_THEN_ACTIVE`, the passive-first flow of the problem
+statement, accept a print and looped clips that score above the passive threshold. Counts, BPCER and per-species table,
 method and limits: [../eval/results/20261014-shipped/README.md](../eval/results/20261014-shipped/README.md).
 
 History: the morning run of 2026-10-05 ([../eval/results/20261005-shipped/README.md](../eval/results/20261005-shipped/README.md))

@@ -67,9 +67,9 @@ For the authentication workflows the live band starts at 95. It only matters whe
 `PASSIVE_THEN_ACTIVE` or `PASSIVE_ONLY`: the shipped `ALWAYS_ACTIVE` default runs the passive stage first (it can
 still reject below `pad.reject_threshold`) and then always asks for challenges, so operators and supervisors answer
 challenges every time. `PASSIVE_THEN_ACTIVE` is PS04's literal flow and remains available by configuration. It was
-measured again on 2026-10-14 before deciding the default: with every workflow at `PASSIVE_THEN_ACTIVE`, 100 of 226
-synthetic attack transactions passed on the passive stage alone (S3 print, score 99; looped clips of genuine video,
-scores 96-100); at `ALWAYS_ACTIVE`, 0 of 226. BPCER was 0.0% in both runs
+measured again on 2026-10-14 before deciding the default: with every workflow at `PASSIVE_THEN_ACTIVE`, synthetic
+attack transactions passed on the passive stage alone (S3 print, score 99; looped clips of genuine video,
+scores 96-100); at `ALWAYS_ACTIVE`, none did. BPCER was 0.0% in both runs
 ([results](../eval/results/20261014-shipped/README.md)). So the default stays `ALWAYS_ACTIVE`.
 
 ## 4. After the decision
@@ -91,8 +91,8 @@ scores 96-100); at `ALWAYS_ACTIVE`, 0 of 226. BPCER was 0.0% in both runs
 Under `ALWAYS_ACTIVE` the passive stage still runs and still decides the attack band (section 3): a score below
 `pad.reject_threshold`, or an integrity flag, fails at once without a challenge.
 
-Measured difference: section 3 gives the 2026-10-14 figures (0 of 226 synthetic attack transactions accepted at
-`ALWAYS_ACTIVE`, 100 of 226 at passive first). Per-species results:
+Measured difference: section 3 gives the 2026-10-14 figures (attack transactions accepted at
+`ALWAYS_ACTIVE` and at passive first). Per-species results:
 [../eval/results/20261014-shipped/README.md](../eval/results/20261014-shipped/README.md); the earlier runs and how to
 read them: [iso-30107.md](iso-30107.md) section 3. The cost for a genuine user is time, not rejections: the median
 accepted registration attempt takes 11.0 s on the replayed stream

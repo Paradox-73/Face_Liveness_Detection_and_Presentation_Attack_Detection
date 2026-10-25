@@ -369,8 +369,7 @@ rejected). Defaults:
 ## Tests
 
 JUnit 5, deterministic: a manual clock, a seeded random source (test code only), scripted model outputs and
-synthetic faces from a small 3-D head model (no face images). 351 tests on 2026-10-04 (after the session driver
-was added); JaCoCo line coverage of `liveness-core` 92.4% (branches 79.9%), of the driver package `run` 82.7%
+synthetic faces from a small 3-D head model (no face images). Test count: [docs/test-report/README.md](../docs/test-report/README.md#2-unit-and-component-tests). JaCoCo line coverage of `liveness-core` 92.4% (branches 79.9%), of the driver package `run` 82.7%
 (branches 74.0%). They cover the design's test groups T-CORE-SM (state machine), DEC
 (decision table), CH (draw rules and uniformity), ACT (detectors, including the sign convention), INT, PLN, Q,
 MJ, POL, UI, TX, MET, AUD and BND, plus end-to-end scenarios (bona fide passive pass, escalation and correct
@@ -390,8 +389,7 @@ mvn -f liveness/pom.xml -pl liveness-core verify   # the core only
 mvn -f liveness/pom.xml -pl face-match-sdk verify  # the face match SDK only (uses the installed core and onnx jars)
 ```
 
-- Test counts on the last full run (2026-10-05, `install -Dliveness.benchmark.frames=0`): core 365, onnx 109
-  (2 skipped: the latency benchmark when `-Dliveness.benchmark.frames=0`), face-match-sdk 42.
+- Test counts per module: [docs/test-report/README.md](../docs/test-report/README.md#2-unit-and-component-tests).
 
 - Needs a full JDK 11 or newer and Maven 3.9. With JDK 12 or newer, `--release 11` keeps the Java 11 API.
 - Output: `liveness-core/target/liveness-core-1.0.0-SNAPSHOT.jar`; coverage report in
