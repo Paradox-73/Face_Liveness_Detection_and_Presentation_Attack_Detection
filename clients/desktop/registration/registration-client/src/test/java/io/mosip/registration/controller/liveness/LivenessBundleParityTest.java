@@ -111,7 +111,7 @@ public class LivenessBundleParityTest {
 			return; // module built outside the repository
 		}
 		List<String> lines = Files.readAllLines(CATALOGUE, StandardCharsets.UTF_8);
-		assertEquals("key,bundle,source,en,fr,ar", lines.get(0));
+		assertEquals("key,bundle,source,en,fr,ar,hi", lines.get(0));
 		for (String line : lines.subList(1, lines.size())) {
 			List<String> cells = parseCsvLine(line);
 			String key = cells.get(0);

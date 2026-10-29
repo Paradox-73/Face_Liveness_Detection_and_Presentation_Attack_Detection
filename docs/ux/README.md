@@ -21,7 +21,7 @@ opaque light card, so it reads the same on light and dark pages).
 | [wireframes.svg](wireframes.svg) | Wireframe sheet: desktop dialog and Android capture screen for each of 14 states, with message keys and the matching committed pictures. Drawn by [capture/draw_wireframes.py](capture/draw_wireframes.py) from the texts of the message catalogue |
 | [desktop-liveness.md](desktop-liveness.md) | Desktop pictures with captions, accessibility checks (contrast 6.8:1 or more, keyboard, screen reader), how to reproduce them |
 | [flows.md](flows.md) | State diagram of the liveness panel and user flows as Mermaid diagrams: desktop (resident, operator, supervisor, failure and recovery, device error) and Android (screen overview, resident capture, face sign-in, packet authentication, supervisor approval, supervisor override, device errors and offline) |
-| [message-catalogue.csv](message-catalogue.csv) | Every liveness text in English, French and Arabic, with its PS04 source (the same keys and English texts are in the Android module) |
+| [message-catalogue.csv](message-catalogue.csv) | Every liveness text in English, French, Arabic and Hindi, with its PS04 source (the same keys and English texts are in the Android module; the Hindi column matches its `values-hi` strings) |
 | [../design/desktop-liveness-ui.md](../design/desktop-liveness-ui.md) | Desktop screen design and deviations |
 | [../design/android-liveness.md](../design/android-liveness.md) | Android capture screen (section 3) and ARC screens (section 11) |
 | [capture/LivenessScreensDriver.java](capture/LivenessScreensDriver.java) | Drives the real desktop client through each state and saves pictures |

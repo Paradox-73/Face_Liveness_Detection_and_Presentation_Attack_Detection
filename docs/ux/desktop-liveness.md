@@ -7,7 +7,7 @@ source and faults were switched between scenarios.
 
 - Design and code: [../design/desktop-liveness-ui.md](../design/desktop-liveness-ui.md)
 - State diagram and user flows: [flows.md](flows.md)
-- All texts in English, French and Arabic: [message-catalogue.csv](message-catalogue.csv)
+- All texts in English, French and Arabic: [message-catalogue.csv](message-catalogue.csv) (its Hindi column is used by the Android client only)
 
 **About the face in the pictures.** The preview shows MockMDS's stock stream image
 (`devices/mock-mds/Biometric Devices/Face/Stream Image/0.jpeg`, part of MOSIP MockMDS, MPL-2.0), sent as every frame.
