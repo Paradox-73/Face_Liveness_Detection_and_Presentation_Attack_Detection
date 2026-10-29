@@ -148,7 +148,9 @@ jobs:
         # face-match-sdk, runs the code generation on a fresh clone, and runs the testDebugUnitTest tasks of
         # :livenessmanager and :app (and of :clientmanager, which holds the upstream tests). :livenessmanager
         # includes LivenessParityTest, the Android half of the cross-client parity check (bonus B4).
-        run: scripts/android-build.sh --test-only
+        # --install-engine rebuilds the engine on every run: the Maven cache is keyed on the pom.xml files only, so
+        # without it a cached 1.0.0-SNAPSHOT from before a Java source change would be tested.
+        run: scripts/android-build.sh --test-only --install-engine
       - name: Flutter widget tests (use the code the previous step generated)
         working-directory: clients/android
         run: flutter test test/liveness/
