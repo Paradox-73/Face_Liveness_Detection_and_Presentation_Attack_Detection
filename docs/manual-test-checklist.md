@@ -13,7 +13,7 @@ into [manual-test-results-template.md](manual-test-results-template.md) under th
 | E. Demo video dry run | `MT-VID-01` to `MT-VID-06` | the whole team | about 2 hours |
 
 Commands run in Git Bash from the repository root unless marked PowerShell. `../run/` is the folder next to the
-repository (`E:\Projects\MOSIP\run\` on the build laptop). Logins and passwords are in [test-data.md](test-data.md).
+repository. Logins and passwords are in [test-data.md](test-data.md).
 
 The screen texts in quotes are the English texts of `docs/ux/message-catalogue.csv`. The desktop client shows them
 from `labels_en.properties`, and the Android client from the `livenessmanager` `strings.xml` and `app_en.arb`. A text
@@ -67,7 +67,7 @@ example `S2_C1_neutral.mp4`, `S2_C2_turn-left.mp4` or `S3_P6_neutral.mp4`.
 | `MT-REC-05` | Record the same 7 clips in dim light (`C2`): one lamp, below about 50 lux, face still visible. Set `L=C2` and run the same commands. | 7 files `S<n>_C2_<clip>.mp4`. |
 | `MT-REC-06` | Check each clip. Play it in a video player, and print its length with `ffprobe -v error -show_entries format=duration -of csv=p=0 ../run/recordings/S1_C1_neutral.mp4`. | The face is visible in every frame. The action happens once. `neutral` lasts 15 to 20 s and each action clip about 4 s. Record a bad clip again. |
 | `MT-REC-07` | Hand over the recordings (PowerShell commands below). | One zip file per subject, its SHA-256 written in the results template, and the checksum matched by the receiver. |
-| `MT-REC-08` | Kanav ingests all recordings and reruns the metrics with `python tools/eval/ingest-recordings.py` (details below). | The last line is `report: <path>`, for example `report: E:\Projects\MOSIP\run\eval\recordings-<time>\report.md`. Copy the headline table of that report into the results template. |
+| `MT-REC-08` | Kanav ingests all recordings and reruns the metrics with `python tools/eval/ingest-recordings.py` (details below). | The last line is `report: <path>`, for example `report: ..\run\eval\recordings-<time>\report.md`. Copy the headline table of that report into the results template. |
 
 Recording commands for `MT-REC-04` and `MT-REC-05`. Set the webcam name, the pseudonym and the light first. Then run
 one `rec` line per clip, and start the action when the helper says "go":
@@ -89,7 +89,7 @@ rec look-down 4
 - If a file exists already, ffmpeg asks `Overwrite? [y/N]`. Answer `y` only for a deliberate second take.
 - Leave auto exposure and auto white balance on. They are the webcam's defaults.
 
-Hand-over commands for `MT-REC-07` (PowerShell, in the parent folder of the repository, `E:\Projects\MOSIP` on the build laptop):
+Hand-over commands for `MT-REC-07` (PowerShell, in the parent folder of the repository):
 
 ```powershell
 Compress-Archive -Path run\recordings\S1_* -DestinationPath run\handover-S1.zip

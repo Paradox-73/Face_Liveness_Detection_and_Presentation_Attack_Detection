@@ -89,7 +89,7 @@ python tools/eval/make-attack-packs.py      # synthetic attack packs
 curl -s -X POST http://127.0.0.1:4501/admin/source -d '{"type":"Face","source":"SEQUENCE","path":"'"$(cd "${MOSIP_RUN_ROOT:-../run}" && pwd -W)"'/frame-packs/s3-main","fps":15,"loop":true}'
 ```
 
-MockMDS is a Windows program: the path must be a Windows path such as `E:/Projects/MOSIP/run/frame-packs/s3-main`
+MockMDS is a Windows program: the path must be a Windows path such as `C:/work/run/frame-packs/s3-main`
 (`pwd -W` prints it in Git Bash). A Git Bash path (`/e/...`) or a relative path is refused with error `511`
 ("path is outside mosip.mock.sbi.face.source.allowed.roots").
 

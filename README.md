@@ -42,7 +42,7 @@ authentication.
 | 15 | Run the real desktop client with your own webcam | [Evaluate in 15 minutes](#evaluate-in-15-minutes) |
 | 20 | Watch every desktop flow run by script (71 checks), after the build in [Quick start](#quick-start) and a one-time `bash scripts/demo-desktop.sh --onboard` | `bash scripts/demo-desktop.sh --restore-golden --policy recorded`; results in [docs/test-report/desktop-e2e.md](docs/test-report/desktop-e2e.md) |
 
-Design: [docs/design/README.md](docs/design/README.md). Pitch material: [docs/pitch/](docs/pitch/summary.md).
+Design: [docs/design/README.md](docs/design/README.md). Pitch material: [slide deck](docs/pitch/deck.pdf), [docs/pitch/](docs/pitch/summary.md).
 
 ## Screens
 
@@ -155,7 +155,7 @@ bundles with a throwaway key, checks that only the valid one verifies, and keeps
 | `liveness/` | Shared engine (`liveness-core`), ONNX adapters (`liveness-onnx`), SFace SDK (`face-match-sdk`) | MPL-2.0 |
 | `models/` | Signed ONNX model bundle, hashes, sources | per model (MIT, Apache-2.0) |
 | `clients/desktop/` | MOSIP desktop Registration Client, upstream `mosip/registration-client` `master@22fe01f`, plus the integration | MPL-2.0 |
-| `clients/android/` | MOSIP Android Registration Client, upstream `mosip/android-registration-client` `release-1.2.x@c4d3ca7`, plus `livenessmanager` | MIT (upstream files); project-added files, including `livenessmanager`, MPL-2.0 |
+| `clients/android/` | MOSIP Android Registration Client, upstream `mosip/android-registration-client` `release-1.2.x@c4d3ca7`, plus `livenessmanager`. The `AGENTS.md` files in this folder come with the upstream import | MIT (upstream files); project-added files, including `livenessmanager`, MPL-2.0 |
 | `devices/mock-mds/` | MOSIP MockMDS, upstream `mosip/mosip-mock-services` `master@3d2174d` (`MockMDS/`), extended into a mock L0/L1 face device | MPL-2.0 |
 | `tools/mock-sync/` | Local stand-in for the MOSIP server | MPL-2.0 (reference data keeps its upstream MPL-2.0) |
 | `tools/eval/`, `eval/` | Scenario runner, analysis, frame-pack manifests and scenarios | MPL-2.0 |
@@ -244,7 +244,7 @@ try again." Each state is drawn in [docs/ux/wireframes.svg](docs/ux/wireframes.s
 | Install and run | [docs/install/README.md](docs/install/README.md), [desktop.md](docs/install/desktop.md), [android.md](docs/install/android.md) |
 | Test reports | [summary](docs/test-report/README.md), [desktop](docs/test-report/desktop-e2e.md), [Android](docs/test-report/android-e2e.md), [desktop/Android interoperability (B4)](docs/test-report/interoperability.md), [Android per-frame latency and memory (B7, B8; phone run of 2026-10-24)](docs/test-report/android-performance.md) |
 | Offline model import (B6) | Android: [install steps](docs/install/android.md#10-import-a-liveness-model-bundle-offline-model-update) and [design](docs/design/android-liveness.md#14-offline-model-update-bonus-b6); desktop: [docs/design/desktop-liveness-services.md](docs/design/desktop-liveness-services.md#61-secure-offline-model-update-bonus-b6) section 6.1 |
-| Pitch material | [deck outline](docs/pitch/deck-outline.md), [summary](docs/pitch/summary.md), [video script](docs/pitch/video-script.md) |
+| Pitch material | [slide deck (PDF)](docs/pitch/deck.pdf), [deck outline](docs/pitch/deck-outline.md), [summary](docs/pitch/summary.md), [video script](docs/pitch/video-script.md) |
 | PAD evaluation protocol and results | [docs/eval/](docs/eval/README.md); real-person run: [docs/eval/results/real-faces-2026-10-24.md](docs/eval/results/real-faces-2026-10-24.md); latest automated runs: [docs/eval/results/20261014-shipped/README.md](docs/eval/results/20261014-shipped/README.md) (shipped defaults against the passive-first flow) |
 | Test data and demo accounts | [docs/test-data.md](docs/test-data.md) |
 | Licences and SBOM | [licenses/README.md](licenses/README.md), [NOTICE](NOTICE), [docs/sbom/README.md](docs/sbom/README.md) |

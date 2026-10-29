@@ -1,7 +1,7 @@
 # Licence texts
 
 Full texts of the licences that apply to third-party components and model files this project adds. The project's
-own code is MIT (`../LICENSE`); attributions are in `../NOTICE`; the review with every component and version is
+own code is MPL-2.0 (`../LICENSE`); attributions are in `../NOTICE`; the review with every component and version is
 `../docs/sbom/README.md`.
 
 | File | Licence | Applies to |
